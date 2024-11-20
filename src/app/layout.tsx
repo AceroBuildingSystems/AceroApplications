@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+
 import localFont from "next/font/local";
 import "./globals.css";
+import Provider from '@/components/provider/Provider'
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,10 +14,6 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "Acero Applications",
-  description: "Acero Applications",
-};
 
 export default function RootLayout({
   children,
@@ -28,7 +25,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Provider>
+          {children}
+        </Provider>
       </body>
     </html>
   );

@@ -1,14 +1,15 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import { UserDocument } from "@/types";
 
-const UserSchema = new Schema({
+const UserSchema: Schema<UserDocument> = new Schema({
     empId: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, required: true },
-    name: { type: String },
+    shortName: { type: String },
+    fullName: { type: String },
     designation: { type: String, required: true },
     employeeType: { type: String, required: true },
     department: { type: String, required: true },
@@ -25,8 +26,8 @@ const UserSchema = new Schema({
 }, { timestamps: true })
 
 UserSchema.pre('save', async function (next) {
-    if (!this.name) {
-        this.name = `${this.firstName} ${this.lastName}`
+    if (!this.fullName) {
+        this.fullName = `${this.firstName} ${this.lastName}`
     }
     next()
 })

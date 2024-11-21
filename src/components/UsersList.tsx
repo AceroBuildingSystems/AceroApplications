@@ -36,7 +36,7 @@ export const UsersList: React.FC = () => {
   return (
     <div className="users-grid">
       {users?.map((user) => (
-        <p>{user.name}</p>
+        <p>{user.fullName}</p>
       ))}
     </div>
   )

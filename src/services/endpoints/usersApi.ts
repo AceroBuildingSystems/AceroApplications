@@ -4,7 +4,7 @@ import { UserDocument } from '@/types'
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getUsers: builder.query<UserDocument[], void>({
-      query: () => 'users',
+      query: () => 'user',
       // Transform response if needed
       transformResponse: (response: UserDocument[]) => 
         response.map(user => ({
@@ -15,13 +15,13 @@ export const usersApi = baseApi.injectEndpoints({
     }),
 
     getUserById: builder.query<UserDocument, string>({
-      query: (id) => `users/${id}`,
+      query: (id) => `user/${id}`,
       providesTags: (result, error, id) => [{ type: 'User', id }],
     }),
 
     createUser: builder.mutation<UserDocument, UserDocument>({
       query: (userData) => ({
-        url: 'users',
+        url: 'user',
         method: 'POST',
         body: userData,
       }),
@@ -31,7 +31,7 @@ export const usersApi = baseApi.injectEndpoints({
 
     updateUser: builder.mutation<UserDocument, UserDocument>({
       query: (userData) => ({
-        url: `users/${userData._id}`,
+        url: `user/${userData._id}`,
         method: 'PUT',
         body: userData,
       }),

@@ -6,31 +6,47 @@ import mongoose from "mongoose"
 
 
 export async function POST() {
-    try{
-        const MONGODB_URI = process.env.NEXT_PUBLIC_DEV_MONGODB_URI
+    try {
 
-        if(!MONGODB_URI){
-            return NextResponse.json({err:"NO MONGO STRING"}, { status: 500 })
-        }
-
-        const mongoConnect = mongoose.connect(MONGODB_URI).then(() => {
-            return NextResponse.json({err:"Couldnt Connect"}, { status: 500 })
-
-          })
-        // const db:any = await dbConnect()
-        // console.debug(db)
-        // return NextResponse.json(db)
-        
+        await dbConnect()
+        // Perform the update operation
         const response = await User.updateMany(
-            { "userid": { $exists: true } },  
-            { $rename: { "userid": "empId" } }  // Rename 'userid' to 'empId'
-        ) 
+            { "userid": { $exists: true } },
+            { $rename: { "userid": "empId" } }
+        ).exec() || await User.create({
+            empId: "EMP001",
+            firstName: "Admin",
+            lastName: "User", 
+            email: "admin@acero.com",
+            password: "admin123",
+            role: "admin",
+            designation: "Administrator",
+            employeeType: "Full Time",
+            department: "Administration",
+            location: "HQ",
+            reportingTo: "None",
+            isActive: true,
+            status: "Active",
+            availability: "Available",
+            extension: "001",
+            mobile: "1234567890",
+            joiningDate: new Date(),
+            relievingDate: new Date(),
+            access: {}
+        })
         
         console.log(response)
         return NextResponse.json(response)
-    }catch(err){
-        console.debug(err)
-        return NextResponse.json(err, { status: 500 })
+
+    } catch(err) {
+        // Ensure connection is closed even if error occurs
+        try {
+            await mongoose.disconnect()
+        } catch (disconnectErr) {
+            console.error("Error disconnecting:", disconnectErr)
+        }
+
+        console.error(err)
+        return NextResponse.json({err: "An error occurred"}, { status: 500 })
     }
 }
-

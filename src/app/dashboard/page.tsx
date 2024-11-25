@@ -1,4 +1,8 @@
+"use client";
+
+import AuthComponent from "@/components/AuthComponent/AuthComponent";
 import { AppSidebar } from "@/components/landingSideBar/app-sidebar";
+import { useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,10 +17,16 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { useSession } from "next-auth/react";
+
 export default function Page() {
+  const [customLoadingState, setCustomLoadingState] = useState(false);
+  const session = useSession();
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
+    <AuthComponent loadingState={customLoadingState}> 
+      <SidebarProvider>
+        <AppSidebar  />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2">
           <div className="flex items-center gap-2 px-4">
@@ -66,6 +76,7 @@ export default function Page() {
           </div>
         </div>
       </SidebarInset>
-    </SidebarProvider>
+      </SidebarProvider>
+    </AuthComponent>
   );
 }

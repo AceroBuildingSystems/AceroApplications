@@ -40,6 +40,16 @@ export const authOptions: AuthOptions = {
       return token;
     },
   },
+  pages: {
+    signIn: "/",
+    signOut: "/",
+  },
+  events: {
+    signIn: async ({ user }) => {
+      // Redirect to dashboard after successful sign in
+    },
+  },
+ 
 };
 
 const handler = NextAuth(authOptions);

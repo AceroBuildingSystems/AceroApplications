@@ -8,12 +8,6 @@ import AuthComponent from "@/components/AuthComponent/AuthComponent";
 
 
 const LoginPage: FC = () => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    setCustomLoadingState(true);
-    e.preventDefault();
-    console.log("Form submitted");
-  };
-
   const [customLoadingState, setCustomLoadingState] = useState(false);
 
   return (
@@ -22,7 +16,7 @@ const LoginPage: FC = () => {
       <GridBackground >
         <div className="w-full h-full flex items-center justify-center p-8">
           <div className="w-1/3 h-full flex-col justify-center items-center flex mr-10">
-            <SignupForm onSubmit={handleSubmit} setCustomLoadingState={setCustomLoadingState} />
+            <SignupForm setCustomLoadingState={setCustomLoadingState} />
           </div>
         </div>
       </GridBackground>

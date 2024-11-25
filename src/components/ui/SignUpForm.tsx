@@ -12,35 +12,32 @@ import { toast } from "react-toastify";
 import Image from "next/image";
 
 interface FormErrors {
-  firstName?: string;
-  lastName?: string;
   email?: string;
+  password?: string;
 }
 
-export function SignupForm({onSubmit, setCustomLoadingState}: {onSubmit: (e: React.FormEvent<HTMLFormElement>) => void, setCustomLoadingState: (state: boolean) => void}) {
+export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (state: boolean) => void}) {
   const [errors, setErrors] = useState<FormErrors>({});
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: ''
+    email: '',
+    password: ''
   });
   const [touched, setTouched] = useState({
-    firstName: false,
-    lastName: false,
-    email: false
+    email: false,
+    password: false
   });
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
-      case 'firstName':
-        return !value.trim() ? 'First name is required' : '';
-      case 'lastName':
-        return !value.trim() ? 'Last name is required' : '';
       case 'email':
         if (!value.trim()) return 'Email is required';
         if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(value)) {
           return 'Invalid email address';
         }
+        return '';
+      case 'password':
+        if (!value.trim()) return 'Password is required';
         return '';
       default:
         return '';
@@ -64,7 +61,7 @@ export function SignupForm({onSubmit, setCustomLoadingState}: {onSubmit: (e: Rea
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
-    const fieldName = id === 'firstname' ? 'firstName' : id === 'lastname' ? 'lastName' : 'email';
+    const fieldName = id === 'email' ? 'email' : 'password';
     
     setFormData(prev => ({
       ...prev,
@@ -74,7 +71,7 @@ export function SignupForm({onSubmit, setCustomLoadingState}: {onSubmit: (e: Rea
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { id } = e.target;
-    const fieldName = id === 'firstname' ? 'firstName' : id === 'lastname' ? 'lastName' : 'email';
+    const fieldName = id === 'email' ? 'email' : 'password';
     
     setTouched(prev => ({
       ...prev,
@@ -82,28 +79,54 @@ export function SignupForm({onSubmit, setCustomLoadingState}: {onSubmit: (e: Rea
     }));
   };
   
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();    
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>,provider: string) => {
+    e.preventDefault();   
 
-    // Mark all fields as touched
+    if(provider === "azure-ad") {
+      setCustomLoadingState(true);
+      const result = await signIn("azure-ad", { callbackUrl: "/dashboard", redirect: false });
+      if(result?.error) {
+        setCustomLoadingState(false);
+        toast.error("Please contact the admin to sign up");
+      }
+      return
+    }
+
     setTouched({
-      firstName: true,
-      lastName: true,
-      email: true
+      email: true,
+      password: true
     });
 
-    if(formData.firstName === "" || formData.lastName === "" || formData.email === "") {
+    const emailError = validateField('email', formData.email);
+    const passwordError = validateField('password', formData.password);
+
+    const newErrors = {
+      email: emailError,
+      password: passwordError
+    };
+
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    if (emailError || passwordError) {
       toast.error("Please fill in all fields correctly");
       return;
     }
 
-    // Check if there are any errors
-    const hasErrors = Object.values(errors).some(error => error);
-    if (hasErrors) {
-      toast.error("Please fill in all fields correctly");
-    } else {
-      onSubmit(e);
+    setCustomLoadingState(true);
+    const result = await signIn("credentials", {
+      email: formData.email,
+      password: formData.password,
+      callbackUrl: "/dashboard",
+      redirect: false
+    });
+
+    if (result?.error) {
+      setCustomLoadingState(false);
+      toast.error("Invalid credentials or contact the admin to sign up");
+      return;
     }
+
   }
 
   return (
@@ -126,44 +149,6 @@ export function SignupForm({onSubmit, setCustomLoadingState}: {onSubmit: (e: Rea
       </p>
 
       <form className="my-8" onSubmit={handleSubmit}>
-        <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 mb-4">
-          <LabelInputContainer>
-            <Label htmlFor="firstname">First name</Label>
-            <Input 
-              id="firstname" 
-              placeholder="Tyler" 
-              type="text"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              className={cn(
-                errors.firstName && touched.firstName ? 'border-red-500 focus:border-red-500' : '',
-                'transition-colors duration-200'
-              )}
-            />
-            {errors.firstName && touched.firstName && (
-              <span className="text-red-500 text-xs mt-1 animate-fadeIn">{errors.firstName}</span>
-            )}
-          </LabelInputContainer>
-          <LabelInputContainer>
-            <Label htmlFor="lastname">Last name</Label>
-            <Input 
-              id="lastname" 
-              placeholder="Durden" 
-              type="text"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
-              className={cn(
-                errors.lastName && touched.lastName ? 'border-red-500 focus:border-red-500' : '',
-                'transition-colors duration-200'
-              )}
-            />
-            {errors.lastName && touched.lastName && (
-              <span className="text-red-500 text-xs mt-1 animate-fadeIn">{errors.lastName}</span>
-            )}
-          </LabelInputContainer>
-        </div>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="email">Email Address</Label>
           <Input 
@@ -180,6 +165,43 @@ export function SignupForm({onSubmit, setCustomLoadingState}: {onSubmit: (e: Rea
           />
           {errors.email && touched.email && (
             <span className="text-red-500 text-xs mt-1 animate-fadeIn">{errors.email}</span>
+          )}
+        </LabelInputContainer>
+
+        <LabelInputContainer className="mb-4">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Input 
+              id="password" 
+              placeholder="********" 
+              type={showPassword ? "text" : "password"}
+              value={formData.password}
+              onChange={handleInputChange}
+              onBlur={handleBlur}
+              className={cn(
+                errors.password && touched.password ? 'border-red-500 focus:border-red-500' : '',
+                'transition-colors duration-200'
+              )}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-300"
+            >
+              {showPassword ? (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+            </button>
+          </div>
+          {errors.password && touched.password && (
+            <span className="text-red-500 text-xs mt-1 animate-fadeIn">{errors.password}</span>
           )}
         </LabelInputContainer>
 

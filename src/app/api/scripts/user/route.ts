@@ -3,6 +3,7 @@ import { userManager } from '@/server/managers/userManager'
 import { NextRequest, NextResponse } from 'next/server'
 import {User} from "@/models/index"
 import mongoose from "mongoose"
+import { EditUserEmpId } from '@/scripts/updateFieldName'
 
 
 export async function POST(request:NextRequest,response:NextResponse) {
@@ -10,10 +11,7 @@ export async function POST(request:NextRequest,response:NextResponse) {
 
         await dbConnect()
         // Perform the update operation
-        const response = await User.updateMany(
-            { "userid": { $exists: true } },
-            { $rename: { "userid": "empId" } }
-        )
+        const response = await User.insertMany(EditUserEmpId())
         console.log(response)
         return NextResponse.json(response)
 

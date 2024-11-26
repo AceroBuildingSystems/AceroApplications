@@ -22,10 +22,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-06-01T00:00:00.000Z"
+      "date": "2022-06-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.732Z"
+      "date": "2024-09-05T12:00:11.732Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -55,10 +55,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-11-01T00:00:00.000Z"
+      "date": "2022-11-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.735Z"
+      "date": "2024-09-05T12:00:11.735Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -88,10 +88,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-18T00:00:00.000Z"
+      "date": "2022-12-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.736Z"
+      "date": "2024-09-05T12:00:11.736Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -121,10 +121,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-01T00:00:00.000Z"
+      "date": "2023-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.737Z"
+      "date": "2024-09-05T12:00:11.737Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -154,10 +154,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-01T00:00:00.000Z"
+      "date": "2023-05-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.738Z"
+      "date": "2024-09-05T12:00:11.738Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -187,10 +187,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-01T00:00:00.000Z"
+      "date": "2023-05-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.738Z"
+      "date": "2024-09-05T12:00:11.738Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -220,10 +220,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-07T00:00:00.000Z"
+      "date": "2023-05-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.738Z"
+      "date": "2024-09-05T12:00:11.738Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -253,10 +253,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.739Z"
+      "date": "2024-09-05T12:00:11.739Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -286,10 +286,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.739Z"
+      "date": "2024-09-05T12:00:11.739Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -319,10 +319,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-09-17T00:00:00.000Z"
+      "date": "2023-09-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.739Z"
+      "date": "2024-09-05T12:00:11.739Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -352,10 +352,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-08T00:00:00.000Z"
+      "date": "2023-10-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.740Z"
+      "date": "2024-09-05T12:00:11.740Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -385,10 +385,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-15T00:00:00.000Z"
+      "date": "2023-10-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.740Z"
+      "date": "2024-09-05T12:00:11.740Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -418,10 +418,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-11-19T00:00:00.000Z"
+      "date": "2023-11-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.740Z"
+      "date": "2024-09-05T12:00:11.740Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -451,10 +451,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-10T00:00:00.000Z"
+      "date": "2023-12-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.741Z"
+      "date": "2024-09-05T12:00:11.741Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -484,10 +484,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-10T00:00:00.000Z"
+      "date": "2023-12-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.741Z"
+      "date": "2024-09-05T12:00:11.741Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -517,10 +517,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-14T00:00:00.000Z"
+      "date": "2024-01-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.741Z"
+      "date": "2024-09-05T12:00:11.741Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -550,10 +550,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-03-24T00:00:00.000Z"
+      "date": "2024-03-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.743Z"
+      "date": "2024-09-05T12:00:11.743Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -583,10 +583,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-04-16T00:00:00.000Z"
+      "date": "2024-04-16T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.743Z"
+      "date": "2024-09-05T12:00:11.743Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -616,10 +616,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-05-01T00:00:00.000Z"
+      "date": "2024-05-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.744Z"
+      "date": "2024-09-05T12:00:11.744Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -649,10 +649,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-01T00:00:00.000Z"
+      "date": "2024-07-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.744Z"
+      "date": "2024-09-05T12:00:11.744Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -682,10 +682,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-21T00:00:00.000Z"
+      "date": "2024-07-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.745Z"
+      "date": "2024-09-05T12:00:11.745Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -715,10 +715,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-08-01T00:00:00.000Z"
+      "date": "2024-08-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.745Z"
+      "date": "2024-09-05T12:00:11.745Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -748,10 +748,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-01T00:00:00.000Z"
+      "date": "2023-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.746Z"
+      "date": "2024-09-05T12:00:11.746Z"
     },
     "__v": 0,
     "orderBy": 100,
@@ -781,10 +781,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-11-23T00:00:00.000Z"
+      "date": "2023-11-23T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.746Z"
+      "date": "2024-09-05T12:00:11.746Z"
     },
     "__v": 0,
     "orderBy": 100,
@@ -815,7 +815,7 @@ export const usersMaster = [{
     "employeeType": "Manager",
     "joiningdate": null,
     "date": {
-      "$date": "2024-09-05T12:00:11.746Z"
+      "date": "2024-09-05T12:00:11.746Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -845,10 +845,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2024-02-01T00:00:00.000Z"
+      "date": "2024-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.747Z"
+      "date": "2024-09-05T12:00:11.747Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -878,10 +878,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2024-02-01T00:00:00.000Z"
+      "date": "2024-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.747Z"
+      "date": "2024-09-05T12:00:11.747Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -911,10 +911,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2021-12-15T00:00:00.000Z"
+      "date": "2021-12-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.747Z"
+      "date": "2024-09-05T12:00:11.747Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -944,10 +944,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-01-02T00:00:00.000Z"
+      "date": "2022-01-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.748Z"
+      "date": "2024-09-05T12:00:11.748Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -977,10 +977,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-01-14T00:00:00.000Z"
+      "date": "2022-01-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.748Z"
+      "date": "2024-09-05T12:00:11.748Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1010,10 +1010,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-03-31T00:00:00.000Z"
+      "date": "2022-03-31T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.749Z"
+      "date": "2024-09-05T12:00:11.749Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1043,10 +1043,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-04-01T00:00:00.000Z"
+      "date": "2022-04-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.749Z"
+      "date": "2024-09-05T12:00:11.749Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1076,10 +1076,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-04-22T00:00:00.000Z"
+      "date": "2022-04-22T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.749Z"
+      "date": "2024-09-05T12:00:11.749Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1109,10 +1109,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-03-09T00:00:00.000Z"
+      "date": "2022-03-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.750Z"
+      "date": "2024-09-05T12:00:11.750Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1142,10 +1142,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-05-09T00:00:00.000Z"
+      "date": "2022-05-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.750Z"
+      "date": "2024-09-05T12:00:11.750Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1175,10 +1175,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-05-11T00:00:00.000Z"
+      "date": "2022-05-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.750Z"
+      "date": "2024-09-05T12:00:11.750Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1208,10 +1208,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-06-16T00:00:00.000Z"
+      "date": "2022-06-16T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.750Z"
+      "date": "2024-09-05T12:00:11.750Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1241,10 +1241,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-06-23T00:00:00.000Z"
+      "date": "2022-06-23T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.751Z"
+      "date": "2024-09-05T12:00:11.751Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1274,10 +1274,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-06-01T00:00:00.000Z"
+      "date": "2022-06-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.751Z"
+      "date": "2024-09-05T12:00:11.751Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1307,10 +1307,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-07-18T00:00:00.000Z"
+      "date": "2022-07-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.751Z"
+      "date": "2024-09-05T12:00:11.751Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1340,10 +1340,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-07-29T00:00:00.000Z"
+      "date": "2022-07-29T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.751Z"
+      "date": "2024-09-05T12:00:11.751Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1373,10 +1373,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-09-06T00:00:00.000Z"
+      "date": "2022-09-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.752Z"
+      "date": "2024-09-05T12:00:11.752Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1406,10 +1406,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-08-01T00:00:00.000Z"
+      "date": "2022-08-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.752Z"
+      "date": "2024-09-05T12:00:11.752Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1439,10 +1439,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-10-19T00:00:00.000Z"
+      "date": "2022-10-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.753Z"
+      "date": "2024-09-05T12:00:11.753Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1472,10 +1472,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-11-01T00:00:00.000Z"
+      "date": "2022-11-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.753Z"
+      "date": "2024-09-05T12:00:11.753Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1505,10 +1505,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-01-04T00:00:00.000Z"
+      "date": "2023-01-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.753Z"
+      "date": "2024-09-05T12:00:11.753Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1538,10 +1538,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-01-16T00:00:00.000Z"
+      "date": "2023-01-16T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.755Z"
+      "date": "2024-09-05T12:00:11.755Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1571,10 +1571,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-08-22T00:00:00.000Z"
+      "date": "2022-08-22T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.756Z"
+      "date": "2024-09-05T12:00:11.756Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1604,10 +1604,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-05-01T00:00:00.000Z"
+      "date": "2022-05-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.757Z"
+      "date": "2024-09-05T12:00:11.757Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1637,10 +1637,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-03-27T00:00:00.000Z"
+      "date": "2023-03-27T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.757Z"
+      "date": "2024-09-05T12:00:11.757Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1670,10 +1670,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-04-17T00:00:00.000Z"
+      "date": "2023-04-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.757Z"
+      "date": "2024-09-05T12:00:11.757Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1703,10 +1703,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-06-07T00:00:00.000Z"
+      "date": "2023-06-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.758Z"
+      "date": "2024-09-05T12:00:11.758Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1736,10 +1736,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-08-31T00:00:00.000Z"
+      "date": "2023-08-31T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.758Z"
+      "date": "2024-09-05T12:00:11.758Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1769,10 +1769,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-10-09T00:00:00.000Z"
+      "date": "2023-10-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.759Z"
+      "date": "2024-09-05T12:00:11.759Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1802,10 +1802,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-12-06T00:00:00.000Z"
+      "date": "2023-12-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.759Z"
+      "date": "2024-09-05T12:00:11.759Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1835,10 +1835,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-12-11T00:00:00.000Z"
+      "date": "2023-12-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.759Z"
+      "date": "2024-09-05T12:00:11.759Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1868,10 +1868,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2024-05-09T00:00:00.000Z"
+      "date": "2024-05-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.760Z"
+      "date": "2024-09-05T12:00:11.760Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1901,10 +1901,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2021-10-01T00:00:00.000Z"
+      "date": "2021-10-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.760Z"
+      "date": "2024-09-05T12:00:11.760Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1934,10 +1934,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2021-12-05T00:00:00.000Z"
+      "date": "2021-12-05T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.760Z"
+      "date": "2024-09-05T12:00:11.760Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -1967,10 +1967,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-01-03T00:00:00.000Z"
+      "date": "2022-01-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.761Z"
+      "date": "2024-09-05T12:00:11.761Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2000,10 +2000,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-01-04T00:00:00.000Z"
+      "date": "2022-01-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.762Z"
+      "date": "2024-09-05T12:00:11.762Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2033,10 +2033,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-01-21T00:00:00.000Z"
+      "date": "2022-01-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.762Z"
+      "date": "2024-09-05T12:00:11.762Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2066,10 +2066,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-02-01T00:00:00.000Z"
+      "date": "2022-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.762Z"
+      "date": "2024-09-05T12:00:11.762Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2099,10 +2099,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-02-07T00:00:00.000Z"
+      "date": "2022-02-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.762Z"
+      "date": "2024-09-05T12:00:11.762Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2132,10 +2132,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-02-17T00:00:00.000Z"
+      "date": "2022-02-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.763Z"
+      "date": "2024-09-05T12:00:11.763Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2165,10 +2165,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-02-28T00:00:00.000Z"
+      "date": "2022-02-28T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.763Z"
+      "date": "2024-09-05T12:00:11.763Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2198,10 +2198,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2022-03-07T00:00:00.000Z"
+      "date": "2022-03-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.763Z"
+      "date": "2024-09-05T12:00:11.763Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2231,10 +2231,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-03-07T00:00:00.000Z"
+      "date": "2022-03-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.764Z"
+      "date": "2024-09-05T12:00:11.764Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2264,10 +2264,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-03-08T00:00:00.000Z"
+      "date": "2022-03-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.764Z"
+      "date": "2024-09-05T12:00:11.764Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2297,10 +2297,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-03-15T00:00:00.000Z"
+      "date": "2022-03-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.765Z"
+      "date": "2024-09-05T12:00:11.765Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2330,10 +2330,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-03-01T00:00:00.000Z"
+      "date": "2022-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.765Z"
+      "date": "2024-09-05T12:00:11.765Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2363,10 +2363,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-03-28T00:00:00.000Z"
+      "date": "2022-03-28T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.765Z"
+      "date": "2024-09-05T12:00:11.765Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2396,10 +2396,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-04-22T00:00:00.000Z"
+      "date": "2022-04-22T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.766Z"
+      "date": "2024-09-05T12:00:11.766Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2429,10 +2429,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-04-27T00:00:00.000Z"
+      "date": "2022-04-27T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.766Z"
+      "date": "2024-09-05T12:00:11.766Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2462,10 +2462,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-04-26T00:00:00.000Z"
+      "date": "2022-04-26T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.766Z"
+      "date": "2024-09-05T12:00:11.766Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2495,10 +2495,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-09T00:00:00.000Z"
+      "date": "2022-05-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.767Z"
+      "date": "2024-09-05T12:00:11.767Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2528,10 +2528,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-10T00:00:00.000Z"
+      "date": "2022-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.767Z"
+      "date": "2024-09-05T12:00:11.767Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2561,10 +2561,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-10T00:00:00.000Z"
+      "date": "2022-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.768Z"
+      "date": "2024-09-05T12:00:11.768Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2594,10 +2594,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-10T00:00:00.000Z"
+      "date": "2022-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.768Z"
+      "date": "2024-09-05T12:00:11.768Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2627,10 +2627,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-10T00:00:00.000Z"
+      "date": "2022-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.769Z"
+      "date": "2024-09-05T12:00:11.769Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2660,10 +2660,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-23T00:00:00.000Z"
+      "date": "2022-05-23T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.769Z"
+      "date": "2024-09-05T12:00:11.769Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2693,10 +2693,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-01T00:00:00.000Z"
+      "date": "2022-06-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.769Z"
+      "date": "2024-09-05T12:00:11.769Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2726,10 +2726,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-06T00:00:00.000Z"
+      "date": "2022-06-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.770Z"
+      "date": "2024-09-05T12:00:11.770Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2759,10 +2759,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-06T00:00:00.000Z"
+      "date": "2022-06-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.771Z"
+      "date": "2024-09-05T12:00:11.771Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2792,10 +2792,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-13T00:00:00.000Z"
+      "date": "2022-06-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.771Z"
+      "date": "2024-09-05T12:00:11.771Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2825,10 +2825,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-13T00:00:00.000Z"
+      "date": "2022-06-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.772Z"
+      "date": "2024-09-05T12:00:11.772Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2858,10 +2858,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-15T00:00:00.000Z"
+      "date": "2022-06-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.772Z"
+      "date": "2024-09-05T12:00:11.772Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2891,10 +2891,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-21T00:00:00.000Z"
+      "date": "2022-06-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.773Z"
+      "date": "2024-09-05T12:00:11.773Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2924,10 +2924,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-29T00:00:00.000Z"
+      "date": "2022-06-29T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.773Z"
+      "date": "2024-09-05T12:00:11.773Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2957,10 +2957,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-30T00:00:00.000Z"
+      "date": "2022-06-30T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.774Z"
+      "date": "2024-09-05T12:00:11.774Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -2990,10 +2990,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-07-12T00:00:00.000Z"
+      "date": "2022-07-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.775Z"
+      "date": "2024-09-05T12:00:11.775Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3023,10 +3023,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-07-14T00:00:00.000Z"
+      "date": "2022-07-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.775Z"
+      "date": "2024-09-05T12:00:11.775Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3056,10 +3056,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-07-18T00:00:00.000Z"
+      "date": "2022-07-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.776Z"
+      "date": "2024-09-05T12:00:11.776Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3089,10 +3089,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-07-18T00:00:00.000Z"
+      "date": "2022-07-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.776Z"
+      "date": "2024-09-05T12:00:11.776Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3122,10 +3122,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-07-18T00:00:00.000Z"
+      "date": "2022-07-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.777Z"
+      "date": "2024-09-05T12:00:11.777Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3155,10 +3155,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-07-25T00:00:00.000Z"
+      "date": "2022-07-25T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.777Z"
+      "date": "2024-09-05T12:00:11.777Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3188,10 +3188,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-08-03T00:00:00.000Z"
+      "date": "2022-08-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.777Z"
+      "date": "2024-09-05T12:00:11.777Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3221,10 +3221,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-09-15T00:00:00.000Z"
+      "date": "2022-09-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.777Z"
+      "date": "2024-09-05T12:00:11.777Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3254,10 +3254,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-09-19T00:00:00.000Z"
+      "date": "2022-09-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.778Z"
+      "date": "2024-09-05T12:00:11.778Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3287,10 +3287,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-09-26T00:00:00.000Z"
+      "date": "2022-09-26T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.778Z"
+      "date": "2024-09-05T12:00:11.778Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3320,10 +3320,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-10-05T00:00:00.000Z"
+      "date": "2022-10-05T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.778Z"
+      "date": "2024-09-05T12:00:11.778Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3353,10 +3353,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-10-17T00:00:00.000Z"
+      "date": "2022-10-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.778Z"
+      "date": "2024-09-05T12:00:11.778Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3386,10 +3386,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-10-31T00:00:00.000Z"
+      "date": "2022-10-31T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.779Z"
+      "date": "2024-09-05T12:00:11.779Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3419,10 +3419,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-10-31T00:00:00.000Z"
+      "date": "2022-10-31T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.779Z"
+      "date": "2024-09-05T12:00:11.779Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3452,10 +3452,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-09T00:00:00.000Z"
+      "date": "2022-11-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.779Z"
+      "date": "2024-09-05T12:00:11.779Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3485,10 +3485,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-14T00:00:00.000Z"
+      "date": "2022-11-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.779Z"
+      "date": "2024-09-05T12:00:11.779Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3518,10 +3518,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-15T00:00:00.000Z"
+      "date": "2022-11-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.780Z"
+      "date": "2024-09-05T12:00:11.780Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3551,10 +3551,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-21T00:00:00.000Z"
+      "date": "2022-11-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.780Z"
+      "date": "2024-09-05T12:00:11.780Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3584,10 +3584,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-24T00:00:00.000Z"
+      "date": "2022-11-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.780Z"
+      "date": "2024-09-05T12:00:11.780Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3617,10 +3617,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-06T00:00:00.000Z"
+      "date": "2022-12-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.781Z"
+      "date": "2024-09-05T12:00:11.781Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3650,10 +3650,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-12T00:00:00.000Z"
+      "date": "2022-12-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.781Z"
+      "date": "2024-09-05T12:00:11.781Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3683,10 +3683,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-13T00:00:00.000Z"
+      "date": "2022-12-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.781Z"
+      "date": "2024-09-05T12:00:11.781Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3716,10 +3716,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-21T00:00:00.000Z"
+      "date": "2022-12-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.782Z"
+      "date": "2024-09-05T12:00:11.782Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3749,10 +3749,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-21T00:00:00.000Z"
+      "date": "2022-12-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.782Z"
+      "date": "2024-09-05T12:00:11.782Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3782,10 +3782,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-21T00:00:00.000Z"
+      "date": "2022-12-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.782Z"
+      "date": "2024-09-05T12:00:11.782Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3815,10 +3815,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-03T00:00:00.000Z"
+      "date": "2023-01-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.783Z"
+      "date": "2024-09-05T12:00:11.783Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3848,10 +3848,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-02T00:00:00.000Z"
+      "date": "2023-01-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.783Z"
+      "date": "2024-09-05T12:00:11.783Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3881,10 +3881,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-10T00:00:00.000Z"
+      "date": "2023-01-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.785Z"
+      "date": "2024-09-05T12:00:11.785Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3914,10 +3914,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-11T00:00:00.000Z"
+      "date": "2023-01-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.786Z"
+      "date": "2024-09-05T12:00:11.786Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3947,10 +3947,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-16T00:00:00.000Z"
+      "date": "2023-01-16T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.786Z"
+      "date": "2024-09-05T12:00:11.786Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -3980,10 +3980,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-18T00:00:00.000Z"
+      "date": "2023-01-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.787Z"
+      "date": "2024-09-05T12:00:11.787Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4013,10 +4013,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-26T00:00:00.000Z"
+      "date": "2023-01-26T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.788Z"
+      "date": "2024-09-05T12:00:11.788Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4046,10 +4046,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-01T00:00:00.000Z"
+      "date": "2023-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.788Z"
+      "date": "2024-09-05T12:00:11.788Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4079,10 +4079,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-06T00:00:00.000Z"
+      "date": "2023-02-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.788Z"
+      "date": "2024-09-05T12:00:11.788Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4112,10 +4112,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-08T00:00:00.000Z"
+      "date": "2023-02-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.788Z"
+      "date": "2024-09-05T12:00:11.788Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4145,10 +4145,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-17T00:00:00.000Z"
+      "date": "2023-02-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.789Z"
+      "date": "2024-09-05T12:00:11.789Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4178,10 +4178,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-02-20T00:00:00.000Z"
+      "date": "2023-02-20T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.789Z"
+      "date": "2024-09-05T12:00:11.789Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4211,10 +4211,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-01T00:00:00.000Z"
+      "date": "2023-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.789Z"
+      "date": "2024-09-05T12:00:11.789Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4244,10 +4244,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-03-01T00:00:00.000Z"
+      "date": "2023-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.789Z"
+      "date": "2024-09-05T12:00:11.789Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4277,10 +4277,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-02T00:00:00.000Z"
+      "date": "2023-03-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.789Z"
+      "date": "2024-09-05T12:00:11.789Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4310,10 +4310,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-02T00:00:00.000Z"
+      "date": "2023-03-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.791Z"
+      "date": "2024-09-05T12:00:11.791Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4343,10 +4343,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-13T00:00:00.000Z"
+      "date": "2023-03-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.791Z"
+      "date": "2024-09-05T12:00:11.791Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4376,10 +4376,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-17T00:00:00.000Z"
+      "date": "2023-03-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.792Z"
+      "date": "2024-09-05T12:00:11.792Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4409,10 +4409,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-20T00:00:00.000Z"
+      "date": "2023-03-20T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.792Z"
+      "date": "2024-09-05T12:00:11.792Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4442,10 +4442,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-03-20T00:00:00.000Z"
+      "date": "2023-03-20T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.793Z"
+      "date": "2024-09-05T12:00:11.793Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4475,10 +4475,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-03T00:00:00.000Z"
+      "date": "2023-04-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.793Z"
+      "date": "2024-09-05T12:00:11.793Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4508,10 +4508,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-10T00:00:00.000Z"
+      "date": "2023-04-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.793Z"
+      "date": "2024-09-05T12:00:11.793Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4541,10 +4541,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-11T00:00:00.000Z"
+      "date": "2023-04-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.793Z"
+      "date": "2024-09-05T12:00:11.793Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4574,10 +4574,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-17T00:00:00.000Z"
+      "date": "2023-04-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.794Z"
+      "date": "2024-09-05T12:00:11.794Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4607,10 +4607,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-03T00:00:00.000Z"
+      "date": "2023-05-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.794Z"
+      "date": "2024-09-05T12:00:11.794Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4640,10 +4640,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-09T00:00:00.000Z"
+      "date": "2023-05-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.795Z"
+      "date": "2024-09-05T12:00:11.795Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4673,10 +4673,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-15T00:00:00.000Z"
+      "date": "2023-05-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.795Z"
+      "date": "2024-09-05T12:00:11.795Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4706,10 +4706,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-12T00:00:00.000Z"
+      "date": "2023-06-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.795Z"
+      "date": "2024-09-05T12:00:11.795Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4739,10 +4739,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-14T00:00:00.000Z"
+      "date": "2023-06-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.795Z"
+      "date": "2024-09-05T12:00:11.795Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4772,10 +4772,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-14T00:00:00.000Z"
+      "date": "2023-06-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.796Z"
+      "date": "2024-09-05T12:00:11.796Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4805,10 +4805,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-15T00:00:00.000Z"
+      "date": "2023-06-15T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.796Z"
+      "date": "2024-09-05T12:00:11.796Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4838,10 +4838,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-19T00:00:00.000Z"
+      "date": "2023-06-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.796Z"
+      "date": "2024-09-05T12:00:11.796Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4871,10 +4871,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-21T00:00:00.000Z"
+      "date": "2023-06-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.796Z"
+      "date": "2024-09-05T12:00:11.796Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4904,10 +4904,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-21T00:00:00.000Z"
+      "date": "2023-06-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.797Z"
+      "date": "2024-09-05T12:00:11.797Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4937,10 +4937,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-06-23T00:00:00.000Z"
+      "date": "2023-06-23T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.797Z"
+      "date": "2024-09-05T12:00:11.797Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -4970,10 +4970,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.797Z"
+      "date": "2024-09-05T12:00:11.797Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5003,10 +5003,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-17T00:00:00.000Z"
+      "date": "2023-07-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.798Z"
+      "date": "2024-09-05T12:00:11.798Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5036,10 +5036,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-19T00:00:00.000Z"
+      "date": "2023-07-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.798Z"
+      "date": "2024-09-05T12:00:11.798Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5069,10 +5069,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-08-07T00:00:00.000Z"
+      "date": "2023-08-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.798Z"
+      "date": "2024-09-05T12:00:11.798Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5102,10 +5102,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-08-07T00:00:00.000Z"
+      "date": "2023-08-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.799Z"
+      "date": "2024-09-05T12:00:11.799Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5135,10 +5135,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-08-21T00:00:00.000Z"
+      "date": "2023-08-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.799Z"
+      "date": "2024-09-05T12:00:11.799Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5168,10 +5168,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-09-18T00:00:00.000Z"
+      "date": "2023-09-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.800Z"
+      "date": "2024-09-05T12:00:11.800Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5201,10 +5201,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-09-28T00:00:00.000Z"
+      "date": "2023-09-28T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.800Z"
+      "date": "2024-09-05T12:00:11.800Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5234,10 +5234,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-02T00:00:00.000Z"
+      "date": "2023-10-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.800Z"
+      "date": "2024-09-05T12:00:11.800Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5267,10 +5267,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-09T00:00:00.000Z"
+      "date": "2023-10-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.800Z"
+      "date": "2024-09-05T12:00:11.800Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5300,10 +5300,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-12T00:00:00.000Z"
+      "date": "2023-10-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.800Z"
+      "date": "2024-09-05T12:00:11.800Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5333,10 +5333,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-17T00:00:00.000Z"
+      "date": "2023-10-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.801Z"
+      "date": "2024-09-05T12:00:11.801Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5366,10 +5366,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-11-13T00:00:00.000Z"
+      "date": "2023-11-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.801Z"
+      "date": "2024-09-05T12:00:11.801Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5399,10 +5399,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-11-13T00:00:00.000Z"
+      "date": "2023-11-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.801Z"
+      "date": "2024-09-05T12:00:11.801Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5432,10 +5432,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-11T00:00:00.000Z"
+      "date": "2023-12-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.802Z"
+      "date": "2024-09-05T12:00:11.802Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5465,10 +5465,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-11T00:00:00.000Z"
+      "date": "2023-12-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.802Z"
+      "date": "2024-09-05T12:00:11.802Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5498,10 +5498,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-25T00:00:00.000Z"
+      "date": "2023-12-25T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.803Z"
+      "date": "2024-09-05T12:00:11.803Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5531,10 +5531,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-26T00:00:00.000Z"
+      "date": "2023-12-26T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.803Z"
+      "date": "2024-09-05T12:00:11.803Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5564,10 +5564,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-02T00:00:00.000Z"
+      "date": "2024-01-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.803Z"
+      "date": "2024-09-05T12:00:11.803Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5597,10 +5597,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-02T00:00:00.000Z"
+      "date": "2024-01-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.804Z"
+      "date": "2024-09-05T12:00:11.804Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5630,10 +5630,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-02T00:00:00.000Z"
+      "date": "2024-01-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.804Z"
+      "date": "2024-09-05T12:00:11.804Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5663,10 +5663,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-08T00:00:00.000Z"
+      "date": "2024-01-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.805Z"
+      "date": "2024-09-05T12:00:11.805Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5696,10 +5696,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-11T00:00:00.000Z"
+      "date": "2024-01-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.805Z"
+      "date": "2024-09-05T12:00:11.805Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5729,10 +5729,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-17T00:00:00.000Z"
+      "date": "2024-01-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.806Z"
+      "date": "2024-09-05T12:00:11.806Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5762,10 +5762,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-29T00:00:00.000Z"
+      "date": "2024-01-29T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.806Z"
+      "date": "2024-09-05T12:00:11.806Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5795,10 +5795,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-02-01T00:00:00.000Z"
+      "date": "2024-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.807Z"
+      "date": "2024-09-05T12:00:11.807Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5828,10 +5828,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-02-01T00:00:00.000Z"
+      "date": "2024-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.807Z"
+      "date": "2024-09-05T12:00:11.807Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5861,10 +5861,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-02-01T00:00:00.000Z"
+      "date": "2024-02-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.808Z"
+      "date": "2024-09-05T12:00:11.808Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5894,10 +5894,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-02-08T00:00:00.000Z"
+      "date": "2024-02-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.810Z"
+      "date": "2024-09-05T12:00:11.810Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5927,10 +5927,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-02-16T00:00:00.000Z"
+      "date": "2024-02-16T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.810Z"
+      "date": "2024-09-05T12:00:11.810Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5960,10 +5960,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-03-01T00:00:00.000Z"
+      "date": "2024-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.811Z"
+      "date": "2024-09-05T12:00:11.811Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -5993,10 +5993,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-04-01T00:00:00.000Z"
+      "date": "2024-04-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.811Z"
+      "date": "2024-09-05T12:00:11.811Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6026,10 +6026,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-05-03T00:00:00.000Z"
+      "date": "2024-05-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.811Z"
+      "date": "2024-09-05T12:00:11.811Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6059,10 +6059,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-05-28T00:00:00.000Z"
+      "date": "2024-05-28T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.812Z"
+      "date": "2024-09-05T12:00:11.812Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6092,10 +6092,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-03T00:00:00.000Z"
+      "date": "2024-06-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.812Z"
+      "date": "2024-09-05T12:00:11.812Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6125,10 +6125,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-05-21T00:00:00.000Z"
+      "date": "2024-05-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.812Z"
+      "date": "2024-09-05T12:00:11.812Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6158,10 +6158,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-06T00:00:00.000Z"
+      "date": "2024-06-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.812Z"
+      "date": "2024-09-05T12:00:11.812Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6191,10 +6191,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-12T00:00:00.000Z"
+      "date": "2024-06-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.812Z"
+      "date": "2024-09-05T12:00:11.812Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6224,10 +6224,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-12T00:00:00.000Z"
+      "date": "2024-06-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.813Z"
+      "date": "2024-09-05T12:00:11.813Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6257,10 +6257,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-19T00:00:00.000Z"
+      "date": "2024-06-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.813Z"
+      "date": "2024-09-05T12:00:11.813Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6290,10 +6290,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-19T00:00:00.000Z"
+      "date": "2024-06-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.813Z"
+      "date": "2024-09-05T12:00:11.813Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6323,10 +6323,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-27T00:00:00.000Z"
+      "date": "2024-06-27T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.813Z"
+      "date": "2024-09-05T12:00:11.813Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6356,10 +6356,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-06-27T00:00:00.000Z"
+      "date": "2024-06-27T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.814Z"
+      "date": "2024-09-05T12:00:11.814Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6389,10 +6389,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-03T00:00:00.000Z"
+      "date": "2024-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.814Z"
+      "date": "2024-09-05T12:00:11.814Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6422,10 +6422,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-08-05T00:00:00.000Z"
+      "date": "2024-08-05T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.814Z"
+      "date": "2024-09-05T12:00:11.814Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6455,10 +6455,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-13T00:00:00.000Z"
+      "date": "2022-06-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.814Z"
+      "date": "2024-09-05T12:00:11.814Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6488,10 +6488,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2022-06-29T00:00:00.000Z"
+      "date": "2022-06-29T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.815Z"
+      "date": "2024-09-05T12:00:11.815Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6521,10 +6521,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2022-08-30T00:00:00.000Z"
+      "date": "2022-08-30T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.815Z"
+      "date": "2024-09-05T12:00:11.815Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6554,10 +6554,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-24T00:00:00.000Z"
+      "date": "2022-11-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.815Z"
+      "date": "2024-09-05T12:00:11.815Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6587,10 +6587,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-02-13T00:00:00.000Z"
+      "date": "2023-02-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.816Z"
+      "date": "2024-09-05T12:00:11.816Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6620,10 +6620,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-03-01T00:00:00.000Z"
+      "date": "2023-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.816Z"
+      "date": "2024-09-05T12:00:11.816Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6653,10 +6653,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-04-04T00:00:00.000Z"
+      "date": "2023-04-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.817Z"
+      "date": "2024-09-05T12:00:11.817Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6686,10 +6686,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-04-17T00:00:00.000Z"
+      "date": "2023-04-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.817Z"
+      "date": "2024-09-05T12:00:11.817Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6719,10 +6719,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-05-08T00:00:00.000Z"
+      "date": "2023-05-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.817Z"
+      "date": "2024-09-05T12:00:11.817Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6752,10 +6752,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-01-08T00:00:00.000Z"
+      "date": "2023-01-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.818Z"
+      "date": "2024-09-05T12:00:11.818Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6785,10 +6785,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-08-03T00:00:00.000Z"
+      "date": "2023-08-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.818Z"
+      "date": "2024-09-05T12:00:11.818Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6818,10 +6818,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-08-07T00:00:00.000Z"
+      "date": "2023-08-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.818Z"
+      "date": "2024-09-05T12:00:11.818Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6851,10 +6851,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-09-07T00:00:00.000Z"
+      "date": "2023-09-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.819Z"
+      "date": "2024-09-05T12:00:11.819Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6884,10 +6884,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2023-10-09T00:00:00.000Z"
+      "date": "2023-10-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.819Z"
+      "date": "2024-09-05T12:00:11.819Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6917,10 +6917,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2024-04-29T00:00:00.000Z"
+      "date": "2024-04-29T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.819Z"
+      "date": "2024-09-05T12:00:11.819Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6950,10 +6950,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Worker",
     "joiningdate": {
-      "$date": "2024-05-13T00:00:00.000Z"
+      "date": "2024-05-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.819Z"
+      "date": "2024-09-05T12:00:11.819Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -6983,10 +6983,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-02-07T00:00:00.000Z"
+      "date": "2022-02-07T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.820Z"
+      "date": "2024-09-05T12:00:11.820Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7016,10 +7016,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-12-08T00:00:00.000Z"
+      "date": "2022-12-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.820Z"
+      "date": "2024-09-05T12:00:11.820Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7049,10 +7049,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-02-14T00:00:00.000Z"
+      "date": "2022-02-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.820Z"
+      "date": "2024-09-05T12:00:11.820Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7082,10 +7082,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-02-21T00:00:00.000Z"
+      "date": "2022-02-21T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.821Z"
+      "date": "2024-09-05T12:00:11.821Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7115,10 +7115,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-03-09T00:00:00.000Z"
+      "date": "2022-03-09T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.821Z"
+      "date": "2024-09-05T12:00:11.821Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7148,10 +7148,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-06-08T00:00:00.000Z"
+      "date": "2022-06-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.821Z"
+      "date": "2024-09-05T12:00:11.821Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7181,10 +7181,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-11-14T00:00:00.000Z"
+      "date": "2022-11-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.821Z"
+      "date": "2024-09-05T12:00:11.821Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7214,10 +7214,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-01T00:00:00.000Z"
+      "date": "2022-12-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.821Z"
+      "date": "2024-09-05T12:00:11.821Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7247,10 +7247,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-01T00:00:00.000Z"
+      "date": "2022-12-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.822Z"
+      "date": "2024-09-05T12:00:11.822Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7280,10 +7280,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-17T00:00:00.000Z"
+      "date": "2023-04-17T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.822Z"
+      "date": "2024-09-05T12:00:11.822Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7313,10 +7313,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-08T00:00:00.000Z"
+      "date": "2023-05-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.822Z"
+      "date": "2024-09-05T12:00:11.822Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7346,10 +7346,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.822Z"
+      "date": "2024-09-05T12:00:11.822Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7379,10 +7379,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.823Z"
+      "date": "2024-09-05T12:00:11.823Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7412,10 +7412,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.823Z"
+      "date": "2024-09-05T12:00:11.823Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7445,10 +7445,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.823Z"
+      "date": "2024-09-05T12:00:11.823Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7478,10 +7478,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.823Z"
+      "date": "2024-09-05T12:00:11.823Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7511,10 +7511,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.824Z"
+      "date": "2024-09-05T12:00:11.824Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7544,10 +7544,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.824Z"
+      "date": "2024-09-05T12:00:11.824Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7577,10 +7577,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.824Z"
+      "date": "2024-09-05T12:00:11.824Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7610,10 +7610,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-11-01T00:00:00.000Z"
+      "date": "2023-11-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7643,10 +7643,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-11-01T00:00:00.000Z"
+      "date": "2023-11-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7676,10 +7676,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-01T00:00:00.000Z"
+      "date": "2024-01-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7709,10 +7709,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-03-04T00:00:00.000Z"
+      "date": "2024-03-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7742,10 +7742,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-01T00:00:00.000Z"
+      "date": "2024-07-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7775,10 +7775,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-01T00:00:00.000Z"
+      "date": "2024-07-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7808,10 +7808,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-01T00:00:00.000Z"
+      "date": "2024-07-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.825Z"
+      "date": "2024-09-05T12:00:11.825Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7841,10 +7841,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-01T00:00:00.000Z"
+      "date": "2024-07-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.826Z"
+      "date": "2024-09-05T12:00:11.826Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7874,10 +7874,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-12-19T00:00:00.000Z"
+      "date": "2022-12-19T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.826Z"
+      "date": "2024-09-05T12:00:11.826Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7907,10 +7907,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2023-04-28T00:00:00.000Z"
+      "date": "2023-04-28T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.826Z"
+      "date": "2024-09-05T12:00:11.826Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7940,10 +7940,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-04-12T00:00:00.000Z"
+      "date": "2022-04-12T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.826Z"
+      "date": "2024-09-05T12:00:11.826Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -7973,10 +7973,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-04-13T00:00:00.000Z"
+      "date": "2022-04-13T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.826Z"
+      "date": "2024-09-05T12:00:11.826Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8006,10 +8006,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-04-18T00:00:00.000Z"
+      "date": "2022-04-18T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.826Z"
+      "date": "2024-09-05T12:00:11.826Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8039,10 +8039,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-04-26T00:00:00.000Z"
+      "date": "2022-04-26T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.827Z"
+      "date": "2024-09-05T12:00:11.827Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8072,10 +8072,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-10T00:00:00.000Z"
+      "date": "2022-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.827Z"
+      "date": "2024-09-05T12:00:11.827Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8105,10 +8105,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-05-10T00:00:00.000Z"
+      "date": "2022-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.827Z"
+      "date": "2024-09-05T12:00:11.827Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8138,10 +8138,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-01-30T00:00:00.000Z"
+      "date": "2023-01-30T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.829Z"
+      "date": "2024-09-05T12:00:11.829Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8171,10 +8171,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-01T00:00:00.000Z"
+      "date": "2023-04-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.829Z"
+      "date": "2024-09-05T12:00:11.829Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8204,10 +8204,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-04-03T00:00:00.000Z"
+      "date": "2023-04-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.829Z"
+      "date": "2024-09-05T12:00:11.829Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8237,10 +8237,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-08T00:00:00.000Z"
+      "date": "2023-05-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.830Z"
+      "date": "2024-09-05T12:00:11.830Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8270,10 +8270,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-05-08T00:00:00.000Z"
+      "date": "2023-05-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.830Z"
+      "date": "2024-09-05T12:00:11.830Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8303,10 +8303,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.830Z"
+      "date": "2024-09-05T12:00:11.830Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8336,10 +8336,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.830Z"
+      "date": "2024-09-05T12:00:11.830Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8369,10 +8369,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.830Z"
+      "date": "2024-09-05T12:00:11.830Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8402,10 +8402,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.830Z"
+      "date": "2024-09-05T12:00:11.830Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8435,10 +8435,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.831Z"
+      "date": "2024-09-05T12:00:11.831Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8468,10 +8468,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.831Z"
+      "date": "2024-09-05T12:00:11.831Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8501,10 +8501,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.831Z"
+      "date": "2024-09-05T12:00:11.831Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8534,10 +8534,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.831Z"
+      "date": "2024-09-05T12:00:11.831Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8567,10 +8567,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.831Z"
+      "date": "2024-09-05T12:00:11.831Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8600,10 +8600,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-24T00:00:00.000Z"
+      "date": "2023-07-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.831Z"
+      "date": "2024-09-05T12:00:11.831Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8633,10 +8633,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-08-14T00:00:00.000Z"
+      "date": "2023-08-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.832Z"
+      "date": "2024-09-05T12:00:11.832Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8666,10 +8666,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-12-06T00:00:00.000Z"
+      "date": "2023-12-06T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.832Z"
+      "date": "2024-09-05T12:00:11.832Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8699,10 +8699,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-01-02T00:00:00.000Z"
+      "date": "2024-01-02T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.832Z"
+      "date": "2024-09-05T12:00:11.832Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8732,10 +8732,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-03-01T00:00:00.000Z"
+      "date": "2024-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.832Z"
+      "date": "2024-09-05T12:00:11.832Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8765,10 +8765,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-03-01T00:00:00.000Z"
+      "date": "2024-03-01T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.833Z"
+      "date": "2024-09-05T12:00:11.833Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8798,10 +8798,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-03-11T00:00:00.000Z"
+      "date": "2024-03-11T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.833Z"
+      "date": "2024-09-05T12:00:11.833Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8831,10 +8831,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-04T00:00:00.000Z"
+      "date": "2024-07-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.833Z"
+      "date": "2024-09-05T12:00:11.833Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8864,10 +8864,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-04T00:00:00.000Z"
+      "date": "2024-07-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.833Z"
+      "date": "2024-09-05T12:00:11.833Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8897,10 +8897,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-04T00:00:00.000Z"
+      "date": "2024-07-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.834Z"
+      "date": "2024-09-05T12:00:11.834Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8930,10 +8930,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-07-04T00:00:00.000Z"
+      "date": "2024-07-04T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.834Z"
+      "date": "2024-09-05T12:00:11.834Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8963,10 +8963,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2022-11-14T00:00:00.000Z"
+      "date": "2022-11-14T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.834Z"
+      "date": "2024-09-05T12:00:11.834Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -8996,10 +8996,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-09-08T00:00:00.000Z"
+      "date": "2022-09-08T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.835Z"
+      "date": "2024-09-05T12:00:11.835Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9029,10 +9029,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2022-12-05T00:00:00.000Z"
+      "date": "2022-12-05T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.835Z"
+      "date": "2024-09-05T12:00:11.835Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9062,10 +9062,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-07-03T00:00:00.000Z"
+      "date": "2023-07-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.835Z"
+      "date": "2024-09-05T12:00:11.835Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9095,10 +9095,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2023-10-03T00:00:00.000Z"
+      "date": "2023-10-03T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.835Z"
+      "date": "2024-09-05T12:00:11.835Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9128,10 +9128,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-02-05T00:00:00.000Z"
+      "date": "2024-02-05T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.835Z"
+      "date": "2024-09-05T12:00:11.835Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9161,10 +9161,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-04-22T00:00:00.000Z"
+      "date": "2024-04-22T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.836Z"
+      "date": "2024-09-05T12:00:11.836Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9194,10 +9194,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-04-24T00:00:00.000Z"
+      "date": "2024-04-24T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.836Z"
+      "date": "2024-09-05T12:00:11.836Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9227,10 +9227,10 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Staff",
     "joiningdate": {
-      "$date": "2024-05-10T00:00:00.000Z"
+      "date": "2024-05-10T00:00:00.000Z"
     },
     "date": {
-      "$date": "2024-09-05T12:00:11.836Z"
+      "date": "2024-09-05T12:00:11.836Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9261,7 +9261,7 @@ export const usersMaster = [{
     "employeeType": "Staff",
     "joiningdate": null,
     "date": {
-      "$date": "2024-09-05T12:00:11.836Z"
+      "date": "2024-09-05T12:00:11.836Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9292,7 +9292,7 @@ export const usersMaster = [{
     "employeeType": "Staff",
     "joiningdate": null,
     "date": {
-      "$date": "2024-09-05T12:00:11.836Z"
+      "date": "2024-09-05T12:00:11.836Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9323,7 +9323,7 @@ export const usersMaster = [{
     "employeeType": "Staff",
     "joiningdate": null,
     "date": {
-      "$date": "2024-09-19T06:48:48.689Z"
+      "date": "2024-09-19T06:48:48.689Z"
     },
     "__v": 0,
     "orderBy": 0,
@@ -9353,11 +9353,11 @@ export const usersMaster = [{
     "Status": "Active",
     "employeeType": "Manager",
     "joiningdate": {
-      "$date": "2024-09-16T00:00:00.000Z"
+      "date": "2024-09-16T00:00:00.000Z"
     },
     "orderBy": 0,
     "date": {
-      "$date": "2024-11-14T08:22:58.992Z"
+      "date": "2024-11-14T08:22:58.992Z"
     },
     "__v": 0,
     "haveAccess": "No"

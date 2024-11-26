@@ -21,4 +21,6 @@ export interface UserDocument {
     joiningDate: Date,
     relievingDate: Date,
     access:any,
+    addedBy: string,
+    updatedBy: string,
 }

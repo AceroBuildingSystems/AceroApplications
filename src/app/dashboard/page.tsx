@@ -17,12 +17,10 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { useSession } from "next-auth/react";
+
 
 export default function Page() {
   const [customLoadingState, setCustomLoadingState] = useState(false);
-  const session = useSession();
-  console.log({session})
 
   return (
     <AuthComponent loadingState={customLoadingState}> 
@@ -48,14 +46,6 @@ export default function Page() {
             </Breadcrumb>
           </div>
         </header>
-        {/* <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-          </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
-        </div> */}
         <div className="flex flex-1">
           <div className="p-2 md:p-10 rounded-tl-2xl dark:border-neutral-700 dark:bg-neutral-900 flex flex-col gap-2 flex-1 w-full h-full">
             <div className="flex gap-2">

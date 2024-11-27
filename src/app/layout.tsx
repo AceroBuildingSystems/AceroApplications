@@ -1,7 +1,9 @@
+"use client"
 
 import localFont from "next/font/local";
 import "./globals.css";
 import Provider from '@/components/provider/Provider'
+import "@/shared/extentions/stringExtentions"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

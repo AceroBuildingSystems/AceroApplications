@@ -3,18 +3,11 @@ import AzureADProvider from "next-auth/providers/azure-ad";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { dbConnect } from "@/lib/mongoose";
 import { User } from "@/models";
-import { INVALID_CREDENTIALS, SUCCESS } from "@/shared/constants";
-import { USER_NOT_FOUND } from "@/shared/constants";
 import bcrypt from "bcryptjs";
 
 declare module "next-auth" {
   interface Session {
-    user: {
-      id?: string;
-      name?: string | null;
-      email?: string | null;
-      image?: string | null;
-    };
+    user: any
   }
 }
 
@@ -61,10 +54,7 @@ export const authOptions: AuthOptions = {
       return true
     },
 
-    async session({ session, token }) {
-      if (session.user && token.sub) {
-        session.user.email = token.sub;
-      }
+    async session({ session }) {
       const user = await User.findOne({ email: session.user.email })
       if(!user) return session
       session.user = user

@@ -8,10 +8,16 @@ declare global {
 
 // Capitalize each word in a string
 const toProperCase = function (this: string): string {
-  return this.toLowerCase()
+  if (this){
+    return this.toLowerCase()
     .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+  }
+  else{
+    return '';
+  }
+ 
 };
 
 // Capitalize the first letter of each sentence

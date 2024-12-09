@@ -6,13 +6,29 @@ const UserSchema: Schema<UserDocument> = new Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, unique: true },
-    password: { type: String,  },
-    role: { type: String },
+    password: { type: String, },
+    role: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role", // Reference to the Role model
+        required: true
+    },
     shortName: { type: String },
     fullName: { type: String },
-    designation: { type: String },
-    employeeType: { type: String },
-    department: { type: String },
+    designation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Designation", // Reference to the Designation model
+        required: true
+    },
+    employeeType: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "EmployeeType", // Reference to the EmployeeType model
+        required: true
+    },
+    department: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Department", // Reference to the Department model
+        required: true
+    },
     location: { type: String },
     reportingTo: { type: String },
     isActive: { type: Boolean },
@@ -22,9 +38,18 @@ const UserSchema: Schema<UserDocument> = new Schema({
     mobile: { type: String },
     joiningDate: { type: Date },
     relievingDate: { type: Date },
-    access: { type: Object, default: {} },
+    access: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Access", // Reference to the Access model
+        required: true
+    },
     addedBy: { type: String },
     updatedBy: { type: String },
+    organisation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Organisation", // Reference to the Organisation model
+        required: true
+    },
 }, { timestamps: true })
 
 UserSchema.pre('save', async function (next) {

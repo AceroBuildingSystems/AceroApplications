@@ -16,7 +16,7 @@ interface FormErrors {
   password?: string;
 }
 
-export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (state: boolean) => void}) {
+export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (state: boolean) => void }) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -46,7 +46,7 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
 
   useEffect(() => {
     const newErrors: FormErrors = {};
-    
+
     Object.keys(touched).forEach((field) => {
       if (touched[field as keyof typeof touched]) {
         const error = validateField(field, formData[field as keyof typeof formData]);
@@ -60,9 +60,10 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
   }, [formData, touched]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    
     const { id, value } = e.target;
     const fieldName = id === 'email' ? 'email' : 'password';
-    
+
     setFormData(prev => ({
       ...prev,
       [fieldName]: value
@@ -72,20 +73,20 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { id } = e.target;
     const fieldName = id === 'email' ? 'email' : 'password';
-    
+
     setTouched(prev => ({
       ...prev,
       [fieldName]: true
     }));
   };
-  
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>,provider: string) => {
-    e.preventDefault();   
 
-    if(provider === "azure-ad") {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, provider: string): Promise<void> => {
+    e.preventDefault();
+
+    if (provider === "azure-ad") {
       setCustomLoadingState(true);
-      const result = await signIn("azure-ad", { callbackUrl: "/dashboard", redirect: false });
-      if(result?.error) {
+      const result = await signIn(provider, { callbackUrl: "/dashboard", redirect: false });
+      if (result?.error) {
         setCustomLoadingState(false);
         toast.error("Please contact the admin to sign up");
       }
@@ -109,12 +110,12 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
 
     // Check if there are any errors
     if (emailError || passwordError) {
-      toast.error("Please fill in all fields correctly");
+      toast.error("Please fill in all the required fields");
       return;
     }
 
     setCustomLoadingState(true);
-    const result = await signIn("credentials", {
+    const result = await signIn(provider, {
       email: formData.email,
       password: formData.password,
       callbackUrl: "/dashboard",
@@ -207,6 +208,8 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
         <Button
           className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-9 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
           type="submit"
+          //@ts-ignore
+          onClick={(e: React.FormEvent<HTMLFormElement>) => { handleSubmit(e, "credentials") }}
         >
           Sign up &rarr;
           <BottomGradient />

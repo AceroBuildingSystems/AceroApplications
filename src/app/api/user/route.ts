@@ -3,7 +3,6 @@ import { userManager } from '@/server/managers/userManager'
 import { NextResponse } from 'next/server'
 
 
-
 export async function GET() {
   await dbConnect()
   const response:any = await userManager.getUsers()

@@ -12,14 +12,14 @@ const LoginPage: FC = () => {
 
   return (
     <AuthComponent loadingState={customLoadingState}>
-    <section className="h-screen w-screen flex gap-2 overflow-hidden">
-      <GridBackground >
-        <div className="w-full h-full flex items-center justify-center p-8">
-          <div className="w-1/3 h-full flex-col justify-center items-center flex mr-10">
-            <SignupForm setCustomLoadingState={setCustomLoadingState} />
+      <section className="h-screen w-screen flex gap-2 overflow-hidden">
+        <GridBackground >
+          <div className="w-full h-full flex items-center justify-center p-8">
+            <div className="w-1/3 h-full flex-col justify-center items-center flex mr-10">
+              <SignupForm setCustomLoadingState={setCustomLoadingState} />
+            </div>
           </div>
-        </div>
-      </GridBackground>
+        </GridBackground>
       </section>
     </AuthComponent>
   );

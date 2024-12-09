@@ -130,26 +130,25 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
   }
 
   return (
-    <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white dark:bg-black">
+    <div className="w-full max-w-2xl mx-auto rounded-2xl p-3 md:p-6 shadow-input bg-white dark:bg-black min-h-0">
       <div className="flex flex-col items-center justify-center">
-
-        
-        <div className="w-2/3 h-full flex-col justify-center items-center flex">
-            <Image
-          src="/logo/logo-big.png"
-          alt="Acero Logo"
-          width={500}
-          height={500}
-          style={{ width: "70%", height: "auto" }} 
-            />
-          </div>
+        <div className="w-full sm:w-3/4 md:w-2/3 flex-col justify-center items-center flex">
+          <Image
+            src="/logo/logo-big.png"
+            alt="Acero Logo"
+            width={500}
+            height={500}
+            className="w-[60%] md:w-[50%] h-auto object-contain"
+            priority
+          />
+        </div>
       </div>
-      <p className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300 ">
+      <p data-test="signup-message" className="text-neutral-500 text-sm max-w-sm mt-2 dark:text-neutral-300 text-center px-2">
         Please contact the admin if you are signing up for the first time
       </p>
 
-      <form className="my-8" onSubmit={handleSubmit}>
-        <LabelInputContainer className="mb-4">
+      <form className="my-4 w-full px-2 md:px-4" onSubmit={(e)=>handleSubmit(e,"credentials")}>
+        <LabelInputContainer className="mb-3">
           <Label htmlFor="email">Email Address</Label>
           <Input 
             id="email" 
@@ -160,7 +159,7 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
             onBlur={handleBlur}
             className={cn(
               errors.email && touched.email ? 'border-red-500 focus:border-red-500' : '',
-              'transition-colors duration-200'
+              'transition-colors duration-200 w-full'
             )}
           />
           {errors.email && touched.email && (
@@ -168,9 +167,9 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
           )}
         </LabelInputContainer>
 
-        <LabelInputContainer className="mb-4">
+        <LabelInputContainer className="mb-3">
           <Label htmlFor="password">Password</Label>
-          <div className="relative">
+          <div className="relative w-full">
             <Input 
               id="password" 
               placeholder="********" 
@@ -180,7 +179,7 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
               onBlur={handleBlur}
               className={cn(
                 errors.password && touched.password ? 'border-red-500 focus:border-red-500' : '',
-                'transition-colors duration-200'
+                'transition-colors duration-200 w-full'
               )}
             />
             <button
@@ -206,18 +205,18 @@ export function SignupForm({ setCustomLoadingState}: {setCustomLoadingState: (st
         </LabelInputContainer>
 
         <Button
-          className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+          className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-9 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
           type="submit"
         >
           Sign up &rarr;
           <BottomGradient />
         </Button>
 
-        <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
+        <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-4 h-[1px] w-full" />
 
         <div className="flex flex-col space-y-4">
           <button
-            className=" relative group/btn flex space-x-2 justify-center items-center px-4 w-full text-black rounded-md h-10 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
+            className="relative group/btn flex space-x-2 justify-center items-center px-4 w-full text-black rounded-md h-9 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
             onClick={() => {
               setCustomLoadingState(true);
               signIn("azure-ad", { callbackUrl: "/dashboard" });

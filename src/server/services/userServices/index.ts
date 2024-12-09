@@ -1,11 +1,12 @@
-import { User } from "@/models"
-import { catchAsync } from "@/server/shared/catchAsync"
+import { crudManager } from '@/server/managers/crudManager';
+import { catchAsync } from '@/server/shared/catchAsync';
+import { ERROR } from '@/shared/constants';
 
-export const getUsers = catchAsync(async () => {    
-  const users = await User.find();
+export const getUsers = catchAsync(async () => {
+  const result = await crudManager.mongooose.find('User', {
+    filter: {},
+    sort: { createdAt: 'desc' }
+  });
 
-  if(!users){
-    return { status: "error", message: "No users found" };
-  }
-  return { status: "success", data: users };
+  return result;
 });

@@ -9362,3 +9362,38 @@ export const usersMaster = [{
     "__v": 0,
     "haveAccess": "No"
   }]
+
+  export const testUser = {
+    "_id": {
+      "$oid": "66d99d4bc78950f202f5b37e"
+    },
+    "userid": "9001",
+    "firstname": "Mohammed",
+    "lastname": "Umer",
+    "fullname": "Mohammed Umer",
+    "name": "Mohammed",
+    "designation": "Software Engineer",
+    "depid": "1205",
+    "email": "mohammed.umer@acero.ae",
+    "password": "Globaladmin@123",
+    "role": "globalAdmin",
+    "status": "Active",
+    "approved": "No",
+    "Availability": true,
+    "reportingtoid": "112014",
+    "location": "Dubai",
+    "Extension": "",
+    "Mobile": "",
+    "Status": "Active",
+    "employeeType": "Staff",
+    "joiningdate": {
+      "date": "2024-09-01T00:00:00.000Z"
+    },
+    "date": {
+      "date": "2024-09-05T12:00:11.732Z"
+    },
+    "__v": 0,
+    "orderBy": 0,
+    "haveAccess": "No"
+  }
+  

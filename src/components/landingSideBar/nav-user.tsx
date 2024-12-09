@@ -8,7 +8,8 @@ import {
   LogOut,
   Sparkles,
 } from "lucide-react"
-
+import { signOut } from "next-auth/react";
+import { useState } from "react";
 import {
   Avatar,
   AvatarFallback,
@@ -29,6 +30,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import Loader from "../ui/Loader";
 
 export function NavUser({
   user,
@@ -40,9 +42,11 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const [customLoadingState, setCustomLoadingState] = useState(false);
 
   return (
-    <SidebarMenu>
+    <Loader loading={customLoadingState}>
+      <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -102,13 +106,14 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => signOut()}>
               <LogOut />
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
-    </SidebarMenu>
+      </SidebarMenu>
+    </Loader>
   )
 }

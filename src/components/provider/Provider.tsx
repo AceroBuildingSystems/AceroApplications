@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react"
 import { store } from "@/store"
 import { Provider as ReduxProvider } from "react-redux"
 import { ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 interface ProviderProps {
   children: React.ReactNode

@@ -1,16 +1,18 @@
+import mongoose from "mongoose";
+
 export interface UserDocument {
-    _id?: string,
+    _id?: mongoose.ObjectId,
     empId: string,
     firstName: string,
     lastName: string,
     email: string,
     password: string,
-    role: string,
+    role: mongoose.ObjectId,
     fullName: string,
     shortName: string,
-    designation: string,
-    employeeType: string,
-    department: string,
+    designation: mongoose.ObjectId,
+    employeeType: mongoose.ObjectId,
+    department: mongoose.ObjectId,
     location: string,
     reportingTo: string,
     isActive: boolean,
@@ -20,7 +22,8 @@ export interface UserDocument {
     mobile: string,
     joiningDate: Date,
     relievingDate: Date,
-    access:any,
+    access:mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,
+    organisation: mongoose.ObjectId,
 }

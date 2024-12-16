@@ -3,6 +3,7 @@ import { SUCCESS } from '@/shared/constants';
 import { DatabaseAdapter, FindOptions, CreateOptions, UpdateOptions, DeleteOptions } from './types';
 import { QueryResult } from './types';
 import { Model, Document } from 'mongoose';
+import { dbConnect } from '@/lib/mongoose';
 
 interface MultiQuery {
   action: 'find' | 'create' | 'update' | 'delete';
@@ -50,11 +51,14 @@ export class MongooseAdapter implements DatabaseAdapter {
    *   populate: ["orders", "profile"],
    *   
    *   // Pagination
+   *   pagination:{
    *   page: 1,
    *   limit: 10
+   *   }
    * });
    */
   async find(modelName: string, options: FindOptions): Promise<QueryResult> {
+    await dbConnect()
     const model = this.models[modelName];
     if (!model) return { status: ERROR, message: `Model ${modelName} not found` };
 
@@ -115,13 +119,18 @@ export class MongooseAdapter implements DatabaseAdapter {
       }
     }
 
-    const page = options.page || 1;
-    const limit = options.limit || 10;
-    const skip = (page - 1) * limit;
-
     const countQuery = model.countDocuments(options.filter || {});
-    query = query.skip(skip).limit(limit);
 
+    let page = -1
+    let limit = -1
+    
+    if(options.pagination){
+      page = options.pagination.page || 1
+      limit = options.pagination.limit || 10
+      const skip = (page - 1) * limit;
+      query = query.skip(skip).limit(limit)
+    }
+    
     const [docs, total] = await Promise.all([query.exec(), countQuery]);
 
     return {
@@ -141,6 +150,7 @@ export class MongooseAdapter implements DatabaseAdapter {
    * 
    * Example usage:
    * const result = await adapter.create('User', {
+   *   bulkInsert:false,
    *   data: {
    *     firstName: "John",
    *     lastName: "Doe",
@@ -150,11 +160,19 @@ export class MongooseAdapter implements DatabaseAdapter {
    *   }
    * });
    */
+
   async create(modelName: string, options: CreateOptions): Promise<QueryResult> {
+    await dbConnect()
     const model = this.models[modelName];
     if (!model) return { status: ERROR, message: `Model ${modelName} not found` };
 
-    const doc = await model.create(options.data);
+    let doc = null
+    if(options.bulkInsert){
+      doc = await model.insertMany(options.data);
+    }else{
+      doc = await model.create(options.data);
+    }
+
     if (!doc) return { status: ERROR, message: 'Failed to create document' };
 
     return { status: SUCCESS, data: doc };
@@ -174,12 +192,29 @@ export class MongooseAdapter implements DatabaseAdapter {
    * });
    */
   async update(modelName: string, options: UpdateOptions): Promise<QueryResult> {
+    await dbConnect();
     const model = this.models[modelName];
     if (!model) return { status: ERROR, message: `Model ${modelName} not found` };
-
-    const doc = await model.findOneAndUpdate(options.filter || {}, options.data, { new: true, runValidators: true });
-    if (!doc) return { status: ERROR, message: 'Document not found' };
-
+  
+    let doc:any = [];
+    
+    if (options.bulkUpdate) {
+      // Perform bulk update (updateMany) and wait for it to complete
+      const result = await model.updateMany(options.filter || {}, options.data);
+  
+      // You can return the result or perform a follow-up query to fetch updated documents
+      if (result.modifiedCount === 0) {
+        return { status: ERROR, message: 'No documents updated' };
+      }
+  
+      doc.push(result);  // result will contain update details, not documents
+    } else {
+      // Perform single document update (findOneAndUpdate)
+      doc = await model.findOneAndUpdate(options.filter || {}, options.data, { new: true, runValidators: true });
+  
+      if (!doc) return { status: ERROR, message: 'Document not found' };
+    }
+  
     return { status: SUCCESS, data: doc };
   }
 
@@ -195,6 +230,7 @@ export class MongooseAdapter implements DatabaseAdapter {
    * });
    */
   async delete(modelName: string, options: DeleteOptions): Promise<QueryResult> {
+    await dbConnect()
     const model = this.models[modelName];
     if (!model) return { status: ERROR, message: `Model ${modelName} not found` };
 
@@ -239,7 +275,9 @@ export class MongooseAdapter implements DatabaseAdapter {
    *   }
    * ]);
    */
+
   async runMultiple(queries: MultiQuery[]): Promise<QueryResult[]> {
+    await dbConnect()
     const results = await Promise.all(
       queries.map(async q => {
         switch (q.action) {

@@ -8,9 +8,9 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
     try {
         const templateData:emailData = {name:"Iqbal",email:"iqbal.ansari@acero.ae",subject,message:"Hello"}
         const result = await emailManager.sendEmail(recipient, subject, templateData);
-        NextResponse.json({status:"Success",message:"email sent",data:{},statusCode:200})
+        return NextResponse.json({status:"SUCCESS",message:"email sent",data:{},statusCode:200})
     } catch (error:any) {
         console.error("Error:", error);
-        NextResponse.json({status:"Error",message:error.message || "something went wrong",data:{},statusCode:500})
+        return NextResponse.json({status:"Error",message:error.message || "something went wrong",data:{},statusCode:500})
     }
 }

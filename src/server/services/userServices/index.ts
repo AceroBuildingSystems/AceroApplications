@@ -1,11 +1,12 @@
 import { crudManager } from '@/server/managers/crudManager';
 import { catchAsync } from '@/server/shared/catchAsync';
-import { ERROR } from '@/shared/constants';
+import { MONGO_MODELS } from '@/shared/constants';
+
 
 export const getUsers = catchAsync(async () => {
-  const result = await crudManager.mongooose.find('User', {
+  const result = await crudManager.mongooose.find(MONGO_MODELS.USER_MASTER, {
     filter: {},
-    sort: { createdAt: 'desc' }
+    sort: { empId: 'desc' }
   });
 
   return result;

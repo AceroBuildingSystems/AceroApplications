@@ -15,3 +15,20 @@ export const USER_CREATED = "User created successfully"
 //INSERT SCRIPT
 export const BULK_INSERT = "bulkInsert"
 export const INSERT_ONE = "insertOne"
+
+//MODELS
+//////////////////////////
+// This is super baddd, please change this
+// **NOTE*/ need to modulrise this, for now add do not forget to model to the model apdapter once added her to import it
+//////////////////////////
+export const MONGO_MODELS = {
+    USER_MASTER :"USER_MASTER",
+    ORGANISATION_MASTER :"ORGANISATION_MASTER",
+    EMPLOYEE_TYPE_MASTER :"EMPLOYEE_TYPE_MASTER",
+    DEPARTMENT_MASTER :"DEPARTMENT_MASTER",
+    ROLE_MASTER :"ROLE_MASTER",
+    ACCESS_MASTER :"ACCESS_MASTER",
+    ADDRESS_MASTER :"ADDRESS_MASTER",
+    DESIGNATION_MASTER :"DESIGNATION_MASTER",
+}
+

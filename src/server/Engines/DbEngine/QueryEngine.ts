@@ -23,8 +23,11 @@ export class QueryEngine {
           filter,
           select: query.select,
           sort: query.sort,
-          limit: query.limit,
-          page: query.page,
+          pagination: {
+            limit: query.limit,
+            page: query.page,
+          },
+         
           distinct: query.distinct,
           searchTerm: query.searchTerm,
           searchFields: query.searchFields,

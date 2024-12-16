@@ -39,8 +39,11 @@ export interface Condition {
     filter?: any;
     select?: string[];
     sort?: { [key: string]: 'asc' | 'desc' };
-    limit?: number;
-    page?: number;
+    pagination?:
+    {
+      limit?: number;
+      page?: number;
+    }
     distinct?: string;
     searchTerm?: string;
     searchFields?: string[];
@@ -50,11 +53,13 @@ export interface Condition {
   
   export interface CreateOptions {
     data: any;
+    bulkInsert:boolean;
   }
   
   export interface UpdateOptions {
     filter?: any;
     data: any;
+    bulkUpdate?:boolean
   }
   
   export interface DeleteOptions {

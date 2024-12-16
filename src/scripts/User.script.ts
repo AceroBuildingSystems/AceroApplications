@@ -2,14 +2,14 @@ import bcrypt from "bcryptjs";
 
 export const bulkUserInsertSanitization = (data:any,iEencryptPasswword:boolean)=>{
     const updatedUserData = data.map((user:any) => {
-        return insertOneUserSanitization(user,iEencryptPasswword)
+        return phaseUserSanitization(user,iEencryptPasswword)
     });
     // Log updated user data
     console.log(updatedUserData);
     return updatedUserData
 }
 
-export const insertOneUserSanitization = (user:any,iEncryptPassword:boolean)=>{
+export const phaseUserSanitization = (user:any,iEncryptPassword:boolean)=>{
     return {
         empId: user.userid, 
         firstName: user.firstname, 

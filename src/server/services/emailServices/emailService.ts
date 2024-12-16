@@ -34,10 +34,7 @@ export const sendEmail = async (
     templateData: any
 ): Promise<any> => {
     try {
-        // Read and render the EJS template
-        console.debug("here")
         const templatePath = path.join(process.cwd(), 'src/server/shared/emailTemplates/emailTemplate.ejs');
-        console.debug(templatePath)
         const template = fs.readFileSync(templatePath, 'utf-8');
         const htmlContent =  ejs.render(template, templateData);
 
@@ -51,10 +48,6 @@ export const sendEmail = async (
 
         // Send email
 
-        console.debug( {
-            user: process.env.EMAIL_USER, // Use environment variables for sensitive data
-            pass: process.env.EMAIL_PASS,
-        })
         const info = await transporter.sendMail(mailOptions);
         return info; // Return email info (e.g., message ID)
     } catch (error) {

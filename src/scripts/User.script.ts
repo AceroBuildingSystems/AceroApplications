@@ -16,12 +16,12 @@ export const phaseUserSanitization = (user:any,iEncryptPassword:boolean)=>{
         lastName: user.lastname,
         email: user.email,
         password: iEncryptPassword && user.password ? bcrypt.hashSync(user.password, 10) : (user.password || ""), // Encrypt if flag true and password exists
-        role: user.role, // Role
+        role1: user.role, // Role
         shortName: user.name || "", // Optional short name
         fullName: user.fullname, // Full name
-        designation: user.designation, // Designation
-        employeeType: user.employeeType, // Employee type
-        department: user.depid || "", // Department ID
+        designation1: user.designation, // Designation
+        employeeType1: user.employeeType, // Employee type
+        department1: user.depid || "", // Department ID
         location: user.location, // Location
         reportingTo: user.reportingtoid || "", // Reporting To ID
         isActive: user.Status === "Active", // Boolean conversion for isActive
@@ -33,7 +33,8 @@ export const phaseUserSanitization = (user:any,iEncryptPassword:boolean)=>{
         relievingDate: null, // Default to null (no value in old data)
         addedBy: user.reportingtoid,
         updatedBy: user.reportingtoid,
-        access: {}
+       
+        
     };
 }
 

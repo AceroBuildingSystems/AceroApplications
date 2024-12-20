@@ -3,6 +3,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { department } from "@/types/department.types";
 
 const DepartmentSchema: Schema<department> = new Schema({
+    depId: { type: String },
     name: { type: String },
     isActive: { type: Boolean },
     addedBy: { type: String },

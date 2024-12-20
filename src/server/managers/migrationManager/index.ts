@@ -1,6 +1,8 @@
-import { postDesignations, putUsers } from "@/server/services/migrationServices"
+import { postDesignations, putUsers, postRoles, postEmployeeType } from "@/server/services/migrationServices"
 
 export const migrationManager = {
     postDesignations,
-    putUsers
+    putUsers,
+    postRoles,
+    postEmployeeType
 }

@@ -3,6 +3,7 @@ import { catchAsync } from '@/server/shared/catchAsync';
 import { ERROR, MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import mongoose from 'mongoose';
 import { NextResponse } from 'next/server';
+import bcrypt from "bcryptjs";
 
 
 export const postDesignations = catchAsync(async (data) => {
@@ -36,6 +37,8 @@ export const putUsers = catchAsync(async (data) => {
   // Fetch designations from the DESIGNATION_MASTER collection
   const { status, data: designationDoc } = await crudManager.mongooose.find(MONGO_MODELS.DESIGNATION_MASTER, {});
 
+  console.log(status, designationDoc);
+  return;
   // If there was an error fetching the designations
   if (status !== SUCCESS) {
     return { status: ERROR, data: {} };
@@ -66,3 +69,73 @@ export const putUsers = catchAsync(async (data) => {
 
   return { status: SUCCESS, updateResult };
 });
+
+
+
+
+
+export const bulkDepartmentInsertSanitization = (data:any)=>{
+    const departmentData = data.map((department:any) => {
+        return phaseDepartmentSanitization(department)
+    });
+    // Log updated user data
+    console.log(departmentData);
+    return departmentData
+}
+
+export const phaseDepartmentSanitization = (department:any)=>{
+    return {
+        depId: department.depId,
+        name: department.departmentName, 
+        isActive: true,
+        createdBy: '113035',
+        updatedBy: '113035'
+    };
+}
+
+export const postRoles = catchAsync(async (data) => {
+  if (!data) {
+    return NextResponse.json({ type: ERROR, message: "data is required", data: null }, { status: 400 })
+  }
+
+
+  const roles = data.map((item: { role: any; }) => item.role);
+  const distinctRoles = [...new Set(roles)];
+
+  const roleDocuments = distinctRoles.map(role => ({
+    name: role,
+    isActive: true,
+    createdBy: '113035',
+    updatedBy: '113035'
+  }));
+  const result = await crudManager.mongooose.create(MONGO_MODELS.ROLE_MASTER, {
+    data: roleDocuments,
+    bulkInsert: true
+  });
+
+  return result;
+});
+
+export const postEmployeeType = catchAsync(async (data) => {
+  if (!data) {
+    return NextResponse.json({ type: ERROR, message: "data is required", data: null }, { status: 400 })
+  }
+
+
+  const employeeTypes = data.map((item: { employeeType: any; }) => item.employeeType);
+  const distinctTypes = [...new Set(employeeTypes)];
+
+  const typeDocuments = distinctTypes.map(employeeType => ({
+    name: employeeType,
+    isActive: true,
+    createdBy: '113035',
+    updatedBy: '113035'
+  }));
+  const result = await crudManager.mongooose.create(MONGO_MODELS.EMPLOYEE_TYPE_MASTER, {
+    data: typeDocuments,
+    bulkInsert: true
+  });
+
+  return result;
+});
+

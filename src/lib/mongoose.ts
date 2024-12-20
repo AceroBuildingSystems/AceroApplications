@@ -6,7 +6,8 @@ const MONGODB_URI = process.env.environment === 'production'
 
 // Define types for global mongoose cache
 declare global {
-  var mongoose: { 
+  var mongoose: {
+    Types: any; 
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
   }

@@ -79,3 +79,11 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.dot-background {
+  background-size: 20px   20px;
+  background-image: radial-gradient(circle, #c0c0c0 1px, transparent 1px);
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}

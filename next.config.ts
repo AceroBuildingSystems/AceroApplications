@@ -5,7 +5,8 @@ const nextConfig: NextConfig = {
   env: {
     API_BASE_URL: process.env.API_BASE_URL,
     ENVIRONMENT: process.env.ENVIRONMENT
-  }
+  },
+  reactStrictMode: false,
 };
 
 export default nextConfig;

@@ -12,6 +12,7 @@ export interface UserDocument {
     shortName: string,
     designation1: string,
     role1: string,
+    imageUrl: string,
     employeeType1: string,
     department1: string,
     designation: mongoose.ObjectId,

@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sidebar"
 import Image from "next/image"
 import useUserAuthorised from "@/hooks/useUserAuthorised"
+import { createSidebarMenuData } from "@/shared/functions"
 
 
 
@@ -158,7 +159,8 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {user} = useUserAuthorised()
-
+  const menuItems = createSidebarMenuData(user)
+  console.log("menuItems", menuItems)
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -179,12 +181,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={menuItems.navMain} label="Platform" />
+        {/* <NavProjects projects={data.projects} />
+        <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={menuItems.user} />
       </SidebarFooter>
     </Sidebar>
   )

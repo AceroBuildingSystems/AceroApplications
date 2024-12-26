@@ -61,6 +61,14 @@ export interface Condition {
     data: any;
     bulkUpdate?:boolean
   }
+
+  export interface UpdateInArrayOptions {
+    id: string;
+    arrayProperty: string;
+    arrayFilter: object;
+    data: object;
+    addIfNotFound?: boolean;
+  }
   
   export interface DeleteOptions {
     filter?: any;

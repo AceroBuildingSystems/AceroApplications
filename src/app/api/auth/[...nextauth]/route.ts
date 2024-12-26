@@ -34,7 +34,7 @@ export const authOptions: AuthOptions = {
       authorize: async (credentials) => {
         const { email, password } = credentials as { email: string; password: string };
         await dbConnect()
-        const user = await User.findOne({ email })
+        const user = await User.findOne({ email }).populate("access")
         const isPasswordValid = await bcrypt.compare(password, user?.password || "");
         if(!user || !isPasswordValid) return null
         return user as any
@@ -43,7 +43,6 @@ export const authOptions: AuthOptions = {
 
   ],
   callbacks: {
-
     async signIn({ user, account }) {
       await dbConnect();
       // For both Azure AD and Credentials

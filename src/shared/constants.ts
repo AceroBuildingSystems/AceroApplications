@@ -1,16 +1,23 @@
 //GENERAL
 export const SUCCESS = "Success"
 export const ERROR = "Error"
+export const SIGNUP = "signup"
 
+//ERROR MESSAGES
 export const USER_NOT_FOUND = "User not found"
 export const INVALID_CREDENTIALS = "Invalid credentials"
 export const USER_ALREADY_EXISTS = "User already exists"
 export const PLEASE_FILL_IN_ALL_FIELDS_CORRECTLY = "Please fill in all fields correctly"
 export const PASSWORD_MISMATCH = "Password mismatch"
 export const NO_USERS_FOUND = "No users found"
-export const SIGNUP = "signup"
 export const INVALID_ACTIONS = "Invalid action"
 export const USER_CREATED = "User created successfully"
+export const DB_REQUIRED = "Please Specify DB"
+export const INVALID_REQUEST = "Invalid request"
+export const ACCESS_ID_REQUIRED = "Access Id Required"
+export const INSUFFIENT_DATA = "Insufficient data"
+export const BODY_REQUIRED = "Body Required"
+export const SPECIFY_ACTION = "Please specify action"
 
 //INSERT SCRIPT
 export const BULK_INSERT = "bulkInsert"
@@ -32,3 +39,13 @@ export const MONGO_MODELS = {
     DESIGNATION_MASTER :"DESIGNATION_MASTER",
 }
 
+
+//MASTER DATA
+export const MASTER_DATA = {
+    GLOBAL_ADMIN:{
+        MANAGE_ACCESS:{
+            name:"manage access",
+            category:"Global Admin",
+        }
+    }
+}

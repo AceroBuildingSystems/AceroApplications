@@ -118,8 +118,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
     const result = await signIn(provider, {
       email: formData.email,
       password: formData.password,
-      callbackUrl: "/dashboard",
-      redirect: false
+      redirectTo: "/dashboard",
     });
 
     if (result?.error) {

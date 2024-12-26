@@ -158,9 +158,12 @@ const data = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {user} = useUserAuthorised()
-  const menuItems = createSidebarMenuData(user)
-  console.log("menuItems", menuItems)
+  const { user } = useUserAuthorised()
+  const menuItems = createSidebarMenuData(user) as {
+    user: { name: string; email: string; avatar: string }
+    navMain: typeof data.navMain
+  }
+
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>

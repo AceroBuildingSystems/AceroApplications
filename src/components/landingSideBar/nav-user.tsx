@@ -55,7 +55,9 @@ export function NavUser({
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.shortName} />
-                <AvatarFallback className="rounded-lg">{user.shortName.split(" ")[0][0] + user.shortName.split(" ")[1][0]}</AvatarFallback>
+                <AvatarFallback className="rounded-lg">
+                  {user.shortName.split(" ")[0][0] + (user.shortName.split(" ")[1]?.[0] || "")}
+                </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">{user?.shortName?.toProperCase()}</span>
@@ -74,7 +76,9 @@ export function NavUser({
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user?.shortName?.toProperCase()} />
-                  <AvatarFallback className="rounded-lg">{user.shortName.split(" ")[0][0] + user.shortName.split(" ")[1][0]}</AvatarFallback>
+                  <AvatarFallback className="rounded-lg">
+                  {user.shortName.split(" ")[0][0] + (user.shortName.split(" ")[1]?.[0] || "")}
+                </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">{user?.shortName?.toProperCase()}</span>

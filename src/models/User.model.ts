@@ -1,11 +1,12 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import { UserDocument } from "@/types";
+import { Query } from "mongoose";
 
 const UserSchema: Schema<UserDocument> = new Schema({
     empId: { type: String, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    email: { type: String, unique: true },
+    email: { type: String, unique: true,required: true },
     password: { type: String, },
     role1: { type: String },
     role: {
@@ -43,11 +44,22 @@ const UserSchema: Schema<UserDocument> = new Schema({
     mobile: { type: String },
     joiningDate: { type: Date },
     relievingDate: { type: Date },
-    access: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Access", // Reference to the Access model
-        
-    },
+    access: [{
+        accessId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Access",  
+        },
+        hasAccess: { type: Boolean, default: false },
+        permissions: {
+            view:   { type: Boolean },
+            create: { type: Boolean },
+            update: { type: Boolean },
+            delete: { type: Boolean },
+            import: { type: Boolean },
+            export: { type: Boolean },
+        },
+        _id: false
+    }],
     addedBy: { type: String },
     updatedBy: { type: String },
     organisation: {
@@ -64,6 +76,17 @@ UserSchema.pre('save', async function (next) {
     next()
 })
 
+UserSchema.pre<Query<any, UserDocument>>(/^find/, function (next) {
+    this.populate([
+      { path: "role" },
+      { path: "designation" },
+      { path: "employeeType" },
+      { path: "department" },
+      { path: "organisation" },
+      { path: "access.accessId" },
+    ]);
+    next();
+  });
 const User: Model<UserDocument> = mongoose.models.User || mongoose.model<UserDocument>("User", UserSchema)
 
 export default User

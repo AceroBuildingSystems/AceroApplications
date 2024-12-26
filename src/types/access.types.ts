@@ -6,6 +6,7 @@ export interface access {
     addedBy: mongoose.ObjectId,
     updatedBy: mongoose.ObjectId,
     isActive:boolean,
+    url:string,
     isMenuItem: boolean,
 }
   

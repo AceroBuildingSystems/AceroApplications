@@ -8,6 +8,11 @@ export const getMasterData = catchAsync(async (options) => {
   return result;
 });
 
+export const updateMasterData = catchAsync(async (options:any) => {
+  const result = await crudManager.mongooose.update(options.db, options);
+  return result;
+});
+
 export const createMasterData = catchAsync(async (options:any) => {
   console.log("options", options)
   const result = await crudManager.mongooose.create(options.db, options);

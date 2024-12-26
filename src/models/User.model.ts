@@ -9,6 +9,7 @@ const UserSchema: Schema<UserDocument> = new Schema({
     email: { type: String, unique: true,required: true },
     password: { type: String, },
     role1: { type: String },
+    imageUrl: { type: String ,default:""},
     role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Role", // Reference to the Role model

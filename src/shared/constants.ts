@@ -44,7 +44,7 @@ export const MONGO_MODELS = {
 export const MASTER_DATA = {
     GLOBAL_ADMIN:{
         MANAGE_ACCESS:{
-            name:"manage_access_ga",
+            name:"manage access",
             category:"Global Admin",
         }
     }

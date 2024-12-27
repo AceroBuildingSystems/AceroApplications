@@ -31,6 +31,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import Loader from "../ui/Loader";
+import { usePathname } from "next/navigation";
 
 export function NavUser({
   user,
@@ -41,8 +42,12 @@ export function NavUser({
     avatar: string
   }
 }) {
+
   const { isMobile } = useSidebar()
   const [customLoadingState, setCustomLoadingState] = useState(false);
+
+ 
+
   return (
     <Loader loading={customLoadingState}>
       <SidebarMenu>

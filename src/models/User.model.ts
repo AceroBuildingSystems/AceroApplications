@@ -52,12 +52,12 @@ const UserSchema: Schema<UserDocument> = new Schema({
         },
         hasAccess: { type: Boolean, default: false },
         permissions: {
-            view:   { type: Boolean },
-            create: { type: Boolean },
-            update: { type: Boolean },
-            delete: { type: Boolean },
-            import: { type: Boolean },
-            export: { type: Boolean },
+            view:   { type: Boolean,default:false },
+            create: { type: Boolean,default:false },
+            update: { type: Boolean,default:false },
+            delete: { type: Boolean,default:false },
+            import: { type: Boolean,default:false },
+            export: { type: Boolean,default:false },
         },
         _id: false
     }],

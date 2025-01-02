@@ -6,11 +6,7 @@ export const usersApi = baseApi.injectEndpoints({
     getUsers: builder.query<UserDocument[], void>({
       query: () => 'user',
       // Transform response if needed
-      transformResponse: (response: UserDocument[]) => 
-        response.map(user => ({
-          ...user,
-          fullName: `${user.firstName} ${user.lastName}`,
-        })),
+      transformResponse: (response: UserDocument[]) => response,
       providesTags: ['User'],
     }),
 

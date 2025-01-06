@@ -10,13 +10,38 @@ import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { userTransformData } from '@/lib/utils';
+import DynamicDialog from '@/components/ModalComponent.tsx/ModelComponent';
+import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 
-
+ 
 const page = () => {
-  const { data, isLoading, isError, error, refetch } = useGetUsersQuery();
-  const userData = data?.data || [];
+  const { data:userData = [], isLoading:userLoading } = useGetUsersQuery();
+  const { data:departmentData = [], isLoading:departmentLoading} = useGetMasterQuery("DEPARTMENT_MASTER" as any);
+  const { data:designationData = [], isLoading:designationLoading} = useGetMasterQuery("DESIGNATION_MASTER" as any);
+  const { data:roleData = [], isLoading:roleLoading} = useGetMasterQuery("ROLE_MASTER" as any);
+  const { data:employeeTypeData = [], isLoading:employeeTypeLoading} = useGetMasterQuery("EMPLOYEE_TYPE_MASTER" as any);
   
+
+  const statusData = [{ _id: true, name: 'Yes' }, { _id: false, name: 'No' }];
+
+  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading;
+
+  const transformedData = userTransformData(userData);
   
+  const distinctRoles = userData.reduce((acc: any[], user: { role: { name: any; }; }) => {
+    // Check if the role is already in the accumulator
+    if (!acc.some(role => role?.name === user?.role?.name)) {
+      acc.push(user.role); // Add the role if it's not already added
+    }
+    return acc;
+  }, []);
+
+  const roleNames = distinctRoles
+  .filter(role => role !== undefined)  // Remove undefined entries
+  .map(role => role.name);             // Extract only the 'name' property
+
+
   interface RowData {
     id: string;
     name: string;
@@ -24,6 +49,58 @@ const page = () => {
     role: string;
   }
 
+  const fields: Array<{label: string; name: string; type: string; data?: any }> = [
+    {label:'Employee ID', name: "empId", type: "text",  },
+    {label:'First Name', name: "firstName", type: "text" },
+    {label:'Last Name', name: "lastName", type: "text" },
+    {label:'Full Name', name: "fullName", type: "text" },
+    {label:'Short Name', name: "shortName", type: "text" },
+    {label:'Designation', name: "designation", type: "select", data: designationData },
+    {label:'Department', name: "department", type: "select", data: departmentData },
+    {label:'Email', name: "email", type: "text" },
+    {label:'Reporting To', name: "reportingTo", type: "select", data: userData },
+    {label:'Role', name: "role", type: "select", data: roleData  },
+    {label:'Location', name: "location1", type: "text" },
+    {label:'Extension', name: "extension", type: "text" },
+    {label:'Mobile', name: "mobile", type: "text" },
+    {label:'Active', name: "isActive", type: "select", data: statusData },
+    {label:'Employee Type', name: "employeeType", type: "select", data: employeeTypeData },
+    {label:'Joining Date', name: "joiningDate", type: "date" },
+    {label:'Leaving Date', name: "relievingDate", type: "date" },
+  ]
+
+  const [isDialogOpen, setDialogOpen] = useState(false);
+  const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
+
+  // Open the dialog and set selected master type
+  const openDialog = (masterType) => {
+    setSelectedMaster(masterType);
+    setDialogOpen(true);
+  };
+
+  // Close dialog
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setSelectedMaster("");
+  };
+
+  // Save function to send data to an API or database
+  const saveData = async (masterType, formData) => {
+    // Call your API to save data to the database based on the master type
+    const response = await fetch(`/api/${masterType}`, {
+      method: "POST",
+      body: JSON.stringify(formData),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (response.ok) {
+      console.log(`${masterType} saved successfully!`);
+    } else {
+      console.error("Error saving data");
+    }
+  };
 
 
   const editUser = (rowData: RowData) => {
@@ -31,8 +108,8 @@ const page = () => {
     // Your add logic for user page
   };
   const handleAdd = () => {
-    console.log('UserPage Add button clicked');
-    // Your add logic for user page
+    openDialog("employee");
+   
   };
 
   const handleImport = () => {
@@ -123,146 +200,22 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
     },
-    {
-      accessorKey: "email",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Email</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("email")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
-    {
-      accessorKey: "lastName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Last Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
-    },
+  
+    
   ];
 
   const userConfig = {
     searchFields: [
-      { key: "name", label: 'Name', type: "text" as const, placeholder: 'Search by name' },
-      { key: "email", label: 'Email', type: "email" as const, placeholder: 'Search by email' },
+      { key: "name", label: 'fullName', type: "text" as const, placeholder: 'Search by name' },
+      { key: "email", label: 'email', type: "email" as const, placeholder: 'Search by email' },
     ],
     filterFields: [
-      { key: "role", label: 'Role', type: "select" as const, options: ['Admin', 'User', 'Manager'] },
-      { key: "location", label: 'Location', type: "select" as const, options: ['NY', 'LA', 'SF'] },
+      { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
+      
     ],
     dataTable: {
       columns: userColumns,
-      userData: userData,
+      userData: transformedData,
     },
     buttons: [
 
@@ -276,8 +229,15 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={userConfig} loadingState={isLoading} />
-
+      <MasterComponent config={userConfig} loadingState={loading} />
+      <DynamicDialog
+        isOpen={isDialogOpen}
+        closeDialog={closeDialog}
+        selectedMaster={selectedMaster}
+        onSave={saveData}
+        fields={fields}
+      
+      />
     </>
 
   )

@@ -2,9 +2,9 @@ import { crudManager } from "@/server/managers/crudManager";
 import { catchAsync } from "@/server/shared/catchAsync";
 import { INSUFFIENT_DATA, MONGO_MODELS } from "@/shared/constants";
 
-export const getUsers = catchAsync(async () => {
+export const getUsers = catchAsync(async ({ filter }: { filter: any }) => {
   const result = await crudManager.mongooose.find(MONGO_MODELS.USER_MASTER, {
-    filter: {},
+    filter,
     sort: { empId: "desc" },
   });
 
@@ -40,9 +40,7 @@ export const updateAccess = catchAsync(
     };
   }) => {
     if (
-      !options.data.id &&
-      !options.data.arrayFilter &&
-      !options.data.arrayProperty
+      !options.data.id 
     ) {
       return { status:500, message:INSUFFIENT_DATA };
     }

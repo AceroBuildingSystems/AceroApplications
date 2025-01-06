@@ -8,12 +8,14 @@ import { emailData } from "./emailData";
 import { role } from "./role.types";
 import { employeeType } from "./employeeType.types";
 
-export type { UserDocument }
-export type { access }
-export type { address }
-export type { department }
-export type { organisation }
-export type { designation }
-export type { emailData }
-export type { role }
-export type { employeeType }
+export type {
+  UserDocument,
+  access,
+  address,
+  department,
+  organisation,
+  designation,
+  emailData,
+  role,
+  employeeType,
+};

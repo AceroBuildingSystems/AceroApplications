@@ -1,7 +1,7 @@
 //@ts-nocheck
 import { MONGO_MODELS } from '@/shared/constants';
 import { MongooseAdapter } from './Mongoose.adapter';
-import { Access,Department,Designation,EmployeeType,Organisation,Role,User } from '@/models';
+import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Category } from '@/models';
 
 
 // Singleton instance tracker

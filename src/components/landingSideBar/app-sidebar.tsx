@@ -156,12 +156,7 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUserAuthorised();
-  const menuItems = createSidebarMenuData(user) || {
-    user: { name: "", email: "", avatar: "" },
-    navMain: [],
-  };
-
+  const { user,menuItems } = useUserAuthorised();
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -190,12 +185,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={menuItems.navMain} label="Platform" />
+        <NavMain items={menuItems} label="Platform" />
         {/* <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={menuItems.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   );

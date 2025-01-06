@@ -6,6 +6,7 @@ import Organisation from "./Organisation.mode"
 import Role from "./Role.model"
 import User from "./User.model"
 
+
 export { Access,Department,Designation,EmployeeType,Organisation,Role,User }
 
 

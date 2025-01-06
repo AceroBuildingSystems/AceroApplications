@@ -86,6 +86,7 @@ UserSchema.pre<Query<any, UserDocument>>(/^find/, function (next) {
       { path: "organisation" },
       { path: "access.accessId" },
     ]);
+
     next();
   });
 const User: Model<UserDocument> = mongoose.models.User || mongoose.model<UserDocument>("User", UserSchema)

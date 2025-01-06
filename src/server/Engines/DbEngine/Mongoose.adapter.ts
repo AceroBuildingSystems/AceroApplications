@@ -245,17 +245,13 @@ export class MongooseAdapter implements DatabaseAdapter {
     return { status: SUCCESS, data: doc };
   }
 
-  /**
-   * Update data in an array property of a document
-   *
-   * Example usage:
-   * const result = await adapter.updateInArray('User', {
-   *   id: 'user123',
-   *   arrayProperty: 'addresses',
-   *   arrayFilter: { city: 'New York' },
-   *   data: { city: 'Los Angeles' }
-   * });
-   */
+// {
+//   id: 'user123',
+//   arrayProperty: 'access',
+//   arrayFilter: { accessId: '64ef3f3e...' },
+//   data: { hasAccess: true, permissions: { view: true, create: true } },
+//   addIfNotFound: true,
+// });
   async updateInArray(
     modelName: string,
     options: UpdateInArrayOptions
@@ -264,49 +260,60 @@ export class MongooseAdapter implements DatabaseAdapter {
     const model = this.models[modelName];
     if (!model)
       return { status: ERROR, message: `Model ${modelName} not found` };
-
-    const { id, arrayProperty, arrayFilter, data } = options;
-
-    // Find the document by ID
+  
+    const { id, arrayProperty, arrayFilter, data, addIfNotFound = true } = options;
+  
+    // Find the document by ID                                                                                                                                                           
     const document = await model.findById(id);
     if (!document) return { status: ERROR, message: "Document not found" };
-
+  
     // Check if the array property exists
-    if (!Array.isArray((document as any)[arrayProperty])) {
+    const array = (document as any)[arrayProperty];
+    if (!Array.isArray(array)) {
       return {
         status: ERROR,
         message: `${arrayProperty} is not an array or does not exist`,
       };
     }
 
-    // Find the array item matching the filter
-    const array = (document as any)[arrayProperty] || [];
-    const itemIndex = array.findIndex((item: any) => {
-      return Object.entries(arrayFilter).every(([key, value]) => {
-      const itemValue = item[key];
-      // Convert ObjectId to string if necessary
-      if (itemValue && itemValue.toString) {
-        return itemValue.toString() === value.toString();
+    if(arrayFilter){
+      // Helper function to access nested keys
+      const getNestedValue = (obj: any, path: string) => {
+        return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
+      };
+    
+      // Find the index of the array item matching the filter
+      const itemIndex = array.findIndex((item: any) =>
+        Object.entries(arrayFilter).every(([key, value]) => {
+          const itemValue = getNestedValue(item, key);
+          if (itemValue && itemValue.toString) {
+            return itemValue.toString() === value.toString();
+          }
+          return itemValue === value;
+        })
+      );
+    
+      // Add or update logic
+      if (itemIndex === -1) {
+        if (!addIfNotFound) {
+          return { status: ERROR, message: "Item not found in the array" };
+        }
+        array.push({ ...arrayFilter, ...data });
+      } else {
+        // Update the array item
+        array[itemIndex] = {
+          ...array[itemIndex],
+          ...data,
+        };
       }
-      return itemValue === value;
-      });
-    });
-    // if (itemIndex === -1 && options.addIfNotFound) {
-    //   return {status: ERROR, message: "Item not found"};
-    // }
-
-    if (itemIndex === -1) {
-      array.push({...arrayFilter, ...data});
-    } else {
-      // Update the array item
-      array[itemIndex] = { ...arrayFilter,...array[itemIndex], ...data };
+    }else{
+      array.push(data);
     }
-
-    // Update the array item
-    (document as any)[arrayProperty] = array;
+  
     // Save the updated document
+    (document as any)[arrayProperty] = array;
     await document.save();
-
+  
     return { status: SUCCESS, data: document };
   }
 
@@ -393,6 +400,5 @@ export class MongooseAdapter implements DatabaseAdapter {
 
     return results;
   }
-
 
 }

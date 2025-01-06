@@ -86,7 +86,7 @@ export function NavMain({
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map(({menuItem:item,permissions}, index) => (
+        {items?.map(({menuItem:item,permissions}, index) => (
           permissions?.view &&
           <CreateSideBarItems key={index} item={item} />
         ))}

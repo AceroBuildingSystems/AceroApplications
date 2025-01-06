@@ -14,6 +14,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { useEffect } from 'react';
 import { ObjectId } from 'mongoose';
 
+
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
     key: string
@@ -34,7 +35,7 @@ interface ButtonConfig {
 // Interface for Data Table configuration
 interface DataTableConfig {
     columns: string[]; // Column names for the table
-    userData: Record<string, string | number | object | Date |ObjectId>[]; // Array of rows where each row is an object with column data
+    userData: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 
 // Main interface for the page configuration
@@ -76,7 +77,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
     };
 
     useEffect(() => {
-        console.log(config.dataTable.userData);
+
         filterData(searchValues, filterValues); // Trigger filtering after search/filter change
     }, [searchValues, filterValues]);
 
@@ -85,22 +86,24 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
         const filtered = config.dataTable.userData.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
-                
+
                 const searchQuery = searchValues[key]?.toLowerCase() || ''; // Get search query, default to empty string
-                const value = item[key?.toLowerCase()]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
-                
+
+                const value = item[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
+
                 return value.includes(searchQuery);
             });
 
             // Check if item matches filter criteria
             const matchesFilter = Object.keys(filterValues).every((key) => {
-                
+
                 const filterValue = filterValues[key];
-                
+
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
                
-                return item[key?.toLowerCase()] === filterValue;
+                
+                return item[key] === filterValue;
             });
 
             return matchesSearch && matchesFilter;
@@ -108,7 +111,6 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
         setFilteredData(filtered); // Update filtered data state
     };
-
 
 
     return (
@@ -175,7 +177,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                     </div>
 
                     <div className='h-[90%]' >
-                        <DataTable data={config.dataTable.userData || []} columns={config.dataTable.columns || []} />
+                        <DataTable data={filteredData.length > 0 ? filteredData : config.dataTable.userData} columns={config.dataTable.columns || []} />
                     </div>
                 </div>
 

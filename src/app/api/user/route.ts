@@ -3,9 +3,14 @@ import { ERROR, INVALID_REQUEST, SUCCESS, ACCESS_ID_REQUIRED, INSUFFIENT_DATA, B
 import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const filter: any = {};
+export async function GET(request:NextRequest) {
+  const response:any = await userManager.getUsers()
+  
+  if(response.status === SUCCESS) {
+    return NextResponse.json(response.data)
+  }
+  return NextResponse.json(response, { status: 500 })
+}
 
   searchParams.forEach((value, key) => {
     filter[key] = value;

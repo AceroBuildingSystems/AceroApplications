@@ -8,7 +8,7 @@ import { NextRequest } from 'next/server'
 export async function GET(request:NextRequest,response:NextResponse) {
   const { searchParams } = new URL(request.url)
   const db = searchParams.get('db')
-  console.log("db", db)
+  // console.log("db", db)
   if(!db) return NextResponse.json({status:ERROR, message:DB_REQUIRED}, { status: 400 })
 
   const result:any = await masterdataManager.getMasterData({ db })

@@ -5,12 +5,10 @@ import { getToken } from 'next-auth/jwt'
 
 export async function GET(request:NextRequest) {
   const response:any = await userManager.getUsers()
-  
+  const filter = {}
   if(response.status === SUCCESS) {
     return NextResponse.json(response.data)
   }
-  return NextResponse.json(response, { status: 500 })
-}
 
   searchParams.forEach((value, key) => {
     filter[key] = value;
@@ -18,13 +16,13 @@ export async function GET(request:NextRequest) {
 
   console.log('filter', filter);
 
-  const response: any = await userManager.getUsers({ filter });
+  const result: any = await userManager.getUsers({ filter });
 
-  if (response.status === SUCCESS) {
-    return NextResponse.json(response);
+  if (result.status === SUCCESS) {
+    return NextResponse.json(result.data);
   }
 
-  return NextResponse.json(response, { status: 500 });
+  return NextResponse.json(result, { status: 500 });
 }
 
 export async function POST(request:NextRequest) {

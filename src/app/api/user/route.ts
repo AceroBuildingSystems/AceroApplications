@@ -10,8 +10,10 @@ export async function GET(request:NextRequest) {
     return NextResponse.json(response.data)
   }
 
-  searchParams.forEach((value, key) => {
-    filter[key] = value;
+  
+  const searchParams = new URL(request.url).searchParams;
+  searchParams.forEach((value: string, key: string) => {
+    (filter as any)[key] = value;
   });
 
   console.log('filter', filter);

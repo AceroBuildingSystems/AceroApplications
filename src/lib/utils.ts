@@ -18,3 +18,16 @@ export const userTransformData = (data) => {
   
   return transformedData
 };
+
+export const organisationTransformData = (data) => {
+
+ 
+  const transformedData = data.map((organisation)=>{
+    return {
+      _id: organisation._id,
+      name: organisation.address?.location || '',  // Add roleName field with the name from the role object
+    };
+  })
+  
+  return transformedData
+};

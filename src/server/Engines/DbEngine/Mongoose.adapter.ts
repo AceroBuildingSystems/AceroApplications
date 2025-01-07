@@ -10,6 +10,7 @@ import {
 } from "./types";
 import { QueryResult } from "./types";
 import { Model, Document } from "mongoose";
+import bcrypt from "bcrypt";
 import { dbConnect } from "@/lib/mongoose";
 
 interface MultiQuery {
@@ -191,6 +192,11 @@ export class MongooseAdapter implements DatabaseAdapter {
     if (options.bulkInsert) {
       doc = await model.insertMany(options.data);
     } else {
+      if (options.data.password) {
+        const saltRounds = 10;
+        options.data.password = await bcrypt.hash(options.data.password, saltRounds);
+      }
+     
       doc = await model.create(options.data);
     }
 

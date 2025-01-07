@@ -16,7 +16,6 @@ export async function GET(request:NextRequest) {
     (filter as any)[key] = value;
   });
 
-  console.log('filter', filter);
 
   const result: any = await userManager.getUsers({ filter });
 
@@ -30,13 +29,14 @@ export async function GET(request:NextRequest) {
 export async function POST(request:NextRequest) {
   const body = await request.json()
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET})
-  console.log('token', token)
+  
   if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED}, { status: 400 })
 
   let response:any = {};
   switch(body.action){
     case 'create':
       response = await userManager.createUser(body)
+    
       break;
     case 'update':
       response = await userManager.updateUser(body)

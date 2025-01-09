@@ -66,6 +66,7 @@ export function ComboboxDemo({ field, formData, handleChange }: any) {
 
                             {field?.data?.map((data) => (
                                 <CommandItem
+                                className="cursor-pointer"
                                     key={data._id}
                                     value={data._id}
                                     onSelect={(value) => {

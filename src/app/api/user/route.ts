@@ -4,13 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getToken } from 'next-auth/jwt'
 
 export async function GET(request:NextRequest) {
-  const response:any = await userManager.getUsers()
-  const filter = {}
-  if(response.status === SUCCESS) {
-    return NextResponse.json(response.data)
-  }
-
-  
+  const filter= {}
   const searchParams = new URL(request.url).searchParams;
   searchParams.forEach((value: string, key: string) => {
     (filter as any)[key] = value;

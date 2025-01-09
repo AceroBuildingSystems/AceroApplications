@@ -5,7 +5,7 @@ import DashboardLoader from '../ui/DashboardLoader';
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from '../ui/button';
-import { Plus, Import, Download, Upload } from 'lucide-react';
+import { Plus, Import, Download, Upload, ChevronsUpDown, Check } from 'lucide-react';
 import { use } from 'chai';
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
@@ -13,6 +13,9 @@ import { SelectGroup, SelectItem, SelectLabel } from '@radix-ui/react-select';
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { useEffect } from 'react';
 import { ObjectId } from 'mongoose';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
+import { cn } from '@/lib/utils';
 
 
 // Interface for individual Input and Select field configurations
@@ -101,8 +104,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
-               
-                
+
+
                 return item[key] === filterValue;
             });
 
@@ -112,6 +115,11 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
         setFilteredData(filtered); // Update filtered data state
     };
 
+   
+
+
+    const [open, setOpen] = React.useState(false)
+    
 
     return (
         <>
@@ -139,9 +147,68 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                             <div className='flex items-center gap-1'>
                                 {config.filterFields?.map((field, index) => (
                                     <div key={index}>
+                                        <Popover open={open} onOpenChange={setOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={open ? true : false}
+                                                    className="w-[200px] justify-between"
+                                                >
+                                                    {filterValues[field.label] || 'Select ' + field.label}
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[200px] p-0">
+                                                <Command>
+                                                    <CommandInput placeholder="Search role" />
 
+                                                    <CommandList>
+                                                        <CommandEmpty>No role found.</CommandEmpty>
+                                                        <CommandGroup>
+                                                            {/* Add "All" option */}
+                                                            <CommandItem
+                                                                key="all"
+                                                                value="All"
+                                                                onSelect={() => {
+                                                                    handleFilterChange(null, field.label); // Set the value to null for "All"
+                                                                    setOpen(false);
+                                                                }}
+                                                            >
+                                                                <Check
+                                                                    className={cn(
+                                                                        "mr-2 h-4 w-4",
+                                                                        filterValues[field.label] === null ? "opacity-100" : "opacity-0"
+                                                                    )}
+                                                                />
+                                                                All
+                                                            </CommandItem>
+
+                                                            {field?.options?.map((option, i) => (
+                                                                <CommandItem
+                                                                    key={i}
+                                                                    value={option}
+                                                                    onSelect={(value) => {
+                                                                        handleFilterChange(value, field.label);
+                                                                        setOpen(false)
+                                                                    }}
+                                                                >
+                                                                    <Check
+                                                                        className={cn(
+                                                                            "mr-2 h-4 w-4",
+                                                                            filterValues[field.label] === option ? "opacity-100" : "opacity-0"
+                                                                        )}
+                                                                    />
+                                                                    {option}
+                                                                </CommandItem>
+                                                            ))}
+                                                        </CommandGroup>
+                                                    </CommandList>
+                                                </Command>
+                                            </PopoverContent>
+                                        </Popover>
                                         {/* Using ShadCN Select component */}
-                                        <Select
+                                        {/* <Select
                                             value={filterValues[field.label] || null} // Set default value to null or a valid value
                                             onValueChange={(value) => handleFilterChange(value, field.label)} // Directly pass value
                                         >
@@ -149,14 +216,14 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                 {filterValues[field.label] || 'Select ' + field.label}
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value={null}>All</SelectItem> {/* 'All' option with null value */}
+                                                <SelectItem value={null}>All</SelectItem> 
                                                 {field?.options?.map((option, i) => (
                                                     <SelectItem key={i} value={option}>
                                                         {option}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
-                                        </Select>
+                                        </Select> */}
                                     </div>
                                 ))}
                             </div>

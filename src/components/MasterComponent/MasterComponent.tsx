@@ -167,7 +167,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                         <div className='flex justify-end gap-1'>
 
                             {config.buttons?.map((button, index) => (
-                                <Button effect="expandIcon" icon={button.icon} iconPlacement="right" key={index} onClick={button.action} className={`w-28 ${button.className}`}>
+                                <Button effect="expandIcon" icon={button.icon} iconPlacement="right" key={index} onClick={button.action} className={`w-28 font-semibold tracking-wide ${button.className}`}>
                                     {button.label}
                                 </Button>
                             ))}

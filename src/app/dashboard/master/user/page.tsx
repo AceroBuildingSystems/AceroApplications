@@ -244,9 +244,9 @@ const userConfig = {
   },
   buttons: [
 
-    { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-    { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
-    { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+    { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-300 text-blue-800 hover:bg-blue-400 hover:text-blue-900 duration-300 ' },
+    { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-400 text-green-800 hover:bg-green-500 hover:text-green-900 duration-300' },
+    { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-neutral-900 hover:bg-neutral-700 text-neutral-200 duration-300' },
   ]
 };
 

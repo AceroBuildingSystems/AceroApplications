@@ -138,6 +138,7 @@ console.log(formData);
                       <PopoverContent className="w-full p-0" align="center">
                         <Calendar
                           mode="single"
+                          className="pointer-events-auto"
                           selected={formData[field.name] ? new Date(formData[field.name]) : undefined}
                           onSelect={(selectedDate) => {
                             console.log("Selected Date:", selectedDate); // Debug: Check if this logs the selected date

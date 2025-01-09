@@ -11,6 +11,7 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "../ui/date-picker";
 
 
 const DynamicDialog = ({ isOpen, closeDialog, selectedMaster, onSave, fields, initialData }) => {
@@ -120,41 +121,15 @@ console.log(formData);
                     </Select>
 
                   ) : field.type === 'date' ? (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "justify-start text-left font-normal",
-                            !formData[field.name] && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2" />
-                          {formData[field.name]
-                            ? format(new Date(formData[field.name]), "PPP")
-                            : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0" align="center">
-                        <Calendar
-                          mode="single"
-                          className="pointer-events-auto"
-                          selected={formData[field.name] ? new Date(formData[field.name]) : undefined}
-                          onSelect={(selectedDate) => {
-                            console.log("Selected Date:", selectedDate); // Debug: Check if this logs the selected date
-                            if (selectedDate) {
-                              handleChange(
-                                { target: { value: selectedDate.toISOString() } }, // Pass the date in ISO format
-                                field.name,
-                                field?.format
-                              );
-                            }
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-
+                    <DatePicker handleChange={(selectedDate)=>{
+                      handleChange(
+                        { target: { value: selectedDate.toISOString() } }, // Pass the date in ISO format
+                        field.name,
+                        field?.format
+                      );
+                    }}
+                    />
+                 
                   ) : (
                     <Input
                       type={field.type}

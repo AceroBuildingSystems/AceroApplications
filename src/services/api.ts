@@ -4,7 +4,7 @@ import { API_BASE_URL, ENVIRONMENT, API_PROD_BASE_URL } from '@/lib/constants'
 // Create a custom base query with retry logic
 const baseQueryWithRetry = retry(
   fetchBaseQuery({
-    baseUrl: ENVIRONMENT === 'development' ? API_BASE_URL : API_PROD_BASE_URL,
+    baseUrl : ENVIRONMENT === 'development' ? API_BASE_URL : API_PROD_BASE_URL ,
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json')
       return headers

@@ -23,7 +23,7 @@ export default function Layout({children}: {children: React.ReactNode}) {
   const [customLoadingState, setCustomLoadingState] = useState(false);
 
   return (
-    <AuthComponent loadingState={customLoadingState}>
+    <AuthComponent loadingState={customLoadingState}  >
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>

@@ -6,7 +6,6 @@ export const usersApi = baseApi.injectEndpoints({
       query: (db:any) => `master?db=${db}`,
       // Transform response if needed
       transformResponse: (response: any[]) => response,
-      providesTags: ['User'],
     }),
     
   }),

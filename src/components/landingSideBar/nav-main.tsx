@@ -74,7 +74,6 @@ export function NavMain({
   items: any[],
   label:string
 }) {
-  console.log(items)
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>

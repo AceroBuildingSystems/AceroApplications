@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export const userTransformData = (data) => {
 
  
-  const transformedData = data.map((user)=>{
+  const transformedData = data?.map((user)=>{
     return {
       ...user,
       roleName: user.role?.name || '',  // Add roleName field with the name from the role object
@@ -22,7 +22,7 @@ export const userTransformData = (data) => {
 export const organisationTransformData = (data) => {
 
  
-  const transformedData = data.map((organisation)=>{
+  const transformedData = data?.map((organisation)=>{
     return {
       _id: organisation._id,
       name: organisation.address?.location || '',  // Add roleName field with the name from the role object

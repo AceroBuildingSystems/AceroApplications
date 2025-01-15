@@ -11,20 +11,23 @@ export async function GET(request:NextRequest) {
   });
 
 
-  const result: any = await userManager.getUsers({ filter });
+  const response: any = await userManager.getUsers({ filter });
 
-  if (result.status === SUCCESS) {
-    return NextResponse.json(result.data);
+  if (response.status === SUCCESS) {
+    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
   }
 
-  return NextResponse.json(result, { status: 500 });
+  return NextResponse.json({status:ERROR, message:response.message, data:{}}, { status: 500 })
 }
+
+//NextResponse.json({status:ERROR, message:ACCESS_ID_REQUIRED, data:{}}, { status: 400 })
+//NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
 
 export async function POST(request:NextRequest) {
   const body = await request.json()
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET})
   
-  if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED}, { status: 400 })
+  if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED,data:{}}, { status: 400 })
 
   let response:any = {};
   switch(body.action){
@@ -37,17 +40,18 @@ export async function POST(request:NextRequest) {
       break;
     case 'updateAccess':
       if(!body.data.id) {
-        return NextResponse.json({status:ERROR, message:ACCESS_ID_REQUIRED}, { status: 400 })
+        return NextResponse.json({status:ERROR, message:ACCESS_ID_REQUIRED, data:{}}, { status: 400 })
       }
       response = await userManager.updateAccess(body)
       break;
     default:
-      return NextResponse.json({status:ERROR, message:SPECIFY_ACTION}, { status: 400 })
+      return NextResponse.json({status:ERROR, message:SPECIFY_ACTION, data:{}}, { status: 400 })
   }
   
   if(response.status === SUCCESS) {
-    return NextResponse.json(response)
+    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
   }
-  return NextResponse.json(response.message, { status: 500 })
+  return NextResponse.json({status:ERROR, message:response.message, data:{}}, { status: 500 })
+
 }
 

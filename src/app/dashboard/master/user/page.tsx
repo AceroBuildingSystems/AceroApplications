@@ -20,6 +20,7 @@ import { RowExpanding } from '@tanstack/react-table';
 
 const page = () => {
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
+  console.log({userData})
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -37,11 +38,11 @@ const page = () => {
 
   const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading;
 
-  const transformedData = userTransformData(userData);
+  const transformedData = userTransformData(userData?.data);
 
-  const orgTransformedData = organisationTransformData(organisationData);
+  const orgTransformedData = organisationTransformData(organisationData?.data);
 
-  const distinctRoles = userData.reduce((acc: any[], user: { role: { name: any; }; }) => {
+  const distinctRoles = userData?.data?.reduce((acc: any[], user: { role: { name: any; }; }) => {
     // Check if the role is already in the accumulator
     if (!acc.some(role => role?.name === user?.role?.name)) {
       acc.push(user.role); // Add the role if it's not already added
@@ -49,7 +50,7 @@ const page = () => {
     return acc;
   }, []);
 
-  const roleNames = distinctRoles
+  const roleNames = distinctRoles?
     .filter(role => role !== undefined)  // Remove undefined entries
     .map(role => role.name);             // Extract only the 'name' property
 
@@ -68,16 +69,16 @@ const page = () => {
     { label: 'Last Name', name: "lastName", type: "text", },
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true },
     { label: 'Short Name', name: "shortName", type: "text" },
-    { label: 'Designation', name: "designation", type: "select", data: designationData, format: 'ObjectId' },
-    { label: 'Department', name: "department", type: "select", data: departmentData, format: 'ObjectId' },
+    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId' },
+    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId' },
     { label: 'Email', name: "email", type: "text" },
-    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData },
+    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data },
     { label: 'Role', name: "role", type: "select", data: roleData, format: 'ObjectId' },
     { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId' },
     { label: 'Extension', name: "extension", type: "text" },
     { label: 'Mobile', name: "mobile", type: "text" },
     { label: 'Status', name: "isActive", type: "select", data: statusData },
-    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData, format: 'ObjectId' },
+    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId' },
     { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date' },
   ]

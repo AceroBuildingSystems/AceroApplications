@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 
 
-export async function GET(request:NextRequest,response:NextResponse) {
+export async function GET(request:NextRequest) {
   const searchParams = new URL(request.url).searchParams;
     const operations: any = {};
 
@@ -13,7 +13,7 @@ export async function GET(request:NextRequest,response:NextResponse) {
     const db = searchParams.get('db');
     if (!db) {
         return NextResponse.json(
-            { status: 'ERROR', message: 'DB_REQUIRED' },
+            { status: 'ERROR', message: 'DB_REQUIRED', data:{} },
             { status: 400 }
         );
     }
@@ -25,7 +25,7 @@ export async function GET(request:NextRequest,response:NextResponse) {
             operations.filter = JSON.parse(filterParam);
         } catch (error) {
             return NextResponse.json(
-                { status: 'ERROR', message: 'INVALID_FILTER_FORMAT' },
+                { status: 'ERROR', message: 'INVALID_FILTER_FORMAT', data:{} },
                 { status: 400 }
             );
         }
@@ -40,7 +40,7 @@ export async function GET(request:NextRequest,response:NextResponse) {
             operations.sort = JSON.parse(sortParam);
         } catch (error) {
             return NextResponse.json(
-                { status: 'ERROR', message: 'INVALID_SORT_FORMAT' },
+                { status: 'ERROR', message: 'INVALID_SORT_FORMAT', data:{} },
                 { status: 400 }
             );
         }
@@ -54,43 +54,48 @@ export async function GET(request:NextRequest,response:NextResponse) {
     operations.pagination = { page, limit };
 
 
-  const result:any = await masterdataManager.getMasterData({ db,operations })
+  const response:any = await masterdataManager.getMasterData({ db,operations })
   
-  if(result.status === SUCCESS) {
-    return NextResponse.json(result.data)
+  if(response.status === SUCCESS) {
+    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
   }
-  return NextResponse.json(result.message, { status: 500 })
+  return  NextResponse.json(
+    { status: 'ERROR', message: response.message, data:{} },
+    { status: 500 }
+);
 }
 
-export async function POST(request:NextRequest,response:NextResponse) {
+export async function POST(request:NextRequest) {
   const body = await request.json()
 
-  if(!body) return NextResponse.json({status:ERROR, message:INVALID_REQUEST}, { status: 400 })
+  if(!body) return NextResponse.json({status:ERROR, message:INVALID_REQUEST, data:{}}, { status: 400 })
 
   const {db,action} = body
-  if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA}, { status: 400 })
+  if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
 
     
   body.data.addedBy = createMongooseObjectId(body.addedBy)
   body.data.updatedBy = createMongooseObjectId(body.updatedBy)
 
-  let result:any = {}
+  let response:any = {}
   
   switch(action){
     case "create":
-      result = await masterdataManager.createMasterData(body)
+      response = await masterdataManager.createMasterData(body)
       break;
     case "update":
-      result = await masterdataManager.updateMasterData(body)
+      response = await masterdataManager.updateMasterData(body)
       break;
     default:
-      result = {status:ERROR, message:INVALID_REQUEST}
+      response = {status:ERROR, message:INVALID_REQUEST}
   }
 
   
-  if(result.status === SUCCESS) {
-    return NextResponse.json(result.data)
+  if(response.status === SUCCESS) {
+    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
   }
-  return NextResponse.json(result.message, { status: 500 })
+  return  NextResponse.json(
+    { status: 'ERROR', message: response.message, data:{} },
+    { status: 500 })
 }
 

@@ -86,7 +86,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-        const filtered = config.dataTable.userData.filter((item) => {
+        const filtered = config?.dataTable?.userData?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
@@ -120,7 +120,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [open, setOpen] = React.useState(false)
     
-
+console.log({config})
     return (
         <>
             <DashboardLoader loading={loadingState}>
@@ -207,23 +207,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                 </Command>
                                             </PopoverContent>
                                         </Popover>
-                                        {/* Using ShadCN Select component */}
-                                        {/* <Select
-                                            value={filterValues[field.label] || null} // Set default value to null or a valid value
-                                            onValueChange={(value) => handleFilterChange(value, field.label)} // Directly pass value
-                                        >
-                                            <SelectTrigger className={`bg-white w-[180px] ${!filterValues[field.label] ? 'opacity-60' : 'opacity-100'}`}>
-                                                {filterValues[field.label] || 'Select ' + field.label}
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value={null}>All</SelectItem> 
-                                                {field?.options?.map((option, i) => (
-                                                    <SelectItem key={i} value={option}>
-                                                        {option}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select> */}
+                                      
                                     </div>
                                 ))}
                             </div>
@@ -244,7 +228,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                     </div>
 
                     <div className='h-[90%]' >
-                        <DataTable data={filteredData.length > 0 ? filteredData : config.dataTable.userData} columns={config.dataTable.columns || []} />
+                        {<DataTable data={filteredData?.length > 0 ? filteredData : config?.dataTable?.userData} columns={config?.dataTable?.columns || []} />}
                     </div>
                 </div>
 

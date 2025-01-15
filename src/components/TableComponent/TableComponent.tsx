@@ -46,7 +46,7 @@ interface DataTableProps<T> {
 
 
 export function DataTable<T>({ data, columns }: DataTableProps<T>) {
-
+  console.log("DAta table",{data})
   const rowNo = ['10', '20', '30', '40', '50'];
 
   const [pagination, setPagination] = useState({
@@ -168,8 +168,8 @@ export function DataTable<T>({ data, columns }: DataTableProps<T>) {
               ))}
             </TableHeader>
             <TableBody className=" rounded-md">
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row, index) => (
+              {table?.getRowModel()?.rows?.length ? (
+                table?.getRowModel()?.rows?.map((row, index) => (
                   <TableRow
                     key={row.id}
                     className=""

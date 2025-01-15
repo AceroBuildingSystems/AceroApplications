@@ -33,6 +33,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Combobox } from "../ui/ComboBoxWrapper";
 import { DatePicker } from "../ui/date-picker";
+import useUserAuthorised from "@/hooks/useUserAuthorised";
 
 const DynamicDialog = ({
   isOpen,
@@ -42,7 +43,10 @@ const DynamicDialog = ({
   fields,
   initialData,
   action,
+  height,
 }) => {
+  const { user,status,authenticated } = useUserAuthorised();
+  
   const [formData, setFormData] = useState({});
 
   // Dynamically generate fields based on selectedMaster
@@ -91,7 +95,7 @@ const DynamicDialog = ({
         updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
           }`.trim();
       }
-
+console.log(updatedFormData);
       return updatedFormData;
     });
   };
@@ -99,6 +103,13 @@ const DynamicDialog = ({
   // Handle form submission
   const handleSubmit = async () => {
     try {
+      const updatedData = {
+        ...formData, // Spread the existing properties of the object
+        addedBy: user._id,
+        updatedBy: user._id
+      };
+     
+  
       // Save the data to the database (e.g., via an API call)
       await onSave({ formData, action });
       closeDialog();
@@ -110,7 +121,7 @@ const DynamicDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
-        className="max-w-full max-h-[80%] pointer-events-auto sm:max-w-md lg:max-w-3xl mx-4  h-[75%]">
+        className={`max-w-full max-h-[80%] pointer-events-auto sm:max-w-md lg:max-w-3xl mx-4  ${height === 'auto' ? 'h-auto' : 'h-[75%]'}`}>
         <DialogTitle className="pl-1">{`${action} ${selectedMaster.charAt(0).toUpperCase() + selectedMaster.slice(1)
           }`}</DialogTitle>
         <div className="bg-white h-full overflow-y-auto p-2 rounded-md">

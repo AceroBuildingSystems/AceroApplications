@@ -18,6 +18,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import Link from 'next/link'; 
 
 
 const CreateSideBarItems = ({item}:any)=>{
@@ -27,9 +28,9 @@ const CreateSideBarItems = ({item}:any)=>{
     return (
       <SidebarMenuSubItem key={item.title}>
             <SidebarMenuSubButton asChild>
-              <a href={item.url}>
+              <Link href={item.url}>
                 <span>{item.title}</span>
-              </a>
+              </Link>
             </SidebarMenuSubButton>
       </SidebarMenuSubItem>
     )
@@ -40,10 +41,10 @@ const CreateSideBarItems = ({item}:any)=>{
     <Collapsible key={item.title} asChild >
       <SidebarMenuItem>
       <SidebarMenuButton asChild tooltip={item.title}>
-      <a href={item.url}>
+      <Link href={item.url}>
         {/* <item.icon /> */}
         <span>{item.title}</span>
-      </a>
+      </Link>
     </SidebarMenuButton>
 
     <CollapsibleTrigger asChild>
@@ -70,26 +71,14 @@ const CreateSideBarItems = ({item}:any)=>{
 export function NavMain({
   items,label
 }: {
-  items: {
-    title: string
-    url: string
-    icon: LucideIcon
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[],
+  items: any[],
   label:string
 }) {
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
-        {items?.map(({menuItem:item,permissions}, index) => (
-          permissions?.view &&
-          <CreateSideBarItems key={index} item={item} />
-        ))}
+        {items?.map((item, index) => ( <CreateSideBarItems key={index} item={item} />))}
       </SidebarMenu>
     </SidebarGroup>
   )

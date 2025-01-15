@@ -2,7 +2,8 @@ import { crudManager } from '@/server/managers/crudManager';
 import { catchAsync } from '@/server/shared/catchAsync';
 
 export const getMasterData = catchAsync(async (options) => {
-  const result = await crudManager.mongooose.find(options.db, {});
+  const {db,operations} = options
+  const result = await crudManager.mongooose.find(options.db, operations);
   return result;
 });
 

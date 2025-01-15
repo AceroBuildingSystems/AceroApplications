@@ -15,17 +15,19 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
 
 interface DatePickerProps {
+  currentDate?: Date;
   startYear?: number;
   endYear?: number;
   handleChange:any;
 }
 export function DatePicker({
+  currentDate,
   startYear = getYear(new Date()) - 100,
   endYear = getYear(new Date()) + 100,
   handleChange
 }: DatePickerProps) {
-
-  const [date, setDate] = React.useState<Date>(new Date());
+  
+  const [date, setDate] = React.useState<Date>(currentDate);
 
   const months = [
     'January',
@@ -49,22 +51,23 @@ export function DatePicker({
   const handleMonthChange = (month: string) => {
     const newDate = setMonth(date, months.indexOf(month));
     setDate(newDate);
+    handleChange(newDate)
   }
 
   const handleYearChange = (year: string) => {
     const newDate = setYear(date, parseInt(year));
     setDate(newDate)
+    handleChange(newDate)
+
   }
 
   const handleSelect = (selectedData: Date | undefined) => {
     if (selectedData) {
       setDate(selectedData)
+      handleChange(selectedData)
     }
   }
   
-  React.useEffect(()=>{
-    handleChange(date)
-  },[date])
   return (
     <Popover>
       <PopoverTrigger asChild>

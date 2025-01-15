@@ -37,6 +37,7 @@ export interface Condition {
 
   export interface FindOptions {
     filter?: any;
+    db:string;
     select?: string[];
     sort?: { [key: string]: 'asc' | 'desc' };
     pagination?:

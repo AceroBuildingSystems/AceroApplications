@@ -24,10 +24,6 @@ export default function Page() {
   const [customLoadingState, setCustomLoadingState] = useState(true);
 
   return (
-    <DashboardLoader loading={customLoadingState}>
-      <div>
-        This is dashboard
-      </div>
-    </DashboardLoader>
+    <DashboardLoader loading={customLoadingState}/>
   );
 }

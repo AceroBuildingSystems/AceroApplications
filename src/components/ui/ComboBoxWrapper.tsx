@@ -21,9 +21,9 @@ import {
 
 
 
-export function ComboboxDemo({ field, formData, handleChange }: any) {
+export function Combobox({ field, formData, handleChange }: any) {
     const [open, setOpen] = React.useState(false)
-    console.log(field, formData, handleChange);
+    // console.log(field, formData, handleChange);
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
@@ -31,7 +31,7 @@ export function ComboboxDemo({ field, formData, handleChange }: any) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className="w-[200px] justify-between"
+                    className=" justify-between"
                 >
                     {field?.data?.find((data) => data._id === formData[field.name])?.name ||
                         field?.data?.find((data) => data._id === formData[field.name])?.shortName ||
@@ -41,7 +41,7 @@ export function ComboboxDemo({ field, formData, handleChange }: any) {
             </PopoverTrigger>
             <PopoverContent className="w-[200px] p-0 pointer-events-auto">
                 <Command>
-                    <CommandInput className="pointer-events-auto" placeholder={`Search ${field?.label}`} />
+                    <CommandInput  className="pointer-events-auto" placeholder={`Search ${field?.label}`} />
 
                     <CommandList className="overflow-y-scroll">
                         <CommandEmpty>No {field?.label?.toLowerCase()} found.</CommandEmpty>
@@ -66,11 +66,11 @@ export function ComboboxDemo({ field, formData, handleChange }: any) {
 
                             {field?.data?.map((data) => (
                                 <CommandItem
-                                className="cursor-pointer"
+                                    className="cursor-pointer"
                                     key={data._id}
-                                    value={data._id}
+                                    value={data.name}
                                     onSelect={(value) => {
-                                        handleChange(value, field.name, field?.format, field?.type);
+                                        handleChange(data._id, field.name, field?.format, field?.type);
                                         setOpen(false);
                                     }}
                                 >

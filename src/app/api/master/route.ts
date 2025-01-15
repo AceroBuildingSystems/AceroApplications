@@ -6,12 +6,55 @@ import { NextRequest } from 'next/server'
 
 
 export async function GET(request:NextRequest,response:NextResponse) {
-  const { searchParams } = new URL(request.url)
-  const db = searchParams.get('db')
-  // console.log("db", db)
-  if(!db) return NextResponse.json({status:ERROR, message:DB_REQUIRED}, { status: 400 })
+  const searchParams = new URL(request.url).searchParams;
+    const operations: any = {};
 
-  const result:any = await masterdataManager.getMasterData({ db })
+    // Extract the database name
+    const db = searchParams.get('db');
+    if (!db) {
+        return NextResponse.json(
+            { status: 'ERROR', message: 'DB_REQUIRED' },
+            { status: 400 }
+        );
+    }
+
+    // Extract and parse the filter parameter
+    const filterParam = searchParams.get('filter');
+    if (filterParam) {
+        try {
+            operations.filter = JSON.parse(filterParam);
+        } catch (error) {
+            return NextResponse.json(
+                { status: 'ERROR', message: 'INVALID_FILTER_FORMAT' },
+                { status: 400 }
+            );
+        }
+    } else {
+        operations.filter = {};
+    }
+
+    // Extract and parse the sort parameter
+    const sortParam = searchParams.get('sort');
+    if (sortParam) {
+        try {
+            operations.sort = JSON.parse(sortParam);
+        } catch (error) {
+            return NextResponse.json(
+                { status: 'ERROR', message: 'INVALID_SORT_FORMAT' },
+                { status: 400 }
+            );
+        }
+    }
+
+    // Extract pagination parameters
+    const page = parseInt(searchParams.get('page') || '1', 10);
+    const limit = parseInt(searchParams.get('limit') || '10', 10);
+
+    // Construct the operations object
+    operations.pagination = { page, limit };
+
+
+  const result:any = await masterdataManager.getMasterData({ db,operations })
   
   if(result.status === SUCCESS) {
     return NextResponse.json(result.data)

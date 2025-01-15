@@ -20,11 +20,17 @@ import { RowExpanding } from '@tanstack/react-table';
 
 const page = () => {
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
-  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery("DEPARTMENT_MASTER" as any);
-  const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery("DESIGNATION_MASTER" as any);
-  const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery("ROLE_MASTER" as any);
-  const { data: employeeTypeData = [], isLoading: employeeTypeLoading } = useGetMasterQuery("EMPLOYEE_TYPE_MASTER" as any);
-  const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery("ORGANISATION_MASTER" as any);
+  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
+    db: 'DEPARTMENT_MASTER',
+    filter: { isActive: true },
+    sort: { createdAt: -1 },
+  });
+   const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
+      db: 'DESIGNATION_MASTER',
+    });
+    const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery( {db:"ROLE_MASTER" });
+    const { data: employeeTypeData = [], isLoading: employeeTypeLoading } = useGetMasterQuery({db: 'EMPLOYEE_TYPE_MASTER'});
+    const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({db:"ORGANISATION_MASTER"} );
   const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
@@ -34,7 +40,6 @@ const page = () => {
   const transformedData = userTransformData(userData);
 
   const orgTransformedData = organisationTransformData(organisationData);
-
 
   const distinctRoles = userData.reduce((acc: any[], user: { role: { name: any; }; }) => {
     // Check if the role is already in the accumulator
@@ -108,6 +113,8 @@ const page = () => {
 
 
     const response = await createUser(formattedData);
+
+    console.log(response?.error?.data?.errorResponse.errmsg);
     if (response.data?.status === SUCCESS && action === 'Add') {
       toast.success('User saved successfully');
 
@@ -117,20 +124,11 @@ const page = () => {
         toast.success('User updated successfully');
       }
     }
-    // Call your API to save data to the database based on the master type
-    // const response = await fetch(`/api/user`, {
-    //   method: "POST",
-    //   body: JSON.stringify(formData),
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   }
-    // });
 
-    // if (response.ok) {
-    //   console.log(`${masterType} saved successfully!`);
-    // } else {
-    //   console.error("Error saving data");
-    // }
+    if(response?.error?.data?.errorResponse.errmsg){
+      toast.error(`Error encountered: ${response?.error?.data?.errorResponse.errmsg}`);
+    }
+   
   };
 
 
@@ -163,12 +161,7 @@ const page = () => {
     // Your delete logic for user page
   };
 
-  // const userData = [
-  //   { id: "1", name: "Alice", email: "alice@example.com", role: "Admin" },
-  //   { id: "2", name: "Bob", email: "bob@example.com", role: "User" },
-  //   { id: "3", name: "Ken", email: "ken@example.com", role: "User" },
-  //   { id: "4", name: "Ked", email: "ked@example.com", role: "User" },
-  // ];
+ 
 
   const userColumns = [
     {

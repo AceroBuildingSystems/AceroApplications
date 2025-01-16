@@ -3,9 +3,9 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { department } from "@/types/department.types";
 
 const DepartmentSchema: Schema<department> = new Schema({
-    depId: { type: String },
-    name: { type: String },
-    isActive: { type: Boolean },
+    depId: { type: String, required:true, unique:true},
+    name: { type: String, required: true, unique:true },
+    isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String },
    

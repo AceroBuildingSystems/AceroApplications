@@ -3,8 +3,8 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { employeeType } from "@/types/employeeType.types";
 
 const EmployeTypeSchema: Schema<employeeType> = new Schema({
-    name: { type: String },
-    isActive: { type: Boolean },
+    name: { type: String, required:true, unique:true },
+    isActive: { type: Boolean, default:true },
     addedBy: { type: String },
     updatedBy: { type: String },
    

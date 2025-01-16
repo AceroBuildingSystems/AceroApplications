@@ -86,6 +86,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
+        console.log(config?.dataTable?.userData);
         const filtered = config?.dataTable?.userData?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
@@ -111,7 +112,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
             return matchesSearch && matchesFilter;
         });
-
+console.log(filterData);
         setFilteredData(filtered); // Update filtered data state
     };
 
@@ -120,7 +121,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [open, setOpen] = React.useState(false)
     
-console.log({config})
+
     return (
         <>
             <DashboardLoader loading={loadingState}>

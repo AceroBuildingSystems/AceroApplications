@@ -95,7 +95,7 @@ const DynamicDialog = ({
         updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
           }`.trim();
       }
-console.log(updatedFormData);
+
       return updatedFormData;
     });
   };

@@ -1,6 +1,6 @@
 import { masterdataManager } from '@/server/managers/masterDataManager'
-import { DB_REQUIRED, ERROR, INSUFFIENT_DATA, INVALID_REQUEST, SUCCESS } from '@/shared/constants'
-import { createMongooseObjectId } from '@/shared/functions'
+import { BODY_REQUIRED, DB_REQUIRED, ERROR, INSUFFIENT_DATA, INVALID_REQUEST, SUCCESS } from '@/shared/constants'
+import { createMongooseObjectId, isObjectEmpty } from '@/shared/functions'
 import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 
@@ -47,11 +47,11 @@ export async function GET(request:NextRequest) {
     }
 
     // Extract pagination parameters
-    const page = parseInt(searchParams.get('page') || '1', 10);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
+    // const page = parseInt(searchParams?.get('page'), 10);
+    // const limit = parseInt(searchParams?.get('limit'), 10);
 
     // Construct the operations object
-    operations.pagination = { page, limit };
+    // operations.pagination = { page, limit };
 
 
   const response:any = await masterdataManager.getMasterData({ db,operations })
@@ -70,10 +70,11 @@ export async function POST(request:NextRequest) {
 
   if(!body) return NextResponse.json({status:ERROR, message:INVALID_REQUEST, data:{}}, { status: 400 })
 
-  const {db,action} = body
-  if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
+  const {db,action,data} = body
 
-    
+  if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
+  
+
   body.data.addedBy = createMongooseObjectId(body.addedBy)
   body.data.updatedBy = createMongooseObjectId(body.updatedBy)
 

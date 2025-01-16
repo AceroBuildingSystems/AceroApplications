@@ -22,8 +22,8 @@ import { createMasterData } from '@/server/services/masterDataServices';
 
 const page = () => {
   
-  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
-      db: 'DEPARTMENT_MASTER',
+  const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery({
+      db: 'ROLE_MASTER',
       sort: { name: -1 },
     });
   
@@ -31,7 +31,7 @@ const page = () => {
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  departmentLoading;
+  const loading =  roleLoading;
 
 
   interface RowData {
@@ -43,8 +43,8 @@ const page = () => {
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string }> = [
-    { label: 'Department Id', name: "depId", type: "text", },
-    { label: 'Department Name', name: "name", type: "text", },
+   
+    { label: 'Role Name', name: "name", type: "text", },
     { label: 'Status', name: "isActive", type: "select", data: statusData },
    
   ]
@@ -72,7 +72,7 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-      db: 'DEPARTMENT_MASTER',
+      db: 'ROLE_MASTER',
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
@@ -84,12 +84,12 @@ const page = () => {
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Department added successfully');
+      toast.success('Role added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Department updated successfully');
+        toast.success('Role updated successfully');
       }
     }
 
@@ -103,14 +103,14 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("department");
+    openDialog("role");
     // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("department");
+    openDialog("role");
 
   };
 
@@ -156,20 +156,6 @@ const page = () => {
     },
 
     {
-      accessorKey: "depId",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Department Id</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("depId")}</div>,
-    },
-    {
       accessorKey: "name",
       header: ({ column }: { column: any }) => (
         <button
@@ -177,11 +163,25 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Department</span> {/* Label */}
+          <span>Role</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "isActive",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>Status</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
     
 
@@ -190,7 +190,7 @@ const page = () => {
 
   const departmentConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by department' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by role' },
       
     ],
     filterFields: [
@@ -199,7 +199,7 @@ const page = () => {
     ],
     dataTable: {
       columns: departmentColumns,
-      userData: departmentData?.data,
+      userData: roleData?.data,
     },
     buttons: [
 

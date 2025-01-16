@@ -23,7 +23,7 @@ import {
 
 export function Combobox({ field, formData, handleChange }: any) {
     const [open, setOpen] = React.useState(false)
-    // console.log(field, formData, handleChange);
+    // console.log(field, formData);
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
@@ -33,8 +33,8 @@ export function Combobox({ field, formData, handleChange }: any) {
                     aria-expanded={open}
                     className=" justify-between"
                 >
-                    {field?.data?.find((data) => data._id === formData[field.name])?.name ||
-                        field?.data?.find((data) => data._id === formData[field.name])?.shortName ||
+                    {field && field?.data?.find((data) => data._id === formData[field.name])?.name ||
+                        field && field?.data?.find((data) => data._id === formData[field.name])?.shortName ||
                         `Select ${field?.label}`}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>

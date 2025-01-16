@@ -46,7 +46,7 @@ interface DataTableProps<T> {
 
 
 export function DataTable<T>({ data, columns }: DataTableProps<T>) {
-  console.log("DAta table",{data})
+  console.log(data);
   const rowNo = ['10', '20', '30', '40', '50'];
 
   const [pagination, setPagination] = useState({

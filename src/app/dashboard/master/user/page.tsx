@@ -20,7 +20,7 @@ import { RowExpanding } from '@tanstack/react-table';
 
 const page = () => {
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
-  console.log({userData})
+
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -73,7 +73,7 @@ const page = () => {
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId' },
     { label: 'Email', name: "email", type: "text" },
     { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data },
-    { label: 'Role', name: "role", type: "select", data: roleData, format: 'ObjectId' },
+    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId' },
     { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId' },
     { label: 'Extension', name: "extension", type: "text" },
     { label: 'Mobile', name: "mobile", type: "text" },
@@ -115,20 +115,20 @@ const page = () => {
 
     const response = await createUser(formattedData);
 
-    console.log(response?.error?.data?.errorResponse.errmsg);
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('User saved successfully');
-
-    }
-    else{
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('User updated successfully');
-      }
-    }
-
-    if(response?.error?.data?.errorResponse.errmsg){
-      toast.error(`Error encountered: ${response?.error?.data?.errorResponse.errmsg}`);
-    }
+       
+       if (response.data?.status === SUCCESS && action === 'Add') {
+         toast.success('User added successfully');
+   
+       }
+       else{
+         if (response.data?.status === SUCCESS && action === 'Update') {
+           toast.success('User updated successfully');
+         }
+       }
+   
+       if(response?.error?.data?.message?.message){
+         toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
+       }
    
   };
 

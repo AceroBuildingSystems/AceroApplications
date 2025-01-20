@@ -83,3 +83,20 @@ export const isObjectEmpty = (obj:any) => {
 //       },
 //     ],
 //   },
+export const getDistinctFromData = (data:any,identifier:string,valuesToMap:string[])=>{
+    const distinctMapper = {}
+    data.forEach(item=>{
+        if(!distinctMapper[identifier]){
+            distinctMapper[identifier] = item
+        }
+    })
+    const distinctData =[]
+    Object.entries(distinctMapper).map(([key,value])=>{
+        const item = {}
+        valuesToMap.forEach(val=>{
+            item[val] = distinctMapper[key][val]
+        })
+        distinctData.push(item)
+    })
+    return distinctData;
+}

@@ -38,7 +38,7 @@ interface ButtonConfig {
 // Interface for Data Table configuration
 interface DataTableConfig {
     columns: string[]; // Column names for the table
-    userData: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
+    data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 
 // Main interface for the page configuration
@@ -61,7 +61,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
-    const [filteredData, setFilteredData] = useState(config.dataTable.userData);
+    const [filteredData, setFilteredData] = useState(config.dataTable.data);
 
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -86,8 +86,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-        console.log(config?.dataTable?.userData);
-        const filtered = config?.dataTable?.userData?.filter((item) => {
+        const filtered = config?.dataTable?.data?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
@@ -121,7 +120,6 @@ console.log(filterData);
 
     const [open, setOpen] = React.useState(false)
     
-
     return (
         <>
             <DashboardLoader loading={loadingState}>
@@ -229,7 +227,7 @@ console.log(filterData);
                     </div>
 
                     <div className='h-[90%]' >
-                        {<DataTable data={filteredData?.length > 0 ? filteredData : config?.dataTable?.userData} columns={config?.dataTable?.columns || []} />}
+                        {<DataTable data={filteredData?.length > 0 ? filteredData : config?.dataTable?.data} columns={config?.dataTable?.columns || []} />}
                     </div>
                 </div>
 

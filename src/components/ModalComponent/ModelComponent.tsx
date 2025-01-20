@@ -11,26 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import mongoose from "mongoose";
-import {
-  Select,
-  SelectContent,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { SelectItem } from "@/components/ui/select";
-import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
-import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "../ui/command";
-import { cn } from "@/lib/utils";
 import { Combobox } from "../ui/ComboBoxWrapper";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
@@ -44,9 +24,8 @@ const DynamicDialog = ({
   initialData,
   action,
   height,
-}) => {
-  const { user,status,authenticated } = useUserAuthorised();
-  
+  user,
+}) => {  
   const [formData, setFormData] = useState({});
 
   // Dynamically generate fields based on selectedMaster
@@ -111,7 +90,7 @@ const DynamicDialog = ({
      
   
       // Save the data to the database (e.g., via an API call)
-      await onSave({ formData, action });
+      await onSave({ updatedData, action });
       closeDialog();
     } catch (error) {
       console.error("Error saving data:", error);
@@ -131,9 +110,8 @@ const DynamicDialog = ({
               {" "}
               {/* 1 column on small screens, 2 on large */}
               {fields.map((field, index) => (
-                <div key={index} className="flex flex-col gap-1 mb-2">
+                <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom"?"col-span-2":""}`}>
                   <Label>{field.label}</Label>
-
                   {
                     (() => {
                       switch (field.type) {
@@ -168,6 +146,10 @@ const DynamicDialog = ({
                               }}
                             />
                           );
+                        case "custom":
+                          return (
+                           <><field.CustomComponent accessData={formData[field.name]} /></>
+                          )
                         default:
                           return (
                             <Input

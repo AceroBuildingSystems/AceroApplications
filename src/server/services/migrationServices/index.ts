@@ -37,8 +37,6 @@ export const putUsers = catchAsync(async (data) => {
   // Fetch designations from the DESIGNATION_MASTER collection
   const { status, data: designationDoc } = await crudManager.mongooose.find(MONGO_MODELS.DESIGNATION_MASTER, {});
 
-  console.log(status, designationDoc);
-  return;
   // If there was an error fetching the designations
   if (status !== SUCCESS) {
     return { status: ERROR, data: {} };
@@ -79,7 +77,6 @@ export const bulkDepartmentInsertSanitization = (data:any)=>{
         return phaseDepartmentSanitization(department)
     });
     // Log updated user data
-    console.log(departmentData);
     return departmentData
 }
 

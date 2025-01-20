@@ -1,11 +1,8 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
-import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
@@ -15,10 +12,6 @@ import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
-import { RowExpanding } from '@tanstack/react-table';
-import { error } from 'console';
-import { createMasterData } from '@/server/services/masterDataServices';
-
 
 const page = () => {
   
@@ -70,7 +63,6 @@ const page = () => {
 
   // Save function to send data to an API or database
   const saveData = async ({formData, action}) => {
-   
     const formattedData = {
       db: 'DEPARTMENT_MASTER',
       action: action === 'Add' ? 'create' : 'update',
@@ -183,9 +175,6 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{row.getValue("name")}</div>,
     },
-    
-
-
   ];
 
   const departmentConfig = {
@@ -194,8 +183,6 @@ const page = () => {
       
     ],
     filterFields: [
-      // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
-
     ],
     dataTable: {
       columns: departmentColumns,

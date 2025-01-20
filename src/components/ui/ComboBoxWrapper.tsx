@@ -23,7 +23,7 @@ import {
 
 export function Combobox({ field, formData, handleChange }: any) {
     const [open, setOpen] = React.useState(false)
-    // console.log(field, formData);
+
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>

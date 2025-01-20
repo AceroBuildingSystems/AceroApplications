@@ -5,7 +5,6 @@ export const bulkUserInsertSanitization = (data:any,iEencryptPasswword:boolean)=
         return phaseUserSanitization(user,iEencryptPasswword)
     });
     // Log updated user data
-    console.log(updatedUserData);
     return updatedUserData
 }
 

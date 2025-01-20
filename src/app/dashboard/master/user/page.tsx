@@ -15,12 +15,11 @@ import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
-import { RowExpanding } from '@tanstack/react-table';
+
 
 
 const page = () => {
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
-
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -92,7 +91,6 @@ const page = () => {
   // Open the dialog and set selected master type
   const openDialog = (masterType) => {
     setSelectedMaster(masterType);
-
     setDialogOpen(true);
   };
 
@@ -110,9 +108,6 @@ const page = () => {
       filter : {"_id": formData._id},
       data: formData,
     };
-
-
-
     const response = await createUser(formattedData);
 
        
@@ -144,7 +139,6 @@ const page = () => {
     setInitialData({});
     setAction('Add');
     openDialog("employee");
-
   };
 
   const handleImport = () => {
@@ -230,8 +224,6 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
     },
-
-
   ];
 
   const userConfig = {
@@ -245,7 +237,7 @@ const page = () => {
     ],
     dataTable: {
       columns: userColumns,
-      userData: transformedData,
+      data: transformedData,
     },
     buttons: [
 

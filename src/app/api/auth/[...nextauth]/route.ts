@@ -75,7 +75,7 @@ export const authOptions: AuthOptions = {
             { permissions: data.permissions },
           ])
       );
-      console.log({accessMap})
+
       // Fetch all ancestors and access nodes for the access IDs
       const trees = await Access.aggregate([
         {
@@ -113,8 +113,6 @@ export const authOptions: AuthOptions = {
         accessMap // Pass accessMap to include permissions
       );
     
-      console.log("Final Menu Items:", JSON.stringify(menuItems, null, 2));
-    
       session.menuItems = menuItems;
       return session;
     },
@@ -151,7 +149,6 @@ function buildNavStructure(ancestors: any[], accessMap: Map<string, any>) {
 
     // Retrieve permissions from the accessMap if available
     const permissions = accessMap.get(nodeId)?.permissions || {};
-    console.log(permissions)
     if (!nodeMap.has(nodeId)) {
       nodeMap.set(nodeId, {
         title: ancestor.name,

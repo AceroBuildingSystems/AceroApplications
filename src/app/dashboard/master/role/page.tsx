@@ -18,10 +18,13 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
+import { bulkImport } from '@/shared/functions';
 
 
 const page = () => {
-  
+   
+  const { user, status, authenticated } = useUserAuthorised();
   const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery({
       db: 'ROLE_MASTER',
       sort: { name: -1 },
@@ -42,10 +45,10 @@ const page = () => {
   }
 
 
-  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string }> = [
+  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Role Name', name: "name", type: "text", },
-    { label: 'Status', name: "isActive", type: "select", data: statusData },
+    { label: 'Role Name', name: "name", type: "text",required: true, placeholder:'Role Name' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
 
@@ -115,8 +118,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    console.log('UserPage Import button clicked');
-    // Your import logic for user page
+    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"ROLE_MASTER", masterName:"Role" });
   };
 
   const handleExport = () => {

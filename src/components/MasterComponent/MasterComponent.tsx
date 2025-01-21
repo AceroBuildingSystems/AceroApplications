@@ -16,7 +16,8 @@ import { ObjectId } from 'mongoose';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { cn } from '@/lib/utils';
-
+import jsPDF from 'jspdf';
+import * as XLSX from "xlsx";
 
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
@@ -61,7 +62,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
-    const [filteredData, setFilteredData] = useState(config.dataTable.data);
+    const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
 
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
@@ -86,7 +87,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-        const filtered = config?.dataTable?.data?.filter((item) => {
+
+        const filtered = config?.dataTable?.userData?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
@@ -111,15 +113,29 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
             return matchesSearch && matchesFilter;
         });
-console.log(filterData);
+
         setFilteredData(filtered); // Update filtered data state
     };
 
-   
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        doc.text("Exported Data", 10, 10);
+        // Add table or other content
+        doc.save("table_data.pdf");
+    };
+
+    const exportToExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(config.dataTable.userData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        XLSX.writeFile(wb, "table_data.xlsx");
+    };
 
     const [open, setOpen] = React.useState(false)
-    
+    const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+
+
     return (
         <>
             <DashboardLoader loading={loadingState}>
@@ -206,24 +222,55 @@ console.log(filterData);
                                                 </Command>
                                             </PopoverContent>
                                         </Popover>
-                                      
+
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-
-                        {/* Button Section */}
-                        <div className='flex justify-end gap-1'>
-
+                        <div className='flex gap-1'>
+                            {/* Button Section */}
                             {config.buttons?.map((button, index) => (
-                                <Button effect="expandIcon" icon={button.icon} iconPlacement="right" key={index} onClick={button.action} className={`w-28 ${button.className}`}>
-                                    {button.label}
-                                </Button>
+                                <div key={index} className="relative">
+                                    {/* Button */}
+                                    <Button
+                                        effect="expandIcon"
+                                        icon={button.icon}
+                                        iconPlacement="right"
+                                        onClick={() => {
+                                            if (button.dropdownOptions) {
+                                                // Toggle dropdown visibility for this button
+                                                setActiveDropdown(index === activeDropdown ? null : index);
+                                            } else {
+                                                button.action(); // Call action directly if no dropdown
+                                            }
+                                        }}
+                                        className={`w-28 ${button.className}`}
+                                    >
+                                        {button.label}
+                                    </Button>
+
+                                    {/* Dropdown (only if dropdownOptions are provided and active) */}
+                                    {button.dropdownOptions && activeDropdown === index && (
+                                        <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
+                                            {button.dropdownOptions.map((option, optionIndex) => (
+                                                <div
+                                                    key={optionIndex}
+                                                    className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
+                                                    onClick={() => {
+                                                        option.action(option.value); // Execute the action for this dropdown option
+                                                        setActiveDropdown(null); // Close the dropdown after selection
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             ))}
-
-
                         </div>
+
                     </div>
 
                     <div className='h-[90%]' >

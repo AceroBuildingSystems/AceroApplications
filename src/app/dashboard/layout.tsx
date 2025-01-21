@@ -25,8 +25,6 @@ export default function Layout({children}: {children: React.ReactNode}) {
 const pathName = usePathname();
 const pathContent = pathName.split('/')
 
-console.log(pathContent[pathContent.length-1].toProperCase() , pathContent[pathContent.length-2].toProperCase());
-
   return (
     <AuthComponent loadingState={customLoadingState}  >
       <SidebarProvider>

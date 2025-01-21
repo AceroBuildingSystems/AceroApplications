@@ -85,13 +85,15 @@ const Access = () => {
           _id: user._id,
           access: accessMap,
         };
+
+
       });
       setSanitisedUserData(sanitisedUser);
     }
 
     setLoading(
       (accessDataLoading || userDataLoading || isCreatingMaster) &&
-        !authenticated
+      !authenticated
     );
   }, [accessDataLoading, userDataLoading, authenticated]);
 
@@ -99,6 +101,7 @@ const Access = () => {
     setSelectedMaster(masterType);
     setDialogOpen(true);
   };
+
 
   const handleAdd = () => {
     setInitialData({});
@@ -112,8 +115,8 @@ const Access = () => {
   };
 
   const saveData = async ({ formData, action }) => {
-    console.log(userAccessSaveData);
-    return;
+    console.log(formData);
+    
     const formattedData = {
       db: "ACCESS_MASTER",
       action: action === "Add" ? "create" : "update",
@@ -121,6 +124,7 @@ const Access = () => {
       data: formData,
     };
 
+    return;
     const response = await createMaster(formattedData);
 
     if (response.data?.status === SUCCESS && action === "Add") {
@@ -139,12 +143,14 @@ const Access = () => {
   };
 
   const editAccess = (rowData) => {
+    
     setAction("Update");
     setInitialData(rowData);
     openDialog("Access");
   };
 
   const editUserAccess = (rowData) => {
+    console.log(`'data' ${rowData}`);
     setAction("Update");
     setInitialData(rowData);
     openDialog("User Access");
@@ -299,24 +305,24 @@ const Access = () => {
     readOnly?: boolean;
     format?: string;
   }> = [
-    { label: "Name", name: "name", type: "text" },
-    { label: "Category", name: "category", type: "text" },
-    { label: "Status", name: "isActive", type: "select", data: statusData },
-    {
-      label: "Is this a Menu item?",
-      name: "isMenuItem",
-      type: "select",
-      data: statusData,
-    },
-    { label: "url", name: "url", type: "text" },
-    {
-      label: "Parent",
-      name: "role",
-      type: "select",
-      data: distinctParentData,
-      format: "ObjectId",
-    },
-  ];
+      { label: "Name", name: "name", type: "text" },
+      { label: "Category", name: "category", type: "text" },
+      { label: "Status", name: "isActive", type: "select", data: statusData },
+      {
+        label: "Is this a Menu item?",
+        name: "isMenuItem",
+        type: "select",
+        data: statusData,
+      },
+      { label: "url", name: "url", type: "text" },
+      {
+        label: "Parent",
+        name: "role",
+        type: "select",
+        data: distinctParentData,
+        format: "ObjectId",
+      },
+    ];
 
   // This is for user access tab configuration [the one on the right]
   const userAccessColumn = [
@@ -436,22 +442,22 @@ const Access = () => {
   };
 
 
-  const setAccessDataForSaving = (userAcessData)=>{
+  const setAccessDataForSaving = (userAcessData) => {
     setUserAccessSaveData(userAcessData);
   }
 
-  const AccessComponent = ({ accessData}) => {
+  const AccessComponent = ({ accessData }) => {
     if (!accessData) {
       return <></>;
     }
     const [accessComboBoxData, setAccessComboBoxData] = useState([]);
     const [acessComponentData, setAccessComponentData] = useState(accessData);
-    console.log(acessComponentData);
 
-    useEffect(()=>{
+
+    useEffect(() => {
       setAccessDataForSaving(acessComponentData)
-    },[acessComponentData])
-   
+    }, [acessComponentData])
+
     const computedAccessComboBoxData = useMemo(() => {
       return distinctParentData.filter(
         (parent) =>
@@ -506,9 +512,9 @@ const Access = () => {
     }, []);
 
     const handleChecked = (id, key) => {
-      
-     
-      
+
+
+
       setAccessComponentData((prev) => {
         const newState = [...prev];
         const findIdx = newState.findIndex((d) => d._id === id);
@@ -522,16 +528,16 @@ const Access = () => {
             [key]: !newState[findIdx].permissions[key],
           },
         };
-console.log(newState);
+
         return newState;
       });
-     
+
     };
 
     const handleDelete = (id) => {
       setAccessComponentData((prev) => {
         const newState = prev.filter((data) => data._id !== id);
-        console.log({ newState });
+
         return newState;
       });
     };
@@ -606,15 +612,15 @@ console.log(newState);
     format?: string;
     CustomComponent?: React.FC;
   }> = [
-    { label: "firstName", name: "firstName", type: "text", readOnly: true },
-    { label: "lastname", name: "lastName", type: "text", readOnly: true },
-    {
-      label: "access",
-      name: "access",
-      type: "custom",
-      CustomComponent: AccessComponent,
-    },
-  ];
+      { label: "firstName", name: "firstName", type: "text", readOnly: true },
+      { label: "lastname", name: "lastName", type: "text", readOnly: true },
+      {
+        label: "access",
+        name: "access",
+        type: "custom",
+        CustomComponent: AccessComponent,
+      },
+    ];
 
   return (
     <div className="w-full h-full px-4">
@@ -641,7 +647,7 @@ console.log(newState);
               fields={fields}
               initialData={initialData}
               action={action}
-              user={user}
+
             />
           </div>
         </TabsContent>
@@ -656,7 +662,7 @@ console.log(newState);
               fields={userAccessFields}
               initialData={initialData}
               action={action}
-              user={user}
+
             />
           </div>
         </TabsContent>

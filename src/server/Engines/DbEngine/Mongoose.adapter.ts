@@ -205,6 +205,10 @@ export class MongooseAdapter implements DatabaseAdapter {
     return { status: SUCCESS, data: doc };
   }
 
+
+
+  
+
   /**
    * Update documents matching a filter
    *

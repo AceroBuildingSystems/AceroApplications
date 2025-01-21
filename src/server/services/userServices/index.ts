@@ -19,6 +19,8 @@ export const createUser = catchAsync(async (options: any) => {
   return result;
 });
 
+
+
 export const updateUser = catchAsync(async (options: any) => {
   const result = await crudManager.mongooose.update(
     MONGO_MODELS.USER_MASTER,

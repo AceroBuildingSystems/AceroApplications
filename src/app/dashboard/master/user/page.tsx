@@ -15,10 +15,18 @@ import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
+import { RowExpanding } from '@tanstack/react-table';
+import * as XLSX from "xlsx";
+import useUserAuthorised from '@/hooks/useUserAuthorised';
+import {bulkImport} from '@/shared/functions';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 
 
 const page = () => {
+  
+const { user, status, authenticated } = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
@@ -49,9 +57,8 @@ const page = () => {
     return acc;
   }, []);
 
-  const roleNames = distinctRoles?
-    .filter(role => role !== undefined)  // Remove undefined entries
-    .map(role => role.name);             // Extract only the 'name' property
+  const roleNames = distinctRoles?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
+  ?.map((role: { name: any; }) => role.name);             // Extract only the 'name' property
 
 
   interface RowData {
@@ -62,24 +69,24 @@ const page = () => {
   }
 
 
-  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string }> = [
-    { label: 'Employee ID', name: "empId", type: "text", },
-    { label: 'First Name', name: "firstName", type: "text", },
-    { label: 'Last Name', name: "lastName", type: "text", },
-    { label: 'Full Name', name: "fullName", type: "text", readOnly: true },
-    { label: 'Short Name', name: "shortName", type: "text" },
-    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId' },
-    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId' },
-    { label: 'Email', name: "email", type: "text" },
-    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data },
-    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId' },
-    { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId' },
-    { label: 'Extension', name: "extension", type: "text" },
-    { label: 'Mobile', name: "mobile", type: "text" },
-    { label: 'Status', name: "isActive", type: "select", data: statusData },
-    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId' },
-    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date' },
-    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date' },
+  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
+    { label: 'Employee ID', name: "empId", type: "text",required: true, placeholder:'Employee ID'  },
+    { label: 'First Name', name: "firstName", type: "text",required: true, placeholder:'First Name' },
+    { label: 'Last Name', name: "lastName", type: "text", placeholder:'Last Name' },
+    { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder:'Full Name' },
+    { label: 'Short Name', name: "shortName", type: "text",required: true, placeholder:'Short Name' },
+    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId',required: true, placeholder:'Select Designation' },
+    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId',required: true, placeholder:'Select Department' },
+    { label: 'Email', name: "email", type: "text",required: true, placeholder:'Email' },
+    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data,required: true, placeholder:'Select Reporting To' },
+    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId',required: true, placeholder:'Select Role' },
+    { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId',required: true, placeholder:'Select Location' },
+    { label: 'Extension', name: "extension", type: "text", placeholder:'Extension' },
+    { label: 'Mobile', name: "mobile", type: "text", placeholder:'Mobile' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
+    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId',required: true, placeholder:'Select Employee Type' },
+    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder:'Pick Joining Date' },
+    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder:'Pick Leaving Date' },
   ]
 
 
@@ -89,7 +96,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
     setDialogOpen(true);
   };
@@ -142,13 +149,38 @@ const page = () => {
   };
 
   const handleImport = () => {
-    console.log('UserPage Import button clicked');
-    // Your import logic for user page
+    bulkImport({ roleData, action: "Add", user, createUser, db:undefined, masterName:"User" });
   };
 
-  const handleExport = () => {
-    console.log('UserPage Update button clicked');
-    // Your update logic for user page
+  const exportToExcel = (data: any[]) => {
+    // Convert JSON data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    // Write the workbook and trigger a download
+    XLSX.writeFile(workbook, 'exported_data.xlsx');
+  };
+
+  const exportToPDF = (data) => {
+    const doc = new jsPDF();
+    doc.text('Exported Data', 14, 10);
+
+    const tableColumns = Object.keys(data[0] || {});
+    const tableRows = data.map((item) => tableColumns.map((key) => item[key]));
+
+    // doc.autoTable({
+    //   head: [tableColumns],
+    //   body: tableRows,
+    // });
+
+    doc.save('exported_data.pdf');
+  };
+
+  const handleExport = (type: string) => {
+    type === 'excel' && exportToExcel(userData?.data) ;
+    
   };
 
   const handleDelete = () => {
@@ -226,6 +258,11 @@ const page = () => {
     },
   ];
 
+ 
+  
+  
+
+
   const userConfig = {
     searchFields: [
       { key: "name", label: 'fullName', type: "text" as const, placeholder: 'Search by name' },
@@ -242,7 +279,10 @@ const page = () => {
     buttons: [
 
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
+      { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300',dropdownOptions:[
+        { label: "Export to Excel", value: "excel",action: (type: string) => handleExport(type) },
+        { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+      ]  },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };

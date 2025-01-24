@@ -9,14 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
-import { userTransformData } from "@/lib/utils";
+
 import {
   useCreateMasterMutation,
   useGetMasterQuery,
 } from "@/services/endpoints/masterApi";
 import { useGetUsersQuery, useUserOperationsMutation } from "@/services/endpoints/usersApi";
 import { SUCCESS } from "@/shared/constants";
-import { getDistinctFromData } from "@/shared/functions";
+
 import { UpdateIcon } from "@radix-ui/react-icons";
 import {
   ArrowUpDown,
@@ -85,15 +85,13 @@ const Access = () => {
           _id: user._id,
           access: accessMap,
         };
-
-
       });
       setSanitisedUserData(sanitisedUser);
     }
 
     setLoading(
       (accessDataLoading || userDataLoading || isCreatingMaster) &&
-      !authenticated
+        !authenticated
     );
   }, [accessDataLoading, userDataLoading, authenticated]);
 
@@ -101,7 +99,6 @@ const Access = () => {
     setSelectedMaster(masterType);
     setDialogOpen(true);
   };
-
 
   const handleAdd = () => {
     setInitialData({});
@@ -138,14 +135,12 @@ const Access = () => {
   };
 
   const editAccess = (rowData) => {
-    
     setAction("Update");
     setInitialData(rowData);
     openDialog("Access");
   };
 
   const editUserAccess = (rowData) => {
-    console.log(`'data' ${rowData}`);
     setAction("Update");
     setInitialData(rowData);
     openDialog("User Access");
@@ -511,7 +506,7 @@ const Access = () => {
 
         return newState;
       });
-
+     
     };
 
     const handleDelete = (id) => {
@@ -626,6 +621,8 @@ const Access = () => {
       CustomComponent: AccessComponent,
     },
   ];
+
+  console.log({accessConfig})
   return (
     <div className="w-full h-full px-4">
       <Tabs defaultValue="Access" className="h-full">
@@ -651,7 +648,7 @@ const Access = () => {
               fields={fields}
               initialData={initialData}
               action={action}
-
+              user={user}
             />
           </div>
         </TabsContent>
@@ -666,7 +663,7 @@ const Access = () => {
               fields={userAccessFields}
               initialData={initialData}
               action={action}
-
+              user={user}
             />
           </div>
         </TabsContent>

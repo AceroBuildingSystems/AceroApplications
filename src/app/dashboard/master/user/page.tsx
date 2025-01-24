@@ -8,7 +8,7 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { useUserOperationsMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -27,7 +27,6 @@ const page = () => {
   
 const { user, status, authenticated } = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
-    const { user, status, authenticated } = useUserAuthorised(); 
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },

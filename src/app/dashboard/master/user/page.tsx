@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -28,6 +27,7 @@ const page = () => {
   
 const { user, status, authenticated } = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
+    const { user, status, authenticated } = useUserAuthorised(); 
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -39,7 +39,7 @@ const { user, status, authenticated } = useUserAuthorised();
     const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery( {db:"ROLE_MASTER" });
     const { data: employeeTypeData = [], isLoading: employeeTypeLoading } = useGetMasterQuery({db: 'EMPLOYEE_TYPE_MASTER'});
     const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({db:"ORGANISATION_MASTER"} );
-  const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
+  const [createUser, { isLoading: isCreatingUser }] = useUserOperationsMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -112,7 +112,7 @@ const { user, status, authenticated } = useUserAuthorised();
 
   // Save function to send data to an API or database
   const saveData = async ({formData, action}) => {
-   
+   console.log({formData})
     const formattedData = {
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
@@ -192,7 +192,7 @@ const { user, status, authenticated } = useUserAuthorised();
     // Your delete logic for user page
   };
 
- 
+
 
   const userColumns = [
     {
@@ -304,6 +304,7 @@ const { user, status, authenticated } = useUserAuthorised();
         fields={fields}
         initialData={initialData}
         action={action}
+        user={user}
       />
     </>
 

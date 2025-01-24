@@ -51,7 +51,6 @@ const DynamicDialog = ({
       }
       return acc;
     }, {});
-
     setFormData(formattedData);
 
   }, [initialData]);
@@ -85,7 +84,6 @@ const DynamicDialog = ({
         updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
           }`.trim();
       }
-
       return updatedFormData;
     });
   };
@@ -104,7 +102,8 @@ const DynamicDialog = ({
         return acc;
       }, {});
   
-      setFormData(formattedData);
+      // Save the data to the database (e.g., via an API call)
+      await onSave({ formData:updatedData, action });
       closeDialog();
     } catch (error) {
       console.error("Error saving data:", error);

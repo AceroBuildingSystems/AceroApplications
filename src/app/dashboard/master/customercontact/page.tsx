@@ -7,10 +7,10 @@ import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { MONGO_MODELS,SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
@@ -21,17 +21,32 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 const page = () => {
 const { user, status, authenticated } = useUserAuthorised();
-  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
-    db: 'DEPARTMENT_MASTER',
-    sort: { name: -1 },
+  const { data: customerContactData = [], isLoading: customerContactLoading } = useGetMasterQuery({
+    db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
+    sort: { name: 'asc' },
+  });
+  const { data: customerData = [], isLoading: customerLoading } = useGetMasterQuery({
+    db: MONGO_MODELS.CUSTOMER_MASTER,
+    sort: { name: 'asc' },
+  });
+  const { data: customerTypeData = [], isLoading: customerTypeLoading } = useGetMasterQuery({
+    db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
+    sort: { name: 'asc' },
   });
 
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading = departmentLoading;
+    const loading = customerContactLoading||customerLoading||customerTypeLoading;
 
+      const customerNames = customerData?.data?.filter((customer: undefined) => customer !== undefined)  // Remove undefined entries
+      ?.map((customer: { name: any; }) => customer.name);             // Extract only the 'name' property
+    
+      const fieldsToAdd = [
+        { fieldName: 'customerName', path: ['customer', 'name'] }
+      ];
+      const transformedData = transformData(customerContactData?.data, fieldsToAdd);
 
   interface RowData {
     id: string;
@@ -42,8 +57,13 @@ const { user, status, authenticated } = useUserAuthorised();
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-    { label: 'Department Id', name: "depId", type: "text", required: true, placeholder: 'Department Id' },
-    { label: 'Department Name', name: "name", type: "text", required: true, placeholder: 'Department Name' },
+    
+    { label: 'Contact Name', name: "name", type: "text", required: true, placeholder: 'Contact Name' },
+    { label: 'Email', name: "email", type: "text", required: true, placeholder: 'Email' },
+    { label: 'Contact Number', name: "phone", type: "text", required: true, placeholder: 'Contact Number' },
+    { label: 'Position', name: "position", type: "text", required: true, placeholder: 'Position' },
+    { label: 'Customer Name', name: "customer", type: "select", data: customerData?.data, placeholder: 'Select Customer' },
+    { label: 'Customer Type', name: "customerType", type: "select", data: customerTypeData?.data, placeholder: 'Select Customer Type' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
   ]
@@ -71,7 +91,7 @@ const { user, status, authenticated } = useUserAuthorised();
   const saveData = async ({ formData, action }) => {
 
     const formattedData = {
-      db: 'DEPARTMENT_MASTER',
+        db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
       action: action === 'Add' ? 'create' : 'update',
       filter: { "_id": formData._id },
       data: formData,
@@ -83,12 +103,12 @@ const { user, status, authenticated } = useUserAuthorised();
 
 
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Department added successfully');
+      toast.success('Customer contact added successfully');
 
     }
     else {
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Department updated successfully');
+        toast.success('Customer contact updated successfully');
       }
     }
 
@@ -102,19 +122,19 @@ const { user, status, authenticated } = useUserAuthorised();
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("department");
+    openDialog("customer contact");
     // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("department");
+    openDialog("customer contact");
 
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: "DEPARTMENT_MASTER", masterName: "Department" });
+    bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER, masterName: "CustomerContact" });
   };
 
   const handleExport = () => {
@@ -129,7 +149,7 @@ const { user, status, authenticated } = useUserAuthorised();
 
 
 
-  const departmentColumns = [
+  const customerContactColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -154,20 +174,6 @@ const { user, status, authenticated } = useUserAuthorised();
     },
 
     {
-      accessorKey: "depId",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Department Id</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("depId")}</div>,
-    },
-    {
       accessorKey: "name",
       header: ({ column }: { column: any }) => (
         <button
@@ -175,12 +181,82 @@ const { user, status, authenticated } = useUserAuthorised();
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Department</span> {/* Label */}
+          <span>Customer Contact</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
+    {
+        accessorKey: "email",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>Email</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div >{row.getValue("email")}</div>,
+      },
+      {
+        accessorKey: "phone",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>Contact</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div >{row.getValue("phone")}</div>,
+      },
+      {
+        accessorKey: "position",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>Position</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div >{row.getValue("position")}</div>,
+      },
+      {
+        accessorKey: "customer",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>Customer Name</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div >{row.getValue("customer")?.name}</div>,
+      },
+      {
+        accessorKey: "customerType",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>Customer Type</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div >{row.getValue("customerType")?.name}</div>,
+      },
 
      {
           accessorKey: "isActive",
@@ -201,16 +277,18 @@ const { user, status, authenticated } = useUserAuthorised();
 
   ];
 
-  const departmentConfig = {
+  const customerContactConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by department' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by customer contact' },
 
     ],
     filterFields: [
-    ],
+        { key: "customer", label: 'customerName', type: "select" as const, options: customerNames, placeholder: 'Search by customer' },
+  
+      ],
     dataTable: {
-      columns: departmentColumns,
-      data: departmentData?.data,
+      columns: customerContactColumns,
+      data: transformedData,
     },
     buttons: [
 
@@ -224,7 +302,7 @@ const { user, status, authenticated } = useUserAuthorised();
   return (
     <>
 
-      <MasterComponent config={departmentConfig} loadingState={loading} />
+      <MasterComponent config={customerContactConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

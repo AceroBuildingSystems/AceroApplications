@@ -10,7 +10,7 @@ import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
@@ -45,7 +45,10 @@ const { user, status, authenticated } = useUserAuthorised();
 
   const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading;
 
-  const transformedData = userTransformData(userData?.data);
+  const fieldsToAdd = [
+    { fieldName: 'roleName', path: ['role', 'name'] }
+  ];
+  const transformedData = transformData(userData?.data, fieldsToAdd);
 
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
@@ -136,6 +139,7 @@ const { user, status, authenticated } = useUserAuthorised();
 
 
   const editUser = (rowData: RowData) => {
+    console.log(rowData);
     setAction('Update');
     setInitialData(rowData);
     openDialog("employee");
@@ -269,7 +273,7 @@ const { user, status, authenticated } = useUserAuthorised();
       { key: "email", label: 'email', type: "email" as const, placeholder: 'Search by email' },
     ],
     filterFields: [
-      { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
+      { key: "role", label: 'roleName', type: "select" as const, options: roleNames, placeholder: 'Search by Role' },
 
     ],
     dataTable: {

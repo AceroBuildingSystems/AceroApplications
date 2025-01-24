@@ -201,7 +201,7 @@ const page = () => {
     ],
     dataTable: {
       columns: departmentColumns,
-      userData: roleData?.data,
+      data: roleData?.data,
     },
     buttons: [
 

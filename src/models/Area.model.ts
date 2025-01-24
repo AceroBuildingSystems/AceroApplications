@@ -3,9 +3,8 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { area } from "@/types/area.types";
 
 const AreaSchema: Schema<area> = new Schema({
-    areaId: { type: String, required:true, unique:true},
+   
     name: { type: String, required: true, unique:true },
-    regionId: { type: String},
     region: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Region", // Reference to the Region model

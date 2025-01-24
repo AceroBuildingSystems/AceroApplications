@@ -74,6 +74,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
+    
         const newFilterValues = { ...filterValues, [field]: value };
 
         setFilterValues(newFilterValues);
@@ -88,7 +89,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
 
-        const filtered = config?.dataTable?.userData?.filter((item) => {
+
+        const filtered = config?.dataTable?.data?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
@@ -103,17 +105,18 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
             const matchesFilter = Object.keys(filterValues).every((key) => {
 
                 const filterValue = filterValues[key];
-
+                console.log(filterValue);
+                console.log(item[key]);
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
 
 
-                return item[key] === filterValue;
+                return typeof item[key] === 'string' && item[key].toLowerCase() === filterValue?.toLowerCase();
             });
 
             return matchesSearch && matchesFilter;
         });
-
+       
         setFilteredData(filtered); // Update filtered data state
     };
 
@@ -134,7 +137,6 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [open, setOpen] = React.useState(false)
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
-
 
     return (
         <>
@@ -168,9 +170,9 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                     variant="outline"
                                                     role="combobox"
                                                     aria-expanded={open ? true : false}
-                                                    className="w-[200px] justify-between"
+                                                    className=" w-[200px] justify-between overflow-hidden text-ellipsis whitespace-nowrap"
                                                 >
-                                                    {filterValues[field.label] || 'Select ' + field.label}
+                                                    {filterValues[field.label] || field.placeholder}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -179,7 +181,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                     <CommandInput placeholder="Search role" />
 
                                                     <CommandList>
-                                                        <CommandEmpty>No role found.</CommandEmpty>
+                                                        <CommandEmpty>No {field.key} found.</CommandEmpty>
                                                         <CommandGroup>
                                                             {/* Add "All" option */}
                                                             <CommandItem
@@ -199,12 +201,15 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                                 All
                                                             </CommandItem>
 
-                                                            {field?.options?.map((option, i) => (
+                                                            {field?.options?.map((option, i) => {
+                                                               
+                                                                return(
                                                                 <CommandItem
                                                                     key={i}
                                                                     value={option}
                                                                     onSelect={(value) => {
-                                                                        handleFilterChange(value, field.label);
+                                                                        
+                                                                        handleFilterChange(value?.toProperCase(), field.label);
                                                                         setOpen(false)
                                                                     }}
                                                                 >
@@ -215,8 +220,9 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                                         )}
                                                                     />
                                                                     {option}
-                                                                </CommandItem>
-                                                            ))}
+                                                                </CommandItem>);
+                                                            }
+                                                            )}
                                                         </CommandGroup>
                                                     </CommandList>
                                                 </Command>
@@ -274,7 +280,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                     </div>
 
                     <div className='h-[90%]' >
-                        {<DataTable data={filteredData?.length > 0 ? filteredData : config?.dataTable?.data} columns={config?.dataTable?.columns || []} />}
+                        {<DataTable data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []} />}
                     </div>
                 </div>
 

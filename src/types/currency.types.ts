@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-export interface region {
+export interface currency {
     _id?: mongoose.ObjectId,
     name: string,
     addedBy: string,

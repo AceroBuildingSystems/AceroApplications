@@ -1,9 +1,8 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { region } from "@/types/region.types";
+import { currency } from "@/types/currency.types";
 
-const RegionSchema: Schema<region> = new Schema({
-    
+const CurrencySchema: Schema<currency> = new Schema({
     name: { type: String, required: true, unique:true },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
@@ -12,6 +11,6 @@ const RegionSchema: Schema<region> = new Schema({
 }, { timestamps: true })
 
 
-const Region: Model<region> = mongoose.models.region || mongoose.model<region>("Region", RegionSchema)
+const Currency: Model<currency> = mongoose.models.Currency || mongoose.model<currency>("Currency", CurrencySchema)
 
-export default Region
+export default Currency

@@ -90,6 +90,27 @@ const DynamicDialog = ({
     });
   };
 
+// handle close
+  const handleClose = async () => {
+    try {
+
+      const formattedData = Object.keys(initialData).reduce((acc: Record<string, any>, key: string) => {
+        if (typeof initialData[key] === "object" && initialData[key]?._id) {
+          // If the field is an object with an _id, store the _id
+          acc[key] = initialData[key]._id;
+        } else {
+          acc[key] = initialData[key];
+        }
+        return acc;
+      }, {});
+  
+      setFormData(formattedData);
+      closeDialog();
+    } catch (error) {
+      console.error("Error saving data:", error);
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async () => {
     try {
@@ -142,7 +163,7 @@ const DynamicDialog = ({
     <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
         className={`max-w-full max-h-[80%] pointer-events-auto sm:max-w-md lg:max-w-3xl mx-4  ${height === 'auto' ? 'h-auto' : 'h-[75%]'}`}>
-        <DialogTitle className="pl-1">{`${action} ${selectedMaster.charAt(0).toUpperCase() + selectedMaster.slice(1)
+        <DialogTitle className="pl-1">{`${action} ${selectedMaster.toProperCase()
           }`}</DialogTitle>
         <div className="bg-white h-full overflow-y-auto p-2 rounded-md">
           <div className=" space-y-4   pr-2 pl-1 my-1 overflow-y-auto">
@@ -264,12 +285,12 @@ const DynamicDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={closeDialog}>
+          <Button variant="secondary" onClick={handleClose}>
             Cancel
           </Button>
           {action === "Add" && <Button onClick={handleSubmit}>Save</Button>}
           {action === "Update" && (
-            <Button onClick={handleSubmit}>Updates</Button>
+            <Button onClick={handleSubmit}>Update</Button>
           )}
         </DialogFooter>
       </DialogContent>

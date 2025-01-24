@@ -1,19 +1,16 @@
 "use client";
 
 import React from 'react'
-import Layout from '../../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
-import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { MONGO_MODELS,SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
@@ -23,17 +20,17 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
-  const { user, status, authenticated } = useUserAuthorised();
-  const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
-      db: 'DESIGNATION_MASTER',
-      sort: { name: -1 },
-    });
-  
+const { user, status, authenticated } = useUserAuthorised();
+  const { data: customerTypeData = [], isLoading: customerTypeLoading } = useGetMasterQuery({
+    db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
+    sort: { name: 'asc' },
+  });
+
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  designationLoading;
+  const loading = customerTypeLoading;
 
 
   interface RowData {
@@ -45,10 +42,10 @@ const page = () => {
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-   
-    { label: 'Designation', name: "name", type: "text", required: true, placeholder:'Designation' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
-   
+    
+    { label: 'Customer Type', name: "name", type: "text", required: true, placeholder: 'Customer Type' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
   ]
 
 
@@ -71,66 +68,68 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}) => {
-   
+  const saveData = async ({ formData, action }) => {
+
     const formattedData = {
-      db: 'DESIGNATION_MASTER',
+        db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
 
+
+
     const response = await createMaster(formattedData);
 
-    
+
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Designation added successfully');
+      toast.success('Customer type added successfully');
 
     }
-    else{
+    else {
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Designation updated successfully');
+        toast.success('Customer type updated successfully');
       }
     }
 
-    if(response?.error?.data?.message?.message){
+    if (response?.error?.data?.message?.message) {
       toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
     }
-   
+
   };
 
 
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("designation");
-    
+    openDialog("customer type");
+    // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("designation");
+    openDialog("customer type");
 
   };
 
- const handleImport = () => {
-      bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
-    };
+  const handleImport = () => {
+    bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_TYPE_MASTER, masterName: "CustomerType" });
+  };
 
   const handleExport = () => {
     console.log('UserPage Update button clicked');
-   
+    // Your update logic for user page
   };
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
-   
+    // Your delete logic for user page
   };
 
- 
 
-  const designationColumns = [
+
+  const customerTypeColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -162,43 +161,42 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Designation</span> {/* Label */}
+          <span>Customer Type</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
-    {
-      accessorKey: "isActive",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-        >
-          <span>Status</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-    },
+     {
+          accessorKey: "isActive",
+          header: ({ column }: { column: any }) => (
+            <button
+              className="flex items-center space-x-2"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
     
+            >
+              <span>Status</span> {/* Label */}
+              <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            </button>
+          ),
+          cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+        },
+
 
 
   ];
 
-  const designationConfig = {
+  const customerTypeConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by designation' },
-      
-    ],
-    filterFields: [
-      // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by customer type' },
 
     ],
+    filterFields: [
+    ],
     dataTable: {
-      columns: designationColumns,
-      data: designationData?.data,
+      columns: customerTypeColumns,
+      data: customerTypeData?.data,
     },
     buttons: [
 
@@ -212,7 +210,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={designationConfig} loadingState={loading} />
+      <MasterComponent config={customerTypeConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}
@@ -221,7 +219,7 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
-        height = 'auto'
+        height='auto'
       />
     </>
 

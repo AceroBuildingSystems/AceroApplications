@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react'
-import Layout from '../../layout'
+import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -18,14 +18,15 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
-import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
+import { bulkImport } from '@/shared/functions';
 
 
 const page = () => {
+   
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
-      db: 'DESIGNATION_MASTER',
+  const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
+      db: 'REGION_MASTER',
       sort: { name: -1 },
     });
   
@@ -33,7 +34,7 @@ const page = () => {
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  designationLoading;
+  const loading =  regionLoading;
 
 
   interface RowData {
@@ -46,7 +47,7 @@ const page = () => {
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Designation', name: "name", type: "text", required: true, placeholder:'Designation' },
+    { label: 'Region', name: "name", type: "text",required: true, placeholder:'Region' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -74,22 +75,24 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-      db: 'DESIGNATION_MASTER',
+      db: 'REGION_MASTER',
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
     };
 
+
+
     const response = await createMaster(formattedData);
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Designation added successfully');
+      toast.success('Region added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Designation updated successfully');
+        toast.success('Region updated successfully');
       }
     }
 
@@ -103,34 +106,34 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("designation");
-    
+    openDialog("region");
+    // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("designation");
+    openDialog("region");
 
   };
 
- const handleImport = () => {
-      bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
-    };
+  const handleImport = () => {
+    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"ROLE_MASTER", masterName:"Role" });
+  };
 
   const handleExport = () => {
     console.log('UserPage Update button clicked');
-   
+    // Your update logic for user page
   };
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
-   
+    // Your delete logic for user page
   };
 
  
 
-  const designationColumns = [
+  const regionColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -162,7 +165,7 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Designation</span> {/* Label */}
+          <span>Region</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
@@ -187,9 +190,9 @@ const page = () => {
 
   ];
 
-  const designationConfig = {
+  const regionConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by designation' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
       
     ],
     filterFields: [
@@ -197,8 +200,8 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: designationColumns,
-      data: designationData?.data,
+      columns: regionColumns,
+      data: regionData?.data,
     },
     buttons: [
 
@@ -212,7 +215,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={designationConfig} loadingState={loading} />
+      <MasterComponent config={regionConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

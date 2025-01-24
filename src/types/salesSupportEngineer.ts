@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
-export interface region {
+export interface salesSupportEngineer {
     _id?: mongoose.ObjectId,
-    name: string,
+    supportEngineer: mongoose.ObjectId,
+    salesTeam: mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,

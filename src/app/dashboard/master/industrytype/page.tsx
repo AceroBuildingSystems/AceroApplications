@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react'
-import Layout from '../../layout'
+import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -13,7 +13,7 @@ import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/us
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
@@ -23,17 +23,18 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
-  const { user, status, authenticated } = useUserAuthorised();
-  const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
-      db: 'DESIGNATION_MASTER',
-      sort: { name: -1 },
+   
+    const { user, status, authenticated } = useUserAuthorised();
+  const { data: industryTypeData = [], isLoading: industryTypeLoading } = useGetMasterQuery({
+      db: MONGO_MODELS.INDUSTRY_TYPE_MASTER,
+      sort: { name: 'asc' },
     });
   
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  designationLoading;
+  const loading =  industryTypeLoading;
 
 
   interface RowData {
@@ -46,7 +47,7 @@ const page = () => {
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Designation', name: "name", type: "text", required: true, placeholder:'Designation' },
+    { label: 'Employee Type', name: "name", type: "text", required: true, placeholder:'Employee Type' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -58,7 +59,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -74,22 +75,26 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-      db: 'DESIGNATION_MASTER',
+        db: MONGO_MODELS.INDUSTRY_TYPE_MASTER,
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
     };
 
+
+
     const response = await createMaster(formattedData);
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Designation added successfully');
+      
+      toast.success('Industry type added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Designation updated successfully');
+        
+        toast.success('Industry type updated successfully');
       }
     }
 
@@ -103,34 +108,34 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("designation");
-    
+    openDialog("industry type");
+    // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("designation");
+    openDialog("industry type");
 
   };
 
- const handleImport = () => {
-      bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
+  const handleImport = () => {
+    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.INDUSTRY_TYPE_MASTER, masterName:"IndustryType" });
     };
 
   const handleExport = () => {
     console.log('UserPage Update button clicked');
-   
+    // Your update logic for user page
   };
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
-   
+    // Your delete logic for user page
   };
 
  
 
-  const designationColumns = [
+  const industryTypeColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -162,7 +167,7 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Designation</span> {/* Label */}
+          <span>Industry Type</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
@@ -184,12 +189,11 @@ const page = () => {
     },
     
 
-
   ];
 
-  const designationConfig = {
+  const industryTypeConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by designation' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by industry type' },
       
     ],
     filterFields: [
@@ -197,8 +201,8 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: designationColumns,
-      data: designationData?.data,
+      columns: industryTypeColumns,
+      data: industryTypeData?.data,
     },
     buttons: [
 
@@ -212,7 +216,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={designationConfig} loadingState={loading} />
+      <MasterComponent config={industryTypeConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

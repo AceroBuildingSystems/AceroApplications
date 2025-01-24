@@ -202,7 +202,7 @@ const page = () => {
     ],
     dataTable: {
       columns: employeeTypeColumns,
-      userData: employeeTypeData?.data,
+      data: employeeTypeData?.data,
     },
     buttons: [
 

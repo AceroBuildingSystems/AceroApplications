@@ -66,8 +66,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
     useEffect(()=>{
         setFilteredData(config?.dataTable?.data)
     },[config,loadingState])
-    
-    console.log({filteredData})
+  
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
         const newSearchValues = { ...searchValues, [field]: e.target.value };

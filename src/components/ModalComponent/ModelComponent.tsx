@@ -211,57 +211,10 @@ const DynamicDialog = ({
                               placeholder={field.placeholder}
                             />
                           );
-                        case "custom":
-                          return (
-                            <div>
-                              {formData?.access?.map((item: any) => (
-                                <div className="flex" key={item._id} style={{ marginBottom: "20px" }}>
-                                  {/* Access Name */}
-                                  <div className="flex items-center w-48">
-
-                                    <div className="w-8">
-                                      <Button
-                                        iconPlacement="left"
-                                        effect="expandIcon"
-                                        icon={Trash2Icon}
-                                        onClick={() => handleRemoveAccess(item._id)}
-                                        className="h-10 p-1"
-                                      />
-                                    </div>
-
-
-                                    <div className=" flex items-center justify-between">
-                                      <h3 >{item.name}</h3>
-                                    </div>
-                                  </div>
-
-
-                                  {/* Permissions */}
-                                  <div className="w-full flex justify-between">
-                                    {Object.entries(item.permissions).map(([key, value]) => (
-                                      <div
-                                        key={key}
-                                        className="flex flex-col gap-0.5 justify-center items-center rounded-sm pb-2 pt-1 min-w-20 bg-neutral-300 h-full"
-                                      >
-                                        <Label
-                                          className="font-medium text-md text-neutral-700"
-                                          htmlFor={`${key}_${item._id}`}
-                                        >
-                                          {key}
-                                        </Label>
-                                        <Switch
-                                          id={`${key}_${item._id}`}
-                                          onClick={() => handleTogglePermission(item._id, key)}
-                                          checked={Boolean(value)}
-                                        />
-                                      </div>
-                                    ))}
-                                  </div>
-
-                                </div>
-                              ))}
-                            </div>
-                          );
+                          case "custom":
+                            return (
+                             <><field.CustomComponent accessData={formData[field.name]} /></>
+                            )
 
                         default:
                           return (

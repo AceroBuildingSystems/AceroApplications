@@ -552,9 +552,11 @@ const Access = () => {
               type: "select",
               data: accessComboBoxData,
               format: "ObjectId",
+              
             }}
             handleChange={handleAccessAdd}
             formData={distinctParentData}
+            placeholder="Add Access"
           />
           <Button effect="expandIcon" iconPlacement="right" icon={UpdateIcon} onClick={updateAcess}>Update Access</Button>
         </div>

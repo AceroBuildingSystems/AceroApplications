@@ -267,55 +267,75 @@ export class MongooseAdapter implements DatabaseAdapter {
     if (!model)
       return { status: ERROR, message: `Model ${modelName} not found` };
   
-    const { id, arrayProperty, arrayFilter, data, addIfNotFound = true } = options;
+    const { id, arrayProperty, arrayFilter, data, addIfNotFound = true,itemMatcher,replaceAll=false } = options;
   
     // Find the document by ID                                                                                                                                                           
     const document = await model.findById(id);
     if (!document) return { status: ERROR, message: "Document not found" };
+
+
   
     // Check if the array property exists
-    const array = (document as any)[arrayProperty];
-    if (!Array.isArray(array)) {
-      return {
-        status: ERROR,
-        message: `${arrayProperty} is not an array or does not exist`,
-      };
-    }
-
-    if(arrayFilter){
-      // Helper function to access nested keys
-      const getNestedValue = (obj: any, path: string) => {
-        return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
-      };
-    
-      // Find the index of the array item matching the filter
-      const itemIndex = array.findIndex((item: any) =>
-        Object.entries(arrayFilter).every(([key, value]) => {
-          const itemValue = getNestedValue(item, key);
-          if (itemValue && itemValue.toString) {
-            return itemValue.toString() === value.toString();
-          }
-          return itemValue === value;
-        })
-      );
-    
-      // Add or update logic
-      if (itemIndex === -1) {
-        if (!addIfNotFound) {
-          return { status: ERROR, message: "Item not found in the array" };
-        }
-        array.push({ ...arrayFilter, ...data });
-      } else {
-        // Update the array item
-        array[itemIndex] = {
-          ...array[itemIndex],
-          ...data,
+    let array = (document as any)[arrayProperty];
+    if(replaceAll){
+      array = data
+    }else{
+      if (!Array.isArray(array)) {
+        return {
+          status: ERROR,
+          message: `${arrayProperty} is not an array or does not exist`,
         };
       }
-    }else{
-      array.push(data);
-    }
   
+      if(arrayFilter){
+        // Helper function to access nested keys
+        const getNestedValue = (obj: any, path: string) => {
+          return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
+        };
+      
+        // Find the index of the array item matching the filter
+        const itemIndex = array.findIndex((item: any) =>
+          Object.entries(arrayFilter).every(([key, value]) => {
+            const itemValue = getNestedValue(item, key);
+            if (itemValue && itemValue.toString) {
+              return itemValue.toString() === value.toString();
+            }
+            return itemValue === value;
+          })
+        );
+      
+        // Add or update logic
+        if (itemIndex === -1) {
+          if (!addIfNotFound) {
+            return { status: ERROR, message: "Item not found in the array" };
+          }
+          array.push({ ...arrayFilter, ...data });
+        } else {
+          // Update the array item
+          array[itemIndex] = {
+            ...array[itemIndex],
+            ...data,
+          };
+        }
+      }else{
+        if(Array.isArray(data)){
+          if(itemMatcher){
+            data.forEach(d=>{
+              const matchIndex = array.findIndex(doc=>doc[itemMatcher] === d[itemMatcher])
+              if(matchIndex !== -1){
+                array[matchIndex][itemMatcher] = d
+              }else{
+                array.push(d);
+              }
+            })
+          }
+        }else{
+          array.push(data)
+        }
+      }
+    
+    }
+
     // Save the updated document
     (document as any)[arrayProperty] = array;
     await document.save();

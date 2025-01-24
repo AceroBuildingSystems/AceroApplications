@@ -14,10 +14,10 @@ import {
   useCreateMasterMutation,
   useGetMasterQuery,
 } from "@/services/endpoints/masterApi";
-import { useGetUsersQuery } from "@/services/endpoints/usersApi";
-
+import { useGetUsersQuery, useUserOperationsMutation } from "@/services/endpoints/usersApi";
 import { SUCCESS } from "@/shared/constants";
 import { getDistinctFromData } from "@/shared/functions";
+import { UpdateIcon } from "@radix-ui/react-icons";
 import {
   ArrowUpDown,
   DeleteIcon,
@@ -27,22 +27,22 @@ import {
   PlusIcon,
   Trash2Icon,
 } from "lucide-react";
-import { permission } from "process";
+import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 const Access = () => {
-  const { data: accessData = [], isLoading: accessDataLoading } =
-    useGetMasterQuery({ db: "ACCESS_MASTER" });
-  const { data: userData = [], isLoading: userDataLoading } =
-    useGetUsersQuery();
+  const { data: accessData = [], isLoading: accessDataLoading } = useGetMasterQuery({ db: "ACCESS_MASTER" });
+  const [updateUser, { isLoading: updateUserAccessLoading }] = useUserOperationsMutation();
+  const { data: userData = [], isLoading: userDataLoading,refetch:refetchUsers } = useGetUsersQuery();
   const [distinctParentData, setDistinctParentData] = useState([]);
   const [sanitisedUserData, setSanitisedUserData] = useState([]);
   const [createMaster, { isLoading: isCreatingMaster }] =
     useCreateMasterMutation();
   const { user, status, authenticated } = useUserAuthorised();
   const [loading, setLoading] = useState(true);
-  const [userAccessSaveData, setUserAccessSaveData] = useState([]);
+
+  const router = useRouter()
 
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedMaster, setSelectedMaster] = useState("");
@@ -54,13 +54,13 @@ const Access = () => {
     if (!accessDataLoading && accessData?.data) {
       const distinctAccess = accessData?.data?.reduce(
         (acc: any[], access: any) => {
-          if (!acc.some((val) => val?.name === access?.parent?.name)) {
+
             acc.push({
               _id: access._id,
               name: access.name,
               category: access.category,
             });
-          }
+        
           return acc;
         },
         []
@@ -112,17 +112,13 @@ const Access = () => {
   };
 
   const saveData = async ({ formData, action }) => {
-    console.log(userAccessSaveData);
-    return;
     const formattedData = {
       db: "ACCESS_MASTER",
       action: action === "Add" ? "create" : "update",
       filter: { _id: formData._id },
       data: formData,
     };
-
     const response = await createMaster(formattedData);
-
     if (response.data?.status === SUCCESS && action === "Add") {
       toast.success("Access added successfully");
     } else {
@@ -290,7 +286,6 @@ const Access = () => {
     { _id: true, name: "True" },
     { _id: false, name: "False" },
   ];
-
   const fields: Array<{
     label: string;
     name: string;
@@ -311,13 +306,12 @@ const Access = () => {
     { label: "url", name: "url", type: "text" },
     {
       label: "Parent",
-      name: "role",
+      name: "parent",
       type: "select",
       data: distinctParentData,
       format: "ObjectId",
     },
   ];
-
   // This is for user access tab configuration [the one on the right]
   const userAccessColumn = [
     {
@@ -436,26 +430,16 @@ const Access = () => {
   };
 
 
-  const setAccessDataForSaving = (userAcessData)=>{
-    setUserAccessSaveData(userAcessData);
-  }
-
   const AccessComponent = ({ accessData}) => {
     if (!accessData) {
       return <></>;
     }
     const [accessComboBoxData, setAccessComboBoxData] = useState([]);
     const [acessComponentData, setAccessComponentData] = useState(accessData);
-    console.log(acessComponentData);
 
-    useEffect(()=>{
-      setAccessDataForSaving(acessComponentData)
-    },[acessComponentData])
-   
     const computedAccessComboBoxData = useMemo(() => {
       return distinctParentData.filter(
         (parent) =>
-          parent?.category === "accesor" &&
           !acessComponentData?.find((data) => data._id === parent._id)
       );
     }, [acessComponentData]);
@@ -506,9 +490,6 @@ const Access = () => {
     }, []);
 
     const handleChecked = (id, key) => {
-      
-     
-      
       setAccessComponentData((prev) => {
         const newState = [...prev];
         const findIdx = newState.findIndex((d) => d._id === id);
@@ -522,7 +503,7 @@ const Access = () => {
             [key]: !newState[findIdx].permissions[key],
           },
         };
-console.log(newState);
+
         return newState;
       });
      
@@ -531,14 +512,38 @@ console.log(newState);
     const handleDelete = (id) => {
       setAccessComponentData((prev) => {
         const newState = prev.filter((data) => data._id !== id);
-        console.log({ newState });
         return newState;
       });
     };
 
+    const  updateAcess = async ()=>{
+      const updatedAccess = acessComponentData.map(access=>{
+        access["accessId"] = access._id
+        return {accessId:access._id,hasAccess:access.hasAccess,permissions:access.permissions}
+      })
+      if(!initialData._id){
+        toast.error("User Id is Missing!")
+        return
+      }
+
+      const resp = await updateUser({
+        action:"updateAccess",
+        data:{
+            id: initialData._id,
+            arrayProperty: "access",
+            data: updatedAccess,
+            replaceAll:true
+        }
+    })
+    console.log("REFRESHING....")
+      router.refresh()
+      refetchUsers()
+      closeDialog()
+    }
+
     return (
       <div className="w-full h-auto bg-neutral-200/50 rounded-lg p-4">
-        <div className="mb-4">
+        <div className="mb-4 w-full flex justify-between">
           <Combobox
             className="mb-10"
             field={{
@@ -551,6 +556,7 @@ console.log(newState);
             handleChange={handleAccessAdd}
             formData={distinctParentData}
           />
+          <Button effect="expandIcon" iconPlacement="right" icon={UpdateIcon} onClick={updateAcess}>Update Access</Button>
         </div>
         <div className="w-full flex flex-col gap-4 mb-1">
           {acessComponentData?.map((data, index) => (
@@ -615,7 +621,6 @@ console.log(newState);
       CustomComponent: AccessComponent,
     },
   ];
-
   return (
     <div className="w-full h-full px-4">
       <Tabs defaultValue="Access" className="h-full">
@@ -652,7 +657,7 @@ console.log(newState);
               isOpen={isDialogOpen}
               closeDialog={closeDialog}
               selectedMaster={selectedMaster}
-              onSave={saveData}
+              onSave={()=>{toast.success("Plase use the other update button!")}}
               fields={userAccessFields}
               initialData={initialData}
               action={action}

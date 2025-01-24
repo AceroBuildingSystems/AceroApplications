@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,17 +8,19 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { useUserOperationsMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 
 const page = () => {
   const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
+    const { user, status, authenticated } = useUserAuthorised(); 
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -31,7 +32,7 @@ const page = () => {
     const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery( {db:"ROLE_MASTER" });
     const { data: employeeTypeData = [], isLoading: employeeTypeLoading } = useGetMasterQuery({db: 'EMPLOYEE_TYPE_MASTER'});
     const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({db:"ORGANISATION_MASTER"} );
-  const [createUser, { isLoading: isCreatingUser }] = useCreateUserMutation();
+  const [createUser, { isLoading: isCreatingUser }] = useUserOperationsMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -102,7 +103,7 @@ const page = () => {
 
   // Save function to send data to an API or database
   const saveData = async ({formData, action}) => {
-   
+   console.log({formData})
     const formattedData = {
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
@@ -156,7 +157,7 @@ const page = () => {
     // Your delete logic for user page
   };
 
- 
+
 
   const userColumns = [
     {
@@ -260,6 +261,7 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
+        user={user}
       />
     </>
 

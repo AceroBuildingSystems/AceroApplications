@@ -39,11 +39,6 @@ export const updateAccess = catchAsync(
       addIfNotFound?: boolean;
     };
   }) => {
-    if (
-      !options.data.id 
-    ) {
-      return { status:500, message:INSUFFIENT_DATA };
-    }
     const result = await crudManager.mongooose.updateInArray(
       MONGO_MODELS.USER_MASTER,
       options.data

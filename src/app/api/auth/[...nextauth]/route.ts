@@ -64,19 +64,20 @@ export const authOptions: AuthOptions = {
       }
     
       session.user = user;
-    
+
       // Collect all access IDs and build access map for permissions
-      const accessIds = user.access.map((data: { accessId: any }) => data.accessId);
+      const accessIdsUnfiltered = user.access.map((data: { accessId: any }) => data.accessId);
+      const accessIds = accessIdsUnfiltered.filter((id: any) => id); // Remove nulls
+
       const accessMap = new Map(
         user.access
           .filter((data: { permissions: any }) => data.permissions.view) // Only include viewable items
           .map((data: { accessId: any; permissions: any }) => [
-            data.accessId._id.toString(), // Ensure the key is a string
+            data.accessId?._id?.toString(), // Ensure the key is a string
             { permissions: data.permissions },
           ])
       );
 
-      // Fetch all ancestors and access nodes for the access IDs
       const trees = await Access.aggregate([
         {
           $match: {
@@ -85,7 +86,7 @@ export const authOptions: AuthOptions = {
         },
         {
           $graphLookup: {
-            from: "accesses", // Ensure this matches your MongoDB collection name
+            from: "accesses", 
             startWith: "$parent",
             connectFromField: "parent",
             connectToField: "_id",
@@ -94,7 +95,7 @@ export const authOptions: AuthOptions = {
         },
       ]);
     
-    
+      console.debug("Trees", trees);
       // Combine all ancestors and nodes into a single list
       const allAncestors = trees.flatMap((tree) => [...tree.ancestors, tree]);
     
@@ -107,8 +108,8 @@ export const authOptions: AuthOptions = {
       const menuItems = buildNavStructure(
         uniqueAncestors.map((ancestor) => ({
           ...ancestor,
-          _id: ancestor._id.toString(),
-          parent: ancestor.parent ? ancestor.parent.toString() : null,
+          _id: ancestor?._id?.toString(),
+          parent: ancestor.parent ? ancestor?.parent?.toString() : null,
         })),
         accessMap // Pass accessMap to include permissions
       );
@@ -145,7 +146,7 @@ function buildNavStructure(ancestors: any[], accessMap: Map<string, any>) {
 
   // Initialize all nodes
   ancestors.forEach((ancestor) => {
-    const nodeId = ancestor._id.toString();
+    const nodeId = ancestor?._id?.toString();
 
     // Retrieve permissions from the accessMap if available
     const permissions = accessMap.get(nodeId)?.permissions || {};

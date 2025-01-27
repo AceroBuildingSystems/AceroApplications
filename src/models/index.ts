@@ -11,7 +11,7 @@ import Country from "./Country.model"
 import QuoteStatus from "./QuoteStatus.model"
 import SalesTeam from "./SalesTeam.model"
 import SalesEngineer from "./SalesEngineer.model"
-import SalesSupportEngineer from "./SalesSupportEngineer.model"
+
 import Currency from "./Currency.model"
 import Customer from "./Customer.model"
 import CustomerType from "./CustomerType.model"
@@ -20,6 +20,6 @@ import IndustryType from "./IndustryType.model"
 
 
 
-export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Region, Area, Country, QuoteStatus, SalesTeam, SalesEngineer, SalesSupportEngineer,Currency, Customer, CustomerType,CustomerContact,IndustryType }
+export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Region, Area, Country, QuoteStatus, SalesTeam, SalesEngineer,Currency, Customer, CustomerType,CustomerContact,IndustryType }
 
 

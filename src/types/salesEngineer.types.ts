@@ -5,6 +5,7 @@ export interface salesEngineer {
     designation: string,
     reportingTo: mongoose.ObjectId,
     salesTeam: mongoose.ObjectId,
+    isSupportEngineer:boolean,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,

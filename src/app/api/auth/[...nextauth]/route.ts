@@ -95,7 +95,7 @@ export const authOptions: AuthOptions = {
         },
       ]);
     
-      console.debug("Trees", trees);
+      // console.debug("Trees", trees);
       // Combine all ancestors and nodes into a single list
       const allAncestors = trees.flatMap((tree) => [...tree.ancestors, tree]);
     

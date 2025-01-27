@@ -4,6 +4,7 @@
 
 body {
   font-family: Arial, Helvetica, sans-serif;
+  overflow: hidden;
 }
 
 @layer base {
@@ -78,4 +79,21 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  border-radius: 8px;
+  background-color: #e7e7e7;
+  /* border: 1px solid #cacaca; */
+}
+
+*::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+border: 3px solid transparent;
+ background-clip: content-box;
+  background-color: #d55959;
 }

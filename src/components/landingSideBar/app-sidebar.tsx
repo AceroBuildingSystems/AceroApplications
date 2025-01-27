@@ -1,6 +1,6 @@
-"use client"
-import { useSession } from "next-auth/react"
-import * as React from "react"
+"use client";
+import { useSession } from "next-auth/react";
+import * as React from "react";
 import {
   BookOpen,
   Bot,
@@ -12,12 +12,12 @@ import {
   Send,
   Settings2,
   SquareTerminal,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/landingSideBar/nav-main"
-import { NavProjects } from "@/components/landingSideBar/nav-projects"
-import { NavSecondary } from "@/components/landingSideBar/nav-secondary"
-import { NavUser } from "@/components/landingSideBar/nav-user"
+import { NavMain } from "@/components/landingSideBar/nav-main";
+import { NavProjects } from "@/components/landingSideBar/nav-projects";
+import { NavSecondary } from "@/components/landingSideBar/nav-secondary";
+import { NavUser } from "@/components/landingSideBar/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -26,11 +26,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import Image from "next/image"
-import useUserAuthorised from "@/hooks/useUserAuthorised"
-
-
+} from "@/components/ui/sidebar";
+import Image from "next/image";
+import useUserAuthorised from "@/hooks/useUserAuthorised";
+import { createSidebarMenuData } from "@/shared/functions";
 
 const data = {
   user: {
@@ -154,11 +153,10 @@ const data = {
       icon: Map,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {user} = useUserAuthorised()
-
+  const { user,menuItems } = useUserAuthorised();
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
@@ -167,10 +165,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <a href="#">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
-                  <Image src="/logo/logo-small.jpg" alt="Acero Logo" width={32} height={32} className="rounded-lg" />
+                  <Image
+                    src="/logo/logo-small.jpg"
+                    alt="Acero Logo"
+                    width={32}
+                    height={32}
+                    className="rounded-lg"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Acero Applications</span>
+                  <span className="truncate font-semibold">
+                    Acero Applications
+                  </span>
                   <span className="truncate text-xs">Enterprise</span>
                 </div>
               </a>
@@ -179,13 +185,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={menuItems} label="Platform" />
+        {/* <NavProjects projects={data.projects} />
+        <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

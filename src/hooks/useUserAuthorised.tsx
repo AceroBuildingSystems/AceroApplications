@@ -8,6 +8,7 @@ export default function useUserAuthorised() {
   return {
     authenticated: status === "authenticated",
     user: data?.user,
+    menuItems: data?.menuItems,
     status,
   };
 }

@@ -118,8 +118,6 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
     const result = await signIn(provider, {
       email: formData.email,
       password: formData.password,
-      callbackUrl: "/dashboard",
-      redirect: false
     });
 
     if (result?.error) {
@@ -131,7 +129,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto rounded-2xl p-3 md:p-6 shadow-input bg-white dark:bg-black min-h-0">
+    <div className="w-full max-w-md mx-auto rounded-2xl p-3 md:p-6 shadow-input bg-white dark:bg-black min-h-0">
       <div className="flex flex-col items-center justify-center">
         <div className="w-full sm:w-3/4 md:w-2/3 flex-col justify-center items-center flex">
           <Image

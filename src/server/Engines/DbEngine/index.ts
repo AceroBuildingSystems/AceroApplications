@@ -1,7 +1,7 @@
 //@ts-nocheck
 import { MONGO_MODELS } from '@/shared/constants';
 import { MongooseAdapter } from './Mongoose.adapter';
-import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Category, Region, Area, Country,QuoteStatus,SalesTeam, SalesEngineer, Currency, Customer, CustomerType, CustomerContact, IndustryType } from '@/models';
+import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Category, Region, Area, Country,QuoteStatus,Team, TeamMember, Currency, Customer, CustomerType, CustomerContact, IndustryType } from '@/models';
 
 
 
@@ -24,8 +24,8 @@ function getMongooseAdapter(): MongooseAdapter {
     AREA_MASTER :Area,
     COUNTRY_MASTER :Country,
     QUOTE_STATUS_MASTER :QuoteStatus,
-    SALES_TEAM_MASTER :SalesTeam,
-    SALES_ENGINEER_MASTER :SalesEngineer,
+    TEAM_MASTER : Team,
+    TEAM_MEMBERS_MASTER : TeamMember,
     CURRENCY_MASTER: Currency,
     CUSTOMER_MASTER: Customer,
     CUSTOMER_TYPE_MASTER: CustomerType,

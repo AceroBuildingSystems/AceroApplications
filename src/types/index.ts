@@ -7,6 +7,8 @@ import { designation } from "./designation.types";
 import { emailData } from "./emailData";
 import { role } from "./role.types";
 import { employeeType } from "./employeeType.types";
+import { team } from "./team.types";
+import { teamMember } from "./teamMember.types";
 
 export type {
   UserDocument,
@@ -18,4 +20,6 @@ export type {
   emailData,
   role,
   employeeType,
+  team,
+  teamMember
 };

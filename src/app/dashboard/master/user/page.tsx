@@ -60,7 +60,7 @@ const { user, status, authenticated } = useUserAuthorised();
   }, []);
 
   const roleNames = distinctRoles?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
-  ?.map((role: { name: any; }) => role.name);             // Extract only the 'name' property
+  ?.map((role: { name: any; }) => role?.name);             // Extract only the 'name' property
 
 
   interface RowData {

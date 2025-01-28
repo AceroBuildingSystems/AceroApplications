@@ -8,5 +8,6 @@ export interface access {
     isActive:boolean,
     url:string,
     isMenuItem: boolean,
-    parent: mongoose.ObjectId
+    parent: mongoose.ObjectId,
+    order:number
 } 

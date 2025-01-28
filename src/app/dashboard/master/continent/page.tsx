@@ -25,21 +25,16 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
    
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
-      db: MONGO_MODELS.REGION_MASTER,
-      sort: { name: -1 },
-    });
-
-    const { data: continentData = [], isLoading: continentLoading } = useGetMasterQuery({
+  const { data: continentData = [], isLoading: continentLoading } = useGetMasterQuery({
       db: MONGO_MODELS.CONTINENT_MASTER,
-      sort: { name: -1 },
+      sort: { name: 'asc' },
     });
   
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  regionLoading || continentLoading;
+  const loading =  continentLoading;
 
 
   interface RowData {
@@ -52,8 +47,7 @@ const page = () => {
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Region', name: "name", type: "text",required: true, placeholder:'Region' },
-    { label: 'Continent', name: "continent", type: "select",required: true, data: continentData?.data, placeholder:'Select Continent' },
+    { label: 'Continent', name: "name", type: "text",required: true, placeholder:'Continent' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -81,7 +75,7 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-      db: 'REGION_MASTER',
+        db: MONGO_MODELS.CONTINENT_MASTER,
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
@@ -93,12 +87,12 @@ const page = () => {
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Region added successfully');
+      toast.success('Continent added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Region updated successfully');
+        toast.success('Continent updated successfully');
       }
     }
 
@@ -112,19 +106,19 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("region");
+    openDialog("continent");
     // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("region");
+    openDialog("continent");
 
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData, action: "Add", user, createUser:createMaster,db: MONGO_MODELS.REGION_MASTER, masterName:"Region" });
+    bulkImport({ roleData: [], continentData : [], action: "Add", user, createUser:createMaster,db:MONGO_MODELS.CONTINENT_MASTER, masterName:"Continent" });
   };
 
   const handleExport = () => {
@@ -139,7 +133,7 @@ const page = () => {
 
  
 
-  const regionColumns = [
+  const continentColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -171,25 +165,11 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Region</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
-    },
-    {
-      accessorKey: "continent",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
           <span>Continent</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("continent")?.name}</div>,
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
     {
       accessorKey: "isActive",
@@ -210,9 +190,9 @@ const page = () => {
 
   ];
 
-  const regionConfig = {
+  const continentConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by continent' },
       
     ],
     filterFields: [
@@ -220,8 +200,8 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: regionColumns,
-      data: regionData?.data,
+      columns: continentColumns,
+      data: continentData?.data,
     },
     buttons: [
 
@@ -235,7 +215,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={regionConfig} loadingState={loading} />
+      <MasterComponent config={continentConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

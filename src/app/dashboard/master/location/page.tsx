@@ -25,13 +25,13 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
    
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
-      db: MONGO_MODELS.REGION_MASTER,
+  const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+      db: MONGO_MODELS.LOCATION_MASTER,
       sort: { name: -1 },
     });
 
-    const { data: continentData = [], isLoading: continentLoading } = useGetMasterQuery({
-      db: MONGO_MODELS.CONTINENT_MASTER,
+    const { data: stateData = [], isLoading: stateLoading } = useGetMasterQuery({
+      db: MONGO_MODELS.STATE_MASTER,
       sort: { name: -1 },
     });
   
@@ -39,7 +39,7 @@ const page = () => {
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  regionLoading || continentLoading;
+  const loading =  locationLoading || stateLoading;
 
 
   interface RowData {
@@ -52,8 +52,10 @@ const page = () => {
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Region', name: "name", type: "text",required: true, placeholder:'Region' },
-    { label: 'Continent', name: "continent", type: "select",required: true, data: continentData?.data, placeholder:'Select Continent' },
+    { label: 'Location', name: "name", type: "text",required: true, placeholder:'Location' },
+    { label: 'Address', name: "address", type: "text", placeholder:'Address' },
+    { label: 'Pin Code', name: "pincode", type: "text", placeholder:'Pin Code' },
+    { label: 'State / City', name: "state", type: "select", required: true, placeholder: 'Select State / City', format: 'ObjectId', data: stateData?.data },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -81,7 +83,7 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-      db: 'REGION_MASTER',
+        db: MONGO_MODELS.LOCATION_MASTER,
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
@@ -93,12 +95,12 @@ const page = () => {
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Region added successfully');
+      toast.success('Location added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Region updated successfully');
+        toast.success('Location updated successfully');
       }
     }
 
@@ -112,19 +114,19 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("region");
+    openDialog("location");
     // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("region");
+    openDialog("location");
 
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData, action: "Add", user, createUser:createMaster,db: MONGO_MODELS.REGION_MASTER, masterName:"Region" });
+    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.LOCATION_MASTER, masterName:"Location" });
   };
 
   const handleExport = () => {
@@ -139,7 +141,7 @@ const page = () => {
 
  
 
-  const regionColumns = [
+  const locationColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -171,26 +173,40 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Region</span> {/* Label */}
+          <span>Location</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
     {
-      accessorKey: "continent",
+      accessorKey: "address",
       header: ({ column }: { column: any }) => (
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Continent</span> {/* Label */}
+          <span>Address</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("continent")?.name}</div>,
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("address")}</div>,
     },
+    {
+        accessorKey: "state",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>State / City</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("state")?.name}</div>,
+      },
     {
       accessorKey: "isActive",
       header: ({ column }: { column: any }) => (
@@ -210,7 +226,7 @@ const page = () => {
 
   ];
 
-  const regionConfig = {
+  const locationConfig = {
     searchFields: [
       { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
       
@@ -220,8 +236,8 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: regionColumns,
-      data: regionData?.data,
+      columns: locationColumns,
+      data: locationData?.data,
     },
     buttons: [
 
@@ -235,7 +251,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={regionConfig} loadingState={loading} />
+      <MasterComponent config={locationConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

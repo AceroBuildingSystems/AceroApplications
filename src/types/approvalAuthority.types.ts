@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
-export interface region {
+export interface approvalAuthority {
     _id?: mongoose.ObjectId,
+    code: string,
     name: string,
-    continent: mongoose.ObjectId,
+    location: mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,

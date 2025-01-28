@@ -1,8 +1,10 @@
 import mongoose from "mongoose";
-export interface region {
+export interface location {
     _id?: mongoose.ObjectId,
     name: string,
-    continent: mongoose.ObjectId,
+    address: string,
+    pincode: string,
+    state: mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,

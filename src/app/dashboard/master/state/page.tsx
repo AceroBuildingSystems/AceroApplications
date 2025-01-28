@@ -1,8 +1,11 @@
 "use client";
 
 import React from 'react'
+import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
+import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
@@ -15,22 +18,24 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
-import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
+import { bulkImport } from '@/shared/functions';
 
 
 const page = () => {
+
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: currencyData = [], isLoading: currencyLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.CURRENCY_MASTER,
+    const { data: stateData = [], isLoading: stateLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.STATE_MASTER,
         sort: { name: 'asc' },
     });
+    const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({ db: MONGO_MODELS.COUNTRY_MASTER });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = currencyLoading;
+    const loading = stateLoading || countryLoading;
 
     interface RowData {
         id: string;
@@ -39,10 +44,10 @@ const page = () => {
         role: string;
     }
 
-
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Currency Name', name: "name", type: "text", required: true, placeholder: 'Currency Name' },
+        { label: 'State / City', name: "name", type: "text", required: true, placeholder: 'State / City' },
+        { label: 'Country', name: "country", type: "select", required: true, placeholder: 'Select Country', format: 'ObjectId', data: countryData?.data },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -70,24 +75,23 @@ const page = () => {
     const saveData = async ({ formData, action }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.CURRENCY_MASTER,
+            db: MONGO_MODELS.STATE_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
         };
 
 
-
         const response = await createMaster(formattedData);
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Currency added successfully');
+            toast.success('State added successfully');
 
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Currency updated successfully');
+                toast.success('State updated successfully');
             }
         }
 
@@ -99,21 +103,22 @@ const page = () => {
 
 
     const editUser = (rowData: RowData) => {
+       
         setAction('Update');
         setInitialData(rowData);
-        openDialog("currency");
+        openDialog("state");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("currency");
+        openDialog("state");
 
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CURRENCY_MASTER, masterName: "Currency" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData, action: "Add", user, createUser: createMaster, db: MONGO_MODELS.STATE_MASTER, masterName: "State" });
     };
 
     const handleExport = () => {
@@ -128,7 +133,7 @@ const page = () => {
 
 
 
-    const currencyColumns = [
+    const stateColumns = [
         {
             id: "select",
             header: ({ table }: { table: any }) => (
@@ -160,39 +165,57 @@ const page = () => {
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Currency Name</span> {/* Label */}
+                    <span>State</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
         {
-             accessorKey: "isActive",
-             header: ({ column }: { column: any }) => (
-               <button
-                 className="flex items-center space-x-2"
-                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-       
-               >
-                 <span>Status</span> {/* Label */}
-                 <ArrowUpDown size={15} /> {/* Sorting Icon */}
-               </button>
-             ),
-             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-           },
+            accessorKey: "country",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>Country</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("country")?.name}</div>,
+        },
+        {
+            accessorKey: "isActive",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>Status</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+        },
+
+
 
     ];
 
-    const currencyConfig = {
+    const stateConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by currency' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by state / city' },
 
         ],
         filterFields: [
+            // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
+
         ],
         dataTable: {
-            columns: currencyColumns,
-            data: currencyData?.data,
+            columns: stateColumns,
+            data: stateData?.data,
         },
         buttons: [
 
@@ -206,7 +229,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={currencyConfig} loadingState={loading} />
+            <MasterComponent config={stateConfig} loadingState={loading} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

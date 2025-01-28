@@ -18,28 +18,23 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
-import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
    
-  const { user, status, authenticated } = useUserAuthorised();
-  const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
-      db: MONGO_MODELS.REGION_MASTER,
-      sort: { name: -1 },
-    });
-
-    const { data: continentData = [], isLoading: continentLoading } = useGetMasterQuery({
-      db: MONGO_MODELS.CONTINENT_MASTER,
-      sort: { name: -1 },
+    const { user, status, authenticated } = useUserAuthorised();
+  const { data: buildingTypeData = [], isLoading: buildingTypeLoading } = useGetMasterQuery({
+      db: MONGO_MODELS.BUILDING_TYPE_MASTER,
+      sort: { name: 'asc' },
     });
   
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  regionLoading || continentLoading;
+  const loading =  buildingTypeLoading;
 
 
   interface RowData {
@@ -52,8 +47,7 @@ const page = () => {
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Region', name: "name", type: "text",required: true, placeholder:'Region' },
-    { label: 'Continent', name: "continent", type: "select",required: true, data: continentData?.data, placeholder:'Select Continent' },
+    { label: 'Building Type', name: "name", type: "text", required: true, placeholder:'Building Type' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -65,7 +59,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -81,7 +75,7 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-      db: 'REGION_MASTER',
+        db: MONGO_MODELS.BUILDING_TYPE_MASTER,
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
@@ -93,12 +87,14 @@ const page = () => {
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Region added successfully');
+      
+      toast.success('Building type added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Region updated successfully');
+        
+        toast.success('Building type updated successfully');
       }
     }
 
@@ -112,20 +108,20 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("region");
+    openDialog("building type");
     // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("region");
+    openDialog("building type");
 
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData, action: "Add", user, createUser:createMaster,db: MONGO_MODELS.REGION_MASTER, masterName:"Region" });
-  };
+    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.BUILDING_TYPE_MASTER, masterName:"BuildingType" });
+    };
 
   const handleExport = () => {
     console.log('UserPage Update button clicked');
@@ -139,7 +135,7 @@ const page = () => {
 
  
 
-  const regionColumns = [
+  const buildingTypeColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -171,25 +167,11 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Region</span> {/* Label */}
+          <span>Industry Type</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
-    },
-    {
-      accessorKey: "continent",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Continent</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("continent")?.name}</div>,
     },
     {
       accessorKey: "isActive",
@@ -207,12 +189,11 @@ const page = () => {
     },
     
 
-
   ];
 
-  const regionConfig = {
+  const buildingTypeConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by building type' },
       
     ],
     filterFields: [
@@ -220,9 +201,10 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: regionColumns,
-      data: regionData?.data,
+      columns: buildingTypeColumns,
+      data: buildingTypeData?.data,
     },
+    
     buttons: [
 
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
@@ -235,7 +217,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={regionConfig} loadingState={loading} />
+      <MasterComponent config={buildingTypeConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

@@ -5,15 +5,10 @@ import { country } from "@/types/country.types";
 const CountrySchema: Schema<country> = new Schema({
     countryCode: { type: String, required: true, unique:true },
     name: { type: String, required: true, unique:true },
-    area: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Area", // Reference to the Region model
-       
-    },
     region: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Region", // Reference to the Region model
-           
+            autopopulate: true
         },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
@@ -21,7 +16,7 @@ const CountrySchema: Schema<country> = new Schema({
    
 }, { timestamps: true })
 
-
+CountrySchema.plugin(require('mongoose-autopopulate'));
 const Country: Model<country> = mongoose.models.country || mongoose.model<country>("Country", CountrySchema)
 
 export default Country

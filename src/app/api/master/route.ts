@@ -46,6 +46,18 @@ export async function GET(request:NextRequest) {
         }
     }
 
+    // Populate Parameter
+    const populateParam = searchParams.get('populate');
+    if (populateParam) {
+        try {
+            operations.populate = JSON.parse(populateParam);
+        } catch (error) {
+            return NextResponse.json(
+                { status: 'ERROR', message: 'INVALID_POPULATE_FORMAT', data:{} },
+                { status: 400 }
+            );
+        }
+    }
     // Extract pagination parameters
     // const page = parseInt(searchParams?.get('page'), 10);
     // const limit = parseInt(searchParams?.get('limit'), 10);

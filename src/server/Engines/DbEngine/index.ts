@@ -1,7 +1,15 @@
 //@ts-nocheck
 import { MONGO_MODELS } from '@/shared/constants';
 import { MongooseAdapter } from './Mongoose.adapter';
-import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Category, Region, Area, Country,QuoteStatus,SalesTeam, SalesEngineer, Currency, Customer, CustomerType, CustomerContact, IndustryType } from '@/models';
+import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Category, Country,QuoteStatus,SalesTeam, 
+  SalesEngineer, Currency, Customer, CustomerType, CustomerContact, IndustryType,BuildingType, 
+  ProjectType,
+  PaintType,
+  Continent,
+  Region,
+  State,
+  Location,
+  ApprovalAuthority} from '@/models';
 
 
 
@@ -20,8 +28,8 @@ function getMongooseAdapter(): MongooseAdapter {
     ROLE_MASTER :Role,
     ACCESS_MASTER :Access,
     DESIGNATION_MASTER :Designation,
+    CONTINENT_MASTER :Continent,
     REGION_MASTER :Region,
-    AREA_MASTER :Area,
     COUNTRY_MASTER :Country,
     QUOTE_STATUS_MASTER :QuoteStatus,
     SALES_TEAM_MASTER :SalesTeam,
@@ -30,7 +38,13 @@ function getMongooseAdapter(): MongooseAdapter {
     CUSTOMER_MASTER: Customer,
     CUSTOMER_TYPE_MASTER: CustomerType,
     CUSTOMER_CONTACT_MASTER: CustomerContact,
-    INDUSTRY_TYPE_MASTER: IndustryType
+    INDUSTRY_TYPE_MASTER: IndustryType,
+    BUILDING_TYPE_MASTER: BuildingType,
+    PROJECT_TYPE_MASTER: ProjectType,
+    PAINT_TYPE_MASTER: PaintType,
+    STATE_MASTER: State,
+    LOCATION_MASTER: Location,
+    APPROVAL_AUTHORITY_MASTER: ApprovalAuthority
     });
   }
   return dbEngineInstance;

@@ -13,29 +13,34 @@ import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/us
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
-import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: areaData = [], isLoading: areaLoading } = useGetMasterQuery({
-        db: 'AREA_MASTER',
-        sort: { name: -1 },
+    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
+        sort: { name: 'asc' },
     });
-    const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({ db: "REGION_MASTER" });
+
+    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.LOCATION_MASTER,
+        sort: { name: 'asc' },
+    });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = areaLoading || regionLoading;
+    const loading = approvalAuthorityLoading;
+
 
     interface RowData {
         id: string;
@@ -44,10 +49,11 @@ const page = () => {
         role: string;
     }
 
-    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Area Name', name: "name", type: "text", required: true, placeholder: 'Area Name' },
-        { label: 'Region', name: "region", type: "select", required: true, placeholder: 'Select Region', format: 'ObjectId', data: regionData?.data },
+    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
+        { label: 'Authority Code', name: "code", type: "text", required: true, placeholder: 'Authority COde' },
+        { label: 'Approval Authority', name: "name", type: "text", required: true, placeholder: 'Approval Authority' },
+        { label: 'Location', name: "location", type: "select", required: true, placeholder: 'Select Location', format: 'ObjectId', data: locationData?.data },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -59,7 +65,7 @@ const page = () => {
     const [action, setAction] = useState('Add');
 
     // Open the dialog and set selected master type
-    const openDialog = (masterType) => {
+    const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
@@ -75,7 +81,7 @@ const page = () => {
     const saveData = async ({ formData, action }) => {
 
         const formattedData = {
-            db: 'AREA_MASTER',
+            db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
@@ -87,12 +93,14 @@ const page = () => {
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Area added successfully');
+
+            toast.success('Approval authority added successfully');
 
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Area updated successfully');
+
+                toast.success('Approval authority updated successfully');
             }
         }
 
@@ -104,22 +112,21 @@ const page = () => {
 
 
     const editUser = (rowData: RowData) => {
-       
         setAction('Update');
         setInitialData(rowData);
-        openDialog("area");
+        openDialog("approval authority");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("area");
+        openDialog("approval authority");
 
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: "AREA_MASTER", masterName: "Area" });
+        bulkImport({ roleData: [],continentData:[],regionData:[],countryData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
     };
 
     const handleExport = () => {
@@ -134,7 +141,7 @@ const page = () => {
 
 
 
-    const areaColumns = [
+    const approvalAuthorityColumns = [
         {
             id: "select",
             header: ({ table }: { table: any }) => (
@@ -157,7 +164,20 @@ const page = () => {
             enableSorting: false,
             enableHiding: false,
         },
+        {
+            accessorKey: "code",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
+                >
+                    <span>Authority Code</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div >{row.getValue("code")}</div>,
+        },
         {
             accessorKey: "name",
             header: ({ column }: { column: any }) => (
@@ -166,25 +186,11 @@ const page = () => {
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Role</span> {/* Label */}
+                    <span>Industry Type</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
-        },
-        {
-            accessorKey: "region",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Region</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("region").name}</div>,
         },
         {
             accessorKey: "isActive",
@@ -202,12 +208,11 @@ const page = () => {
         },
 
 
-
     ];
 
-    const areaConfig = {
+    const approvalAuthorityConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by area' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by approval authority' },
 
         ],
         filterFields: [
@@ -215,9 +220,10 @@ const page = () => {
 
         ],
         dataTable: {
-            columns: areaColumns,
-            data: areaData?.data,
+            columns: approvalAuthorityColumns,
+            data: approvalAuthorityData?.data,
         },
+
         buttons: [
 
             { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
@@ -230,7 +236,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={areaConfig} loadingState={loading} />
+            <MasterComponent config={approvalAuthorityConfig} loadingState={loading} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

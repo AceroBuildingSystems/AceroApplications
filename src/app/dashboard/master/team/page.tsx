@@ -10,7 +10,7 @@ import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, transformData } from '@/lib/utils';
+import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -25,33 +25,26 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: salesSupportEngData = [], isLoading: salesSupportEngLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.SALES_SUPPORT_ENGINEER_MASTER,
+    const { data: salesTeamaData = [], isLoading: salesTeamLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.TEAM_MASTER,
         sort: { name: 'asc' },
     });
     const { data: userData = [], isLoading: userLoading } = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER });
-
-    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({ db: MONGO_MODELS.SALES_TEAM_MASTER });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = salesSupportEngLoading || userLoading || teamLoading;
+    const loading = salesTeamLoading || userLoading;
 
-    const engData = userData?.data?.filter(data => data?.department?.name === 'Sales General');
+    const directorData = userData?.data?.filter(data=> data?.department?.name === 'Sales General');
 
-    const formattedData = engData?.map(item => ({
-        _id: item._id,
-        name: `${item.shortName.toProperCase()}`
-    }));
+const formattedData = directorData?.map(item => ({
+    _id: item._id,
+    name: `${item.shortName.toProperCase()}`
+  }));
 
-     const fieldsToAdd = [
-            { fieldName: 'name', path: ['supportEngineer', 'shortName'] }
-          ];
-          const transformedData = transformData(salesSupportEngData?.data, fieldsToAdd);
-    
-   
+  
     interface RowData {
         id: string;
         name: string;
@@ -61,8 +54,8 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Support Engineer', name: "supportEngineer", type: "select", required: true, placeholder: 'Select Support Engineer', format: 'ObjectId', data: formattedData },
-        { label: 'Sales Team', name: "salesTeam", type: "select", required: true, placeholder: 'Select Sales Team', format: 'ObjectId', data: teamData?.data },
+        { label: 'Team Name', name: "name", type: "text", required: true, placeholder: 'Team Name' },
+        { label: 'Director', name: "director", type: "select", required: true, placeholder: 'Select Director', format: 'ObjectId', data: formattedData },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -90,7 +83,7 @@ const page = () => {
     const saveData = async ({ formData, action }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.SALES_SUPPORT_ENGINEER_MASTER,
+            db: MONGO_MODELS.TEAM_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
@@ -102,12 +95,12 @@ const page = () => {
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Sales support engineer added successfully');
+            toast.success('Sales team added successfully');
 
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Sales support engineer added updated successfully');
+                toast.success('Sales team added updated successfully');
             }
         }
 
@@ -119,22 +112,22 @@ const page = () => {
 
 
     const editUser = (rowData: RowData) => {
-
+       
         setAction('Update');
         setInitialData(rowData);
-        openDialog("sales support engineer");
+        openDialog("sales team");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("sales support engineer");
+        openDialog("sales team");
 
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.SALES_SUPPORT_ENGINEER_MASTER, masterName: "SalesSupportEngineer" });
+        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MASTER, masterName: "SalesTeam" });
     };
 
     const handleExport = () => {
@@ -149,7 +142,7 @@ const page = () => {
 
 
 
-    const salesEngColumns = [
+    const salesTeamColumns = [
         {
             id: "select",
             header: ({ table }: { table: any }) => (
@@ -174,22 +167,7 @@ const page = () => {
         },
 
         {
-            accessorKey: "supportEngineer",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Support Engineer</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("supportEngineer")?.shortName.toProperCase()}</div>,
-        },
-       
-        {
-            accessorKey: "salesTeam",
+            accessorKey: "name",
             header: ({ column }: { column: any }) => (
                 <button
                     className="flex items-center space-x-2"
@@ -200,7 +178,21 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("salesTeam")?.name.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+        },
+        {
+            accessorKey: "director",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>Director</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("director")?.shortName.toProperCase()}</div>,
         },
         {
             accessorKey: "isActive",
@@ -221,9 +213,9 @@ const page = () => {
 
     ];
 
-    const salesEngConfig = {
+    const salesTeamConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by support engineer' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by area' },
 
         ],
         filterFields: [
@@ -231,8 +223,8 @@ const page = () => {
 
         ],
         dataTable: {
-            columns: salesEngColumns,
-            data: transformedData,
+            columns: salesTeamColumns,
+            data: salesTeamaData?.data,
         },
         buttons: [
 
@@ -246,7 +238,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={salesEngConfig} loadingState={loading} />
+            <MasterComponent config={salesTeamConfig} loadingState={loading} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

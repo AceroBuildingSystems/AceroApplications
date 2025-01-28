@@ -9,7 +9,9 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Region,
   State,
   Location,
-  ApprovalAuthority} from '@/models';
+  ApprovalAuthority,
+  Team,
+  TeamMember} from '@/models';
 
 
 
@@ -32,8 +34,8 @@ function getMongooseAdapter(): MongooseAdapter {
     REGION_MASTER :Region,
     COUNTRY_MASTER :Country,
     QUOTE_STATUS_MASTER :QuoteStatus,
-    SALES_TEAM_MASTER :SalesTeam,
-    SALES_ENGINEER_MASTER :SalesEngineer,
+    TEAM_MASTER : Team,
+    TEAM_MEMBERS_MASTER : TeamMember,
     CURRENCY_MASTER: Currency,
     CUSTOMER_MASTER: Customer,
     CUSTOMER_TYPE_MASTER: CustomerType,

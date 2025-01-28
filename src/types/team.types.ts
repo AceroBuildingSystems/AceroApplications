@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
-export interface salesTeam {
+export interface team {
     _id?: mongoose.ObjectId,
     name: string,
-    director: mongoose.ObjectId,
+    reportingTo: mongoose.ObjectId[],
+    teamMembers: mongoose.ObjectId[],
+    department: mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,
+
 }
   

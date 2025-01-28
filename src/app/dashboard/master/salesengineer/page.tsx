@@ -64,7 +64,7 @@ const page = () => {
         { label: 'Sales Engineer', name: "salesEngineer", type: "select", required: true, placeholder: 'Select Sales Engineer', format: 'ObjectId', data: formattedData },
         { label: 'Designation', name: "designation", type: "text", required: true, placeholder: 'Designation' },
         { label: 'Reporting To', name: "reportingTo", type: "select", required: true, placeholder: 'Select Reporting To', format: 'ObjectId', data: formattedData },
-        { label: 'Sales Team', name: "salesTeam", type: "select", required: true, placeholder: 'Select Reporting To', format: 'ObjectId', data: teamData?.data },
+        { label: 'Sales Team', name: "salesTeam", type: "select", required: true, placeholder: 'Select Sales Team', format: 'ObjectId', data: teamData?.data },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]

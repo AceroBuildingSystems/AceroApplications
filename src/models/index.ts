@@ -9,8 +9,8 @@ import Continent from "./Continent.model"
 import Region from "./Region.model"
 import Country from "./Country.model"
 import QuoteStatus from "./QuoteStatus.model"
-import SalesTeam from "./SalesTeam.model"
-import SalesEngineer from "./SalesEngineer.model"
+import Team from "./Team.model"
+import TeamMember from "./TeamMember.model"
 
 import Currency from "./Currency.model"
 import Customer from "./Customer.model"
@@ -25,7 +25,7 @@ import Location from "./Location.model"
 import ApprovalAuthority from "./ApprovalAuthority.model"
 
 
-export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, SalesTeam, SalesEngineer,Currency, Customer,
+export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, Team, TeamMember,Currency, Customer,
      CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority }
 
 

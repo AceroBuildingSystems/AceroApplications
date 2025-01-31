@@ -38,13 +38,13 @@ const UserSchema: Schema<UserDocument> = new Schema({
     },
     location: { type: String },
     reportingTo: { type: String },
-    isActive: { type: Boolean },
+    isActive: { type: Boolean, default:true },
     status: { type: String },
     availability: { type: String },
     extension: { type: String },
     mobile: { type: String },
-    joiningDate: { type: Date },
-    relievingDate: { type: Date },
+    joiningDate: { type: Date, default:null },
+    relievingDate: { type: Date, default:null },
     access: [{
         accessId: {
             type: mongoose.Schema.Types.ObjectId,

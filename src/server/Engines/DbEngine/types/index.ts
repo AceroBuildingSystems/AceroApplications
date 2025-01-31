@@ -69,6 +69,8 @@ export interface Condition {
     arrayFilter: object;
     data: object;
     addIfNotFound?: boolean;
+    itemMatcher?:string;
+    replaceAll?:boolean;
   }
   
   export interface DeleteOptions {

@@ -19,6 +19,8 @@ export const createUser = catchAsync(async (options: any) => {
   return result;
 });
 
+
+
 export const updateUser = catchAsync(async (options: any) => {
   const result = await crudManager.mongooose.update(
     MONGO_MODELS.USER_MASTER,
@@ -39,11 +41,6 @@ export const updateAccess = catchAsync(
       addIfNotFound?: boolean;
     };
   }) => {
-    if (
-      !options.data.id 
-    ) {
-      return { status:500, message:INSUFFIENT_DATA };
-    }
     const result = await crudManager.mongooose.updateInArray(
       MONGO_MODELS.USER_MASTER,
       options.data

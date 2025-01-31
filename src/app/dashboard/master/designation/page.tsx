@@ -9,7 +9,6 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -18,10 +17,12 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
+import { bulkImport } from '@/shared/functions';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
-  
+  const { user, status, authenticated } = useUserAuthorised();
   const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
       db: 'DESIGNATION_MASTER',
       sort: { name: -1 },
@@ -42,10 +43,10 @@ const page = () => {
   }
 
 
-  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string }> = [
+  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Designation', name: "name", type: "text", },
-    { label: 'Status', name: "isActive", type: "select", data: statusData },
+    { label: 'Designation', name: "name", type: "text", required: true, placeholder:'Designation' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
 
@@ -112,10 +113,9 @@ const page = () => {
 
   };
 
-  const handleImport = () => {
-    console.log('UserPage Import button clicked');
-    // Your import logic for user page
-  };
+ const handleImport = () => {
+      bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
+    };
 
   const handleExport = () => {
     console.log('UserPage Update button clicked');
@@ -197,7 +197,7 @@ const page = () => {
     ],
     dataTable: {
       columns: designationColumns,
-      userData: designationData?.data,
+      data: designationData?.data,
     },
     buttons: [
 

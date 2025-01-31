@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 import { MenuItemicons } from '../iconMaps';
 import { MenuItem } from '../types';
+import * as XLSX from "xlsx";
+import { toast } from 'react-toastify';
+import { SUCCESS } from '@/shared/constants';
+
 
 export const createMongooseObjectId = (id: any) => {
     if (mongoose.Types.ObjectId.isValid(id) && new mongoose.Types.ObjectId(id).toString() === id.toString()) {
@@ -38,7 +42,7 @@ export const createSidebarMenuData = (data: any) => {
         }));
 
     // Helper to build nested structure
-    const buildMenuTree = (items: any[], parentId: string | null = null):MenuItem[] => {
+    const buildMenuTree = (items: any[], parentId: string | null = null): MenuItem[] => {
         return items
             .filter(item => item.parentId === parentId && item.hasAccess) // Stop if hasAccess is false
             .map(item => ({
@@ -57,29 +61,159 @@ export const createSidebarMenuData = (data: any) => {
     };
 };
 
-export const isObjectEmpty = (obj:any) => {
+export const isObjectEmpty = (obj: any) => {
     return Object.keys(obj).length === 0;
 };
 
 
+export const bulkImport = async ({ roleData, action, user, createUser, db, masterName }) => {
 
-// {
-//     title: "Playground",
-//     url: "#",
-//     icon: SquareTerminal,
-//     isActive: true,
-//     items: [
-//       {
-//         title: "History",
-//         url: "#",
-//       },
-//       {
-//         title: "Starred",
-//         url: "#",
-//       },
-//       {
-//         title: "Settings",
-//         url: "#",
-//       },
-//     ],
-//   },
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".xlsx, .xls";
+    input.onchange = async (event) => {
+        const file = (event.target as HTMLInputElement)?.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const data = e.target?.result;
+            const workbook = XLSX.read(data, { type: "binary" });
+            const sheetName = workbook.SheetNames[0];
+            const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+            // Transform the sheet data based on the entity
+            const formData = mapExcelToEntity(sheetData, masterName);
+            const referenceData = {
+                roleData: roleData?.data || [],
+
+            };
+
+            const finalData = mapFieldsToIds(formData, masterName, referenceData);
+
+            const enrichedData = finalData.map((item) => ({
+                ...item,
+                addedBy: user._id,
+                updatedBy: user._id,
+            }));
+            // Send the transformed data for bulk insert
+            try {
+
+                const formattedData = {
+                    action: action === 'Add' ? 'create' : 'update',
+                    db: db,
+                    bulkInsert: true,
+                    data: enrichedData,
+                };
+
+
+                const response = await createUser(formattedData);
+
+                if (response.data?.status === SUCCESS && action === 'Add') {
+                    toast.success(`${masterName} imported successfully`);
+
+                }
+                else {
+                    if (response.data?.status === SUCCESS && action === 'Update') {
+                        toast.success(`${masterName} updated successfully`);
+                    }
+                }
+
+                if (response?.error?.data?.message?.message) {
+                    toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
+                }
+            } catch (err) {
+                toast.error(`Error during import: ${err.message}`);
+            }
+        };
+        reader.readAsBinaryString(file);
+    };
+    input.click();
+};
+
+const fieldMappingConfig = {
+    user: {
+        role: { source: "roleData", key: "name", value: "_id" },
+    },
+    // Add more entity mappings if needed
+};
+
+
+const mapFieldsToIds = (data, entityType, referenceData) => {
+
+    const mappings = fieldMappingConfig[entityType];
+
+    return data.map((item) => {
+        const transformedItem = { ...item };
+        if (mappings) {
+            Object.entries(mappings).forEach(([field, { source, key, value }]) => {
+                const referenceArray = referenceData[source]?.data || referenceData[source];
+
+                if (!Array.isArray(referenceArray)) {
+                    console.error(`Invalid reference data for source: ${source}`, referenceData[source]);
+                    transformedItem[field] = undefined; // Default to empty if reference data is invalid
+                    return;
+                }
+
+                const reference = referenceArray.find((ref) => ref[key] === item[field]);
+
+                if (reference) {
+                    transformedItem[field] = reference[value]; // Replace with corresponding ID
+                } else {
+                    console.warn(`No reference found for field: ${field} with value: ${item[field]}`);
+                    transformedItem[field] = undefined; // Replace unmatched value with empty string
+                }
+            });
+        }
+
+
+        return transformedItem;
+    });
+};
+
+
+
+
+
+const entityFieldMappings = {
+    User: {
+        "Employee ID": "empId",
+        "First Name": "firstName",
+        "Last Name": "lastName",
+        "Email": "email",
+        "Role": "role",
+        // Add more mappings for users
+    },
+    Department: {
+        "Department Id": "depId",
+        "Department Name": "name",
+        // Add more mappings for departments
+    },
+    Role: {
+        "Role Name": "name",
+        // Add more mappings for departments
+    },
+
+    EmployeeType: {
+        "Employee Type": "name",
+
+        // Add more mappings for departments
+    },
+    Designation: {
+        "Designation": "name",
+
+        // Add more mappings for departments
+    },
+    // Add mappings for other entities
+};
+
+const mapExcelToEntity = (excelData, entityType) => {
+    const mappings = entityFieldMappings[entityType];
+    return excelData.map((row) =>
+        Object.keys(row).reduce((acc, key) => {
+            const mappedKey = mappings[key];
+            if (mappedKey) acc[mappedKey] = row[key];
+            return acc;
+        }, {})
+    );
+};

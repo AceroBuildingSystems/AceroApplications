@@ -16,7 +16,8 @@ import { ObjectId } from 'mongoose';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { cn } from '@/lib/utils';
-
+import jsPDF from 'jspdf';
+import * as XLSX from "xlsx";
 
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
@@ -38,7 +39,7 @@ interface ButtonConfig {
 // Interface for Data Table configuration
 interface DataTableConfig {
     columns: string[]; // Column names for the table
-    userData: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
+    data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 
 // Main interface for the page configuration
@@ -61,8 +62,11 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
-    const [filteredData, setFilteredData] = useState(config.dataTable.userData);
-
+    const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
+    useEffect(()=>{
+        setFilteredData(config?.dataTable?.data)
+    },[config,loadingState])
+  
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
         const newSearchValues = { ...searchValues, [field]: e.target.value };
@@ -73,6 +77,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
+    
         const newFilterValues = { ...filterValues, [field]: value };
 
         setFilterValues(newFilterValues);
@@ -86,8 +91,9 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-        console.log(config?.dataTable?.userData);
-        const filtered = config?.dataTable?.userData?.filter((item) => {
+
+
+        const filtered = config?.dataTable?.data?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
@@ -102,25 +108,38 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
             const matchesFilter = Object.keys(filterValues).every((key) => {
 
                 const filterValue = filterValues[key];
-
+                console.log(filterValue);
+                console.log(item[key]);
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
 
 
-                return item[key] === filterValue;
+                return typeof item[key] === 'string' && item[key].toLowerCase() === filterValue?.toLowerCase();
             });
 
             return matchesSearch && matchesFilter;
         });
-console.log(filterData);
+       
         setFilteredData(filtered); // Update filtered data state
     };
 
-   
 
+    const exportToPDF = () => {
+        const doc = new jsPDF();
+        doc.text("Exported Data", 10, 10);
+        // Add table or other content
+        doc.save("table_data.pdf");
+    };
+
+    const exportToExcel = () => {
+        const ws = XLSX.utils.json_to_sheet(config.dataTable.userData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Data");
+        XLSX.writeFile(wb, "table_data.xlsx");
+    };
 
     const [open, setOpen] = React.useState(false)
-    
+    const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
     return (
         <>
@@ -154,9 +173,9 @@ console.log(filterData);
                                                     variant="outline"
                                                     role="combobox"
                                                     aria-expanded={open ? true : false}
-                                                    className="w-[200px] justify-between"
+                                                    className=" w-[200px] justify-between overflow-hidden text-ellipsis whitespace-nowrap"
                                                 >
-                                                    {filterValues[field.label] || 'Select ' + field.label}
+                                                    {filterValues[field.label] || field.placeholder}
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -165,7 +184,7 @@ console.log(filterData);
                                                     <CommandInput placeholder="Search role" />
 
                                                     <CommandList>
-                                                        <CommandEmpty>No role found.</CommandEmpty>
+                                                        <CommandEmpty>No {field.key} found.</CommandEmpty>
                                                         <CommandGroup>
                                                             {/* Add "All" option */}
                                                             <CommandItem
@@ -185,12 +204,15 @@ console.log(filterData);
                                                                 All
                                                             </CommandItem>
 
-                                                            {field?.options?.map((option, i) => (
+                                                            {field?.options?.map((option, i) => {
+                                                               
+                                                                return(
                                                                 <CommandItem
                                                                     key={i}
                                                                     value={option}
                                                                     onSelect={(value) => {
-                                                                        handleFilterChange(value, field.label);
+                                                                        
+                                                                        handleFilterChange(value?.toProperCase(), field.label);
                                                                         setOpen(false)
                                                                     }}
                                                                 >
@@ -201,35 +223,67 @@ console.log(filterData);
                                                                         )}
                                                                     />
                                                                     {option}
-                                                                </CommandItem>
-                                                            ))}
+                                                                </CommandItem>);
+                                                            }
+                                                            )}
                                                         </CommandGroup>
                                                     </CommandList>
                                                 </Command>
                                             </PopoverContent>
                                         </Popover>
-                                      
+
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-
-                        {/* Button Section */}
-                        <div className='flex justify-end gap-1'>
-
+                        <div className='flex gap-1'>
+                            {/* Button Section */}
                             {config.buttons?.map((button, index) => (
-                                <Button effect="expandIcon" icon={button.icon} iconPlacement="right" key={index} onClick={button.action} className={`w-28 ${button.className}`}>
-                                    {button.label}
-                                </Button>
+                                <div key={index} className="relative">
+                                    {/* Button */}
+                                    <Button
+                                        effect="expandIcon"
+                                        icon={button.icon}
+                                        iconPlacement="right"
+                                        onClick={() => {
+                                            if (button.dropdownOptions) {
+                                                // Toggle dropdown visibility for this button
+                                                setActiveDropdown(index === activeDropdown ? null : index);
+                                            } else {
+                                                button.action(); // Call action directly if no dropdown
+                                            }
+                                        }}
+                                        className={`w-28 ${button.className}`}
+                                    >
+                                        {button.label}
+                                    </Button>
+
+                                    {/* Dropdown (only if dropdownOptions are provided and active) */}
+                                    {button.dropdownOptions && activeDropdown === index && (
+                                        <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
+                                            {button.dropdownOptions.map((option, optionIndex) => (
+                                                <div
+                                                    key={optionIndex}
+                                                    className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
+                                                    onClick={() => {
+                                                        option.action(option.value); // Execute the action for this dropdown option
+                                                        setActiveDropdown(null); // Close the dropdown after selection
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             ))}
-
-
                         </div>
+
                     </div>
 
                     <div className='h-[90%]' >
-                        {<DataTable data={filteredData?.length > 0 ? filteredData : config?.dataTable?.userData} columns={config?.dataTable?.columns || []} />}
+                        {<DataTable data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []} />}
                     </div>
                 </div>
 

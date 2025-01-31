@@ -1,15 +1,11 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
-import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -18,20 +14,22 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
+import { bulkImport } from '@/shared/functions';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
-  
+const { user, status, authenticated } = useUserAuthorised();
   const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
-      db: 'DEPARTMENT_MASTER',
-      sort: { name: -1 },
-    });
-  
+    db: 'DEPARTMENT_MASTER',
+    sort: { name: -1 },
+  });
+
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  departmentLoading;
+  const loading = departmentLoading;
 
 
   interface RowData {
@@ -42,11 +40,11 @@ const page = () => {
   }
 
 
-  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string }> = [
-    { label: 'Department Id', name: "depId", type: "text", },
-    { label: 'Department Name', name: "name", type: "text", },
-    { label: 'Status', name: "isActive", type: "select", data: statusData },
-   
+  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
+    { label: 'Department Id', name: "depId", type: "text", required: true, placeholder: 'Department Id' },
+    { label: 'Department Name', name: "name", type: "text", required: true, placeholder: 'Department Name' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
   ]
 
 
@@ -69,12 +67,12 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}) => {
-   
+  const saveData = async ({ formData, action }) => {
+
     const formattedData = {
       db: 'DEPARTMENT_MASTER',
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
 
@@ -82,21 +80,21 @@ const page = () => {
 
     const response = await createMaster(formattedData);
 
-    
+
     if (response.data?.status === SUCCESS && action === 'Add') {
       toast.success('Department added successfully');
 
     }
-    else{
+    else {
       if (response.data?.status === SUCCESS && action === 'Update') {
         toast.success('Department updated successfully');
       }
     }
 
-    if(response?.error?.data?.message?.message){
+    if (response?.error?.data?.message?.message) {
       toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
     }
-   
+
   };
 
 
@@ -115,8 +113,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    console.log('UserPage Import button clicked');
-    // Your import logic for user page
+    bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: "DEPARTMENT_MASTER", masterName: "Department" });
   };
 
   const handleExport = () => {
@@ -129,7 +126,7 @@ const page = () => {
     // Your delete logic for user page
   };
 
- 
+
 
   const departmentColumns = [
     {
@@ -183,7 +180,22 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{row.getValue("name")}</div>,
     },
+
+     {
+          accessorKey: "isActive",
+          header: ({ column }: { column: any }) => (
+            <button
+              className="flex items-center space-x-2"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
     
+            >
+              <span>Status</span> {/* Label */}
+              <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            </button>
+          ),
+          cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+        },
+
 
 
   ];
@@ -191,15 +203,13 @@ const page = () => {
   const departmentConfig = {
     searchFields: [
       { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by department' },
-      
+
     ],
     filterFields: [
-      // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
-
     ],
     dataTable: {
       columns: departmentColumns,
-      userData: departmentData?.data,
+      data: departmentData?.data,
     },
     buttons: [
 
@@ -222,7 +232,7 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
-        height = 'auto'
+        height='auto'
       />
     </>
 

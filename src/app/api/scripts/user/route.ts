@@ -45,8 +45,7 @@ export async function POST(request:NextRequest,response:NextResponse) {
             default:
                 response = await User.insertMany(bulkUserInsertSanitization(data,iEncryptPassword))
                 return NextResponse.json({type: SUCCESS,message: "Bulk insert success",data: response}, { status: 200 })
-                // console.log(action);
-                // return NextResponse.json({type: ERROR,message: "Invalid action",data: null}, { status: 400 })
+
         }
 
     } catch(err) {

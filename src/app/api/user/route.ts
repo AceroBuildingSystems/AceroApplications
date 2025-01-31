@@ -26,7 +26,7 @@ export async function GET(request:NextRequest) {
 export async function POST(request:NextRequest) {
   const body = await request.json()
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET})
-  
+  console.log("BODY",body)
   if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED,data:{}}, { status: 400 })
 
   let response:any = {};
@@ -47,6 +47,27 @@ export async function POST(request:NextRequest) {
     default:
       return NextResponse.json({status:ERROR, message:SPECIFY_ACTION, data:{}}, { status: 400 })
   }
+  
+  if(response.status === SUCCESS) {
+    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
+  }
+  return NextResponse.json({status:ERROR, message:response.message, data:{}}, { status: 500 })
+
+}
+
+
+export async function PUT(request:NextRequest) {
+  const body = await request.json()
+  const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET})
+
+  let response = {}
+  
+  if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED,data:{}}, { status: 400 })
+  if(!body.data.id) {
+    return NextResponse.json({status:ERROR, message:ACCESS_ID_REQUIRED, data:{}}, { status: 400 })
+  }
+  console.log(body)
+  response = await userManager.updateAccess(body)
   
   if(response.status === SUCCESS) {
     return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })

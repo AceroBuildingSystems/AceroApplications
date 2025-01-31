@@ -18,23 +18,24 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
-import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
+import { bulkImport } from '@/shared/functions';
 
 
 const page = () => {
    
-    const { user, status, authenticated } = useUserAuthorised();
-  const { data: buildingTypeData = [], isLoading: buildingTypeLoading } = useGetMasterQuery({
-      db: MONGO_MODELS.BUILDING_TYPE_MASTER,
-      sort: { name: 'asc' },
+  const { user, status, authenticated } = useUserAuthorised();
+  const { data: incotermData = [], isLoading: incotermLoading } = useGetMasterQuery({
+      db: MONGO_MODELS.INCOTERM_MASTER,
+      sort: { name: -1 },
     });
+
   
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  buildingTypeLoading;
+  const loading =  incotermLoading;
 
 
   interface RowData {
@@ -47,7 +48,8 @@ const page = () => {
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
-    { label: 'Building Type', name: "name", type: "text", required: true, placeholder:'Building Type' },
+    { label: 'Incoterm', name: "name", type: "text",required: true, placeholder:'Incoterm' },
+    { label: 'Description', name: "description", type: "text", placeholder:'Description' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -59,7 +61,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType: React.SetStateAction<string>) => {
+  const openDialog = (masterType) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -75,7 +77,7 @@ const page = () => {
   const saveData = async ({formData, action}) => {
    
     const formattedData = {
-        db: MONGO_MODELS.BUILDING_TYPE_MASTER,
+        db: MONGO_MODELS.INCOTERM_MASTER,
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
       data: formData,
@@ -87,14 +89,12 @@ const page = () => {
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
-      
-      toast.success('Building type added successfully');
+      toast.success('Incoterm added successfully');
 
     }
     else{
       if (response.data?.status === SUCCESS && action === 'Update') {
-        
-        toast.success('Building type updated successfully');
+        toast.success('Incoterm updated successfully');
       }
     }
 
@@ -108,20 +108,20 @@ const page = () => {
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("building type");
+    openDialog("incoterm");
     // Your add logic for user page
   };
 
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("building type");
+    openDialog("incoterm");
 
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.BUILDING_TYPE_MASTER, masterName:"BuildingType" });
-    };
+    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.INCOTERM_MASTER, masterName:"Incoterm" });
+  };
 
   const handleExport = () => {
     console.log('UserPage Update button clicked');
@@ -135,7 +135,7 @@ const page = () => {
 
  
 
-  const buildingTypeColumns = [
+  const incotermColumns = [
     {
       id: "select",
       header: ({ table }: { table: any }) => (
@@ -167,12 +167,27 @@ const page = () => {
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Building Type</span> {/* Label */}
+          <span>Incoterm</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
+    {
+      accessorKey: "description",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>Description</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("description")}</div>,
+    },
+   
     {
       accessorKey: "isActive",
       header: ({ column }: { column: any }) => (
@@ -189,11 +204,12 @@ const page = () => {
     },
     
 
+
   ];
 
-  const buildingTypeConfig = {
+  const incotermConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by building type' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by incoterm' },
       
     ],
     filterFields: [
@@ -201,10 +217,9 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: buildingTypeColumns,
-      data: buildingTypeData?.data,
+      columns: incotermColumns,
+      data: incotermData?.data,
     },
-    
     buttons: [
 
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
@@ -217,7 +232,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={buildingTypeConfig} loadingState={loading} />
+      <MasterComponent config={incotermConfig} loadingState={loading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

@@ -11,7 +11,9 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Location,
   ApprovalAuthority,
   Team,
-  TeamMember} from '@/models';
+  TeamMember,
+  Incoterm,
+  Sector} from '@/models';
 
 
 
@@ -46,7 +48,9 @@ function getMongooseAdapter(): MongooseAdapter {
     PAINT_TYPE_MASTER: PaintType,
     STATE_MASTER: State,
     LOCATION_MASTER: Location,
-    APPROVAL_AUTHORITY_MASTER: ApprovalAuthority
+    APPROVAL_AUTHORITY_MASTER: ApprovalAuthority,
+    INCOTERM_MASTER: Incoterm,
+    SECTOR_MASTER: Sector
     });
   }
   return dbEngineInstance;

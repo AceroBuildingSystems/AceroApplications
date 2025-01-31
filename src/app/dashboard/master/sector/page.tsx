@@ -25,30 +25,17 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.TEAM_MASTER,
+    const { data: sectorData = [], isLoading: sectorLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.SECTOR_MASTER,
         sort: { name: 'asc' },
     });
-    const { data: userData = [], isLoading: userLoading } = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER,sort: { name: 'asc' }, });
-
-    const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({ db: MONGO_MODELS.DEPARTMENT_MASTER,sort: { name: 'asc' }, });
-
+  
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = teamLoading || userLoading || departmentLoading;
-    const formattedUserData = userData?.data?.map((option) => ({
-        label: option?.shortName?.toProperCase(), // Display name
-        value: option?._id, // Unique ID as value
-      }));
+    const loading = sectorLoading;
 
-// const formattedData = userData?.data?.map(item => ({
-//     _id: item._id,
-//     name: `${item?.shortName?.toProperCase()}`
-//   }));
-
-  
     interface RowData {
         id: string;
         name: string;
@@ -58,9 +45,7 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Team Name', name: "name", type: "text", required: true, placeholder: 'Team Name' },
-        { label: 'Team Head', name: "teamHead", type: "multiselect", required: true, placeholder: 'Select Team Head', data: formattedUserData },
-        { label: 'Department', name: "department", type: "select", required: true, placeholder: 'Select Department', format: 'ObjectId', data: departmentData?.data },
+        { label: 'Sector', name: "name", type: "text", required: true, placeholder: 'Sector' },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -88,24 +73,23 @@ const page = () => {
     const saveData = async ({ formData, action }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.TEAM_MASTER,
+            db: MONGO_MODELS.SECTOR_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
         };
 
 
-
         const response = await createMaster(formattedData);
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Team added successfully');
+            toast.success('Sector added successfully');
 
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Team added updated successfully');
+                toast.success('Sector updated successfully');
             }
         }
 
@@ -117,28 +101,22 @@ const page = () => {
 
 
     const editUser = (rowData: RowData) => {
-      
-        setAction('Update');
-        const transformedData = {
-            ...rowData, // Keep the existing fields
-            teamHead: rowData?.teamHead.map(team => team._id) // Map `location` to just the `_id`s
-          };
-  
-        setInitialData(transformedData);
        
-        openDialog("team");
+        setAction('Update');
+        setInitialData(rowData);
+        openDialog("sector");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("team");
+        openDialog("sector");
 
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MASTER, masterName: "Team" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData, action: "Add", user, createUser: createMaster, db: MONGO_MODELS.SECTOR_MASTER, masterName: "Sector" });
     };
 
     const handleExport = () => {
@@ -153,7 +131,7 @@ const page = () => {
 
 
 
-    const teamColumns = [
+    const sectorColumns = [
         {
             id: "select",
             header: ({ table }: { table: any }) => (
@@ -185,40 +163,13 @@ const page = () => {
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Team Name</span> {/* Label */}
+                    <span>Sector</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
-        {
-            accessorKey: "teamHead",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Team Head</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("teamHead")[0]?.shortName?.toProperCase()}</div>,
-        },
-        {
-            accessorKey: "department",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Department</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("department")?.name.toProperCase()}</div>,
-        },
+       
         {
             accessorKey: "isActive",
             header: ({ column }: { column: any }) => (
@@ -238,9 +189,9 @@ const page = () => {
 
     ];
 
-    const teamConfig = {
+    const sectorConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by area' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by sector' },
 
         ],
         filterFields: [
@@ -248,8 +199,8 @@ const page = () => {
 
         ],
         dataTable: {
-            columns: teamColumns,
-            data: teamData?.data,
+            columns: sectorColumns,
+            data: sectorData?.data,
         },
         buttons: [
 
@@ -263,7 +214,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={teamConfig} loadingState={loading} />
+            <MasterComponent config={sectorConfig} loadingState={loading} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

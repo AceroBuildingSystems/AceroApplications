@@ -24,6 +24,7 @@ import {
   PlusIcon,
   Trash2Icon,
 } from "lucide-react";
+import MultipleSelector from "../ui/multiple-selector";
 
 const DynamicDialog = ({
   isOpen,
@@ -34,6 +35,7 @@ const DynamicDialog = ({
   initialData,
   action,
   height,
+  width,
 }) => {
   const { user, status, authenticated } = useUserAuthorised();
 
@@ -51,6 +53,7 @@ const DynamicDialog = ({
       }
       return acc;
     }, {});
+    
     setFormData(formattedData);
 
   }, [initialData]);
@@ -59,12 +62,14 @@ const DynamicDialog = ({
   const handleChange = (e, fieldName, format, type) => {
     let value: string | null = "";
 
-    if (type === "select") {
-      value = e;
-    } else {
-      value = e.target.value;
-    }
 
+    if (type === "multiselect") {
+      value = e.map((item) => item.value); // Store only `_id`s
+    } else if (type === "select") {
+      value = e; // Ensure single select values are stored correctly
+    } else {
+      value = e.target.value || "";
+    }
     setFormData((prev) => {
       let formattedValue = value;
       if (format === "ObjectId") {
@@ -72,11 +77,11 @@ const DynamicDialog = ({
       } else if (format === "Date") {
         formattedValue = value ? new Date(value) : null; // Convert to Date object
       }
+      
       const updatedFormData = {
         ...prev,
         [fieldName]: formattedValue,
       };
-
 
       // Update `fullName` if `firstName` or `lastName` changes
       // Need to generalise later for other master components
@@ -88,7 +93,7 @@ const DynamicDialog = ({
     });
   };
 
-// handle close
+  // handle close
   const handleClose = async () => {
     try {
 
@@ -101,10 +106,10 @@ const DynamicDialog = ({
         }
         return acc;
       }, {});
-  
+
       setFormData(formattedData);
       // Save the data to the database (e.g., via an API call)
-    closeDialog();
+      closeDialog();
     } catch (error) {
       console.error("Error saving data:", error);
     }
@@ -119,7 +124,7 @@ const DynamicDialog = ({
         addedBy: user._id,
         updatedBy: user._id
       };
-     
+
 
       // Save the data to the database (e.g., via an API call)
       await onSave({ formData: updatedData, action });
@@ -161,8 +166,8 @@ const DynamicDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
-        className={`max-w-full max-h-[80%] pointer-events-auto sm:max-w-md lg:max-w-3xl mx-4  ${height === 'auto' ? 'h-auto' : 'h-[75%]'}`}>
-        <DialogTitle className="pl-1">{`${action} ${selectedMaster.toProperCase()
+        className={`max-w-full max-h-[90%] pointer-events-auto mx-2  ${height === 'auto' ? 'h-auto' : 'h-[75%]'} ${width === 'full' ? 'w-[95%] h-[90%]' : 'sm:max-w-md lg:max-w-3xl'}`}>
+        <DialogTitle className="pl-1">{`${action} ${selectedMaster?.toProperCase()
           }`}</DialogTitle>
         <div className="bg-white h-full overflow-y-auto p-2 rounded-md">
           <div className=" space-y-4   pr-2 pl-1 my-1 overflow-y-auto">
@@ -176,6 +181,20 @@ const DynamicDialog = ({
                   {
                     (() => {
                       switch (field.type) {
+                        case "multiselect":
+                         
+                          return (
+                           
+                            <MultipleSelector
+                            value={(formData[field.name] || []).map((id) => ({
+                              value: id,
+                              label: field.data.find((option) => option.value === id)?.label || "Unknown",
+                            }))} // Convert stored `_id`s back to { label, value }
+                            onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
+                            defaultOptions={field.data} // Ensure `field.data` is in [{ label, value }] format
+                            placeholder={field.placeholder || "Select options..."}
+                            />
+                          );
                         case "textarea":
                           return (
                             <textarea
@@ -211,10 +230,10 @@ const DynamicDialog = ({
                               placeholder={field.placeholder}
                             />
                           );
-                          case "custom":
-                            return (
-                             <><field.CustomComponent accessData={formData[field.name]} /></>
-                            )
+                        case "custom":
+                          return (
+                            <><field.CustomComponent accessData={formData[field.name]} /></>
+                          )
 
                         default:
                           return (

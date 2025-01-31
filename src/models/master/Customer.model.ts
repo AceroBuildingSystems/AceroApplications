@@ -3,15 +3,20 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { customer } from "@/types/customer.types";
 
 const CustomerSchema: Schema<customer> = new Schema({
-    name: { type: String, required: true, unique:true },
+    name: { type: String, required: true, unique: true },
     website: { type: String },
-    email: { type: String},
-    phone: { type: String},
+    email: { type: String },
+    phone: { type: String },
     address: { type: String },
+    customerType: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "CustomerType", // Reference to the CustomerType model
+
+    },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String },
-   
+
 }, { timestamps: true })
 
 

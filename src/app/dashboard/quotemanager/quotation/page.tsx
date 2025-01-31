@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, userTransformData } from '@/lib/utils';
-import DynamicDialog from '@/components/ModalComponent/ModelComponent';
+import DynamicDialog from '@/components/AQMModelComponent/AQMComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
@@ -23,6 +23,13 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const page = () => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+
+    const[year,setYear]=useState(currentYear);
+    const[option,setOption]=useState('A');
+    
+    const[revNo,setRevNo]=useState(0);
 
     const { user, status, authenticated } = useUserAuthorised();
     const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading } = useGetMasterQuery({
@@ -30,10 +37,57 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
-    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.LOCATION_MASTER,
+    const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.COUNTRY_MASTER,
         sort: { name: 'asc' },
     });
+
+    const { data: quoteStatusData = [], isLoading: quoteStatusLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.QUOTE_STATUS_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const quoteStatus=quoteStatusData?.data?.filter((option) => option?.name === 'A - Active')[0]?._id;
+
+    const { data: teamMemberData = [], isLoading: teamMemberLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const salesEngData = teamMemberData?.data?.map((option) => ({
+        name: option?.user?.shortName?.toProperCase(), // Display name
+        _id: option?.user?._id, // Unique ID as value
+    }));
+   
+    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.TEAM_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    
+    const yearData = [];
+
+    if (currentMonth < 12) {
+        for (let year = currentYear - 2; year <= currentYear; year++) {
+            yearData.push({ _id: year, name: year.toString() });
+        }
+    }
+    else {
+
+        for (let year = currentYear - 2; year <= currentYear + 1; year++) {
+            yearData.push({ _id: year, name: year.toString() });
+        }
+    }
+
+    const optionData = Array.from({ length: 26 }, (_, i) => ({
+        _id: String.fromCharCode(65 + i), // ASCII code for 'A' is 65
+        name: String.fromCharCode(65 + i),
+      }));
+
+      const revNoData = Array.from({ length: 100 }, (_, i) => ({
+        _id: i + 0, 
+        name: (i + 0).toString()
+      }));
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
@@ -42,12 +96,11 @@ const page = () => {
     const loading = approvalAuthorityLoading;
 
 
-  
 
-    const formattedLocationData = locationData?.data?.map((option) => ({
-        label: option.name, // Display name
-        value: option._id, // Unique ID as value
-      }));
+    const formattedTeamMemberData = teamMemberData?.data?.map((option) => ({
+        label: option?.user?.shortName?.toProperCase(), // Display name
+        value: option?.user?._id, // Unique ID as value
+    }));
 
     interface RowData {
         id: string;
@@ -56,13 +109,34 @@ const page = () => {
         role: string;
     }
 
+    // state-1 salesengineer1 hidden
+    // state-2 --------------2 hidden
+    // visibility
+    //pass function the label state1 
 
-    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-        { label: 'Authority Code', name: "code", type: "text", required: true, placeholder: 'Authority Code' },
-        { label: 'Approval Authority', name: "name", type: "text", required: true, placeholder: 'Approval Authority' },
-        { label: 'Location', name: "location", type: "multiselect", required: true, placeholder: 'Select Location', data: formattedLocationData },
-        { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
-
+    // function
+    //     {
+    //         state(visible)
+    //     }
+    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; section?: string; addMore?: boolean; visibility?: boolean; onAddMore?: () => void; }> = [
+        { label: 'Country', name: "country", type: "select", data: countryData?.data, format: 'ObjectId', required: true, placeholder: 'Select Country', section: 'QuoteDetails', visibility: true },
+        { label: 'Year', name: "year", type: "select", data: yearData, required: true, placeholder: 'Select Year', section: 'QuoteDetails', visibility: true },
+        { label: 'Option', name: "option", type: "select", data: optionData, required: false, placeholder: 'Select Option', section: 'QuoteDetails', visibility: true },
+        { label: 'Quote Status', name: "quoteStatus", type: "select", data: quoteStatusData?.data, format: 'ObjectId', required: true, placeholder: 'Select Quote Status', section: 'QuoteDetails', visibility: true },
+        { label: 'Rev No', name: "revNo", type: "select", data: revNoData, required: true, placeholder: 'Select Rev No', section: 'QuoteDetails', visibility: true },
+        { label: 'Sales Engineer/Manager', name: "salesEngineer", type: "select", data: salesEngData, format: 'ObjectId', required: true, placeholder: 'Select Sales Engineer / Manager', section: 'QuoteDetails', visibility: true },
+        { label: 'Sales Support Engineer', name: "salesSupportEngineer1", type: "multiselect", data: formattedTeamMemberData, required: true, placeholder: 'Select Sales Support Engineer', section: 'QuoteDetails', visibility: true },
+        { label: 'Received Date From Customer', name: "rcvdDateFromCustomer", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: 'QuoteDetails', visibility: true },
+        { label: 'Selling Team', name: "sellingTeam", type: "select", data: teamData?.data, format: 'ObjectId', required: true, placeholder: 'Select Selling Team', section: 'QuoteDetails', visibility: true },
+        { label: 'Responsible Team', name: "responsibleTeam", type: "select", data: teamData?.data, format: 'ObjectId', required: true, placeholder: 'Responsible Team', section: 'QuoteDetails', visibility: true },
+        { label: 'Quote Details Remark', name: "quoteDetailsRemark", type: "text", required: false, placeholder: 'Quote Details Remark', section: 'QuoteDetails', visibility: true },
+        { label: 'Company Name', name: "responsibleTeam", type: "select", data: teamData?.data, format: 'ObjectId', required: true, placeholder: 'Responsible Team', section: 'QuoteDetails', visibility: true },
+        { label: 'Contact Name', name: "responsibleTeam", type: "select", data: teamData?.data, format: 'ObjectId', required: true, placeholder: 'Responsible Team', section: 'QuoteDetails', visibility: true },
+        { label: 'Contact Email', name: "quoteDetailsRemark", type: "text", required: false, placeholder: 'Quote Details Remark', section: 'QuoteDetails', visibility: true },
+        { label: 'Contact Number', name: "quoteDetailsRemark", type: "text", required: false, placeholder: 'Quote Details Remark', section: 'QuoteDetails', visibility: true },
+        { label: 'Quote Details Remark', name: "quoteDetailsRemark", type: "text", required: false, placeholder: 'Quote Details Remark', section: 'QuoteDetails', visibility: true },
+        { label: 'Quote Details Remark', name: "quoteDetailsRemark", type: "text", required: false, placeholder: 'Quote Details Remark', section: 'QuoteDetails', visibility: true },
+       
     ]
 
 
@@ -123,22 +197,22 @@ const page = () => {
         const transformedData = {
             ...rowData, // Keep the existing fields
             location: rowData.location.map(loc => loc._id) // Map `location` to just the `_id`s
-          };
-    
+        };
+
         setInitialData(transformedData);
-        openDialog("approval authority");
+        openDialog("update quotation");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
-        setInitialData({});
+        setInitialData({year,option,quoteStatus,revNo});
         setAction('Add');
-        openDialog("approval authority");
+        openDialog("new quotation");
 
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [],continentData:[],regionData:[],countryData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
     };
 
     const handleExport = () => {
@@ -255,9 +329,11 @@ const page = () => {
                 selectedMaster={selectedMaster}
                 onSave={saveData}
                 fields={fields}
+
                 initialData={initialData}
                 action={action}
-                height='auto'
+                height=''
+                width='full'
             />
         </>
 

@@ -10,7 +10,7 @@ import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData, transformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -25,23 +25,41 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.TEAM_MASTER,
+    const { data: teamMemberData = [], isLoading: teamMemberLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         sort: { name: 'asc' },
     });
     const { data: userData = [], isLoading: userLoading } = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER,sort: { name: 'asc' }, });
 
-    const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({ db: MONGO_MODELS.DEPARTMENT_MASTER,sort: { name: 'asc' }, });
+    const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery({ db: MONGO_MODELS.ROLE_MASTER,sort: { name: 'asc' }, });
+
+    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER,sort: { name: 'asc' }, });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = teamLoading || userLoading || departmentLoading;
-    const formattedUserData = userData?.data?.map((option) => ({
+    const loading = teamMemberLoading || roleLoading || userLoading || teamLoading;
+
+    const formattedRoleData = roleData?.data?.map((option) => ({
+        label: option?.name?.toProperCase(), // Display name
+        value: option?._id, // Unique ID as value
+      }));
+
+      const formattedUserData = userData?.data?.map((option) => ({
         label: option?.shortName?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
       }));
+
+      const transformUserData = userData?.data?.map((option) => ({
+        name: option?.shortName?.toProperCase(), // Display name
+        _id: option?._id, // Unique ID as value
+      }));
+
+      const fieldsToAdd = [
+          { fieldName: 'name', path: ['user', 'shortName'] }
+        ];
+        const transformedData = transformData(teamMemberData?.data, fieldsToAdd);
 
 // const formattedData = userData?.data?.map(item => ({
 //     _id: item._id,
@@ -58,9 +76,10 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Team Name', name: "name", type: "text", required: true, placeholder: 'Team Name' },
-        { label: 'Team Head', name: "teamHead", type: "multiselect", required: true, placeholder: 'Select Team Head', data: formattedUserData },
-        { label: 'Department', name: "department", type: "select", required: true, placeholder: 'Select Department', format: 'ObjectId', data: departmentData?.data },
+        { label: 'Team Member', name: "user", type: "select", required: true, placeholder: 'Select Team Member', format: 'ObjectId', data: transformUserData },
+        { label: 'Role', name: "teamRole", type: "multiselect", required: true, placeholder: 'Select Role', data: formattedRoleData },
+        { label: 'Reporting To', name: "teamReportingTo", type: "multiselect", required: true, placeholder: 'Select Reporting To', data: formattedUserData },
+        { label: 'Team', name: "team", type: "select", required: true, placeholder: 'Select Team', format: 'ObjectId', data: teamData?.data },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -88,7 +107,7 @@ const page = () => {
     const saveData = async ({ formData, action }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.TEAM_MASTER,
+            db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
@@ -100,12 +119,12 @@ const page = () => {
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Team added successfully');
+            toast.success('Team member added successfully');
 
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Team added updated successfully');
+                toast.success('Team member added updated successfully');
             }
         }
 
@@ -121,7 +140,8 @@ const page = () => {
         setAction('Update');
         const transformedData = {
             ...rowData, // Keep the existing fields
-            teamHead: rowData?.teamHead.map(team => team._id) // Map `location` to just the `_id`s
+            teamRole: rowData?.teamRole.map(role => role._id), // Map `location` to just the `_id`s
+            teamReportingTo: rowData?.teamReportingTo.map(reporting => reporting._id)
           };
   
         setInitialData(transformedData);
@@ -138,7 +158,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MASTER, masterName: "Team" });
+        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
     };
 
     const handleExport = () => {
@@ -153,7 +173,7 @@ const page = () => {
 
 
 
-    const teamColumns = [
+    const teamMemberColumns = [
         {
             id: "select",
             header: ({ table }: { table: any }) => (
@@ -178,46 +198,60 @@ const page = () => {
         },
 
         {
-            accessorKey: "name",
+            accessorKey: "user",
             header: ({ column }: { column: any }) => (
                 <button
                     className="flex items-center space-x-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Team Name</span> {/* Label */}
+                    <span>Team Member</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("user")?.shortName?.toProperCase()}</div>,
         },
         {
-            accessorKey: "teamHead",
+            accessorKey: "teamRole",
             header: ({ column }: { column: any }) => (
                 <button
                     className="flex items-center space-x-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Team Head</span> {/* Label */}
+                    <span>Team Role</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("teamHead")[0]?.shortName?.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='' >{row?.getValue("teamRole")?.[0]?.name?.toProperCase()}</div>,
         },
         {
-            accessorKey: "department",
+            accessorKey: "teamReportingTo",
             header: ({ column }: { column: any }) => (
                 <button
                     className="flex items-center space-x-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Department</span> {/* Label */}
+                    <span>Reporting To</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("department")?.name.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='' >{row?.getValue("teamReportingTo")?.[0]?.shortName?.toProperCase()}</div>,
+        },
+        {
+            accessorKey: "team",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>Team</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("team")?.name?.toProperCase()}</div>,
         },
         {
             accessorKey: "isActive",
@@ -238,9 +272,9 @@ const page = () => {
 
     ];
 
-    const teamConfig = {
+    const teamMemberConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by area' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by team member' },
 
         ],
         filterFields: [
@@ -248,8 +282,8 @@ const page = () => {
 
         ],
         dataTable: {
-            columns: teamColumns,
-            data: teamData?.data,
+            columns: teamMemberColumns,
+            data: transformedData,
         },
         buttons: [
 
@@ -263,7 +297,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={teamConfig} loadingState={loading} />
+            <MasterComponent config={teamMemberConfig} loadingState={loading} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

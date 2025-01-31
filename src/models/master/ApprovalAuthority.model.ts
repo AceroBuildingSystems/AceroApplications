@@ -5,11 +5,13 @@ import { approvalAuthority } from "@/types/approvalAuthority.types";
 const ApprovalAuthoritySchema: Schema<approvalAuthority> = new Schema({
     code: { type: String, required:true, unique:true },
     name: { type: String, required:true, unique:true },
-    location: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Location", // Reference to the Region model
-                autopopulate: true
-            },
+    location: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Location", // Reference to the Location model
+          autopopulate: true, // Automatically populate this field
+        },
+      ],
     isActive: { type: Boolean, default:true },
     addedBy: { type: String },
     updatedBy: { type: String },

@@ -625,11 +625,11 @@ const Access = () => {
     },
   ];
 
-  console.log({accessConfig})
+ 
   return (
     <div className="w-full h-full px-4">
-      <Tabs defaultValue="Access" className="h-full">
-        <TabsList width={"full"}>
+      <Tabs  defaultValue="Access" className="h-full">
+        <TabsList  width={"full"}>
           <TabsTrigger value="Access" width={"full"}>
             Access
           </TabsTrigger>

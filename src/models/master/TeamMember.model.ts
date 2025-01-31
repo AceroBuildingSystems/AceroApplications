@@ -6,10 +6,22 @@ const TeamMemberSchema: Schema<teamMember> = new Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",  // based on department
+        autopopulate: true, // Automatically populate this field
     },
-    teamRole:{
+    teamRole:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Role",
+        autopopulate: true, // Automatically populate this field
+    }],
+    teamReportingTo:[{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        autopopulate: true, // Automatically populate this field
+    }],
+    team:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Team",
+        autopopulate: true, // Automatically populate this field
     },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
@@ -17,7 +29,7 @@ const TeamMemberSchema: Schema<teamMember> = new Schema({
 
 }, { timestamps: true })
 
-
+TeamMemberSchema.plugin(require('mongoose-autopopulate'));
 const TeamMember: Model<teamMember> = mongoose.models.teamMember || mongoose.model<teamMember>("TeamMember", TeamMemberSchema)
 
 export default TeamMember

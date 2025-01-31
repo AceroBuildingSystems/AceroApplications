@@ -7,11 +7,7 @@ const CustomerContactSchema: Schema<customerContacts> = new Schema({
     email: { type: String },
     phone: { type: String},
     position: { type: String },
-    customerType: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "CustomerType", // Reference to the CustomerType model
-           
-        },
+    
         customer: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Customer", // Reference to the CustomerType model

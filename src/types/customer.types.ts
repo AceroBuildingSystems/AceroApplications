@@ -6,6 +6,7 @@ export interface customer {
     email: string,
     phone: string,
     address: string,
+    customerType: mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,

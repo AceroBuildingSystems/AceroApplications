@@ -26,11 +26,15 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
+    const { data: customerTypeData = [], isLoading: customerTypeLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
+        sort: { name: 'asc' },
+      });
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = customerLoading;
+    const loading = customerLoading || customerTypeLoading;
 
     interface RowData {
         id: string;
@@ -47,6 +51,7 @@ const page = () => {
         { label: 'Email', name: "email", type: "email", placeholder: 'Email' },
         { label: 'Phone', name: "phone", type: "text", placeholder: 'Phone' },
         { label: 'Address', name: "address", type: "text", placeholder: 'Address' },
+        { label: 'Customer Type', name: "customerType", type: "select", data: customerTypeData?.data, placeholder: 'Select Customer Type' },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -226,6 +231,20 @@ const page = () => {
             ),
             cell: ({ row }: { row: any }) => <div >{row.getValue("address")}</div>,
         },
+         {
+                accessorKey: "customerType",
+                header: ({ column }: { column: any }) => (
+                  <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          
+                  >
+                    <span>Customer Type</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                  </button>
+                ),
+                cell: ({ row }: { row: any }) => <div >{row.getValue("customerType")?.name}</div>,
+              },
         {
              accessorKey: "isActive",
              header: ({ column }: { column: any }) => (

@@ -39,7 +39,7 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0 pointer-events-auto">
+            <PopoverContent className="w-100% p-0 pointer-events-auto">
                 <Command>
                     <CommandInput  className="pointer-events-auto" placeholder={`Search ${field?.label}`} />
 

@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 export interface team {
     _id?: mongoose.ObjectId,
     name: string,
-    reportingTo: mongoose.ObjectId[],
-    teamMembers: mongoose.ObjectId[],
+    teamHead: mongoose.ObjectId[],
     department: mongoose.ObjectId,
     addedBy: string,
     updatedBy: string,

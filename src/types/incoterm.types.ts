@@ -1,11 +1,8 @@
 import mongoose from "mongoose";
-export interface customerContacts {
+export interface incoterm {
     _id?: mongoose.ObjectId,
     name: string,
-    email: string,
-    phone: string,
-    position: string,
-    customer:mongoose.ObjectId,
+    description: string,
     addedBy: string,
     updatedBy: string,
     isActive:boolean,

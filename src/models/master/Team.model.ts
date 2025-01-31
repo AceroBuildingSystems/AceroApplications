@@ -4,24 +4,22 @@ import { team } from "@/types";
 
 const TeamSchema: Schema<team> = new Schema({
     name: { type: String, required: true, unique: true },
-    reportingTo: [{
+    teamHead: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User", // Reference to the User model
-    }],
-    teamMembers:[{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "TeamMember", // Reference to the User model
+        autopopulate: true, // Automatically populate this field
     }],
     department:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Department", // Reference to the User model
+        autopopulate: true, // Automatically populate this field
     },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String },
 }, { timestamps: true })
 
-
+TeamSchema.plugin(require('mongoose-autopopulate'));
 const Team: Model<team> = mongoose.models.team || mongoose.model<team>("Team", TeamSchema)
 
 export default Team

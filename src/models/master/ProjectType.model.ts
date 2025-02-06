@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { projectType } from "@/types/projectType.types";
+import { projectType } from "@/types/master/projectType.types";
 
 const ProjectTypeSchema: Schema<projectType> = new Schema({
     name: { type: String, required:true, unique:true },

@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { currency } from "@/types/currency.types";
+import { currency } from "@/types/master/currency.types";
 
 const CurrencySchema: Schema<currency> = new Schema({
     name: { type: String, required: true, unique:true },

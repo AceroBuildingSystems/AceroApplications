@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import { organisation } from "@/types/organisation.types";
+import { organisation } from "@/types/master/organisation.types";
 
 const OrganisationSchema: Schema<organisation> = new Schema({
     name: { type: String, required: true },

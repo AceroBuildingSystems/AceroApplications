@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { quoteStatus } from "@/types/quoteStatus.types";
+import { quoteStatus } from "@/types/master/quoteStatus.types";
 
 const QuoteStatusSchema: Schema<quoteStatus> = new Schema({
     name: { type: String, required:true, unique:true },

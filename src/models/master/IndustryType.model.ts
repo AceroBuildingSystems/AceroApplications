@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { industryType } from "@/types/industryType.types";
+import { industryType } from "@/types/master/industryType.types";
 
 const IndustryTypeSchema: Schema<industryType> = new Schema({
     name: { type: String, required:true, unique:true },

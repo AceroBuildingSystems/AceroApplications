@@ -26,11 +26,13 @@ import Location from "./master/Location.model"
 import ApprovalAuthority from "./master/ApprovalAuthority.model"
 import Incoterm from "./master/Incoterm.model"
 import Sector from "./master/Sector.model"
-
+import Quotation from "./aqm/QuotationModel.model"
 // AQM
 
+import ProposalRevisions from "./aqm/ProposalRevisions.model"
+import Proposal from "./aqm/Proposals.model"
 
 export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, Team, TeamMember,Currency, Customer,
-     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector }
+     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation }
 
 

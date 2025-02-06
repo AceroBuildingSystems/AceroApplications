@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { location } from "@/types/location.types";
+import { location } from "@/types/master/location.types";
 
 const LocationSchema: Schema<location> = new Schema({
    

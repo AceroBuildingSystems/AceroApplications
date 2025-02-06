@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { continent } from "@/types/continent.types";
+import { continent } from "@/types/master/continent.types";
 
 const ContinentSchema: Schema<continent> = new Schema({
     

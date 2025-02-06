@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { paintType } from "@/types/paintType.types";
+import { paintType } from "@/types/master/paintType.types";
 
 const PaintTypeSchema: Schema<paintType> = new Schema({
     name: { type: String, required:true, unique:true },

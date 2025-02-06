@@ -1,5 +1,5 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
-import { designation } from "@/types/designation.types";
+import { designation } from "@/types/master/designation.types";
 
 const DesignationSchema: Schema<designation> = new Schema({
     name: { type: String, required: true, unique:true },

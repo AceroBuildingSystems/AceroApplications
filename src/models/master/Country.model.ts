@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { country } from "@/types/country.types";
+import { country } from "@/types/master/country.types";
 
 const CountrySchema: Schema<country> = new Schema({
     countryCode: { type: String, required: true, unique:true },

@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { customer } from "@/types/customer.types";
+import { customer } from "@/types/master/customer.types";
 
 const CustomerSchema: Schema<customer> = new Schema({
     name: { type: String, required: true, unique: true },
@@ -11,7 +11,7 @@ const CustomerSchema: Schema<customer> = new Schema({
     customerType: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "CustomerType", // Reference to the CustomerType model
-
+        autopopulate: true, // Automatically populate this field
     },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
@@ -19,7 +19,7 @@ const CustomerSchema: Schema<customer> = new Schema({
 
 }, { timestamps: true })
 
-
+CustomerSchema.plugin(require('mongoose-autopopulate'));
 const Customer: Model<customer> = mongoose.models.Customer || mongoose.model<customer>("Customer", CustomerSchema)
 
 export default Customer

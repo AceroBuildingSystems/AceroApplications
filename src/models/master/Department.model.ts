@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { department } from "@/types/department.types";
+import { department } from "@/types/master/department.types";
 
 const DepartmentSchema: Schema<department> = new Schema({
     depId: { type: String, required:true, unique:true},

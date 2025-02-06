@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { sector } from "@/types/sector.types";
+import { sector } from "@/types/master/sector.types";
 
 const SectorSchema: Schema<sector> = new Schema({
     name: { type: String, required:true, unique:true },

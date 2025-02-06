@@ -28,6 +28,7 @@ export const usersApi = baseApi.injectEndpoints({
       // Invalidate relevant cache tags after mutation
       invalidatesTags: ['Application'],
     }),
+    
   }),
   overrideExisting: false,
 });

@@ -13,7 +13,12 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Team,
   TeamMember,
   Incoterm,
-  Sector} from '@/models';
+  Sector,
+  ProposalRevisions,
+  Quotation,
+  Proposal} from '@/models';
+
+
 
 
 
@@ -50,7 +55,10 @@ function getMongooseAdapter(): MongooseAdapter {
     LOCATION_MASTER: Location,
     APPROVAL_AUTHORITY_MASTER: ApprovalAuthority,
     INCOTERM_MASTER: Incoterm,
-    SECTOR_MASTER: Sector
+    SECTOR_MASTER: Sector,
+    PROPOSAL_REVISION_MASTER: ProposalRevisions,
+    PROPOSAL_MASTER: Proposal,
+    QUOTATION_MASTER: Quotation
     });
   }
   return dbEngineInstance;

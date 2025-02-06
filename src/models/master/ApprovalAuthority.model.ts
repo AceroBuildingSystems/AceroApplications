@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { approvalAuthority } from "@/types/approvalAuthority.types";
+import { approvalAuthority } from "@/types/master/approvalAuthority.types";
 
 const ApprovalAuthoritySchema: Schema<approvalAuthority> = new Schema({
     code: { type: String, required:true, unique:true },

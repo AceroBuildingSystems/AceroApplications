@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { role } from "@/types/role.types";
+import { role } from "@/types/master/role.types";
 
 const RoleSchema: Schema<role> = new Schema({
     name: { type: String, required:true, unique:true },

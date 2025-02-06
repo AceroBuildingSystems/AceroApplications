@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { state } from "@/types/state.types";
+import { state } from "@/types/master/state.types";
 
 const StateSchema: Schema<state> = new Schema({
     name: { type: String, required: true, unique:true },

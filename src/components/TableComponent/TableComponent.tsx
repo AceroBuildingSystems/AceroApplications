@@ -54,7 +54,6 @@ export function DataTable<T>({ data, columns }: DataTableProps<T>) {
     pageSize: 10, //default page size
   });
 
-
   const handlePageSizeChange = (size: string) => {
     setPagination((prev) => ({
       ...prev,

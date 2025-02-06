@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { incoterm } from "@/types/incoterm.types";
+import { incoterm } from "@/types/master/incoterm.types";
 
 const IncotermSchema: Schema<incoterm> = new Schema({
     name: { type: String, required:true, unique:true },

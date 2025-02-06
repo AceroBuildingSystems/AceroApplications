@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { buildingType } from "@/types/buildingType";
+import { buildingType } from "@/types/master/buildingType";
 
 const BuildingTypeSchema: Schema<buildingType> = new Schema({
     name: { type: String, required:true, unique:true },

@@ -1,6 +1,6 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-import { region } from "@/types/region.types";
+import { region } from "@/types/master/region.types";
 
 const RegionSchema: Schema<region> = new Schema({
    

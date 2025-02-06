@@ -204,6 +204,7 @@ const page = () => {
       columns: industryTypeColumns,
       data: industryTypeData?.data,
     },
+    
     buttons: [
 
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },

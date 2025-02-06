@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { NextResponse } from 'next/server'
 import { emailManager } from '@/server/managers/emailManager/emailManager';
-import { emailData } from '@/types/emailData';
+import { emailData } from '@/types/master/emailData';
 
 export async function POST(req: NextApiRequest, res: NextApiResponse) {
     const { recipient= 'iqbal.ansari@acero.ae', subject='Test Email' }: { recipient: string, subject: string } = req.body;

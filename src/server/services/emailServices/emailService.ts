@@ -24,19 +24,19 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false, // Optional, use if you encounter issues with self-signed certificates
     },
-
 });
 
 // Send email function
 export const sendEmail = async (
     recipient: string,
     subject: string,
+    templateName: string,
     templateData: any
 ): Promise<any> => {
     try {
-        const templatePath = path.join(process.cwd(), 'src/server/shared/emailTemplates/emailTemplate.ejs');
+        const templatePath = path.join(process.cwd(), `src/server/shared/emailTemplates/${templateName}.ejs`);
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const htmlContent =  ejs.render(template, templateData);
+        const htmlContent = ejs.render(template, templateData);
 
         // Set up email options
         const mailOptions = {
@@ -47,7 +47,6 @@ export const sendEmail = async (
         };
 
         // Send email
-
         const info = await transporter.sendMail(mailOptions);
         return info; // Return email info (e.g., message ID)
     } catch (error) {

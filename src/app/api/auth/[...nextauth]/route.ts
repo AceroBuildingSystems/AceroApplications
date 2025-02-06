@@ -37,7 +37,7 @@ export const authOptions: AuthOptions = {
         await dbConnect()
         const user = await User.findOne({ email })
         const isPasswordValid = await bcrypt.compare(password, user?.password || "");
-        if(!user || !isPasswordValid) return null
+        if (!user || !isPasswordValid) return null
         return user as any
       },
     }),
@@ -49,34 +49,35 @@ export const authOptions: AuthOptions = {
       // For both Azure AD and Credentials
       const email = user.email;
       const dbUser = await User.findOne({ email });
-      
-      if(!dbUser) return false
+
+      if (!dbUser) return false
       return true
     },
 
     async session({ session }) {
       await dbConnect();
-    
+
       const user = await User.findOne({ email: session.user.email });
       if (!user) {
         console.error("User not found");
         return session;
       }
-    
+
       session.user = user;
-    
+
       // Collect all access IDs and build access map for permissions
-      const accessIds = user.access.map((data: { accessId: any }) => data.accessId);
+      const accessIdsUnfiltered = user.access.map((data: { accessId: any }) => data.accessId);
+      const accessIds = accessIdsUnfiltered.filter((id: any) => id); // Remove nulls
+
       const accessMap = new Map(
         user.access
           .filter((data: { permissions: any }) => data.permissions.view) // Only include viewable items
           .map((data: { accessId: any; permissions: any }) => [
-            data.accessId._id.toString(), // Ensure the key is a string
+            data.accessId?._id?.toString(), // Ensure the key is a string
             { permissions: data.permissions },
           ])
       );
 
-      // Fetch all ancestors and access nodes for the access IDs
       const trees = await Access.aggregate([
         {
           $match: {
@@ -85,34 +86,39 @@ export const authOptions: AuthOptions = {
         },
         {
           $graphLookup: {
-            from: "accesses", // Ensure this matches your MongoDB collection name
+            from: "accesses",
             startWith: "$parent",
             connectFromField: "parent",
             connectToField: "_id",
             as: "ancestors",
           },
         },
+        {
+          $sort: {
+            order: 1, // Sort by 'order' in ascending order
+          },
+        },
       ]);
-    
-    
+
+      // console.debug("Trees", trees);
       // Combine all ancestors and nodes into a single list
       const allAncestors = trees.flatMap((tree) => [...tree.ancestors, tree]);
-    
+
       // Remove duplicates by `_id`
       const uniqueAncestors = Array.from(
         new Map(allAncestors.map((ancestor) => [ancestor._id.toString(), ancestor])).values()
       );
-    
+
       // Build the unified menu structure
       const menuItems = buildNavStructure(
         uniqueAncestors.map((ancestor) => ({
           ...ancestor,
-          _id: ancestor._id.toString(),
-          parent: ancestor.parent ? ancestor.parent.toString() : null,
+          _id: ancestor?._id?.toString(),
+          parent: ancestor.parent ? ancestor?.parent?.toString() : null,
         })),
         accessMap // Pass accessMap to include permissions
       );
-    
+
       session.menuItems = menuItems;
       return session;
     },
@@ -145,7 +151,7 @@ function buildNavStructure(ancestors: any[], accessMap: Map<string, any>) {
 
   // Initialize all nodes
   ancestors.forEach((ancestor) => {
-    const nodeId = ancestor._id.toString();
+    const nodeId = ancestor?._id?.toString();
 
     // Retrieve permissions from the accessMap if available
     const permissions = accessMap.get(nodeId)?.permissions || {};
@@ -153,7 +159,7 @@ function buildNavStructure(ancestors: any[], accessMap: Map<string, any>) {
       nodeMap.set(nodeId, {
         title: ancestor.name,
         url: ancestor.url || "#",
-        category:ancestor.category,
+        category: ancestor.category,
         icon: "", // Add custom logic for icons if necessary
         isActive: ancestor.isActive || false,
         permissions, // Attach permissions here

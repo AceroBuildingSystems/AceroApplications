@@ -32,7 +32,6 @@ const page = () => {
 
     const loading = currencyLoading;
 
-
     interface RowData {
         id: string;
         name: string;

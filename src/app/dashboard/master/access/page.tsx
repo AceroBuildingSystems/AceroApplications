@@ -32,7 +32,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 const Access = () => {
-  const { data: accessData = [], isLoading: accessDataLoading } = useGetMasterQuery({ db: "ACCESS_MASTER" });
+  const { data: accessData = [], isLoading: accessDataLoading } = useGetMasterQuery({ db: "ACCESS_MASTER",sort: { name: 'asc' }, });
   const [updateUser, { isLoading: updateUserAccessLoading }] = useUserOperationsMutation();
   const { data: userData = [], isLoading: userDataLoading,refetch:refetchUsers } = useGetUsersQuery();
   const [distinctParentData, setDistinctParentData] = useState([]);
@@ -73,16 +73,16 @@ const Access = () => {
         const accessMap =
           user.access?.map((access) => {
             return {
-              name: access.accessId.name,
-              _id: access.accessId._id,
-              permissions: access.permissions,
-              hasAccess: access.hasAccess,
+              name: access?.accessId?.name,
+              _id: access?.accessId?._id,
+              permissions: access?.permissions,
+              hasAccess: access?.hasAccess,
             };
           }) ?? [];
         return {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          _id: user._id,
+          firstName: user?.firstName,
+          lastName: user?.lastName,
+          _id: user?._id,
           access: accessMap,
         };
       });
@@ -311,6 +311,7 @@ const Access = () => {
       data: distinctParentData,
       format: "ObjectId",
     },
+    { label: "Order", name: "order", type: "number" },
   ];
   // This is for user access tab configuration [the one on the right]
   const userAccessColumn = [
@@ -624,11 +625,11 @@ const Access = () => {
     },
   ];
 
-  console.log({accessConfig})
+ 
   return (
     <div className="w-full h-full px-4">
-      <Tabs defaultValue="Access" className="h-full">
-        <TabsList width={"full"}>
+      <Tabs  defaultValue="Access" className="h-full">
+        <TabsList  width={"full"}>
           <TabsTrigger value="Access" width={"full"}>
             Access
           </TabsTrigger>

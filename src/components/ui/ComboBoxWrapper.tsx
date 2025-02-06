@@ -23,6 +23,7 @@ import {
 
 export function Combobox({ field, formData, handleChange, placeholder }: any) {
     const [open, setOpen] = React.useState(false)
+    
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
@@ -30,7 +31,7 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={`justify-between ${(field && field?.data?.find((data) => data._id === formData[field.name])?.name ||
+                    className={`w-full justify-between ${(field && field?.data?.find((data) => data._id === formData[field.name])?.name ||
                         field && field?.data?.find((data) => data._id === formData[field.name]?.shortName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
                 >
                     {field && field?.data?.find((data) => data._id === formData[field.name])?.name ||
@@ -39,7 +40,7 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[200px] p-0 pointer-events-auto">
+            <PopoverContent className="w-full p-0 pointer-events-auto">
                 <Command>
                     <CommandInput  className="pointer-events-auto" placeholder={`Search ${field?.label}`} />
 
@@ -51,7 +52,7 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                                 key="all"
                                 value=""
                                 onSelect={() => {
-                                    handleChange(null, field.name, field?.format, field?.type); // Set the value to null for "All"
+                                    handleChange(null, field.name, field?.format, field?.type,field?.data, field); // Set the value to null for "All"
                                     setOpen(false);
                                 }}
                             >
@@ -70,7 +71,7 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                                     key={data._id}
                                     value={data.name}
                                     onSelect={(value) => {
-                                        handleChange(data._id, field.name, field?.format, field?.type);
+                                        handleChange(data._id, field.name, field?.format, field?.type,field?.data, field);
                                         setOpen(false);
                                     }}
                                 >

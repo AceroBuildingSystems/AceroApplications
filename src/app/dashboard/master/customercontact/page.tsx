@@ -29,16 +29,13 @@ const { user, status, authenticated } = useUserAuthorised();
     db: MONGO_MODELS.CUSTOMER_MASTER,
     sort: { name: 'asc' },
   });
-  const { data: customerTypeData = [], isLoading: customerTypeLoading } = useGetMasterQuery({
-    db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
-    sort: { name: 'asc' },
-  });
+  
 
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = customerContactLoading||customerLoading||customerTypeLoading;
+    const loading = customerContactLoading||customerLoading;
 
       const customerNames = customerData?.data?.filter((customer: undefined) => customer !== undefined)  // Remove undefined entries
       ?.map((customer: { name: any; }) => customer.name);             // Extract only the 'name' property
@@ -63,7 +60,7 @@ const { user, status, authenticated } = useUserAuthorised();
     { label: 'Contact Number', name: "phone", type: "text", required: true, placeholder: 'Contact Number' },
     { label: 'Position', name: "position", type: "text", required: true, placeholder: 'Position' },
     { label: 'Customer Name', name: "customer", type: "select", data: customerData?.data, placeholder: 'Select Customer' },
-    { label: 'Customer Type', name: "customerType", type: "select", data: customerTypeData?.data, placeholder: 'Select Customer Type' },
+    
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
   ]
@@ -243,20 +240,7 @@ const { user, status, authenticated } = useUserAuthorised();
         ),
         cell: ({ row }: { row: any }) => <div >{row.getValue("customer")?.name}</div>,
       },
-      {
-        accessorKey: "customerType",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  
-          >
-            <span>Customer Type</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => <div >{row.getValue("customerType")?.name}</div>,
-      },
+     
 
      {
           accessorKey: "isActive",

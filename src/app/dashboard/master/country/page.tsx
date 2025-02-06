@@ -27,19 +27,19 @@ const page = () => {
     const { user, status, authenticated } = useUserAuthorised();
     const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({
         db: 'COUNTRY_MASTER',
-        sort: { name: -1 },
+        sort: { name: 'asc' },
     });
-    const { data: areaData = [], isLoading: areaLoading } = useGetMasterQuery({
-        db: 'AREA_MASTER',
-        sort: { name: -1 },
+    const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
+        db: 'REGION_MASTER',
+        sort: { name: 'asc' },
     });
-    const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({ db: "REGION_MASTER" });
+    
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = areaLoading || regionLoading || countryLoading;
+    const loading = regionLoading || countryLoading;
 
     interface RowData {
         id: string;
@@ -51,17 +51,16 @@ const page = () => {
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
         { label: 'Country Code', name: "countryCode", type: "text", required: true, placeholder: 'Country Code' },
         { label: 'Country Name', name: "name", type: "text", required: true, placeholder: 'Country Name' },
-        { label: 'Area', name: "area", type: "select", required: true, placeholder: 'Select Area', format: 'ObjectId', data: areaData?.data },
         { label: 'Region', name: "region", type: "select", required: true, placeholder: 'Select Region', format: 'ObjectId', data: regionData?.data },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
 
-    const areaNames = areaData?.data?.filter((area: undefined) => area !== undefined)  // Remove undefined entries
-  ?.map((area: { name: any; }) => area.name);             // Extract only the 'name' property
+    const regionNames = regionData?.data?.filter((region: undefined) => region !== undefined)  // Remove undefined entries
+  ?.map((region: { name: any; }) => region.name);             // Extract only the 'name' property
 
   const fieldsToAdd = [
-    { fieldName: 'areaName', path: ['area', 'name'] }
+    { fieldName: 'regionName', path: ['region', 'name'] }
   ];
   const transformedData = transformData(countryData?.data, fieldsToAdd);
 
@@ -131,7 +130,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: "COUNTRY_MASTER", masterName: "Country" });
+        bulkImport({ roleData: [], continentData: [], regionData, action: "Add", user, createUser: createMaster, db: "COUNTRY_MASTER", masterName: "Country" });
     };
 
     const handleExport = () => {
@@ -169,7 +168,20 @@ const page = () => {
             enableSorting: false,
             enableHiding: false,
         },
+        {
+            accessorKey: "countryCode",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
+                >
+                    <span>Country Code</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("countryCode")}</div>,
+        },
         {
             accessorKey: "name",
             header: ({ column }: { column: any }) => (
@@ -184,20 +196,7 @@ const page = () => {
             ),
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
-        {
-            accessorKey: "area",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Area</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("area").name}</div>,
-        },
+        
         {
             accessorKey: "region",
             header: ({ column }: { column: any }) => (
@@ -210,7 +209,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("region").name}</div>,
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("region")?.name}</div>,
         },
         {
             accessorKey: "isActive",
@@ -237,7 +236,7 @@ const page = () => {
 
         ],
         filterFields: [
-             { key: "area", label: 'areaName', type: "select" as const, options: areaNames , placeholder: 'Search by Area'},
+             { key: "region", label: 'regionName', type: "select" as const, options: regionNames , placeholder: 'Search by Region'},
 
         ],
         dataTable: {

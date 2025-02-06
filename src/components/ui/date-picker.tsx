@@ -30,7 +30,7 @@ export function DatePicker({
 }: DatePickerProps) {
 
   const [date, setDate] = React.useState<Date>(currentDate);
-console.log(currentDate);
+
   const months = [
     'January',
     'February',
@@ -72,27 +72,27 @@ console.log(currentDate);
 
   return (
     <>
-      <div className="relative">
+      <div className="relative w-full">
       <Popover>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
               className={cn(
-                "w-full justify-start text-left font-normal",
+                "w-full flex justify-start  font-normal",
                 !date && "text-muted-foreground bg-zinc-50 text-gray-400"
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
+              <CalendarIcon className=" h-4 w-4" />
               {date ? format(date, "PPP") : <span>{placeholder}</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 pointer-events-auto">
-            <div className="flex justify-between p-2">
+          <PopoverContent className="w-full p-0 pointer-events-auto">
+            <div className="w-full flex p-2">
               <Select
                 onValueChange={handleMonthChange}
                 value={months[getMonth(date)]}
               >
-                <SelectTrigger className="w-[110px]">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Month" />
                 </SelectTrigger>
                 <SelectContent>
@@ -105,7 +105,7 @@ console.log(currentDate);
                 onValueChange={handleYearChange}
                 value={getYear(date).toString()}
               >
-                <SelectTrigger className="w-[110px]">
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
                 <SelectContent>

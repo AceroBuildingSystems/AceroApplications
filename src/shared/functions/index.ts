@@ -4,6 +4,7 @@ import { MenuItem } from '../types';
 import * as XLSX from "xlsx";
 import { toast } from 'react-toastify';
 import { SUCCESS } from '@/shared/constants';
+import { IndustryType, QuoteStatus } from '@/models';
 
 
 export const createMongooseObjectId = (id: any) => {
@@ -66,7 +67,7 @@ export const isObjectEmpty = (obj: any) => {
 };
 
 
-export const bulkImport = async ({ roleData, action, user, createUser, db, masterName }) => {
+export const bulkImport = async ({ roleData,continentData,regionData,countryData, action, user, createUser, db, masterName }) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -86,6 +87,9 @@ export const bulkImport = async ({ roleData, action, user, createUser, db, maste
             const formData = mapExcelToEntity(sheetData, masterName);
             const referenceData = {
                 roleData: roleData?.data || [],
+                continentData: continentData?.data || [],
+                regionData: regionData?.data || [],
+                countryData: countryData?.data || [],
 
             };
 
@@ -93,8 +97,8 @@ export const bulkImport = async ({ roleData, action, user, createUser, db, maste
 
             const enrichedData = finalData.map((item) => ({
                 ...item,
-                addedBy: user._id,
-                updatedBy: user._id,
+                addedBy: user?._id,
+                updatedBy: user?._id,
             }));
             // Send the transformed data for bulk insert
             try {
@@ -105,7 +109,6 @@ export const bulkImport = async ({ roleData, action, user, createUser, db, maste
                     bulkInsert: true,
                     data: enrichedData,
                 };
-
 
                 const response = await createUser(formattedData);
 
@@ -132,9 +135,19 @@ export const bulkImport = async ({ roleData, action, user, createUser, db, maste
 };
 
 const fieldMappingConfig = {
-    user: {
+    User: {
         role: { source: "roleData", key: "name", value: "_id" },
     },
+    Region: {
+        continent: { source: "continentData", key: "name", value: "_id" },
+    },
+    Country: {
+        region: { source: "regionData", key: "name", value: "_id" },
+    },
+    State: {
+        country: { source: "countryData", key: "name", value: "_id" },
+    },
+   
     // Add more entity mappings if needed
 };
 
@@ -155,6 +168,7 @@ const mapFieldsToIds = (data, entityType, referenceData) => {
                     return;
                 }
 
+               
                 const reference = referenceArray.find((ref) => ref[key] === item[field]);
 
                 if (reference) {
@@ -165,7 +179,6 @@ const mapFieldsToIds = (data, entityType, referenceData) => {
                 }
             });
         }
-
 
         return transformedItem;
     });
@@ -186,28 +199,85 @@ const entityFieldMappings = {
     },
     Department: {
         "Department Id": "depId",
-        "Department Name": "name",
+        "Department": "name",
         // Add more mappings for departments
     },
     Role: {
-        "Role Name": "name",
-        // Add more mappings for departments
+        "Role": "name",
+        // Add more mappings for Role
     },
 
     EmployeeType: {
         "Employee Type": "name",
 
-        // Add more mappings for departments
+        // Add more mappings for EmployeeType
     },
     Designation: {
         "Designation": "name",
 
-        // Add more mappings for departments
+        // Add more mappings for Designation
+    },
+    Continent: {
+        "Continent": "name",
+
+        // Add more mappings for Continent
+    },
+    Region: {
+        "Region": "name",
+        "Continent": "continent",
+        
+        // Add more mappings for Region
+    },
+
+    Country: {
+        "Country Code": "countryCode",
+        "Country": "name",
+        "Region": "region",
+        
+        // Add more mappings for Country
+    },
+
+    State: {
+        "State": "name",
+        "Country": "country",
+        
+        // Add more mappings for State
+    },
+    Currency: {
+        "Currency": "name",
+       
+        // Add more mappings for State
+    },
+    PaintType: {
+        "Paint Type": "name",
+       
+        // Add more mappings for State
+    },
+    ProjectType: {
+        "Project Type": "name",
+       
+        // Add more mappings for State
+    },
+    BuildingType: {
+        "Building Type": "name",
+       
+        // Add more mappings for State
+    },
+    IndustryType: {
+        "Industry Type": "name",
+       
+        // Add more mappings for State
+    },
+    QuoteStatus: {
+        "Quote Status": "name",
+       
+        // Add more mappings for State
     },
     // Add mappings for other entities
 };
 
 const mapExcelToEntity = (excelData, entityType) => {
+  
     const mappings = entityFieldMappings[entityType];
     return excelData.map((row) =>
         Object.keys(row).reduce((acc, key) => {
@@ -217,3 +287,7 @@ const mapExcelToEntity = (excelData, entityType) => {
         }, {})
     );
 };
+
+
+
+  

@@ -13,7 +13,7 @@ import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/us
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
@@ -26,27 +26,67 @@ const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
     const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({
-        db: 'ORGANISATION_MASTER',
-        sort: { name: -1 },
+        db: MONGO_MODELS.ORGANISATION_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.LOCATION_MASTER,
+        sort: { name: 'asc' },
     });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = organisationLoading;
+    const loading = organisationLoading || locationLoading;
 
     // Flatten each object in the array
+   
+
     const flattenedData = organisationData?.data?.map((item) => {
-        const { address, ...rest } = item; // Destructure 'address' and the rest of the fields
+        const { location, ...rest } = item;
+
         return {
-            ...rest,
-            ...address, // Spread the fields of 'address' into the root level
+            _id: rest._id,
+            name: rest.name,
+            isActive:rest.isActive,
+            location: location
+                ? {
+                    _id: location._id,
+                    name: location.name,
+                    address: location.address,
+                    pincode: location.pincode,
+                }
+                : null,
+            state: location?.state
+                ? {
+                    _id: location.state._id,
+                    name: location.state.name,
+                }
+                : null,
+            country: location?.state?.country
+                ? {
+                    _id: location.state.country._id,
+                    name: location.state.country.name,
+                }
+                : null,
+            region: location?.state?.country?.region
+                ? {
+                    _id: location.state.country.region._id,
+                    name: location.state.country.region.name,
+                }
+                : null,
+            continent: location?.state?.country?.region?.continent
+                ? {
+                    _id: location.state.country.region.continent._id,
+                    name: location.state.country.region.continent.name,
+                }
+                : null,
         };
     });
 
-    console.log(organisationData);
-    console.log(flattenedData);
+
 
     interface RowData {
         id: string;
@@ -59,11 +99,7 @@ const page = () => {
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
         { label: 'Organisation Name', name: "name", type: "text", required: true, placeholder: 'Organisation Name' },
-        { label: 'State', name: "state", type: "text", required: true, placeholder: 'Organisation Name' },
-        { label: 'Pin Code', name: "pinCode", type: "text", required: true, placeholder: 'Organisation Name' },
-        { label: 'Country', name: "country", type: "text", required: true, placeholder: 'Organisation Name' },
-        { label: 'Area', name: "area", type: "text", required: true, placeholder: 'Organisation Name' },
-        { label: 'Location', name: "location", type: "text", required: true, placeholder: 'Organisation Name' },
+        { label: 'Location', name: "location", type: "select",required: true, data: locationData?.data, placeholder:'Select Location' },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -111,7 +147,7 @@ const page = () => {
             data: formattedData,
         };
 
-     
+
 
         const response = await createMaster(formattedData);
 
@@ -196,19 +232,47 @@ const page = () => {
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
         {
-            accessorKey: "isActive",
+            accessorKey: "location",
             header: ({ column }: { column: any }) => (
                 <button
                     className="flex items-center space-x-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Status</span> {/* Label */}
+                    <span>Location</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("location")?.name}</div>,
         },
+        {
+            accessorKey: "state",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>State / City</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("state")?.name}</div>,
+        },
+       {
+             accessorKey: "isActive",
+             header: ({ column }: { column: any }) => (
+               <button
+                 className="flex items-center space-x-2"
+                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+       
+               >
+                 <span>Status</span> {/* Label */}
+                 <ArrowUpDown size={15} /> {/* Sorting Icon */}
+               </button>
+             ),
+             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+           },
 
 
 

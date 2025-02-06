@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/cypress/component/app.cy.js", "src/components/ModalComponent"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/cypress/component/app.cy.js", "src/components/ModalComponent", "src/components/AQMModelComponent"],
   "exclude": ["node_modules"]
 }

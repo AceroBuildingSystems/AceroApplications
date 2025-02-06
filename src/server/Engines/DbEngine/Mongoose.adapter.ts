@@ -245,8 +245,10 @@ export class MongooseAdapter implements DatabaseAdapter {
       doc.push(result); // result will contain update details, not documents
     } else {
       // Perform single document update (findOneAndUpdate)
+    
       doc = await model.findOneAndUpdate(options.filter || {}, options.data, {
         new: true,
+        upsert: options.upsert ?? false,
         runValidators: true,
       });
       if (!doc) return { status: ERROR, message: "Document not found" };

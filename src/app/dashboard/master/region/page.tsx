@@ -13,7 +13,7 @@ import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/us
 import { organisationTransformData, userTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
@@ -26,7 +26,12 @@ const page = () => {
    
   const { user, status, authenticated } = useUserAuthorised();
   const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
-      db: 'REGION_MASTER',
+      db: MONGO_MODELS.REGION_MASTER,
+      sort: { name: -1 },
+    });
+
+    const { data: continentData = [], isLoading: continentLoading } = useGetMasterQuery({
+      db: MONGO_MODELS.CONTINENT_MASTER,
       sort: { name: -1 },
     });
   
@@ -34,7 +39,7 @@ const page = () => {
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  regionLoading;
+  const loading =  regionLoading || continentLoading;
 
 
   interface RowData {
@@ -48,6 +53,7 @@ const page = () => {
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
    
     { label: 'Region', name: "name", type: "text",required: true, placeholder:'Region' },
+    { label: 'Continent', name: "continent", type: "select",required: true, data: continentData?.data, placeholder:'Select Continent' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
    
   ]
@@ -118,7 +124,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"ROLE_MASTER", masterName:"Role" });
+    bulkImport({ roleData: [], continentData, action: "Add", user, createUser:createMaster,db: MONGO_MODELS.REGION_MASTER, masterName:"Region" });
   };
 
   const handleExport = () => {
@@ -170,6 +176,20 @@ const page = () => {
         </button>
       ),
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+    },
+    {
+      accessorKey: "continent",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>Continent</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("continent")?.name}</div>,
     },
     {
       accessorKey: "isActive",

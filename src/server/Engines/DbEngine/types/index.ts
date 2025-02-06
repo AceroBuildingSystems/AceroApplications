@@ -61,6 +61,7 @@ export interface Condition {
     filter?: any;
     data: any;
     bulkUpdate?:boolean
+    upsert?:boolean
   }
 
   export interface UpdateInArrayOptions {

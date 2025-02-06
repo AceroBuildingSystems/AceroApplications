@@ -44,7 +44,7 @@ const pathContent = pathName.split('/')
                   </BreadcrumbItem>
                   <BreadcrumbSeparator className="hidden md:block" />
                   <BreadcrumbItem>
-                    <BreadcrumbPage>{pathContent[pathContent.length-1].toProperCase()} {pathContent[pathContent.length-2].toProperCase()}</BreadcrumbPage>
+                    <BreadcrumbPage>{pathContent[pathContent.length-1].toProperCase()}</BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>

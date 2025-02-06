@@ -63,10 +63,11 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
-    useEffect(()=>{
+
+    useEffect(() => {
         setFilteredData(config?.dataTable?.data)
-    },[config,loadingState])
-  
+    }, [config, loadingState])
+
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
         const newSearchValues = { ...searchValues, [field]: e.target.value };
@@ -77,7 +78,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
-    
+
         const newFilterValues = { ...filterValues, [field]: value };
 
         setFilterValues(newFilterValues);
@@ -108,8 +109,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
             const matchesFilter = Object.keys(filterValues).every((key) => {
 
                 const filterValue = filterValues[key];
-                console.log(filterValue);
-                console.log(item[key]);
+
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
 
@@ -119,7 +119,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
             return matchesSearch && matchesFilter;
         });
-       
+
         setFilteredData(filtered); // Update filtered data state
     };
 
@@ -205,25 +205,25 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                                                             </CommandItem>
 
                                                             {field?.options?.map((option, i) => {
-                                                               
-                                                                return(
-                                                                <CommandItem
-                                                                    key={i}
-                                                                    value={option}
-                                                                    onSelect={(value) => {
-                                                                        
-                                                                        handleFilterChange(value?.toProperCase(), field.label);
-                                                                        setOpen(false)
-                                                                    }}
-                                                                >
-                                                                    <Check
-                                                                        className={cn(
-                                                                            "mr-2 h-4 w-4",
-                                                                            filterValues[field.label] === option ? "opacity-100" : "opacity-0"
-                                                                        )}
-                                                                    />
-                                                                    {option}
-                                                                </CommandItem>);
+
+                                                                return (
+                                                                    <CommandItem
+                                                                        key={i}
+                                                                        value={option}
+                                                                        onSelect={(value) => {
+
+                                                                            handleFilterChange(value?.toProperCase(), field.label);
+                                                                            setOpen(false)
+                                                                        }}
+                                                                    >
+                                                                        <Check
+                                                                            className={cn(
+                                                                                "mr-2 h-4 w-4",
+                                                                                filterValues[field.label] === option ? "opacity-100" : "opacity-0"
+                                                                            )}
+                                                                        />
+                                                                        {option}
+                                                                    </CommandItem>);
                                                             }
                                                             )}
                                                         </CommandGroup>

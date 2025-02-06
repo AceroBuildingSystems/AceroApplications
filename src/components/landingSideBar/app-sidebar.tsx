@@ -158,7 +158,7 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user,menuItems } = useUserAuthorised();
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar variant="inset" {...props} className="px-0">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

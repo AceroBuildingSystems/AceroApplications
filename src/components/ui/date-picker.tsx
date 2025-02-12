@@ -52,21 +52,27 @@ export function DatePicker({
 
   const handleMonthChange = (month: string) => {
     const newDate = setMonth(date, months.indexOf(month));
-    setDate(newDate);
-    handleChange(newDate)
+    const customChange = handleChange(newDate,setDate)
+    if(!customChange){
+      setDate(newDate);
+    }
   }
 
   const handleYearChange = (year: string) => {
     const newDate = setYear(date, parseInt(year));
-    setDate(newDate)
-    handleChange(newDate)
+    const customChange = handleChange(newDate,setDate)
+    if(!customChange){
+      setDate(newDate);
+    }
 
   }
 
   const handleSelect = (selectedData: Date | undefined) => {
     if (selectedData) {
-      setDate(selectedData)
-      handleChange(selectedData)
+      const customChange = handleChange(selectedData,setDate)
+      if(!customChange){
+        setDate(selectedData);
+      }
     }
   }
 

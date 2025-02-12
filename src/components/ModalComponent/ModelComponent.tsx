@@ -192,7 +192,7 @@ const DynamicDialog = ({
                               label: field.data.find((option) => option.value === id)?.label || "Unknown",
                             }))} // Convert stored `_id`s back to { label, value }
                             onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
-                            defaultOptions={field.data} // Ensure `field.data` is in [{ label, value }] format
+                            options={field.data} // Ensure `field.data` is in [{ label, value }] format
                             placeholder={field.placeholder || "Select options..."}
                             />
                           );

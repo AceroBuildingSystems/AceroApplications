@@ -2,12 +2,15 @@ import nodemailer from 'nodemailer';
 import ejs from 'ejs';
 import path from 'path';
 import fs from 'fs';
+import { ERROR, SUCCESS } from '@/shared/constants';
 
 // Type for email options
 interface EmailOptions {
     recipient: string;
     subject: string;
     templateData: any;
+    fileName:string;
+    senderName:string
 }
 
 // Create reusable transporter for sending emails
@@ -31,12 +34,21 @@ const transporter = nodemailer.createTransport({
 export const sendEmail = async (
     recipient: string,
     subject: string,
-    templateData: any
+    templateData: any,
+    fileName:string,
+    senderName:string,
+    approveUrl:string,
+    rejectUrl:string,
 ): Promise<any> => {
     try {
-        const templatePath = path.join(process.cwd(), 'src/server/shared/emailTemplates/emailTemplate.ejs');
+        
+        if(!fileName){
+           return {status:ERROR,message: "File Name must be sent!",data:{},statusCode:500}
+        }
+        const filePath = `src/server/shared/emailTemplates/${fileName}.ejs`
+        const templatePath = path.join(process.cwd(),filePath );
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const htmlContent =  ejs.render(template, templateData);
+        const htmlContent =  ejs.render(template, { subject, templateData, senderName,approveUrl,rejectUrl });
 
         // Set up email options
         const mailOptions = {
@@ -49,9 +61,13 @@ export const sendEmail = async (
         // Send email
 
         const info = await transporter.sendMail(mailOptions);
-        return info; // Return email info (e.g., message ID)
+        console.debug("info",info);
+        if(info.status === ERROR){
+            return info
+        }
+        return {status:SUCCESS,message: "Email sent!",data:info,statusCode:200}
     } catch (error) {
-        console.error("Error sending email:", error);
-        throw error; // Throw the error so it can be handled by the caller
+        return {status:ERROR,message: "something went wrong",data:error.message,statusCode:500}
     }
 };
+// D:\\AceroApplications\\src\\server\\shared\\emailTemplates\\newCustomerTemplate.ejs

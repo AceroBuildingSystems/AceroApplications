@@ -164,6 +164,11 @@ const QuotationSchema: Schema<quotation> = new Schema({
         
         autopopulate: true, // Automatically populate this field
     },
+    status: {
+        type: String,
+        enum: ['draft', 'quoterequested', 'incomplete', 'submitted', 'rejected', 'approved'], // Enum values for the status
+        required: true 
+      },
     submitDate:{type: Date, default:null},
     approvalDate:{type: Date},
     addedBy: { type: String },

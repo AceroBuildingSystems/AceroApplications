@@ -64,6 +64,7 @@ export interface quotation {
     finalShipDate: Date,
     isActive: Boolean,
     handleBy: mongoose.ObjectId,
+    status:string,
     submitDate: Date,
     approvalDate: Date,
     addedBy: string,

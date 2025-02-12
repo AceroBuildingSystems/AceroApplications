@@ -30,6 +30,6 @@ const TeamMemberSchema: Schema<teamMember> = new Schema({
 }, { timestamps: true })
 
 TeamMemberSchema.plugin(require('mongoose-autopopulate'));
-const TeamMember: Model<teamMember> = mongoose.models.teamMember || mongoose.model<teamMember>("TeamMember", TeamMemberSchema)
+const TeamMember: Model<teamMember> = mongoose.models.TeamMember || mongoose.model<teamMember>("TeamMember", TeamMemberSchema)
 
 export default TeamMember

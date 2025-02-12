@@ -17,6 +17,6 @@ const baseQueryWithRetry = retry(
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithRetry,
-  tagTypes: ['User', 'Post', 'Comment', 'Master', 'Application'], // Define entity types for cache invalidation
+  tagTypes: ['User', 'Post', 'Comment', 'Master', 'Application', 'Assets'], // Added 'Assets'
   endpoints: () => ({}), // We'll inject endpoints from other files
 })

@@ -50,39 +50,32 @@ interface IconProps {
   iconPlacement: 'left' | 'right';
 }
 
-interface IconRefProps {
-  icon?: never;
-  iconPlacement?: undefined;
-}
-
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 
-export type ButtonIconProps = IconProps | IconRefProps;
+export type ButtonIconProps = Partial<IconProps>
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps & ButtonIconProps>(
   ({ className, variant, effect, size, icon: Icon, iconPlacement, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp className={cn(buttonVariants({ variant, effect, size, className }))} ref={ref} {...props}>
-        {Icon &&
-          iconPlacement === 'left' &&
+        {Icon && iconPlacement === 'left' &&
           (effect === 'expandIcon' ? (
             <div className="w-10 translate-x-[0%] pr-0 opacity-0 transition-all duration-200 group-hover:w-5 group-hover:translate-x-100 group-hover:pr-2 group-hover:opacity-100">
               <Icon />
             </div>
-          ) : (
+          ) : Icon && (
             <Icon />
           ))}
         <Slottable>{props.children}</Slottable>
-        {Icon &&
-          iconPlacement === 'right' &&
+        {Icon && iconPlacement === 'right' &&
           (effect === 'expandIcon' ? (
             <div className="w-0 translate-x-[100%] pl-0 opacity-0 transition-all duration-200 group-hover:w-5 group-hover:translate-x-0 group-hover:pl-2 group-hover:opacity-100">
               <Icon />
             </div>
-          ) : (
+          ) : Icon && (
             <Icon />
           ))}
       </Comp>

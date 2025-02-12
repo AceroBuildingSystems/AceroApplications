@@ -12,6 +12,6 @@ const ContinentSchema: Schema<continent> = new Schema({
 }, { timestamps: true })
 
 
-const Continent: Model<continent> = mongoose.models.region || mongoose.model<continent>("Continent", ContinentSchema)
+const Continent: Model<continent> = mongoose.models.Continent || mongoose.model<continent>("Continent", ContinentSchema)
 
 export default Continent

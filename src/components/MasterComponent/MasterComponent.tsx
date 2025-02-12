@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/
 import { Input } from "@/components/ui/input";
 import { Button } from '../ui/button';
 import { Plus, Import, Download, Upload, ChevronsUpDown, Check } from 'lucide-react';
-import { use } from 'chai';
+
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
 import { SelectGroup, SelectItem, SelectLabel } from '@radix-ui/react-select';
@@ -38,7 +38,7 @@ interface ButtonConfig {
 
 // Interface for Data Table configuration
 interface DataTableConfig {
-    columns: string[]; // Column names for the table
+    columns: ColumnConfig[]; // Column names for the table
     data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 

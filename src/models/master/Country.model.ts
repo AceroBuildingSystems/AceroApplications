@@ -17,6 +17,6 @@ const CountrySchema: Schema<country> = new Schema({
 }, { timestamps: true })
 
 CountrySchema.plugin(require('mongoose-autopopulate'));
-const Country: Model<country> = mongoose.models.country || mongoose.model<country>("Country", CountrySchema)
+const Country: Model<country> = mongoose.models.Country || mongoose.model<country>("Country", CountrySchema)
 
 export default Country

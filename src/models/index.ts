@@ -38,5 +38,3 @@ import Vendor from "./master/Vendor.model"
 
 export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, Team, TeamMember,Currency, Customer,
      CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation, Asset, Vendor }
-
-

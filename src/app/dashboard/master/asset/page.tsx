@@ -114,7 +114,7 @@ const AssetPage: React.FC = () => {
       { fieldName: 'departmentName', path: ['department', 'name'] },
       { fieldName: 'userName', path: ['assignedUser', 'name'] } // Assuming user has a 'name' field
   ];
-  const transformedData = transformData(assetData, fieldsToAdd);
+  console.log('assetData', assetData);
 
   const assetColumns = useMemo(() => [
     {
@@ -196,7 +196,7 @@ const AssetPage: React.FC = () => {
             ],
             dataTable: {
                 columns: assetColumns,
-                data: transformedData,
+                data: assetData?.data,
             },
             buttons: [
     

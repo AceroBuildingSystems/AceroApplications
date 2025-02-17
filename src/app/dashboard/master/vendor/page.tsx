@@ -95,7 +95,7 @@ const VendorPage: React.FC = () => {
   // Basic transformData for now
   const fieldsToAdd: { fieldName: string; path: string[] }[] = [
   ];
-  const transformedData = transformData(vendorData, fieldsToAdd);
+
 
   const vendorColumns = useMemo(() => [
     {
@@ -194,7 +194,7 @@ const VendorPage: React.FC = () => {
       <MasterComponent config={{
         searchFields: [],
         filterFields: [],
-        dataTable: {columns: vendorColumns, data: transformedData},
+        dataTable: {columns: vendorColumns, data: vendorData?.data},
         buttons: [{label: 'Add Vendor',action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300'}]
       }} loadingState={vendorLoading} />
       <DynamicDialog

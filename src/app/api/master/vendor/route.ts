@@ -1,6 +1,6 @@
 // src/app/api/master/vendor/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import Vendor from "@/models/master/Vendor.model";
+import Vendor from "@/models/assetManagement/Vendor.model";
 import "@/lib/mongoose";
 
 // GET all vendors

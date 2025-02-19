@@ -1,31 +1,35 @@
-// src/app/dashboard/master/vendor/page.tsx
+// src/app/dashboard/master/inventory/page.tsx
 "use client";
 import React, { useState, useMemo } from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
-import { transformData } from '@/lib/utils'; // Import transformData
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { Plus, ArrowUpDown } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
-interface RowData { // Define a type for the row data
+interface RowData {
     _id: string;
     name: string;
-    contactPerson?: string;
-    address?: string,
-    pincode?: string,
-    isActive?: boolean
-    email?: string;
-    phone?: string
-    // Add other properties as needed
+    description?: string;
+    vendor?: any;
+    asset?: any;
+    quantity?: number;
+    location?: any;
 }
 
-const VendorPage: React.FC = () => {
-  const { data: vendorData = [], isLoading: vendorLoading } = useGetMasterQuery({
-      db: 'VENDOR_MASTER',
-      sort: { name: 'asc' }, // Example sorting
+const InventoryPage: React.FC = () => {
+  const { data: vendorResponse } = useGetMasterQuery({ db: 'VENDOR_MASTER' });
+  const vendorData = vendorResponse?.data;
+  const { data: assetResponse } = useGetMasterQuery({ db: 'ASSET_MASTER' });
+  const assetData = assetResponse?.data;
+  const { data: locationResponse } = useGetMasterQuery({ db: 'LOCATION_MASTER' });
+  const locationData = locationResponse?.data;
+
+  const { data: inventoryData = [], isLoading: inventoryLoading } = useGetMasterQuery({
+      db: 'INVENTORY_MASTER',
+      sort: { name: 'asc' },
   });
 
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
@@ -36,7 +40,7 @@ const VendorPage: React.FC = () => {
     const [action, setAction] = useState('Add');
 
     const openDialog = () => {
-        setSelectedMaster("vendor");
+        setSelectedMaster("inventory");
         setDialogOpen(true);
     };
 
@@ -46,18 +50,18 @@ const VendorPage: React.FC = () => {
     };
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-        { label: 'Vendor Name', name: "name", type: "text", required: true, placeholder: 'Vendor Name' },
-        { label: 'Contact Person', name: "contactPerson", type: "text", placeholder: 'Contact Person' },
-        { label: 'Email', name: "email", type: "text", placeholder: 'Email' },
-        { label: 'Phone', name: "phone", type: "text", placeholder: 'Phone' },
-        { label: 'Address', name: "address", type: "text", placeholder: 'Address' },
-        { label: 'Status', name: "isActive", type: "select", required: true, placeholder: 'Select Status', data: [{_id: true, name: 'Active'}, {_id: false, name: 'InActive'}] },
+        { label: 'Inventory Name', name: "name", type: "text", required: true, placeholder: 'Inventory Name' },
+        { label: 'Description', name: "description", type: "text", placeholder: 'Description' },
+        { label: 'Vendor', name: "vendor", type: "custom", placeholder: 'Select Vendor', data: vendorData?.data },
+        { label: 'Asset', name: "asset", type: "custom", placeholder: 'Select Asset', data: assetData?.data },
+        { label: 'Quantity', name: "quantity", type: "number", placeholder: 'Quantity' },
+        { label: 'Location', name: "location", type: "custom", placeholder: 'Select Location', data: locationData?.data },
     ];
 
     const saveData = async ({ formData, action }: {formData: any, action: string}) => {
 
         const formattedData = {
-            db: 'VENDOR_MASTER',
+            db: 'INVENTORY_MASTER',
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
@@ -65,21 +69,21 @@ const VendorPage: React.FC = () => {
 
         const response = await createMaster(formattedData);
 
-        if (response.data && response.data.status === SUCCESS) {
+        if (response?.data?.status === SUCCESS) {
           if (action === 'Add') {
-              toast.success('Vendor added successfully');
+              toast.success('Inventory added successfully');
           } else if (action === 'Update') {
-              toast.success('Vendor updated successfully');
+              toast.success('Inventory updated successfully');
           }
           closeDialog();
         }
         else if (response.error) {
-            toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
+            toast.error(`Error encountered: ${response?.error?.data?.message}`);
         }
 
     };
 
-    const editVendor = (rowData: RowData) => {
+    const editInventory = (rowData: RowData) => {
         setAction('Update');
         setInitialData(rowData);
         openDialog();
@@ -89,15 +93,10 @@ const VendorPage: React.FC = () => {
         setInitialData({});
         setAction('Add');
         openDialog();
-
     };
 
-  // Basic transformData for now
-  const fieldsToAdd: { fieldName: string; path: string[] }[] = [
-  ];
 
-
-  const vendorColumns = useMemo(() => [
+  const inventoryColumns = useMemo(() => [
     {
             id: "select",
             header: ({ table }: {table: any}) => (
@@ -133,56 +132,42 @@ const VendorPage: React.FC = () => {
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Vendor Name</span>
+                    <span>Inventory Name</span>
                     <ArrowUpDown size={15} />
                 </button></React.Fragment>)
             },
-            cell: ({ row }: {row: any}) =>  {return(<div onClick={() => editVendor(row.original)} className="lowercase">{row.getValue("name")}</div>)},
+            cell: ({ row }: {row: any}) =>  {return(<div className="lowercase">{row.getValue("name")}</div>)},
             enableSorting: true,
             enableHiding: false,
           },
           {
-            id: "contactPerson",
-            accessorKey: "contactPerson",
+            id: "description",
+            accessorKey: "description",
             header: ({ column }: {column: any}) => {
               return (<React.Fragment><button
                     className="flex items-center space-x-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Contact Person</span>
+                    <span>Description</span>
                     <ArrowUpDown size={15} />
                 </button></React.Fragment>)
             },
-            cell: ({ row }: {row: any}) => {return(<div className="lowercase">{row.getValue("contactPerson")}</div>)},
+            cell: ({ row }: {row: any}) => {return(<div className="lowercase">{row.getValue("description")}</div>)},
             enableSorting: true,
             enableHiding: false,
           },
             {
-                id: "email",
-                accessorKey: 'email',
+                id: "quantity",
+                accessorKey: 'quantity',
                 header: ({ column }: { column: any }) => { return(
                     <React.Fragment><button className="flex items-center space-x-2" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                    
-                        <span>Email</span>
+
+                        <span>Quantity</span>
                         <ArrowUpDown size={15} />
                     </button></React.Fragment>)
                 },
-                cell: ({ row }: {row: any}) => <div>{row.getValue("email")}</div>,
-                enableSorting: true,
-                enableHiding: false,
-              },
-              {
-                id: "phone",
-                accessorKey: 'phone',
-                header: ({ column }: { column: any }) => (
-                  <React.Fragment>  <button className="flex items-center space-x-2" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-                    
-                        <span>Phone</span>
-                        <ArrowUpDown size={15} />
-                    </button></React.Fragment>
-                ),
-                cell: ({ row }: {row: any}) => <div>{row.getValue("phone")}</div>,
+                cell: ({ row }: {row: any}) => <div>{row.getValue("quantity")}</div>,
                 enableSorting: true,
                 enableHiding: false,
               },
@@ -194,9 +179,9 @@ const VendorPage: React.FC = () => {
       <MasterComponent config={{
         searchFields: [],
         filterFields: [],
-        dataTable: {columns: vendorColumns, data: vendorData?.data},
-        buttons: [{label: 'Add Vendor',action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300'}]
-      }} loadingState={vendorLoading} />
+        dataTable: {columns: inventoryColumns, data: inventoryData?.data},
+        buttons: [{label: 'Add Inventory',action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300'}]
+      }} loadingState={inventoryLoading} />
       <DynamicDialog
           isOpen={isDialogOpen}
           closeDialog={closeDialog}
@@ -212,4 +197,4 @@ const VendorPage: React.FC = () => {
   );
 };
 
-export default VendorPage;
+export default InventoryPage;

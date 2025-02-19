@@ -18,7 +18,10 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Quotation,
   Proposal,
   Asset,
-  Vendor
+  Vendor,
+  AssetSpecs,
+  Warehouse,
+  Inventory
 } from '@/models';
 
 
@@ -64,6 +67,9 @@ function getMongooseAdapter(): MongooseAdapter {
     QUOTATION_MASTER: Quotation,
     ASSET_MASTER: Asset,
     VENDOR_MASTER: Vendor,
+    ASSET_SPEC_MASTER: AssetSpecs,
+    WAREHOUSE_MASTER: Warehouse,
+    INVENTORY_MASTER: Inventory,
     });
   }
   return dbEngineInstance;

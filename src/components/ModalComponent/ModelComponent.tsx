@@ -233,8 +233,13 @@ const DynamicDialog = ({
                           );
                         case "custom":
                           return (
-                            <><field.CustomComponent accessData={formData[field.name]} /></>
-                          )
+                            <Combobox
+                              field={field}
+                              formData={formData}
+                              handleChange={handleChange}
+                              placeholder={field.placeholder || ""}
+                            />
+                          );
 
                         default:
                           return (

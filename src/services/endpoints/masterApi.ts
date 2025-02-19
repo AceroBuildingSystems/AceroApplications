@@ -19,7 +19,7 @@ export const masterApi = baseApi.injectEndpoints({
         limit && params.append('limit', limit.toString());
         return `master?${params.toString()}`;
       },
-      transformResponse: (response: any[]) => response,
+      transformResponse: (response: any) => response,
       providesTags: ['Master'],
     }),
 

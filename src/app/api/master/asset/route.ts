@@ -1,6 +1,6 @@
 // src/app/api/master/asset/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import Asset from "@/models/master/Asset.model";
+import Asset from "@/models/assetManagement/Asset.model";
 import "@/lib/mongoose";
 import mongoose from "mongoose";
 

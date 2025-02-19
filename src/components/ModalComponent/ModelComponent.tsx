@@ -40,6 +40,7 @@ const DynamicDialog = ({
   const { user, status, authenticated } = useUserAuthorised();
 
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [selectedStatus, setSelectedStatus] = useState('');
 
   // Dynamically generate fields based on selectedMaster
 
@@ -53,15 +54,15 @@ const DynamicDialog = ({
       }
       return acc;
     }, {});
-    
+
     setFormData(formattedData);
 
   }, [initialData]);
-  
-  // Handle form data changes
-  const handleChange = (e, fieldName, format, type) => {
-    let value: string | null = "";
 
+  // Handle form data changes
+  const handleChange = (e, fieldName, format, type, data, field) => {
+    let value: string | null = "";
+    fieldName === 'quoteStatus' && setSelectedStatus(field?.data?.find((data) => data._id === e)?.name);
 
     if (type === "multiselect") {
       value = e.map((item) => item.value); // Store only `_id`s
@@ -77,7 +78,7 @@ const DynamicDialog = ({
       } else if (format === "Date") {
         formattedValue = value ? new Date(value) : null; // Convert to Date object
       }
-      
+
       const updatedFormData = {
         ...prev,
         [fieldName]: formattedValue,
@@ -119,7 +120,7 @@ const DynamicDialog = ({
   // Handle form submission
   const handleSubmit = async () => {
     try {
-
+      console.log(user)
       const updatedData = {
         ...formData, // Spread the existing properties of the object
         addedBy: user._id,
@@ -169,7 +170,14 @@ const DynamicDialog = ({
       <DialogContent
         className={`max-w-full max-h-[90%] pointer-events-auto mx-2  ${height === 'auto' ? 'h-auto' : 'h-[75%]'} ${width === 'full' ? 'w-[95%] h-[90%]' : 'sm:max-w-md lg:max-w-3xl'}`}>
         <DialogTitle className="pl-1">{`${action} ${selectedMaster?.toProperCase()
-          }`}</DialogTitle>
+          }`}
+          {selectedMaster === 'quote status' && <div>
+            <div className="text-sm font-medium pt-2">Quote No# : {initialData?.country?.countryCode}-{initialData?.year?.toString().slice(-2)}-{formData?.quoteNo}</div>
+            <div className="text-sm font-medium p-0">Currest Status : {initialData?.quoteStatus?.name}</div>
+          </div>}
+        </DialogTitle>
+
+
         <div className="bg-white h-full overflow-y-auto p-2 rounded-md">
           <div className=" space-y-4   pr-2 pl-1 my-1 overflow-y-auto">
             {/* Use a responsive grid layout for form fields */}
@@ -177,23 +185,23 @@ const DynamicDialog = ({
 
               {/* 1 column on small screens, 2 on large */}
               {fields.map((field, index) => (
-                <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""}`}>
+                <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""} ${field.visibility === true ? '' : field.section && (field.section.includes(selectedStatus) ? '' : field.section && 'hidden')} `}>
                   {field.label !== 'access' && <Label>{field.label}</Label>}
                   {
                     (() => {
                       switch (field.type) {
                         case "multiselect":
-                         
+
                           return (
-                           
+
                             <MultipleSelector
-                            value={(formData[field.name] || []).map((id) => ({
-                              value: id,
-                              label: field.data.find((option) => option.value === id)?.label || "Unknown",
-                            }))} // Convert stored `_id`s back to { label, value }
-                            onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
-                            options={field.data} // Ensure `field.data` is in [{ label, value }] format
-                            placeholder={field.placeholder || "Select options..."}
+                              value={(formData[field.name] || []).map((id) => ({
+                                value: id,
+                                label: field.data.find((option) => option.value === id)?.label || "Unknown",
+                              }))} // Convert stored `_id`s back to { label, value }
+                              onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
+                              options={field.data} // Ensure `field.data` is in [{ label, value }] format
+                              placeholder={field.placeholder || "Select options..."}
                             />
                           );
                         case "textarea":
@@ -218,7 +226,7 @@ const DynamicDialog = ({
                           return (
 
                             <DatePicker
-                              currentDate={formData[field.name]}
+                              currentDate={formData[field.name] || undefined}
                               handleChange={(selectedDate) => {
                                 handleChange(
                                   {

@@ -10,7 +10,8 @@ interface EmailOptions {
     subject: string;
     templateData: any;
     fileName:string;
-    senderName:string
+    senderName:string;
+    reason:string
 }
 
 // Create reusable transporter for sending emails
@@ -39,16 +40,17 @@ export const sendEmail = async (
     senderName:string,
     approveUrl:string,
     rejectUrl:string,
+    reason:string,
 ): Promise<any> => {
     try {
-        
+        console.log(reason);
         if(!fileName){
            return {status:ERROR,message: "File Name must be sent!",data:{},statusCode:500}
         }
         const filePath = `src/server/shared/emailTemplates/${fileName}.ejs`
         const templatePath = path.join(process.cwd(),filePath );
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const htmlContent =  ejs.render(template, { subject, templateData, senderName,approveUrl,rejectUrl });
+        const htmlContent =  ejs.render(template, { subject, templateData, senderName,approveUrl,rejectUrl, reason });
 
         // Set up email options
         const mailOptions = {
@@ -59,9 +61,8 @@ export const sendEmail = async (
         };
 
         // Send email
-
+console.log(mailOptions)
         const info = await transporter.sendMail(mailOptions);
-        console.debug("info",info);
         if(info.status === ERROR){
             return info
         }

@@ -10,8 +10,9 @@ import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
-import DynamicDialog from '@/components/AQMModelComponent/AQMComponent';
+import { organisationTransformData, transformDataForExcel, transformQuoteData, userTransformData } from '@/lib/utils';
+import QuotationDialog from '@/components/AQMModelComponent/AQMComponent';
+import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
@@ -20,7 +21,9 @@ import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
 import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-
+import { useGetApplicationQuery } from "@/services/endpoints/applicationApi";
+import * as XLSX from "xlsx";
+import { createAction } from '@reduxjs/toolkit';
 
 const page = () => {
     const proposalOffer = []
@@ -43,108 +46,111 @@ const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
 
-
-    const { data: quotationData = [], isLoading: quotationLoading } = useGetMasterQuery({
+    const { data: quotationData = [], isLoading: quotationLoading } = useGetApplicationQuery({
         db: MONGO_MODELS.QUOTATION_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
+    const { data: teamMemberData = [], isLoading: teamMemberLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
+        filter: { isActive: true },
+        sort: { name: 'asc' },
+    });
+
+    const quotationDataNew = transformQuoteData(quotationData?.data, user, teamMemberData?.data);
+
     const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({
         db: MONGO_MODELS.COUNTRY_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: quoteStatusData = [], isLoading: quoteStatusLoading } = useGetMasterQuery({
         db: MONGO_MODELS.QUOTE_STATUS_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const quoteStatus = quoteStatusData?.data?.filter((option) => option?.name === 'A - Active')[0]?._id;
 
-    const { data: teamMemberData = [], isLoading: teamMemberLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
-        filter: {isActive:true},
-        sort: { name: 'asc' },
-    });
+
 
     const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: customerData = [], isLoading: customerLoading } = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: customerContactData = [], isLoading: customerContactLoading } = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: customerTypeData = [], isLoading: customerTypeLoading } = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: sectorData = [], isLoading: sectorLoading } = useGetMasterQuery({
         db: MONGO_MODELS.SECTOR_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
     const { data: industryData = [], isLoading: industryLoading } = useGetMasterQuery({
         db: MONGO_MODELS.INDUSTRY_TYPE_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: buildingData = [], isLoading: buildingLoading } = useGetMasterQuery({
         db: MONGO_MODELS.BUILDING_TYPE_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
     const { data: fullstateData = [], isLoading: stateLoading } = useGetMasterQuery({
         db: MONGO_MODELS.STATE_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
     const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading } = useGetMasterQuery({
         db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
     const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
     const { data: projectTypeData = [], isLoading: projectTypeLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PROJECT_TYPE_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
     const { data: paintTypeData = [], isLoading: paintTypeLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PAINT_TYPE_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: currencyData = [], isLoading: currencyLoading } = useGetMasterQuery({
         db: MONGO_MODELS.CURRENCY_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
     const { data: incotermData = [], isLoading: incotermLoading } = useGetMasterQuery({
         db: MONGO_MODELS.INCOTERM_MASTER,
-        filter: {isActive:true},
+        filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
@@ -154,26 +160,33 @@ const page = () => {
     }));
 
     const teamId = teamMemberData?.data?.filter(data => data?.user?._id === user?._id)?.[0]?.team?._id;
+    const teamRole = teamMemberData?.data?.filter(data => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
 
     let salesEngData = teamMemberData?.data?.filter(data => data?.team?._id === teamId)?.map((option) => ({
         name: option?.user?.shortName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
         team: option?.team?._id,
-        teamHead:option?.team?.teamHead[0]?.shortName.toProperCase(),
-        email:option?.team?.teamHead[0]?.email
+        teamHead: option?.team?.teamHead[0]?.shortName.toProperCase(),
+        email: option?.team?.teamHead[0]?.email
     }));
-    console.log(salesEngData)
 
-
-
+    if (teamRole === 'Engineer') {
+        salesEngData = teamMemberData?.data?.filter(data => data?.user?._id === user?._id)?.map((option) => ({
+            name: option?.user?.shortName?.toProperCase(), // Display name
+            _id: option?._id, // Unique ID as value
+            team: option?.team?._id,
+            teamHead: option?.team?.teamHead[0]?.shortName.toProperCase(),
+            email: option?.team?.teamHead[0]?.email
+        }));
+    }
 
     if (user?.role?.name === 'Admin') {
         salesEngData = teamMemberData?.data?.map((option) => ({
             name: option?.user?.shortName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
-            teamHead:option?.team?.teamHead[0]?.shortName.toProperCase(),
-            email:option?.team?.teamHead[0]?.email
+            teamHead: option?.team?.teamHead[0]?.shortName.toProperCase(),
+            email: option?.team?.teamHead[0]?.email
         }));
     }
 
@@ -336,7 +349,7 @@ const page = () => {
         { label: 'Quote No', name: "quoteNo", type: "number", required: false, placeholder: 'Quote No', section: 'QuoteDetails', visibility: true },
         { label: 'Option', name: "option", type: "select", data: optionData, required: false, placeholder: 'Select Option', section: 'QuoteDetails', visibility: true },
         { label: 'Quote Status', name: "quoteStatus", type: "select", data: quoteStatusData?.data, format: 'ObjectId', required: true, placeholder: 'Select Quote Status', section: 'QuoteDetails', visibility: true },
-        { label: 'Rev No', name: "revNo", type: "select", data: revNoData, required: true, placeholder: 'Select Rev No', section: 'QuoteDetails', visibility: true,  readOnly:true},
+        { label: 'Rev No', name: "revNo", type: "select", data: revNoData, required: true, placeholder: 'Select Rev No', section: 'QuoteDetails', visibility: true, readOnly: true },
         { label: 'Sales Engineer/Manager', name: "salesEngineer", type: "select", data: salesEngData, format: 'ObjectId', required: true, placeholder: 'Select Sales Engineer / Manager', section: 'QuoteDetails', visibility: true },
         { label: 'Sales Support Engineer', name: "salesSupportEngineer", type: "multiselect", data: supportTeamMemberData, required: true, placeholder: 'Select Sales Support Engineer', section: 'QuoteDetails', visibility: true },
         { label: 'Received Date From Customer', name: "rcvdDateFromCustomer", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: 'QuoteDetails', visibility: true },
@@ -404,9 +417,25 @@ const page = () => {
         { label: 'Payment Term', name: "paymentTerm", type: "text", required: false, placeholder: 'Payment Term', section: 'JobDetails', visibility: true },
         { label: 'Job Details Remark', name: "remarks", type: "text", required: false, placeholder: 'Job Details Remark', section: 'JobDetails', visibility: true },
 
+    ];
+
+    const statusField: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; section?: string[]; subSection?: string; elementType?: any[]; addNew?: boolean; addHelp?: boolean; visibility?: boolean; title?: string; onAddMore?: () => void; }> = [
+        { label: 'New Status', name: "quoteStatus", type: "select", data: quoteStatusData?.data, format: 'ObjectId', required: true, placeholder: 'Select Status', visibility: true },
+        { label: 'Select Forecast Month', name: "forecastMonth", type: "select", data: monthsData, required: false, placeholder: 'Select Month', section: ['HOT QUOTE'], visibility: false },
+        { label: 'Job No', name: "jobNo", type: "text", required: true, placeholder: 'Job No', section: ['J - Job'], visibility: false },
+        { label: 'Job Entry Date', name: "jobDate", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: ['J - Job'], visibility: false },
+        { label: 'Shipping Forecast Month', name: "forecastMonth", type: "select", data: monthsData, required: true, placeholder: 'Select Month', section: ['J - Job'], visibility: false },
+        { label: 'Payment Terms', name: "paymentTerm", type: "text", required: true, placeholder: 'Payment Term', section: ['J - Job'], visibility: false },
+        { label: 'Intial Shipped Date', name: "initialShipDate", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: ['JOB SHIPPED'], visibility: false },
+        { label: 'Final Shipped Date', name: "finalShipDate", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: ['JOB SHIPPED'], visibility: false },
+        { label: 'Lost To', name: "lostTo", type: "text", required: true, placeholder: 'Lost To', section: ['L - Lost'], visibility: false },
+        { label: 'Lost To Others', name: "lostToOthers", type: "text", required: true, placeholder: 'Lost To Others', section: ['L - Lost'], visibility: false },
+        { label: 'Reason', name: "reason", type: "text", placeholder: 'Reason', section: ['C - Cancel', 'D - Declined', 'H - Hold', 'L - Lost'], visibility: false },
+        { label: 'Remarks', name: "remarks", type: "text", required: false, placeholder: 'Remarks', section: ['J - Job', 'JOB SHIPPED', 'HOT QUOTE'], visibility: false },
+
     ]
 
-
+    const [isStatusDialogOpen, setStatusDialogOpen] = useState(false);
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
@@ -419,6 +448,12 @@ const page = () => {
         setDialogOpen(true);
     };
 
+    const openStausDialog = (masterType: React.SetStateAction<string>) => {
+        setSelectedMaster(masterType);
+
+        setStatusDialogOpen(true);
+    };
+
     // Close dialog
     const closeDialog = () => {
         setInitialData({});
@@ -427,8 +462,15 @@ const page = () => {
         setSelectedMaster("");
     };
 
+    const closeStatusDialog = () => {
+        setInitialData({});
+        setContactData([]);
+        setStatusDialogOpen(false);
+        setSelectedMaster("");
+    };
+
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action, master }) => {
+    const saveData = async ({ formData, action, master = 'QUOTATION_MASTER' }) => {
 
         const formattedData = {
             db: MONGO_MODELS[master],
@@ -493,6 +535,18 @@ const page = () => {
         // Your add logic for user page
     };
 
+    const editQuoteStatus = (rowData: RowData) => {
+        setAction('Update');
+        const transformedData = {
+            ...rowData, // Keep the existing fields
+            salesSupportEngineer: rowData?.salesSupportEngineer.map(eng => eng._id), // Map `location` to just the `_id`s
+
+        };
+        setInitialData(transformedData);
+        !['draft', 'quoterequested'].includes(rowData?.status) && openStausDialog("quote status");
+        // Your add logic for user page
+    };
+
     const handleAdd = () => {
         setInitialData({ year, option, quoteStatus, revNo, noOfBldg });
         setAction('Add');
@@ -501,20 +555,33 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createAction, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "QuotationMaster" });
     };
 
-    const handleExport = () => {
-        console.log('UserPage Update button clicked');
-        // Your update logic for user page
+    const handleExport = (type: string, quotationDataNew: any[]) => {
+        if (!quotationDataNew || quotationDataNew.length === 0) {
+            toast.error("No data to export");
+            return;
+        }
+
+        const formattedData = transformDataForExcel(quotationDataNew);
+
+        if (type === 'excel') {
+            exportToExcel(formattedData);
+        }
+    };
+
+    const exportToExcel = (data: any[]) => {
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
     const handleDelete = () => {
         console.log('UserPage Delete button clicked');
         // Your delete logic for user page
     };
-
-
 
     const quotationColumns = [
         {
@@ -577,7 +644,7 @@ const page = () => {
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
                 >
-                    <span>Rev No</span> 
+                    <span>Rev No</span>
                     <ArrowUpDown size={15} />
                 </button>
             ),
@@ -609,7 +676,8 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div>{quoteStatusData?.data.find(data => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
+            cell: ({ row }: { row: any }) => <div className="w-28 p-2 border rounded-md flex items-center justify-center text-center" onClick={() => editQuoteStatus(row.original)}>
+                {quoteStatusData?.data.find(data => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
         },
         {
             accessorKey: "bookingProbability",
@@ -697,26 +765,6 @@ const page = () => {
             cell: ({ row }: { row: any }) => <div>{row.getValue("projectName")}</div>,
         },
 
-        {
-            accessorKey: "status",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-                >
-                    <span>Status</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            // This column will not be visible but still accessible for styling purposes
-            cell: ({ row }: { row: any }) => {
-                // Access the quoteStatus value without displaying it
-                return <div style={{ visibility: "hidden" }}>{row.getValue("status")}</div>;
-            },
-            enableHiding: true,  // Allows hiding the column
-            enableSorting: false, // You can disable sorting here if needed
-        },
-
     ];
 
     const quotationConfig = {
@@ -730,32 +778,37 @@ const page = () => {
         ],
         dataTable: {
             columns: quotationColumns,
-            data: quotationData?.data,
+            data: quotationDataNew,
         },
 
         buttons: [
 
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-            { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
+            { label: 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            {
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type,quotationDataNew) }
+                ]
+            },
+
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
-const rowClassMap = {
-    draft:"",
-    quoterequested:"bg-yellow-100",
-    incomplete:'bg-blue-100',
-    submitted:'bg-orange-200',
-    rejected:'bg-red-100',
-    approved:'bg-green-100'
+    const rowClassMap = {
+        draft: "bg-white",
+        quoterequested: "bg-yellow-100",
+        incomplete: 'bg-blue-100',
+        submitted: 'bg-orange-200',
+        rejected: 'bg-red-200',
+        approved: 'bg-green-100'
 
-};
+    };
 
 
     return (
         <>
 
             <MasterComponent config={quotationConfig} loadingState={loading} rowClassMap={rowClassMap} />
-            <DynamicDialog
+            <QuotationDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}
                 selectedMaster={selectedMaster}
@@ -774,6 +827,17 @@ const rowClassMap = {
                 proposalDrawing={proposalDrawing}
                 locationData={formattedLocationData}
                 stateData={fullstateData?.data}
+
+            />
+            <DynamicDialog
+                isOpen={isStatusDialogOpen}
+                closeDialog={closeStatusDialog}
+                selectedMaster={selectedMaster}
+                onSave={saveData}
+                fields={statusField}
+                initialData={initialData}
+                action={action}
+                height={'auto'}
 
             />
         </>

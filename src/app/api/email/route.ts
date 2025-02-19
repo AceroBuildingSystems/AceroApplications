@@ -4,11 +4,10 @@ import { emailManager } from '@/server/managers/emailManager/emailManager';
 import { emailData } from '@/types/master/emailData';
 
 export async function POST(req: NextApiRequest, res: NextApiResponse) {
-    const { recipient, subject, templateData , fileName, senderName,approveUrl,rejectUrl }: { recipient: string, subject: string, templateData:emailData, fileName: string, senderName: string,approveUrl: string,rejectUrl: string  } =  await req.json()
+    const { recipient, subject, templateData , fileName, senderName,approveUrl,rejectUrl,reason }: { recipient: string, subject: string, templateData:emailData, fileName: string, senderName: string,approveUrl: string,rejectUrl: string,reason:string  } =  await req.json()
     try {
         
-        console.debug("BODY",req.body,{recipient, subject, templateData , fileName});
-        const result = await emailManager.sendEmail(recipient, subject, templateData,fileName,senderName,approveUrl,rejectUrl);
+        const result = await emailManager.sendEmail(recipient, subject, templateData,fileName,senderName,approveUrl,rejectUrl, reason);
         return NextResponse.json({status:"SUCCESS",message:"email sent",data:result,statusCode:200})
     } catch (error:any) {
         console.error("Error:", error);

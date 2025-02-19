@@ -9,6 +9,11 @@ const ProposalRevisionSchema: Schema<proposalRevision> = new Schema({
     cycleTime: { type: Number, default:0 },
     sentToCustomer: { type: Date, default:null },
     notes: { type: String, default:'' },
+    changes: {
+        type: Map,
+        of: mongoose.Schema.Types.Mixed, // Dynamic field to store changes
+        default: {}
+    },
     addedBy: { type: String },
     updatedBy: { type: String },
    

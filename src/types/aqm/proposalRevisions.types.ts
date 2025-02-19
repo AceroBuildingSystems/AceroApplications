@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Mixed } from "mongoose";
 export interface proposalRevision {
     _id?: mongoose.ObjectId,
     revNo:number,
@@ -7,6 +7,7 @@ export interface proposalRevision {
     cycleTime: number,
     sentToCustomer: Date,
     notes: string,
+    changes:Mixed,
     addedBy: string,
     updatedBy: string
 }

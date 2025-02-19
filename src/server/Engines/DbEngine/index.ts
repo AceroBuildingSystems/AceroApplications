@@ -16,7 +16,8 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Sector,
   ProposalRevisions,
   Quotation,
-  Proposal} from '@/models';
+  Proposal,
+  Option} from '@/models';
 
 
 
@@ -58,7 +59,8 @@ function getMongooseAdapter(): MongooseAdapter {
     SECTOR_MASTER: Sector,
     PROPOSAL_REVISION_MASTER: ProposalRevisions,
     PROPOSAL_MASTER: Proposal,
-    QUOTATION_MASTER: Quotation
+    QUOTATION_MASTER: Quotation,
+    OPTION_MASTER: Option
     });
   }
   return dbEngineInstance;

@@ -41,7 +41,7 @@ const page = () => {
 
   const loading =  locationLoading || stateLoading;
 
-
+console.log({locationData})
   interface RowData {
     id: string;
     name: string;

@@ -431,7 +431,7 @@ const Access = () => {
   };
 
 
-  const AccessComponent = ({ accessData}) => {
+  const AccessComponent = ({ data:accessData}) => {
     if (!accessData) {
       return <></>;
     }

@@ -1,47 +1,34 @@
-import mongoose, { Document, Model, Schema } from "mongoose";
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import { IAssetModel } from './AssetModel.model';
+import { department } from "@/types/master/department.types";
+import { UserDocument } from "@/types";
+import { location } from "@/types/master/location.types";
+import { IVendor } from './Vendor.model';
 
-interface Asset extends Document {
+export interface IAsset extends Document {
+  modelNumber: IAssetModel['_id'];
+  specification: any;
   serialNumber: string;
-  modelNumber: string;
-  variantSpecifications: object; // Flexible structure
-  status: "active" | "damaged" | "in repair" | "inactive";
-  vendor: Schema.Types.ObjectId; // Reference to Vendor
-  purchaseDate?: Date;
-  warrantyExpiration?: Date;
-  location: Schema.Types.ObjectId; // Reference to Location
-  department: Schema.Types.ObjectId; // Reference to Department
-  assignedUser?: Schema.Types.ObjectId; // Reference to User, optional
-  notes?: string;
-  isActive: boolean;
-  addedBy?: string;
-  updatedBy?: string;
+  department: department['_id'];
+  user: UserDocument['_id'];
+  status: string;
+  location: location['_id'];
+  vendor: IVendor['_id'];
+  purchaseDate: Date;
 }
 
-const AssetSchema: Schema<Asset> = new Schema(
-  {
-    serialNumber: { type: String, required: true, unique: true },
-    modelNumber: { type: String, required: true },
-    variantSpecifications: { type: Schema.Types.Mixed },
-    status: {
-      type: String,
-      required: true,
-      enum: ["active", "damaged", "in repair", "inactive"],
-    },
-    vendor: { type: Schema.Types.ObjectId, ref: "Vendor" },
-    purchaseDate: { type: Date },
-    warrantyExpiration: { type: Date },
-    location: { type: Schema.Types.ObjectId, ref: "Location" },
-    department: { type: Schema.Types.ObjectId, ref: "Department" },
-    assignedUser: { type: Schema.Types.ObjectId, ref: "User" },
-    notes: { type: String },
-    isActive: { type: Boolean, default: true },
-    addedBy: { type: String },
-    updatedBy: { type: String },
-  },
-  { timestamps: true }
-);
+const AssetSchema: Schema = new Schema({
+  modelNumber: { type: Schema.Types.ObjectId, required: true, ref: 'AssetModel' },
+  specification: { type: Schema.Types.Mixed, required: false },
+  serialNumber: { type: String, required: true },
+  depatment: { type: Schema.Types.ObjectId, ref: 'Department' },
+  user: { type: Schema.Types.ObjectId, ref: 'User' },
+  status: { type: String, required: true },
+  location: { type: Schema.Types.ObjectId, required: true, ref: 'Location' },
+  vendor: { type: Schema.Types.ObjectId, required: true, ref: 'Vendor' },
+  purchaseDate: { type: Date, required: true },
+});
 
-const Asset: Model<Asset> =
-  mongoose.models.Asset || mongoose.model<Asset>("Asset", AssetSchema);
+const Asset: Model<IAsset> = mongoose.models.Asset || mongoose.model<IAsset>("Asset", AssetSchema)
 
-export default Asset;
+export default Asset

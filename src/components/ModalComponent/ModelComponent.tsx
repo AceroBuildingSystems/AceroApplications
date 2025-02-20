@@ -36,6 +36,7 @@ const DynamicDialog = ({
   action,
   height,
   width,
+  customUpdate = false
 }) => {
   const { user, status, authenticated } = useUserAuthorised();
 
@@ -233,7 +234,7 @@ const DynamicDialog = ({
                           );
                         case "custom":
                           return (
-                            <><field.CustomComponent accessData={formData[field.name]} /></>
+                            <><field.CustomComponent data={formData[field.name]} action={action} fullData={formData} /></>
                           )
 
                         default:
@@ -257,11 +258,11 @@ const DynamicDialog = ({
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={handleClose}>
+          {!customUpdate &&<Button variant="secondary" onClick={handleClose}>
             Cancel
-          </Button>
+          </Button>}
           {action === "Add" && <Button onClick={handleSubmit}>Save</Button>}
-          {action === "Update" && (
+          {action === "Update" && !customUpdate && (
             <Button onClick={handleSubmit}>Update</Button>
           )}
         </DialogFooter>

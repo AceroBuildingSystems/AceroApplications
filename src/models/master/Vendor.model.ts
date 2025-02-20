@@ -1,32 +1,24 @@
-// src/models/master/Vendor.model.ts
-import mongoose, { Document, Model, Schema } from "mongoose";
+import mongoose, { Schema, Document, Model } from 'mongoose';
+import { location } from "@/types/master/location.types";
 
-interface Vendor extends Document {
+export interface IVendor extends Document {
+  _id: string;
   name: string;
-  contactPerson?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  isActive: boolean;
-  addedBy?: string;
-  updatedBy?: string;
+  contactPerson: string;
+  email: string;
+  phone: string;
+  address: string;
+  location: location['_id'];
 }
 
-const VendorSchema: Schema<Vendor> = new Schema(
-  {
-    name: { type: String, required: true },
-    contactPerson: { type: String },
-    email: { type: String },
-    phone: { type: String },
-    address: { type: String },
-    isActive: { type: Boolean, default: true },
-    addedBy: { type: String },
-    updatedBy: { type: String },
-  },
-  { timestamps: true }
-);
+const VendorSchema: Schema = new Schema({
+  name: { type: String, required: true },
+  contactPerson: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  address: { type: String},
+  location: { type: Schema.Types.ObjectId, required: true, ref: 'Location' },
+});
+const Vendor: Model<IVendor> = mongoose.models.Vendor || mongoose.model<IVendor>("Vendor", VendorSchema)
 
-const Vendor: Model<Vendor> =
-  mongoose.models.Vendor || mongoose.model<Vendor>("Vendor", VendorSchema);
-
-export default Vendor;
+export default Vendor

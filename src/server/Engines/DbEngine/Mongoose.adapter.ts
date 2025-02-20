@@ -36,34 +36,6 @@ export class MongooseAdapter implements DatabaseAdapter {
 
   /**
    * Find documents with advanced querying options
-   *
-   * Example usage:
-   * const result = await adapter.find('User', {
-   *   // Basic filter
-   *   filter: { age: { $gt: 18 } },
-   *
-   *   // Search functionality
-   *   searchTerm: "john",
-   *   searchFields: ["firstName", "lastName", "email"],
-   *
-   *   // Get distinct values
-   *   distinct: "role",
-   *
-   *   // Sorting
-   *   sort: { createdAt: "desc", lastName: "asc" },
-   *
-   *   // Field selection
-   *   select: ["firstName", "lastName", "email", "role"],
-   *
-   *   // Populate relations
-   *   populate: ["orders", "profile"],
-   *
-   *   // Pagination
-   *   pagination:{
-   *   page: 1,
-   *   limit: 10
-   *   }
-   * });
    */
   async find(modelName: string, options: FindOptions): Promise<QueryResult> {
     await dbConnect();
@@ -165,20 +137,7 @@ export class MongooseAdapter implements DatabaseAdapter {
 
   /**
    * Create a new document
-   *
-   * Example usage:
-   * const result = await adapter.create('User', {
-   *   bulkInsert:false,
-   *   data: {
-   *     firstName: "John",
-   *     lastName: "Doe",
-   *     email: "john@example.com",
-   *     age: 25,
-   *     role: "user"
-   *   }
-   * });
    */
-
   async create(
     modelName: string,
     options: CreateOptions
@@ -188,7 +147,7 @@ export class MongooseAdapter implements DatabaseAdapter {
     if (!model)
       return { status: ERROR, message: `Model ${modelName} not found` };
 
-    let doc = null;
+    let doc: any = null;
     if (options.bulkInsert) {
       doc = await model.insertMany(options.data);
     } else {
@@ -196,8 +155,15 @@ export class MongooseAdapter implements DatabaseAdapter {
         const saltRounds = 10;
         options.data.password = await bcrypt.hash(options.data.password, saltRounds);
       }
-     
-      doc = await model.create(options.data);
+
+    //   // Handle AssetCategory creation with variationSchema
+    //   if (modelName === "AssetCategory" && options.data.variationSchema) {
+    //     doc = await model.create({
+    //       ...options.data,
+    //     });
+    //   } else {
+        doc = await model.create(options.data);
+    //   }
     }
 
     if (!doc) return { status: ERROR, message: "Failed to create document" };
@@ -205,22 +171,8 @@ export class MongooseAdapter implements DatabaseAdapter {
     return { status: SUCCESS, data: doc };
   }
 
-
-
-  
-
   /**
    * Update documents matching a filter
-   *
-   * Example usage:
-   * const result = await adapter.update('User', {
-   *   filter: { email: "john@example.com" },
-   *   data: {
-   *     age: 26,
-   *     lastName: "Smith",
-   *     lastUpdated: new Date()
-   *   }
-   * });
    */
   async update(
     modelName: string,
@@ -231,26 +183,37 @@ export class MongooseAdapter implements DatabaseAdapter {
     if (!model)
       return { status: ERROR, message: `Model ${modelName} not found` };
 
-    let doc: any = [];
+    let doc: any = null;
 
     if (options.bulkUpdate) {
       // Perform bulk update (updateMany) and wait for it to complete
       const result = await model.updateMany(options.filter || {}, options.data);
 
       // You can return the result or perform a follow-up query to fetch updated documents
-      if (result.modifiedCount === 0) {
+      if (result?.modifiedCount === 0) {
         return { status: ERROR, message: "No documents updated" };
       }
 
-      doc.push(result); // result will contain update details, not documents
+      doc = result; // result will contain update details, not documents
     } else {
       // Perform single document update (findOneAndUpdate)
-    
-      doc = await model.findOneAndUpdate(options.filter || {}, options.data, {
-        new: true,
-        upsert: options.upsert ?? false,
-        runValidators: true,
-      });
+
+      // Handle AssetCategory update with variationSchema
+      if (modelName === "AssetCategory" && options.data.variationSchema) {
+        doc = await model.findOneAndUpdate(options.filter || {}, {
+          ...options.data,
+        }, {
+          new: true,
+          upsert: options.upsert ?? false,
+          runValidators: true,
+        });
+      } else {
+        doc = await model.findOneAndUpdate(options.filter || {}, options.data, {
+          new: true,
+          upsert: options.upsert ?? false,
+          runValidators: true,
+        });
+      }
       if (!doc) return { status: ERROR, message: "Document not found" };
     }
 
@@ -290,6 +253,7 @@ export class MongooseAdapter implements DatabaseAdapter {
         return {
           status: ERROR,
           message: `${arrayProperty} is not an array or does not exist`,
+          
         };
       }
   
@@ -327,7 +291,7 @@ export class MongooseAdapter implements DatabaseAdapter {
         if(Array.isArray(data)){
           if(itemMatcher){
             data.forEach(d=>{
-              const matchIndex = array.findIndex(doc=>doc[itemMatcher] === d[itemMatcher])
+              const matchIndex = array.findIndex( (doc:any) =>doc[itemMatcher] === d[itemMatcher])
               if(matchIndex !== -1){
                 array[matchIndex][itemMatcher] = d
               }else{
@@ -338,8 +302,9 @@ export class MongooseAdapter implements DatabaseAdapter {
         }else{
           array.push(data)
         }
+      
       }
-    
+
     }
 
     // Save the updated document
@@ -351,14 +316,6 @@ export class MongooseAdapter implements DatabaseAdapter {
 
   /**
    * Delete documents matching a filter
-   *
-   * Example usage:
-   * const result = await adapter.delete('User', {
-   *   filter: {
-   *     age: { $lt: 18 },
-   *     status: 'inactive'
-   *   }
-   * });
    */
   async delete(
     modelName: string,
@@ -378,39 +335,7 @@ export class MongooseAdapter implements DatabaseAdapter {
 
   /**
    * Run multiple operations in parallel
-   *
-   * Example usage:
-   * const results = await adapter.runMultiple([
-   *   {
-   *     action: 'find',
-   *     modelName: 'User',
-   *     options: {
-   *       filter: { role: 'admin' },
-   *       select: ['email', 'firstName']
-   *     }
-   *   },
-   *   {
-   *     action: 'create',
-   *     modelName: 'Order',
-   *     options: {
-   *       data: {
-   *         userId: '123',
-   *         total: 99.99,
-   *         items: ['item1', 'item2']
-   *       }
-   *     }
-   *   },
-   *   {
-   *     action: 'update',
-   *     modelName: 'Product',
-   *     options: {
-   *       filter: { id: 'prod123' },
-   *       data: { stock: 50 }
-   *     }
-   *   }
-   * ]);
    */
-
   async runMultiple(queries: MultiQuery[]): Promise<QueryResult[]> {
     await dbConnect();
     const results = await Promise.all(
@@ -432,5 +357,4 @@ export class MongooseAdapter implements DatabaseAdapter {
 
     return results;
   }
-
 }

@@ -1,5 +1,4 @@
-
-// MASTER MODELS 
+// MASTER MODELS
 import Access from "./master/Access.model"
 import Department from "./master/Department.model"
 import Designation from "./master/Designation.model"
@@ -35,6 +34,11 @@ import Proposal from "./aqm/Proposals.model"
 //Asset and inventory
 import Asset from "./master/Asset.model"
 import Vendor from "./master/Vendor.model"
+import AssetCategory from "./master/AssetCategory.model";
+import AssetModel from "./master/AssetModel.model";
+import AssetVariation from "./master/AssetVariation.model";
+import Site from "./master/Site.model";
+import Warehouse from "./master/Warehouse.model";
 
 export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, Team, TeamMember,Currency, Customer,
-     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation, Asset, Vendor }
+     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation, Asset, Vendor, AssetCategory, AssetModel, AssetVariation, Site, Warehouse }

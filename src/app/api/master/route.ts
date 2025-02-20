@@ -111,4 +111,3 @@ export async function POST(request:NextRequest) {
     { status: 'ERROR', message: response.message, data:{} },
     { status: 500 })
 }
-

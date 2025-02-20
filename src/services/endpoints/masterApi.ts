@@ -20,7 +20,7 @@ export const masterApi = baseApi.injectEndpoints({
         return `master?${params.toString()}`;
       },
       transformResponse: (response: any[]) => response,
-      providesTags: ['Master'],
+      providesTags: ['Master', 'Assets'],
     }),
 
     createMaster: builder.mutation<MasterApiResponse, any>({ // Use the MasterApiResponse type
@@ -29,7 +29,7 @@ export const masterApi = baseApi.injectEndpoints({
         method: 'POST',
         body: masterData,
       }),
-      invalidatesTags: ['Master'],
+      invalidatesTags: ['Master', 'Assets'],
     }),
   }),
   overrideExisting: false,

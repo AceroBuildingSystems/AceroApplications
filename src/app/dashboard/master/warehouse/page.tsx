@@ -3,23 +3,23 @@
 import React from 'react';
 import Layout from '@/app/dashboard/layout';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { vendorConfig } from '@/lib/masterConfigs/inventoryConfigs';
+import { warehouseConfig } from '@/lib/masterConfigs/inventoryConfigs';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-import { IVendor } from '@/models/master/Vendor.model';
+import { IWarehouse } from '@/models/master/Warehouse.model';
 import { useCreateMasterMutation, masterApi, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, Import, Download, Upload } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
-const VendorPage = () => {
+const WarehousePage = () => {
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedMaster, setSelectedMaster] = useState("");
   const [initialData, setInitialData] = useState({});
   const [action, setAction] = useState('Add');
 
-  const { data:vendorData = [], isLoading: vendorLoading, isError, error } = useGetMasterQuery({
-    db: MONGO_MODELS.VENDOR_MASTER,
+  const { data:warehouseData = [], isLoading: vendorLoading, isError, error } = useGetMasterQuery({
+    db: MONGO_MODELS.WAREHOUSE_MASTER,
     sort: { name: 'asc' },
   });
 
@@ -30,11 +30,11 @@ const VendorPage = () => {
 
 
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
-    console.log({vendorData})
+    console.log({warehouseData})
   const handleAdd = () => {
     setInitialData({});
     setAction('Add');
-    openDialog("vendor");
+    openDialog("Warehouse");
   };
 
   const openDialog = (masterType: string) => {
@@ -50,7 +50,7 @@ const VendorPage = () => {
     const saveData = async ({ formData, action }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.VENDOR_MASTER,
+            db: MONGO_MODELS.WAREHOUSE_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
@@ -62,12 +62,12 @@ const VendorPage = () => {
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Vendor added successfully');
+            toast.success('Warehouse added successfully');
 
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Vendor added updated successfully');
+                toast.success('Warehouse added updated successfully');
             }
         }
 
@@ -77,10 +77,10 @@ const VendorPage = () => {
 
     };
 
-  const editVendor = (rowData: IVendor) => {
+  const editVendor = (rowData: IWarehouse) => {
     setAction('Update');
     setInitialData(rowData);
-    openDialog("vendor");
+    openDialog("Warehouse");
   };
 
   const handleImport = () => {
@@ -95,28 +95,23 @@ const VendorPage = () => {
     console.log('Delete button clicked');
   };
 
-  const vendorColumns = [
+  const warehouseColumns = [
     { accessorKey: 'name', header: 'Name', cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editVendor(row.original)}>{row.getValue("name")}</div> },
-    { accessorKey: 'contactPerson', header: 'Contact Person' },
-    { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'phone', header: 'Phone' },
-    { accessorKey: 'address', header: 'Address' },
     { accessorKey: 'location', header: 'Location',cell: ({ row }: { row: any }) => <div>{row.getValue("location")?.name}</div>  },
   ];
 
 
 
-  const vendorConfigUpdated = {
-    ...vendorConfig,
+  const warehouseConfigUpdated = {
+    ...warehouseConfig,
     fields: [
-      ...vendorConfig.fields.slice(0, 5),
+      { label: 'Name', name: 'name', type: 'text', required: true, placeholder: 'Warehouse Name' },
       { label: 'Location', name: "location", type: "select", required: true, placeholder: 'Select Location', format: 'ObjectId', data: locationData?.data },
-      ...vendorConfig.fields.slice(6),
     ],
     dataTable: {
-      columns: vendorColumns,
+      columns: warehouseColumns,
       // @ts-expect-error
-      data: vendorData?.data,
+      data: warehouseData?.data,
     },
     buttons: [
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
@@ -127,13 +122,13 @@ const VendorPage = () => {
 
   return (
  <>
-      <MasterComponent config={vendorConfigUpdated} loadingState={vendorLoading} />
+      <MasterComponent config={warehouseConfigUpdated} loadingState={vendorLoading} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}
         selectedMaster={selectedMaster}
         onSave={saveData}
-        fields={vendorConfigUpdated.fields}
+        fields={warehouseConfigUpdated.fields}
         initialData={initialData}
         action={action}
         height='auto'
@@ -144,4 +139,4 @@ const VendorPage = () => {
   );
 };
 
-export default VendorPage;
+export default WarehousePage;

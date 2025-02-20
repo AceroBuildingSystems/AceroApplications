@@ -32,14 +32,22 @@ import {
 } from "@/components/ui/tooltip";
 
 const AssetModelPage = () => {
-  const { data: assetCategoryData, isLoading: assetCategoryLoading } =
+  const { data: assetModelData, isLoading: assetModelLoading } =
     useGetMasterQuery({
       db: MONGO_MODELS.ASSET_MODEL_MASTER,
       sort: { name: "asc" },
     });
 
+    const { data: assetCategoryData, isLoading: assetCategoryLoading } =
+    useGetMasterQuery({
+      db: MONGO_MODELS.ASSET_CATEGORY_MASTER,
+      sort: { name: "asc" },
+    });
+
   const [createMaster, { isLoading: isCreatingMaster }] =
     useCreateMasterMutation();
+
+    console.log({ assetCategoryData });
 
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [initialData, setInitialData] = useState({});
@@ -205,21 +213,14 @@ const AssetModelPage = () => {
       type: "select",
       required: true,
       placeholder: "Asset Category Name",
+      data: assetCategoryData?.data?.map((category: any) => ({
+        name: category.type,
+        _id: category._id,
+      }))
     },
-    {
-      label: "Description",
-      name: "description",
-      type: "textarea",
-      required: true,
-      placeholder: "Asset Category Description",
-    },
-    {
-      label: "Variation Schema (JSON)",
-      name: "variationSchema",
-      type: "custom",
-      required: true,
-      placeholder: "Asset Category Description",
-    },
+    { label: 'Model Number', name: "modelNumber", type: "text", required: true, placeholder: 'Model Number' },
+    { label: 'Name', name: "name", type: "text", placeholder: 'Name' },
+    { label: 'Manufacturer', name: "manufacturer", type: "text", required: true, placeholder: 'Manufacturer' },
   ];
 
   const assetCategoryConfig = {
@@ -233,7 +234,7 @@ const AssetModelPage = () => {
     ],
     dataTable: {
       columns: assetCategoryColumns,
-      data: assetCategoryData?.data || [],
+      data: assetModelData?.data || [],
     },
     buttons: [
       {
@@ -249,18 +250,18 @@ const AssetModelPage = () => {
     <>
       <MasterComponent
         config={assetCategoryConfig}
-        loadingState={assetCategoryLoading}
+        loadingState={assetModelLoading}
       />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}
-        selectedMaster="Asset Category"
+        selectedMaster="Asset Model"
         onSave={saveData}
         fields={fields}
         initialData={initialData}
         action={action}
         height="auto"
-        customUpdate={true}
+        
       />
     </>
   );

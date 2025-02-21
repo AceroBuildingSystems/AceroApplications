@@ -23,11 +23,39 @@ export const masterApi = baseApi.injectEndpoints({
       providesTags: ['Master'],
     }),
 
-    createMaster: builder.mutation<MasterApiResponse, any>({ // Use the MasterApiResponse type
+    createMaster: builder.mutation<MasterApiResponse, any>({
       query: (masterData) => ({
         url: 'master',
         method: 'POST',
-        body: masterData,
+        body: {
+          ...masterData,
+          action: 'create'
+        },
+      }),
+      invalidatesTags: ['Master'],
+    }),
+
+    updateMaster: builder.mutation<MasterApiResponse, any>({
+      query: (masterData) => ({
+        url: 'master',
+        method: 'POST',
+        body: {
+          ...masterData,
+          action: 'update'
+        },
+      }),
+      invalidatesTags: ['Master'],
+    }),
+
+    deleteMaster: builder.mutation<MasterApiResponse, { db: string; id: string }>({
+      query: ({ db, id }) => ({
+        url: 'master',
+        method: 'POST',
+        body: {
+          db,
+          action: 'delete',
+          id
+        },
       }),
       invalidatesTags: ['Master'],
     }),
@@ -38,4 +66,6 @@ export const masterApi = baseApi.injectEndpoints({
 export const {
   useGetMasterQuery,
   useCreateMasterMutation,
+  useUpdateMasterMutation,
+  useDeleteMasterMutation,
 } = masterApi;

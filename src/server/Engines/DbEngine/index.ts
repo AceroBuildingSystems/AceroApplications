@@ -14,11 +14,11 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   TeamMember,
   Incoterm,
   Sector,
-  ProposalRevisions,
-  Quotation,
-  Proposal,
-  Asset,
-  Vendor
+  ProductCategory,
+  Product,
+  Transaction,
+  Vendor,
+  Warehouse
 } from '@/models';
 
 
@@ -49,7 +49,6 @@ function getMongooseAdapter(): MongooseAdapter {
     CURRENCY_MASTER: Currency,
     CUSTOMER_MASTER: Customer,
     CUSTOMER_TYPE_MASTER: CustomerType,
-    CUSTOMER_CONTACT_MASTER: CustomerContact,
     INDUSTRY_TYPE_MASTER: IndustryType,
     BUILDING_TYPE_MASTER: BuildingType,
     PROJECT_TYPE_MASTER: ProjectType,
@@ -59,11 +58,11 @@ function getMongooseAdapter(): MongooseAdapter {
     APPROVAL_AUTHORITY_MASTER: ApprovalAuthority,
     INCOTERM_MASTER: Incoterm,
     SECTOR_MASTER: Sector,
-    PROPOSAL_REVISION_MASTER: ProposalRevisions,
-    PROPOSAL_MASTER: Proposal,
-    QUOTATION_MASTER: Quotation,
-    ASSET_MASTER: Asset,
     VENDOR_MASTER: Vendor,
+    PRODUCT_CATEGORY_MASTER: ProductCategory,
+    PRODUCT_MASTER: Product,
+    TRANSACTION_MASTER: Transaction,
+    WAREHOUSE_MASTER: Warehouse,
     });
   }
   return dbEngineInstance;

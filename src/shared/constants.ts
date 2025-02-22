@@ -1,38 +1,39 @@
 export const MONGO_MODELS = {
-    USER_MASTER: "USER_MASTER",
-    ORGANISATION_MASTER: "ORGANISATION_MASTER",
-    EMPLOYEE_TYPE_MASTER: "EMPLOYEE_TYPE_MASTER",
-    DEPARTMENT_MASTER: "DEPARTMENT_MASTER",
-    ROLE_MASTER: "ROLE_MASTER",
-    ACCESS_MASTER: "ACCESS_MASTER",
-    ADDRESS_MASTER: "ADDRESS_MASTER",
-    DESIGNATION_MASTER: "DESIGNATION_MASTER",
-    TEAM_MASTER: "TEAM_MASTER",
-    TEAM_MEMBER_MASTER: "TEAM_MEMBER_MASTER",
-    CONTINENT_MASTER: "CONTINENT_MASTER",
-    REGION_MASTER: "REGION_MASTER",
-    COUNTRY_MASTER: "COUNTRY_MASTER",
-    STATE_MASTER: "STATE_MASTER",
-    LOCATION_MASTER: "LOCATION_MASTER",
-    WAREHOUSE_MASTER: "WAREHOUSE_MASTER",
-    PRODUCT_CATEGORY_MASTER: "PRODUCT_CATEGORY_MASTER",
-    PRODUCT_MASTER: "PRODUCT_MASTER",
-    VENDOR_MASTER: "VENDOR_MASTER",
-    PURCHASE_ORDER_MASTER: "PURCHASE_ORDER_MASTER",
-    TRANSACTION_MASTER: "TRANSACTION_MASTER",
-    CUSTOMER_MASTER: "CUSTOMER_MASTER",
-    CUSTOMER_CONTACT_MASTER: "CUSTOMER_CONTACT_MASTER",
-    CUSTOMER_TYPE_MASTER: "CUSTOMER_TYPE_MASTER",
-    INDUSTRY_TYPE_MASTER: "INDUSTRY_TYPE_MASTER",
-    BUILDING_TYPE_MASTER: "BUILDING_TYPE_MASTER",
-    PROJECT_TYPE_MASTER: "PROJECT_TYPE_MASTER",
-    PAINT_TYPE_MASTER: "PAINT_TYPE_MASTER",
-    INCOTERM_MASTER: "INCOTERM_MASTER",
-    CURRENCY_MASTER: "CURRENCY_MASTER",
-    QUOTE_STATUS_MASTER: "QUOTE_STATUS_MASTER",
-    APPROVAL_AUTHORITY_MASTER: "APPROVAL_AUTHORITY_MASTER"
-  }as const;
+    USER_MASTER: "User",
+    ORGANISATION_MASTER: "Organisation",
+    EMPLOYEE_TYPE_MASTER: "EmployeeType",
+    DEPARTMENT_MASTER: "Department",
+    ROLE_MASTER: "Role",
+    ACCESS_MASTER: "Access",
+    ADDRESS_MASTER: "Address",
+    DESIGNATION_MASTER: "Designation",
+    TEAM_MASTER: "Team",
+    TEAM_MEMBER_MASTER: "TeamMember",
+    CONTINENT_MASTER: "Continent",
+    REGION_MASTER: "Region",
+    COUNTRY_MASTER: "Country",
+    STATE_MASTER: "State",
+    LOCATION_MASTER: "Location",
+    WAREHOUSE_MASTER: "Warehouse",
+    PRODUCT_CATEGORY_MASTER: "ProductCategory",
+    MODEL_MASTER: "ModelMaster", // Added for model master
+    SERIAL_NUMBER_MASTER: "SerialNumber", // Added for serial numbers
+    VENDOR_MASTER: "Vendor",
+    TRANSACTION_MASTER: "Transaction",
+    CUSTOMER_MASTER: "Customer",
+    CUSTOMER_CONTACT_MASTER: "CustomerContact",
+    CUSTOMER_TYPE_MASTER: "CustomerType",
+    INDUSTRY_TYPE_MASTER: "IndustryType",
+    BUILDING_TYPE_MASTER: "BuildingType",
+    PROJECT_TYPE_MASTER: "ProjectType",
+    PAINT_TYPE_MASTER: "PaintType",
+    INCOTERM_MASTER: "Incoterm",
+    CURRENCY_MASTER: "Currency",
+    QUOTE_STATUS_MASTER: "QuoteStatus",
+    APPROVAL_AUTHORITY_MASTER: "ApprovalAuthority",
+} as const;
 
+// Status Constants
 export const SUCCESS = "Success";
 export const FAILED = "Failed";
 export const PENDING = "Pending";
@@ -44,19 +45,21 @@ export const DRAFT = "Draft";
 export const SUBMITTED = "Submitted";
 export const ACTIVE = "Active";
 export const INACTIVE = "Inactive";
-export const BODY_REQUIRED = "Body is required";
-export const INVALID_ID = "Invalid ID"; 
-export const ERROR = "Error" 
-export const INSUFFIENT_DATA = "Insufficient data" 
-export const INVALID_REQUEST = " Invalid request"
-export const INVALID_EMAIL = "Invalid email"
 
+// Error Constants
+export const ERROR = "Error";
+export const INVALID_REQUEST = "Invalid Request";
+export const BODY_REQUIRED = "Request body is required";
+export const INSUFFIENT_DATA = "Insufficient data provided";
+
+// Role Constants
 export const ROLES = {
     SUPER_ADMIN: "Super Admin",
     ADMIN: "Admin",
     USER: "User",
 } as const;
 
+// Permission Constants
 export const PERMISSIONS = {
     CREATE: "Create",
     READ: "Read",

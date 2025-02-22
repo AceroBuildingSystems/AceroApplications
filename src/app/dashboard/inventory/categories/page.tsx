@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { Plus, Download, Upload, ArrowUpDown, Settings2, History } from 'lucide-react';
+import { Plus, ArrowUpDown, Settings2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -20,13 +20,13 @@ export default function CategoriesPage() {
         sort: { name: -1 },
     });
 
-    const { data: parentCategories } = useGetMasterQuery({
+    const { data: parentCategoriesResponse } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
         sort: { name: -1 },
     });
 
     const categories = response?.data || [];
-    const parents = parentCategories?.data || [];
+    const parentCategories = parentCategoriesResponse?.data || [];
 
     const [createMaster] = useCreateMasterMutation();
     const [isDialogOpen, setDialogOpen] = useState(false);
@@ -53,19 +53,26 @@ export default function CategoriesPage() {
             label: 'Parent Category',
             name: "parent",
             type: "select",
-            data: parents,
-            placeholder: 'Select Parent Category'
+            data: parentCategories,
+            placeholder: 'Select Parent Category (Optional)'
+        },
+        {
+            label: 'Description',
+            name: "description",
+            type: "textarea",
+            placeholder: 'Category Description'
         },
         {
             label: 'Status',
             name: "isActive",
             type: "select",
+            required: true,
             data: [
                 { _id: true, name: 'Active' },
                 { _id: false, name: 'Inactive' }
             ],
             placeholder: 'Select Status'
-        },
+        }
     ];
 
     const openDialog = (masterType: string) => {
@@ -85,7 +92,10 @@ export default function CategoriesPage() {
             filter: { "_id": formData._id },
             data: {
                 ...formData,
-                specificationTemplate: formData.specificationTemplate || { version: 1, fields: [] }
+                specificationTemplate: formData.specificationTemplate || {
+                    version: 1,
+                    fields: []
+                }
             },
         };
 
@@ -94,6 +104,11 @@ export default function CategoriesPage() {
         if ('data' in response && response.data?.status === SUCCESS) {
             toast.success(`Category ${action === 'Add' ? 'added' : 'updated'} successfully`);
             closeDialog();
+            
+            // Redirect to specification management if needed
+            if (action === 'Add') {
+                router.push(`/dashboard/inventory/categories/${response.data._id}/specifications`);
+            }
         }
 
         if ('error' in response && response.error && 'data' in response.error) {
@@ -191,6 +206,21 @@ export default function CategoriesPage() {
                 </div>
             ),
         },
+        {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }: { row: any }) => (
+                <div className="flex space-x-2">
+                    <button
+                        className="p-2 hover:bg-gray-100 rounded-full"
+                        onClick={() => router.push(`/dashboard/inventory/categories/${row.original._id}/specifications`)}
+                        title="Manage Specifications"
+                    >
+                        <Settings2 size={16} />
+                    </button>
+                </div>
+            ),
+        },
     ];
 
     const config = {
@@ -222,9 +252,7 @@ export default function CategoriesPage() {
             data: categories,
         },
         buttons: [
-            { label: 'Add Category', action: handleAdd, icon: Plus, className: 'bg-primary' },
-            { label: 'Import', action: () => {}, icon: Upload },
-            { label: 'Export', action: () => {}, icon: Download },
+            { label: 'Add Category', action: handleAdd, icon: Plus, className: 'bg-primary' }
         ]
     };
 

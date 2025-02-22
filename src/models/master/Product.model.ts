@@ -4,6 +4,7 @@ import { ProductDocument } from "@/types";
 const ProductSchema: Schema<ProductDocument> = new Schema({
     code: { type: String, required: true, unique: true },
     name: { type: String, required: true },
+    modelNumber: { type: String, required: true }, // Added model number field
     description: { type: String },
     category: {
         type: mongoose.Schema.Types.ObjectId,
@@ -45,7 +46,7 @@ const ProductSchema: Schema<ProductDocument> = new Schema({
                 autopopulate: true
             },
             quantity: { type: Number, default: 0 },
-            location: { type: String } // Specific location within warehouse (e.g., "Rack A-123")
+            location: { type: String } // Specific location within warehouse
         }]
     },
     // Asset specific fields
@@ -65,15 +66,7 @@ const ProductSchema: Schema<ProductDocument> = new Schema({
                 frequency: { type: Number }, // In days
                 lastMaintenance: { type: Date },
                 nextMaintenance: { type: Date }
-            },
-            history: [{
-                type: { type: String },
-                date: { type: Date },
-                description: { type: String },
-                cost: { type: Number },
-                performedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-                documents: [{ type: String }] // URLs to maintenance documents
-            }]
+            }
         }
     },
     // Common fields for both inventory and assets
@@ -134,7 +127,7 @@ ProductSchema.pre('save', async function(next) {
 });
 
 // Pre-save hook to update inventory quantities
-ProductSchema.pre('save', function(next) {
+ProductSchema.pre('save', async function(next) {
     if (this.isModified('inventory.warehouses')) {
         // Calculate total quantity across all warehouses
         const totalQty = (this.inventory?.warehouses || []).reduce((sum: number, w: { quantity?: number }) => {
@@ -143,7 +136,17 @@ ProductSchema.pre('save', function(next) {
 
         if (this.inventory) {
             this.inventory.totalQuantity = totalQty;
-            this.inventory.availableQuantity = totalQty - (this.inventory.reservedQuantity || 0);
+            
+            // For serialized products, get available count from SerialNumber collection
+            if (this.tracking.serialized) {
+                const availableCount = await mongoose.model('SerialNumber').countDocuments({
+                    product: this._id,
+                    status: 'AVAILABLE'
+                });
+                this.inventory.availableQuantity = availableCount;
+            } else {
+                this.inventory.availableQuantity = totalQty - (this.inventory.reservedQuantity || 0);
+            }
         }
     }
     next();

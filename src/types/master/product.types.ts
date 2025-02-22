@@ -1,15 +1,5 @@
 import mongoose from "mongoose";
 
-// Maintenance history entry type
-interface MaintenanceRecord {
-    type: string;
-    date: Date;
-    description: string;
-    cost: number;
-    performedBy: mongoose.ObjectId;
-    documents: string[];
-}
-
 // Document type
 interface ProductDocumentAttachment {
     type: string;
@@ -33,14 +23,11 @@ interface AssetDepreciation {
     usefulLife?: number;
 }
 
-// Asset maintenance type
-interface AssetMaintenance {
-    schedule: {
-        frequency?: number;
-        lastMaintenance?: Date;
-        nextMaintenance?: Date;
-    };
-    history: MaintenanceRecord[];
+// Asset maintenance schedule type
+interface AssetMaintenanceSchedule {
+    frequency?: number;
+    lastMaintenance?: Date;
+    nextMaintenance?: Date;
 }
 
 // Product specifications type
@@ -53,6 +40,7 @@ export interface ProductDocument {
     _id?: mongoose.ObjectId;
     code: string;
     name: string;
+    modelNumber: string; // Added model number
     description?: string;
     category: mongoose.ObjectId;
     specifications: ProductSpecifications;
@@ -76,7 +64,9 @@ export interface ProductDocument {
     // Asset specific fields
     asset?: {
         depreciation: AssetDepreciation;
-        maintenance: AssetMaintenance;
+        maintenance: {
+            schedule: AssetMaintenanceSchedule;
+        };
     };
     // Common fields
     vendor: mongoose.ObjectId;

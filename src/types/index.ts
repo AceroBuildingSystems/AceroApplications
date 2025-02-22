@@ -14,22 +14,24 @@ import { ProductCategoryDocument } from "./master/productCategory.types";
 import { ProductDocument } from "./master/product.types";
 import { TransactionDocument } from "./master/transaction.types";
 import { VendorDocument } from "./master/vendor.types";
+import { SerialNumberDocument } from "./master/serialNumber.types";
 
 export type {
-  UserDocument,
-  access,
-  address,
-  department,
-  organisation,
-  designation,
-  emailData,
-  role,
-  employeeType,
-  team,
-  teamMember,
-  WarehouseDocument,
-  ProductCategoryDocument,
-  ProductDocument,
-  TransactionDocument,
-  VendorDocument
+    UserDocument,
+    access,
+    address,
+    department,
+    organisation,
+    designation,
+    emailData,
+    role,
+    employeeType,
+    team,
+    teamMember,
+    WarehouseDocument,
+    ProductCategoryDocument,
+    ProductDocument,
+    TransactionDocument,
+    VendorDocument,
+    SerialNumberDocument
 };

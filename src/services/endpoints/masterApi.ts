@@ -1,6 +1,6 @@
 import { baseApi } from '../api';
 
-interface MasterApiResponse {
+export interface MasterApiResponse {
   status: string;
   message?: string;
   data?: any;
@@ -9,7 +9,7 @@ interface MasterApiResponse {
 
 export const masterApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMaster: builder.query<any[], { db: string; filter?: object; sort?: object; page?: number; limit?: number }>({
+    getMaster: builder.query<MasterApiResponse, { db: string; filter?: object; sort?: object; page?: number; limit?: number }>({
       query: ({ db, filter, sort, page, limit }) => {
         const params = new URLSearchParams();
         params.append('db', db);
@@ -19,11 +19,11 @@ export const masterApi = baseApi.injectEndpoints({
         limit && params.append('limit', limit.toString());
         return `master?${params.toString()}`;
       },
-      transformResponse: (response: any[]) => response,
+      transformResponse: (response: MasterApiResponse) => response,
       providesTags: ['Master'],
     }),
 
-    createMaster: builder.mutation<MasterApiResponse, any>({ // Use the MasterApiResponse type
+    createMaster: builder.mutation<MasterApiResponse, any>({
       query: (masterData) => ({
         url: 'master',
         method: 'POST',

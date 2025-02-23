@@ -9,6 +9,10 @@ import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { MONGO_MODELS } from '@/shared/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface CategoryFormData {
     _id?: string;
@@ -28,68 +32,72 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
         setSpecs(accessData || {});
     }, [accessData]);
 
-    const updateSpecs = (newSpecs: Record<string, "string" | "number" | "boolean">) => {
-        setSpecs(newSpecs);
-        handleChange({ target: { value: newSpecs } }, "specsRequired");
-    };
-
     return (
-        <div className="space-y-4">
-            <div className="space-y-2">
-                {Object.entries(specs).map(([key, type], index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 border rounded">
-                        <span className="flex-1">{key}</span>
-                        <span className="text-gray-500">{String(type)}</span>
-                        <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => {
-                                const newSpecs = { ...specs };
-                                delete newSpecs[key];
-                                updateSpecs(newSpecs);
-                            }}
-                        >
-                            Remove
-                        </Button>
-                    </div>
-                ))}
-            </div>
-            <div className="flex gap-2">
-                <Input
-                    type="text"
-                    value={newSpecName}
-                    onChange={(e) => setNewSpecName(e.target.value)}
-                    placeholder="Specification name"
-                    className="flex-1"
-                />
-                <select
-                    value={newSpecType}
-                    onChange={(e) => setNewSpecType(e.target.value as "string" | "number" | "boolean")}
-                    className="px-2 py-1 border rounded"
-                >
-                    <option value="string">Text</option>
-                    <option value="number">Number</option>
-                    <option value="boolean">Yes/No</option>
-                </select>
-                <Button
-                    type="button"
-                    onClick={() => {
-                        if (newSpecName.trim()) {
-                            updateSpecs({
-                                ...specs,
-                                [newSpecName]: newSpecType
-                            });
-                            setNewSpecName('');
-                            setNewSpecType("string");
-                        }
-                    }}
-                    disabled={!newSpecName.trim()}
-                >
-                    Add Specification
-                </Button>
-            </div>
-        </div>
+        <Card>
+            <CardContent className="pt-6 space-y-4">
+                <div className="space-y-2">
+                    {Object.entries(specs).map(([key, type], index) => (
+                        <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                            <span className="flex-1 font-medium">{key}</span>
+                            <Badge variant="secondary">{String(type)}</Badge>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                    const newSpecs = { ...specs };
+                                    delete newSpecs[key];
+                                    setSpecs(newSpecs);
+                                    handleChange({ target: { value: newSpecs } }, "specsRequired");
+                                }}
+                            >
+                                Remove
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex gap-2">
+                    <Input
+                        type="text"
+                        value={newSpecName}
+                        onChange={(e) => setNewSpecName(e.target.value)}
+                        placeholder="Specification name"
+                        className="flex-1"
+                    />
+                    <Select
+                        value={newSpecType}
+                        onValueChange={(value) => setNewSpecType(value as "string" | "number" | "boolean")}
+                    >
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="string">Text</SelectItem>
+                            <SelectItem value="number">Number</SelectItem>
+                            <SelectItem value="boolean">Yes/No</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button
+                        type="button"
+                        onClick={() => {
+                            if (newSpecName.trim()) {
+                                const newSpecs = {
+                                    ...specs,
+                                    [newSpecName]: newSpecType
+                                };
+                                setSpecs(newSpecs);
+                                handleChange({ target: { value: newSpecs } }, "specsRequired");
+                                setNewSpecName('');
+                                setNewSpecType("string");
+                            }
+                        }}
+                        disabled={!newSpecName.trim()}
+                    >
+                        Add
+                    </Button>
+                </div>
+            </CardContent>
+        </Card>
     );
 };
 
@@ -108,7 +116,7 @@ const ProductCategoriesPage = () => {
 
     const [createMaster] = useCreateMasterMutation();
 
-    // Form fields configuration
+    // Form fields configuration with validation
     const formFields = [
         {
             name: "_id",
@@ -119,26 +127,45 @@ const ProductCategoriesPage = () => {
             label: "Name",
             type: "text",
             required: true,
-            placeholder: "Enter category name"
+            placeholder: "Enter category name",
+            validate: (value: string) => {
+                if (value.length < 3) return "Name must be at least 3 characters";
+                if (value.length > 50) return "Name must be less than 50 characters";
+                return undefined;
+            }
         },
         {
             name: "code",
             label: "Code",
             type: "text",
             required: true,
-            placeholder: "Enter category code"
+            placeholder: "Enter category code",
+            validate: (value: string) => {
+                if (!/^[A-Z0-9-]+$/.test(value)) return "Code must contain only uppercase letters, numbers, and hyphens";
+                if (value.length < 2) return "Code must be at least 2 characters";
+                if (value.length > 20) return "Code must be less than 20 characters";
+                return undefined;
+            }
         },
         {
             name: "description",
             label: "Description",
             type: "textarea",
-            placeholder: "Enter category description"
+            placeholder: "Enter category description",
+            validate: (value: string) => {
+                if (value && value.length > 500) return "Description must be less than 500 characters";
+                return undefined;
+            }
         },
         {
             name: "specsRequired",
             label: "Required Specifications",
             type: "custom",
-            CustomComponent: SpecificationsComponent
+            CustomComponent: SpecificationsComponent,
+            validate: (value: Record<string, string>) => {
+                if (Object.keys(value).length === 0) return "At least one specification is required";
+                return undefined;
+            }
         },
         {
             name: "isActive",
@@ -170,10 +197,12 @@ const ProductCategoriesPage = () => {
                 const specs = row.original.specsRequired as Record<string, string>;
                 if (!specs) return null;
                 return (
-                    <div className="max-w-[300px] overflow-hidden text-ellipsis">
-                        {Object.entries(specs).map(([key, type]) => 
-                            `${key}: ${String(type)}`
-                        ).join(", ")}
+                    <div className="flex flex-wrap gap-1 max-w-[300px]">
+                        {Object.entries(specs).map(([key, type], index) => (
+                            <Badge key={index} variant="outline">
+                                {key}: {String(type)}
+                            </Badge>
+                        ))}
                     </div>
                 );
             }
@@ -182,9 +211,9 @@ const ProductCategoriesPage = () => {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
-                <div className={`px-2 py-1 rounded-full text-center ${row.original.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <Badge variant={row.original.isActive ? "default" : "destructive"}>
                     {row.original.isActive ? 'Active' : 'Inactive'}
-                </div>
+                </Badge>
             )
         }
     ];

@@ -7,6 +7,12 @@ import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { MONGO_MODELS } from '@/shared/constants';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProductFormData {
     _id?: string;
@@ -52,7 +58,7 @@ const ProductsPage = () => {
 
     const [createMaster] = useCreateMasterMutation();
 
-    // Form fields configuration
+    // Form fields configuration with validation
     const formFields = [
         {
             name: "_id",
@@ -63,14 +69,25 @@ const ProductsPage = () => {
             label: "Name",
             type: "text",
             required: true,
-            placeholder: "Enter product name"
+            placeholder: "Enter product name",
+            validate: (value: string) => {
+                if (value.length < 3) return "Name must be at least 3 characters";
+                if (value.length > 100) return "Name must be less than 100 characters";
+                return undefined;
+            }
         },
         {
             name: "code",
             label: "Code",
             type: "text",
             required: true,
-            placeholder: "Enter product code"
+            placeholder: "Enter product code",
+            validate: (value: string) => {
+                if (!/^[A-Z0-9-]+$/.test(value)) return "Code must contain only uppercase letters, numbers, and hyphens";
+                if (value.length < 2) return "Code must be at least 2 characters";
+                if (value.length > 20) return "Code must be less than 20 characters";
+                return undefined;
+            }
         },
         {
             name: "category",
@@ -87,51 +104,99 @@ const ProductsPage = () => {
             label: "Brand",
             type: "text",
             required: true,
-            placeholder: "Enter brand name"
+            placeholder: "Enter brand name",
+            validate: (value: string) => {
+                if (value.length < 2) return "Brand must be at least 2 characters";
+                if (value.length > 50) return "Brand must be less than 50 characters";
+                return undefined;
+            }
         },
         {
             name: "model",
             label: "Model",
             type: "text",
             required: true,
-            placeholder: "Enter model number"
+            placeholder: "Enter model number",
+            validate: (value: string) => {
+                if (value.length < 2) return "Model must be at least 2 characters";
+                if (value.length > 50) return "Model must be less than 50 characters";
+                return undefined;
+            }
         },
         {
             name: "description",
             label: "Description",
             type: "textarea",
-            placeholder: "Enter product description"
+            placeholder: "Enter product description",
+            validate: (value: string) => {
+                if (value && value.length > 1000) return "Description must be less than 1000 characters";
+                return undefined;
+            }
         },
         {
             name: "unitOfMeasure",
             label: "Unit of Measure",
             type: "text",
             required: true,
-            placeholder: "Enter unit of measure"
+            placeholder: "Enter unit of measure",
+            validate: (value: string) => {
+                if (value.length < 1) return "Unit of measure is required";
+                if (value.length > 20) return "Unit of measure must be less than 20 characters";
+                return undefined;
+            }
         },
         {
             name: "minimumStockLevel",
             label: "Minimum Stock Level",
             type: "number",
-            placeholder: "Enter minimum stock level"
+            placeholder: "Enter minimum stock level",
+            validate: (value: number, formData: ProductFormData) => {
+                if (value < 0) return "Minimum stock level cannot be negative";
+                if (formData.maximumStockLevel && value >= formData.maximumStockLevel) {
+                    return "Minimum stock level must be less than maximum stock level";
+                }
+                return undefined;
+            }
         },
         {
             name: "maximumStockLevel",
             label: "Maximum Stock Level",
             type: "number",
-            placeholder: "Enter maximum stock level"
+            placeholder: "Enter maximum stock level",
+            validate: (value: number, formData: ProductFormData) => {
+                if (value < 0) return "Maximum stock level cannot be negative";
+                if (formData.minimumStockLevel && value <= formData.minimumStockLevel) {
+                    return "Maximum stock level must be greater than minimum stock level";
+                }
+                return undefined;
+            }
         },
         {
             name: "reorderPoint",
             label: "Reorder Point",
             type: "number",
-            placeholder: "Enter reorder point"
+            placeholder: "Enter reorder point",
+            validate: (value: number, formData: ProductFormData) => {
+                if (value < 0) return "Reorder point cannot be negative";
+                if (formData.minimumStockLevel && value < formData.minimumStockLevel) {
+                    return "Reorder point should be at least the minimum stock level";
+                }
+                if (formData.maximumStockLevel && value > formData.maximumStockLevel) {
+                    return "Reorder point cannot be greater than maximum stock level";
+                }
+                return undefined;
+            }
         },
         {
             name: "unitCost",
             label: "Unit Cost",
             type: "number",
-            placeholder: "Enter unit cost"
+            placeholder: "Enter unit cost",
+            validate: (value: number) => {
+                if (value < 0) return "Unit cost cannot be negative";
+                if (value > 999999999) return "Unit cost is too high";
+                return undefined;
+            }
         },
         {
             name: "vendor",
@@ -150,7 +215,13 @@ const ProductsPage = () => {
             data: vendorsResponse?.data?.map((vendor: any) => ({
                 label: vendor.name,
                 value: vendor._id
-            })) || []
+            })) || [],
+            validate: (value: string[], formData: ProductFormData) => {
+                if (value.includes(formData.vendor)) {
+                    return "Primary vendor cannot be an alternate vendor";
+                }
+                return undefined;
+            }
         },
         {
             name: "isActive",
@@ -174,7 +245,11 @@ const ProductsPage = () => {
         {
             accessorKey: "category",
             header: "Category",
-            cell: ({ row }: any) => row.original.category?.name || ''
+            cell: ({ row }: any) => (
+                <Badge variant="outline">
+                    {row.original.category?.name || ''}
+                </Badge>
+            )
         },
         {
             accessorKey: "brand",
@@ -187,15 +262,19 @@ const ProductsPage = () => {
         {
             accessorKey: "vendor",
             header: "Primary Vendor",
-            cell: ({ row }: any) => row.original.vendor?.name || ''
+            cell: ({ row }: any) => (
+                <Badge variant="secondary">
+                    {row.original.vendor?.name || ''}
+                </Badge>
+            )
         },
         {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
-                <div className={`px-2 py-1 rounded-full text-center ${row.original.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <Badge variant={row.original.isActive ? "default" : "destructive"}>
                     {row.original.isActive ? 'Active' : 'Inactive'}
-                </div>
+                </Badge>
             )
         }
     ];

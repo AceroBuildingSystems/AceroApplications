@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus, UserPlus, RotateCcw } from 'lucide-react';
+import { Plus, UserPlus, RotateCcw, History } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -10,6 +10,12 @@ import { MONGO_MODELS } from '@/shared/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 interface AssignmentFormData {
     _id: string;
@@ -19,12 +25,125 @@ interface AssignmentFormData {
     remarks?: string;
 }
 
+interface HistoryDialogProps {
+    isOpen: boolean;
+    onClose: () => void;
+    asset: any;
+}
+
+const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
+    if (!asset) return null;
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-3xl">
+                <DialogHeader>
+                    <DialogTitle>Assignment History - {asset.serialNumber}</DialogTitle>
+                </DialogHeader>
+                <div className="mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-medium">Current Assignment</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            {asset.currentAssignment ? (
+                                <div className="space-y-2">
+                                    <div className="flex justify-between">
+                                        <span className="font-medium">Assigned To:</span>
+                                        <span>{asset.currentAssignment.assignedTo}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="font-medium">Type:</span>
+                                        <Badge>{asset.currentAssignment.assignedType}</Badge>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="font-medium">Date:</span>
+                                        <span>{new Date(asset.currentAssignment.assignedDate).toLocaleDateString()}</span>
+                                    </div>
+                                    {asset.currentAssignment.location && (
+                                        <div className="flex justify-between">
+                                            <span className="font-medium">Location:</span>
+                                            <span>{asset.currentAssignment.location}</span>
+                                        </div>
+                                    )}
+                                    {asset.currentAssignment.remarks && (
+                                        <div className="flex justify-between">
+                                            <span className="font-medium">Remarks:</span>
+                                            <span>{asset.currentAssignment.remarks}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="text-center text-muted-foreground">Not currently assigned</div>
+                            )}
+                        </CardContent>
+                    </Card>
+
+                    <Separator className="my-4" />
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-sm font-medium">Assignment History</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ScrollArea className="h-[300px] pr-4">
+                                <div className="space-y-4">
+                                    {asset.assignmentHistory?.length > 0 ? (
+                                        asset.assignmentHistory.map((history: any, index: number) => (
+                                            <div key={index} className="p-4 border rounded-lg">
+                                                <div className="space-y-2">
+                                                    <div className="flex justify-between">
+                                                        <span className="font-medium">Assigned To:</span>
+                                                        <span>{history.assignedTo}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="font-medium">Type:</span>
+                                                        <Badge>{history.assignedType}</Badge>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="font-medium">Assigned Date:</span>
+                                                        <span>{new Date(history.assignedDate).toLocaleDateString()}</span>
+                                                    </div>
+                                                    <div className="flex justify-between">
+                                                        <span className="font-medium">Returned Date:</span>
+                                                        <span>{new Date(history.returnedDate).toLocaleDateString()}</span>
+                                                    </div>
+                                                    {history.location && (
+                                                        <div className="flex justify-between">
+                                                            <span className="font-medium">Location:</span>
+                                                            <span>{history.location}</span>
+                                                        </div>
+                                                    )}
+                                                    {history.remarks && (
+                                                        <div className="flex justify-between">
+                                                            <span className="font-medium">Remarks:</span>
+                                                            <span>{history.remarks}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center text-muted-foreground">No assignment history</div>
+                                    )}
+                                </div>
+                            </ScrollArea>
+                        </CardContent>
+                    </Card>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
 const AssetManagementPage = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Assign" | "Return">("Assign");
     const [selectedItem, setSelectedItem] = useState<any>(null);
+    const [assignmentType, setAssignmentType] = useState<'user' | 'department'>('user');
 
     // API hooks
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
@@ -44,9 +163,10 @@ const AssetManagementPage = () => {
     });
 
     const [createMaster] = useCreateMasterMutation();
+    const assignToTypes  = [{ _id: "user", name: "user"}, { _id: "department", name: "department" }];
 
     // Form fields for assignment
-    const assignmentFields = [
+    const formFields = [
         {
             name: "_id",
             type: "hidden"
@@ -56,14 +176,15 @@ const AssetManagementPage = () => {
             label: "Assign To",
             type: "select",
             required: true,
-            options: ["user", "department"]
+            data:assignToTypes,
+            onChange: (value: string) => setAssignmentType(value as 'user' | 'department')
         },
         {
             name: "assignedTo",
             label: "Select User/Department",
             type: "select",
             required: true,
-            data: selectedItem?.assignedType === 'user' 
+            data: assignmentType === 'user' 
                 ? usersResponse?.data?.map((user: any) => ({
                     name: `${user.firstName} ${user.lastName}`,
                     _id: user._id
@@ -71,19 +192,31 @@ const AssetManagementPage = () => {
                 : departmentsResponse?.data?.map((dept: any) => ({
                     name: dept.name,
                     _id: dept._id
-                })) || []
+                })) || [],
+            validate: (value: string) => {
+                if (!value) return `Please select a ${assignmentType}`;
+                return undefined;
+            }
         },
         {
             name: "location",
             label: "Location",
             type: "text",
-            placeholder: "Enter location"
+            placeholder: "Enter location",
+            validate: (value: string) => {
+                if (value && value.length > 100) return "Location must be less than 100 characters";
+                return undefined;
+            }
         },
         {
             name: "remarks",
             label: "Remarks",
             type: "textarea",
-            placeholder: "Enter any remarks"
+            placeholder: "Enter any remarks",
+            validate: (value: string) => {
+                if (value && value.length > 500) return "Remarks must be less than 500 characters";
+                return undefined;
+            }
         }
     ];
 
@@ -107,14 +240,14 @@ const AssetManagementPage = () => {
             accessorKey: "status",
             header: "Status",
             cell: ({ row }: any) => (
-                <div className={`px-2 py-1 rounded-full text-center ${
-                    row.original.status === 'available' ? 'bg-green-100 text-green-800' :
-                    row.original.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                    row.original.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                }`}>
+                <Badge variant={
+                    row.original.status === 'available' ? "default" :
+                    row.original.status === 'assigned' ? "secondary" :
+                    row.original.status === 'maintenance' ? "outline" :
+                    "destructive"
+                }>
                     {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
-                </div>
+                </Badge>
             )
         },
         {
@@ -126,7 +259,7 @@ const AssetManagementPage = () => {
                 return (
                     <div>
                         <div>{assignment.assignedTo}</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-muted-foreground">
                             {new Date(assignment.assignedDate).toLocaleDateString()}
                         </div>
                     </div>
@@ -161,6 +294,17 @@ const AssetManagementPage = () => {
                             <RotateCcw className="h-4 w-4" />
                         </Button>
                     )}
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedItem(row.original);
+                            setIsHistoryOpen(true);
+                        }}
+                    >
+                        <History className="h-4 w-4" />
+                    </Button>
                 </div>
             )
         }
@@ -246,7 +390,8 @@ const AssetManagementPage = () => {
             data: (assetsResponse?.data || []) as any[],
             onRowClick: (row: any) => {
                 // Show assignment history or details
-                console.log('Asset details:', row.original);
+                setSelectedItem(row.original);
+                setIsHistoryOpen(true);
             }
         }
     };
@@ -266,11 +411,17 @@ const AssetManagementPage = () => {
                 closeDialog={() => setIsDialogOpen(false)}
                 selectedMaster="Asset Assignment"
                 onSave={handleSave}
-                fields={assignmentFields}
+                fields={formFields}
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
                 width="full"
+            />
+
+            <HistoryDialog
+                isOpen={isHistoryOpen}
+                onClose={() => setIsHistoryOpen(false)}
+                asset={selectedItem}
             />
         </div>
     );

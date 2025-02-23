@@ -14,6 +14,7 @@ import { Combobox } from "../ui/ComboBoxWrapper";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
 import MultipleSelector from "../ui/multiple-selector";
+import { toast } from "react-toastify";
 
 interface Field {
   name: string;
@@ -26,13 +27,20 @@ interface Field {
   data?: any[];
   options?: string[];
   onChange?: (value: string) => void;
+  validate?: (value: any, formData?: any) => string | undefined;
   CustomComponent?: React.ComponentType<{
     accessData: any;
     handleChange: (e: { target: { value: any } }, fieldName: string) => void;
   }>;
 }
 
-interface DynamicDialogProps<T> {
+interface BaseFormData {
+  addedBy?: string;
+  updatedBy?: string;
+  [key: string]: any;
+}
+
+interface DynamicDialogProps<T extends BaseFormData> {
   isOpen: boolean;
   closeDialog: () => void;
   selectedMaster: string;
@@ -44,7 +52,7 @@ interface DynamicDialogProps<T> {
   width?: string;
 }
 
-function DynamicDialog<T extends Record<string, any>>({
+function DynamicDialog<T extends BaseFormData>({
   isOpen,
   closeDialog,
   selectedMaster,
@@ -57,11 +65,12 @@ function DynamicDialog<T extends Record<string, any>>({
 }: DynamicDialogProps<T>) {
   const { user } = useUserAuthorised();
   const [formData, setFormData] = useState<Partial<T>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const formattedData = Object.keys(initialData).reduce((acc: Record<string, any>, key: string) => {
       if (typeof initialData[key] === "object" && initialData[key]?._id) {
-        // If the field is an object with an _id, store the _id
         acc[key] = initialData[key]._id;
       } else {
         acc[key] = initialData[key];
@@ -70,6 +79,7 @@ function DynamicDialog<T extends Record<string, any>>({
     }, {});
     
     setFormData(formattedData as Partial<T>);
+    setErrors({});
   }, [initialData]);
   
   // Handle form data changes
@@ -84,9 +94,9 @@ function DynamicDialog<T extends Record<string, any>>({
     let value: any;
 
     if (type === "multiselect") {
-      value = (e as any[]).map((item: { value: any }) => item.value); // Store only `_id`s
+      value = (e as any[]).map((item: { value: any }) => item.value);
     } else if (type === "select") {
-      value = e; // Use the _id directly
+      value = e;
     } else if (e === null) {
       value = null;
     } else {
@@ -96,9 +106,9 @@ function DynamicDialog<T extends Record<string, any>>({
     setFormData((prev) => {
       let formattedValue = value;
       if (format === "ObjectId") {
-        formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+        formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null;
       } else if (format === "Date") {
-        formattedValue = value ? new Date(value).toISOString() : null; // Convert to ISO string
+        formattedValue = value ? new Date(value).toISOString() : null;
       }
       
       const updatedFormData = {
@@ -111,30 +121,79 @@ function DynamicDialog<T extends Record<string, any>>({
         field.onChange(formattedValue);
       }
 
+      // Clear error when field is changed
+      if (errors[fieldName]) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[fieldName];
+          return newErrors;
+        });
+      }
+
       return updatedFormData;
     });
+  };
+
+  // Validate form
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    fields.forEach(field => {
+      const value = formData[field.name];
+
+      // Required field validation
+      if (field.required && (value === undefined || value === null || value === "")) {
+        newErrors[field.name] = `${field.label || field.name} is required`;
+      }
+
+      // Custom field validation
+      if (field.validate && value !== undefined) {
+        const error = field.validate(value, formData);
+        if (error) {
+          newErrors[field.name] = error;
+        }
+      }
+
+      // Format validation
+      if (field.format === "ObjectId" && value && !mongoose.Types.ObjectId.isValid(value)) {
+        newErrors[field.name] = `Invalid ${field.label || field.name} format`;
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   // handle close
   const handleClose = () => {
     setFormData({});
+    setErrors({});
     closeDialog();
   };
 
   // Handle form submission
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      toast.error("Please fix the form errors before submitting");
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       const updatedData = {
         ...formData,
         addedBy: user._id,
         updatedBy: user._id
-      };
+      } as T;
 
-      // Cast to T since we know the form data matches the type
-      await onSave({ formData: updatedData as unknown as T, action });
-      closeDialog();
+      await onSave({ formData: updatedData, action });
+      toast.success(`${selectedMaster} ${action === 'Add' ? 'created' : 'updated'} successfully`);
+      handleClose();
     } catch (error) {
       console.error("Error saving data:", error);
+      toast.error(`Error ${action === 'Add' ? 'creating' : 'updating'} ${selectedMaster}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -156,54 +215,80 @@ function DynamicDialog<T extends Record<string, any>>({
                         switch (field.type) {
                           case "multiselect":
                             return (
-                              <MultipleSelector
-                                value={((formData[field.name] || []) as string[]).map((id) => ({
-                                  value: id,
-                                  label: field.data?.find((option) => option.value === id)?.label || "Unknown",
-                                }))}
-                                onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
-                                defaultOptions={field.data}
-                                placeholder={field.placeholder || "Select options..."}
-                              />
+                              <div>
+                                <MultipleSelector
+                                  value={((formData[field.name] || []) as string[]).map((id) => ({
+                                    value: id,
+                                    label: field.data?.find((option) => option.value === id)?.label || "Unknown",
+                                  }))}
+                                  onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
+                                  defaultOptions={field.data}
+                                  placeholder={field.placeholder || "Select options..."}
+                                />
+                                {errors[field.name] && (
+                                  <span className="text-sm text-destructive">{errors[field.name]}</span>
+                                )}
+                              </div>
                             );
                           case "textarea":
                             return (
-                              <textarea
-                                rows={3}
-                                onChange={(e) => handleChange(e, field.name, field.format)}
-                                value={formData[field.name] || ""}
-                                placeholder={field.placeholder || ""}
-                              />
+                              <div>
+                                <textarea
+                                  rows={3}
+                                  onChange={(e) => handleChange(e, field.name, field.format)}
+                                  value={formData[field.name] || ""}
+                                  placeholder={field.placeholder || ""}
+                                  className={errors[field.name] ? "border-destructive" : ""}
+                                />
+                                {errors[field.name] && (
+                                  <span className="text-sm text-destructive">{errors[field.name]}</span>
+                                )}
+                              </div>
                             );
                           case "select":
                             return (
-                              <Combobox
-                                field={field}
-                                formData={formData}
-                                handleChange={handleChange}
-                                placeholder={field.placeholder || ""}
-                              />
+                              <div>
+                                <Combobox
+                                  field={field}
+                                  formData={formData}
+                                  handleChange={handleChange}
+                                  placeholder={field.placeholder || ""}
+                                />
+                                {errors[field.name] && (
+                                  <span className="text-sm text-destructive">{errors[field.name]}</span>
+                                )}
+                              </div>
                             );
                           case "date":
                             return (
-                              <DatePicker
-                                currentDate={formData[field.name]}
-                                handleChange={(selectedDate: Date | null) => {
-                                  handleChange(
-                                    { target: { value: selectedDate?.toISOString() || "" } },
-                                    field.name,
-                                    field.format
-                                  );
-                                }}
-                                placeholder={field.placeholder}
-                              />
+                              <div>
+                                <DatePicker
+                                  currentDate={formData[field.name]}
+                                  handleChange={(selectedDate: Date | null) => {
+                                    handleChange(
+                                      { target: { value: selectedDate?.toISOString() || "" } },
+                                      field.name,
+                                      field.format
+                                    );
+                                  }}
+                                  placeholder={field.placeholder}
+                                />
+                                {errors[field.name] && (
+                                  <span className="text-sm text-destructive">{errors[field.name]}</span>
+                                )}
+                              </div>
                             );
                           case "custom":
                             return field.CustomComponent ? (
-                              <field.CustomComponent 
-                                accessData={formData[field.name]} 
-                                handleChange={handleChange}
-                              />
+                              <div>
+                                <field.CustomComponent 
+                                  accessData={formData[field.name]} 
+                                  handleChange={handleChange}
+                                />
+                                {errors[field.name] && (
+                                  <span className="text-sm text-destructive">{errors[field.name]}</span>
+                                )}
+                              </div>
                             ) : null;
                           case "hidden":
                             return (
@@ -215,14 +300,20 @@ function DynamicDialog<T extends Record<string, any>>({
                             );
                           default:
                             return (
-                              <Input
-                                type={field.type}
-                                onChange={(e) => handleChange(e, field.name, field.format)}
-                                value={formData[field.name] || ""}
-                                readOnly={field.readOnly}
-                                placeholder={field.placeholder || ""}
-                                required={field.required || false}
-                              />
+                              <div>
+                                <Input
+                                  type={field.type}
+                                  onChange={(e) => handleChange(e, field.name, field.format)}
+                                  value={formData[field.name] || ""}
+                                  readOnly={field.readOnly}
+                                  placeholder={field.placeholder || ""}
+                                  required={field.required || false}
+                                  className={errors[field.name] ? "border-destructive" : ""}
+                                />
+                                {errors[field.name] && (
+                                  <span className="text-sm text-destructive">{errors[field.name]}</span>
+                                )}
+                              </div>
                             );
                         }
                       })()
@@ -235,12 +326,18 @@ function DynamicDialog<T extends Record<string, any>>({
         </div>
 
         <DialogFooter>
-          <Button variant="secondary" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          {action === "Add" && <Button onClick={handleSubmit}>Save</Button>}
+          {action === "Add" && (
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save"}
+            </Button>
+          )}
           {action === "Update" && (
-            <Button onClick={handleSubmit}>Update</Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update"}
+            </Button>
           )}
         </DialogFooter>
       </DialogContent>

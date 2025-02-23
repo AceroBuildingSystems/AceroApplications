@@ -10,6 +10,10 @@ import { MONGO_MODELS } from '@/shared/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 interface AssetFormData {
     _id?: string;
@@ -44,52 +48,62 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedProduct }: 
     }, [accessData]);
 
     if (!selectedProduct?.category?.specsRequired) {
-        return <div>Please select a product first</div>;
+        return (
+            <Card>
+                <CardContent className="pt-6">
+                    <div className="text-center text-muted-foreground">
+                        Please select a product first
+                    </div>
+                </CardContent>
+            </Card>
+        );
     }
 
     return (
-        <div className="space-y-2">
-            {Object.entries(selectedProduct.category.specsRequired).map(([key, type]) => (
-                <div key={key} className="flex gap-2 items-center">
-                    <label className="w-1/3">{key}:</label>
-                    {type === "boolean" ? (
-                        <Select
-                            value={String(specs[key] || "false")}
-                            onValueChange={(val) => {
-                                const newSpecs = {
-                                    ...specs,
-                                    [key]: val === "true"
-                                };
-                                setSpecs(newSpecs);
-                                handleChange({ target: { value: newSpecs } }, "specifications");
-                            }}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select value" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="true">Yes</SelectItem>
-                                <SelectItem value="false">No</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    ) : (
-                        <Input
-                            type={type === "number" ? "number" : "text"}
-                            value={String(specs[key] || "")}
-                            onChange={(e) => {
-                                const newSpecs = {
-                                    ...specs,
-                                    [key]: type === "number" ? Number(e.target.value) : e.target.value
-                                };
-                                setSpecs(newSpecs);
-                                handleChange({ target: { value: newSpecs } }, "specifications");
-                            }}
-                            className="flex-1"
-                        />
-                    )}
-                </div>
-            ))}
-        </div>
+        <Card>
+            <CardContent className="pt-6 space-y-4">
+                {Object.entries(selectedProduct.category.specsRequired).map(([key, type]) => (
+                    <div key={key} className="flex gap-2 items-center">
+                        <label className="w-1/3 font-medium">{key}:</label>
+                        {type === "boolean" ? (
+                            <Select
+                                value={String(specs[key] || "false")}
+                                onValueChange={(val) => {
+                                    const newSpecs = {
+                                        ...specs,
+                                        [key]: val === "true"
+                                    };
+                                    setSpecs(newSpecs);
+                                    handleChange({ target: { value: newSpecs } }, "specifications");
+                                }}
+                            >
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Select value" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="true">Yes</SelectItem>
+                                    <SelectItem value="false">No</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <Input
+                                type={type === "number" ? "number" : "text"}
+                                value={String(specs[key] || "")}
+                                onChange={(e) => {
+                                    const newSpecs = {
+                                        ...specs,
+                                        [key]: type === "number" ? Number(e.target.value) : e.target.value
+                                    };
+                                    setSpecs(newSpecs);
+                                    handleChange({ target: { value: newSpecs } }, "specifications");
+                                }}
+                                className="flex-1"
+                            />
+                        )}
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
     );
 };
 
@@ -141,7 +155,7 @@ const AssetsPage = () => {
         }
     };
 
-    // Form fields configuration
+    // Form fields configuration with validation
     const formFields = [
         {
             name: "_id",
@@ -152,7 +166,19 @@ const AssetsPage = () => {
             label: "Serial Number",
             type: "text",
             required: true,
-            placeholder: "Enter serial number"
+            placeholder: "Enter serial number",
+            validate: (value: string) => {
+                if (!/^[A-Z0-9-]+$/.test(value)) {
+                    return "Serial number must contain only uppercase letters, numbers, and hyphens";
+                }
+                if (value.length < 4) {
+                    return "Serial number must be at least 4 characters";
+                }
+                if (value.length > 50) {
+                    return "Serial number must be less than 50 characters";
+                }
+                return undefined;
+            }
         },
         {
             name: "product",
@@ -179,20 +205,47 @@ const AssetsPage = () => {
             name: "specifications",
             label: "Specifications",
             type: "custom",
-            CustomComponent: (props: any) => <SpecificationsComponent {...props} selectedProduct={selectedProduct} />
+            CustomComponent: (props: any) => <SpecificationsComponent {...props} selectedProduct={selectedProduct} />,
+            validate: (value: Record<string, any>, formData: AssetFormData) => {
+                if (!selectedProduct?.category?.specsRequired) return undefined;
+                
+                const missingSpecs = Object.keys(selectedProduct.category.specsRequired)
+                    .filter(key => !value[key] && value[key] !== false && value[key] !== 0);
+                
+                if (missingSpecs.length > 0) {
+                    return `Missing specifications: ${missingSpecs.join(", ")}`;
+                }
+                return undefined;
+            }
         },
         {
             name: "purchaseDate",
             label: "Purchase Date",
             type: "date",
-            required: true
+            required: true,
+            validate: (value: string) => {
+                const purchaseDate = new Date(value);
+                if (purchaseDate > new Date()) {
+                    return "Purchase date cannot be in the future";
+                }
+                return undefined;
+            }
         },
         {
             name: "purchasePrice",
             label: "Purchase Price",
             type: "number",
             required: true,
-            placeholder: "Enter purchase price"
+            placeholder: "Enter purchase price",
+            validate: (value: number) => {
+                if (value <= 0) {
+                    return "Purchase price must be greater than 0";
+                }
+                if (value > 999999999) {
+                    return "Purchase price is too high";
+                }
+                return undefined;
+            }
         },
         {
             name: "vendor",
@@ -209,38 +262,93 @@ const AssetsPage = () => {
             label: "PO Number",
             type: "text",
             required: true,
-            placeholder: "Enter PO number"
+            placeholder: "Enter PO number",
+            validate: (value: string) => {
+                if (!/^[A-Z0-9-]+$/.test(value)) {
+                    return "PO number must contain only uppercase letters, numbers, and hyphens";
+                }
+                if (value.length < 3) {
+                    return "PO number must be at least 3 characters";
+                }
+                if (value.length > 20) {
+                    return "PO number must be less than 20 characters";
+                }
+                return undefined;
+            }
         },
         {
             name: "prNumber",
             label: "PR Number",
             type: "text",
-            placeholder: "Enter PR number"
+            placeholder: "Enter PR number",
+            validate: (value: string) => {
+                if (value && !/^[A-Z0-9-]+$/.test(value)) {
+                    return "PR number must contain only uppercase letters, numbers, and hyphens";
+                }
+                if (value && value.length > 20) {
+                    return "PR number must be less than 20 characters";
+                }
+                return undefined;
+            }
         },
         {
             name: "invoiceNumber",
             label: "Invoice Number",
             type: "text",
             required: true,
-            placeholder: "Enter invoice number"
+            placeholder: "Enter invoice number",
+            validate: (value: string) => {
+                if (!/^[A-Z0-9-]+$/.test(value)) {
+                    return "Invoice number must contain only uppercase letters, numbers, and hyphens";
+                }
+                if (value.length < 3) {
+                    return "Invoice number must be at least 3 characters";
+                }
+                if (value.length > 20) {
+                    return "Invoice number must be less than 20 characters";
+                }
+                return undefined;
+            }
         },
         {
             name: "warrantyStartDate",
             label: "Warranty Start Date",
             type: "date",
-            required: true
+            required: true,
+            validate: (value: string, formData: AssetFormData) => {
+                const startDate = new Date(value);
+                const purchaseDate = new Date(formData.purchaseDate);
+                if (startDate < purchaseDate) {
+                    return "Warranty start date cannot be before purchase date";
+                }
+                return undefined;
+            }
         },
         {
             name: "warrantyEndDate",
             label: "Warranty End Date",
             type: "date",
-            required: true
+            required: true,
+            validate: (value: string, formData: AssetFormData) => {
+                const endDate = new Date(value);
+                const startDate = new Date(formData.warrantyStartDate);
+                if (endDate <= startDate) {
+                    return "Warranty end date must be after warranty start date";
+                }
+                return undefined;
+            }
         },
         {
             name: "warrantyDetails",
             label: "Warranty Details",
             type: "textarea",
-            placeholder: "Enter warranty details"
+            placeholder: "Enter warranty details",
+            validate: (value: string) => {
+                if (value && value.length > 1000) {
+                    return "Warranty details must be less than 1000 characters";
+                }
+                return undefined;
+            }
         },
         {
             name: "isActive",
@@ -260,31 +368,47 @@ const AssetsPage = () => {
         {
             accessorKey: "product",
             header: "Product",
-            cell: ({ row }: any) => `${row.original.product?.name} (${row.original.product?.code})`
+            cell: ({ row }: any) => (
+                <Badge variant="outline">
+                    {`${row.original.product?.name} (${row.original.product?.code})`}
+                </Badge>
+            )
         },
         {
             accessorKey: "warehouse",
             header: "Warehouse",
-            cell: ({ row }: any) => row.original.warehouse?.name || ''
+            cell: ({ row }: any) => (
+                <Badge variant="secondary">
+                    {row.original.warehouse?.name || ''}
+                </Badge>
+            )
         },
         {
             accessorKey: "status",
             header: "Status",
-            cell: ({ row }: any) => (
-                <div className={`px-2 py-1 rounded-full text-center ${
-                    row.original.status === 'available' ? 'bg-green-100 text-green-800' :
-                    row.original.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                    row.original.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                }`}>
-                    {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
-                </div>
-            )
+            cell: ({ row }: any) => {
+                const status = row.original.status;
+                const variant = 
+                    status === 'available' ? "default" :
+                    status === 'assigned' ? "secondary" :
+                    status === 'maintenance' ? "outline" :
+                    "destructive";
+                
+                return (
+                    <Badge variant={variant}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </Badge>
+                );
+            }
         },
         {
             accessorKey: "vendor",
             header: "Vendor",
-            cell: ({ row }: any) => row.original.vendor?.name || ''
+            cell: ({ row }: any) => (
+                <Badge variant="outline">
+                    {row.original.vendor?.name || ''}
+                </Badge>
+            )
         },
         {
             accessorKey: "poNumber",
@@ -293,15 +417,25 @@ const AssetsPage = () => {
         {
             accessorKey: "warrantyEndDate",
             header: "Warranty Until",
-            cell: ({ row }: any) => new Date(row.original.warrantyEndDate).toLocaleDateString()
+            cell: ({ row }: any) => {
+                const endDate = new Date(row.original.warrantyEndDate);
+                const today = new Date();
+                const variant = endDate < today ? "destructive" : "default";
+                
+                return (
+                    <Badge variant={variant}>
+                        {endDate.toLocaleDateString()}
+                    </Badge>
+                );
+            }
         },
         {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
-                <div className={`px-2 py-1 rounded-full text-center ${row.original.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                <Badge variant={row.original.isActive ? "default" : "destructive"}>
                     {row.original.isActive ? 'Active' : 'Inactive'}
-                </div>
+                </Badge>
             )
         }
     ];

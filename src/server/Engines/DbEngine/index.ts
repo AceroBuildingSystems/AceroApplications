@@ -18,7 +18,11 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Quotation,
   Proposal,
   Asset,
-  Vendor
+  Vendor,
+  Product,
+  ProductCategory,
+  Warehouse,
+  Inventory
 } from '@/models';
 
 
@@ -55,7 +59,11 @@ function getMongooseAdapter(): MongooseAdapter {
     PROJECT_TYPE_MASTER: ProjectType,
     PAINT_TYPE_MASTER: PaintType,
     STATE_MASTER: State,
+    PRODUCT_MASTER:Product,
+    PRODUCT_CATEGORY_MASTER:ProductCategory,
+    WAREHOUSE_MASTER:Warehouse,
     LOCATION_MASTER: Location,
+    INVENTORY_MASTER: Inventory,
     APPROVAL_AUTHORITY_MASTER: ApprovalAuthority,
     INCOTERM_MASTER: Incoterm,
     SECTOR_MASTER: Sector,

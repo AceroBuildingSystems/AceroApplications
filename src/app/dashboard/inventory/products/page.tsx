@@ -6,14 +6,15 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
+import { MONGO_MODELS } from '@/shared/constants';
 
 interface ProductFormData {
+    _id?: string;
     name: string;
     code: string;
     category: string;
     brand: string;
     model: string;
-    specifications: Record<string, string | number | boolean>;
     description?: string;
     unitOfMeasure: string;
     minimumStockLevel?: number;
@@ -22,11 +23,6 @@ interface ProductFormData {
     unitCost?: number;
     vendor: string;
     alternateVendors?: string[];
-    warranty?: {
-        duration: number;
-        unit: string;
-        description?: string;
-    };
     isActive: string;
 }
 
@@ -36,21 +32,21 @@ const ProductsPage = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<ProductFormData | null>(null);
-    const [selectedCategory, setSelectedCategory] = useState<any>(null);
 
     // API hooks
     const { data: productsResponse, isLoading: productsLoading } = useGetMasterQuery({
-        db: "Product",
-        filter: { isActive: true }
+        db: MONGO_MODELS.PRODUCT_MASTER,
+        filter: { isActive: true },
+        populate: ['category', 'vendor']
     });
 
     const { data: categoriesResponse } = useGetMasterQuery({
-        db: "ProductCategory",
+        db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
         filter: { isActive: true }
     });
 
     const { data: vendorsResponse } = useGetMasterQuery({
-        db: "Vendor",
+        db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true }
     });
 
@@ -58,6 +54,10 @@ const ProductsPage = () => {
 
     // Form fields configuration
     const formFields = [
+        {
+            name: "_id",
+            type: "hidden"
+        },
         {
             name: "name",
             label: "Name",
@@ -77,14 +77,10 @@ const ProductsPage = () => {
             label: "Category",
             type: "select",
             required: true,
-            options: categoriesResponse?.data?.map((cat: any) => ({
-                label: cat.name,
-                value: cat._id
-            })) || [],
-            onChange: (value: string) => {
-                const category = categoriesResponse?.data?.find((cat: any) => cat._id === value);
-                setSelectedCategory(category);
-            }
+            data: categoriesResponse?.data?.map((cat: any) => ({
+                name: cat.name,
+                _id: cat._id
+            })) || []
         },
         {
             name: "brand",
@@ -99,51 +95,6 @@ const ProductsPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter model number"
-        },
-        {
-            name: "specifications",
-            label: "Specifications",
-            type: "custom",
-            CustomComponent: ({ value, onChange }: any) => {
-                if (!selectedCategory) return <div>Please select a category first</div>;
-                
-                return (
-                    <div className="space-y-2">
-                        {Object.entries(selectedCategory.specsRequired || {}).map(([key, type]) => (
-                            <div key={key} className="flex gap-2 items-center">
-                                <label className="w-1/3">{key}:</label>
-                                {type === "boolean" ? (
-                                    <select
-                                        value={value?.[key] || "false"}
-                                        onChange={(e) => {
-                                            onChange({
-                                                ...value,
-                                                [key]: e.target.value === "true"
-                                            });
-                                        }}
-                                        className="flex-1 px-2 py-1 border rounded"
-                                    >
-                                        <option value="true">Yes</option>
-                                        <option value="false">No</option>
-                                    </select>
-                                ) : (
-                                    <input
-                                        type={type === "number" ? "number" : "text"}
-                                        value={value?.[key] || ""}
-                                        onChange={(e) => {
-                                            onChange({
-                                                ...value,
-                                                [key]: type === "number" ? Number(e.target.value) : e.target.value
-                                            });
-                                        }}
-                                        className="flex-1 px-2 py-1 border rounded"
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                );
-            }
         },
         {
             name: "description",
@@ -187,60 +138,19 @@ const ProductsPage = () => {
             label: "Primary Vendor",
             type: "select",
             required: true,
-            options: vendorsResponse?.data?.map((vendor: any) => ({
-                label: vendor.name,
-                value: vendor._id
+            data: vendorsResponse?.data?.map((vendor: any) => ({
+                name: vendor.name,
+                _id: vendor._id
             })) || []
         },
         {
             name: "alternateVendors",
             label: "Alternate Vendors",
             type: "multiselect",
-            options: vendorsResponse?.data?.map((vendor: any) => ({
+            data: vendorsResponse?.data?.map((vendor: any) => ({
                 label: vendor.name,
                 value: vendor._id
             })) || []
-        },
-        {
-            name: "warranty",
-            label: "Warranty",
-            type: "custom",
-            CustomComponent: ({ value, onChange }: any) => (
-                <div className="space-y-2">
-                    <div className="flex gap-2">
-                        <input
-                            type="number"
-                            value={value?.duration || ""}
-                            onChange={(e) => onChange({
-                                ...value,
-                                duration: Number(e.target.value)
-                            })}
-                            className="w-24 px-2 py-1 border rounded"
-                            placeholder="Duration"
-                        />
-                        <select
-                            value={value?.unit || "months"}
-                            onChange={(e) => onChange({
-                                ...value,
-                                unit: e.target.value
-                            })}
-                            className="px-2 py-1 border rounded"
-                        >
-                            <option value="months">Months</option>
-                            <option value="years">Years</option>
-                        </select>
-                    </div>
-                    <textarea
-                        value={value?.description || ""}
-                        onChange={(e) => onChange({
-                            ...value,
-                            description: e.target.value
-                        })}
-                        className="w-full px-2 py-1 border rounded"
-                        placeholder="Warranty description"
-                    />
-                </div>
-            )
         },
         {
             name: "isActive",
@@ -275,20 +185,6 @@ const ProductsPage = () => {
             header: "Model",
         },
         {
-            accessorKey: "specifications",
-            header: "Specifications",
-            cell: ({ row }: any) => {
-                const specs = row.original.specifications;
-                return (
-                    <div className="max-w-[300px] overflow-hidden text-ellipsis">
-                        {Object.entries(specs || {}).map(([key, value]) => (
-                            `${key}: ${value}`
-                        )).join(", ")}
-                    </div>
-                );
-            }
-        },
-        {
             accessorKey: "vendor",
             header: "Primary Vendor",
             cell: ({ row }: any) => row.original.vendor?.name || ''
@@ -308,8 +204,9 @@ const ProductsPage = () => {
     const handleSave = async ({ formData, action }: { formData: ProductFormData; action: string }) => {
         try {
             await createMaster({
-                db: "Product",
-                action: action.toLowerCase(),
+                db: MONGO_MODELS.PRODUCT_MASTER,
+                action: action === 'Add' ? 'create' : 'update',
+                filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
                     isActive: formData.isActive === "Active"
@@ -349,7 +246,18 @@ const ProductsPage = () => {
         ],
         dataTable: {
             columns: columns,
-            data: (productsResponse?.data || []) as any[]
+            data: (productsResponse?.data || []) as any[],
+            onRowClick: (row: any) => {
+                setDialogAction("Update");
+                setSelectedItem({
+                    ...row.original,
+                    category: row.original.category?._id,
+                    vendor: row.original.vendor?._id,
+                    alternateVendors: row.original.alternateVendors?.map((v: any) => v._id),
+                    isActive: row.original.isActive ? "Active" : "Inactive"
+                });
+                setIsDialogOpen(true);
+            }
         },
         buttons: [
             {
@@ -362,7 +270,6 @@ const ProductsPage = () => {
                         category: '',
                         brand: '',
                         model: '',
-                        specifications: {},
                         unitOfMeasure: '',
                         vendor: '',
                         isActive: "Active"
@@ -385,7 +292,7 @@ const ProductsPage = () => {
         <div className="h-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
-            <DynamicDialog
+            <DynamicDialog<ProductFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => setIsDialogOpen(false)}
                 selectedMaster="Product"

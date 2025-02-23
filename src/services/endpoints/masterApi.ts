@@ -7,16 +7,26 @@ export interface MasterApiResponse {
   error?: any;
 }
 
+export interface GetMasterParams {
+  db: string;
+  filter?: object;
+  sort?: object;
+  page?: number;
+  limit?: number;
+  populate?: string | string[];
+}
+
 export const masterApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMaster: builder.query<MasterApiResponse, { db: string; filter?: object; sort?: object; page?: number; limit?: number }>({
-      query: ({ db, filter, sort, page, limit }) => {
+    getMaster: builder.query<MasterApiResponse, GetMasterParams>({
+      query: ({ db, filter, sort, page, limit, populate }) => {
         const params = new URLSearchParams();
         params.append('db', db);
         filter && params.append('filter', JSON.stringify(filter));
         sort && params.append('sort', JSON.stringify(sort));
         page && params.append('page', page.toString());
         limit && params.append('limit', limit.toString());
+        populate && params.append('populate', Array.isArray(populate) ? JSON.stringify(populate) : populate);
         return `master?${params.toString()}`;
       },
       transformResponse: (response: MasterApiResponse) => response,

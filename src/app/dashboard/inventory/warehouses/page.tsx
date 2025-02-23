@@ -6,25 +6,15 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-
-interface StorageSection {
-    name: string;
-    code: string;
-    capacity: number;
-    unit: string;
-    description?: string;
-}
+import { MONGO_MODELS } from '@/shared/constants';
 
 interface WarehouseFormData {
+    _id?: string;
     name: string;
     code: string;
     location: string;
     contactPerson: string;
     contactNumber: string;
-    storageSections: StorageSection[];
-    totalCapacity: number;
-    capacityUnit: string;
-    operatingHours?: string;
     isActive: string;
 }
 
@@ -37,12 +27,12 @@ const WarehousesPage = () => {
 
     // API hooks
     const { data: warehousesResponse, isLoading: warehousesLoading } = useGetMasterQuery({
-        db: "Warehouse",
+        db: MONGO_MODELS.WAREHOUSE_MASTER,
         filter: { isActive: true }
     });
 
     const { data: locationsResponse } = useGetMasterQuery({
-        db: "Location",
+        db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
     });
 
@@ -50,6 +40,10 @@ const WarehousesPage = () => {
 
     // Form fields configuration
     const formFields = [
+        {
+            name: "_id",
+            type: "hidden"
+        },
         {
             name: "name",
             label: "Name",
@@ -69,9 +63,9 @@ const WarehousesPage = () => {
             label: "Location",
             type: "select",
             required: true,
-            options: locationsResponse?.data?.map((loc: any) => ({
-                label: loc.name,
-                value: loc._id
+            data: locationsResponse?.data?.map((loc: any) => ({
+                name: loc.name,
+                _id: loc._id
             })) || []
         },
         {
@@ -87,125 +81,6 @@ const WarehousesPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter contact number"
-        },
-        {
-            name: "storageSections",
-            label: "Storage Sections",
-            type: "custom",
-            CustomComponent: ({ value = [], onChange }: any) => (
-                <div className="space-y-2">
-                    {value.map((section: StorageSection, index: number) => (
-                        <div key={index} className="p-2 border rounded space-y-2">
-                            <div className="flex gap-2">
-                                <input
-                                    type="text"
-                                    value={section.name}
-                                    onChange={(e) => {
-                                        const newSections = [...value];
-                                        newSections[index] = { ...section, name: e.target.value };
-                                        onChange(newSections);
-                                    }}
-                                    className="flex-1 px-2 py-1 border rounded"
-                                    placeholder="Section name"
-                                />
-                                <input
-                                    type="text"
-                                    value={section.code}
-                                    onChange={(e) => {
-                                        const newSections = [...value];
-                                        newSections[index] = { ...section, code: e.target.value };
-                                        onChange(newSections);
-                                    }}
-                                    className="w-24 px-2 py-1 border rounded"
-                                    placeholder="Code"
-                                />
-                            </div>
-                            <div className="flex gap-2">
-                                <input
-                                    type="number"
-                                    value={section.capacity}
-                                    onChange={(e) => {
-                                        const newSections = [...value];
-                                        newSections[index] = { ...section, capacity: Number(e.target.value) };
-                                        onChange(newSections);
-                                    }}
-                                    className="w-24 px-2 py-1 border rounded"
-                                    placeholder="Capacity"
-                                />
-                                <input
-                                    type="text"
-                                    value={section.unit}
-                                    onChange={(e) => {
-                                        const newSections = [...value];
-                                        newSections[index] = { ...section, unit: e.target.value };
-                                        onChange(newSections);
-                                    }}
-                                    className="w-24 px-2 py-1 border rounded"
-                                    placeholder="Unit"
-                                />
-                                <button
-                                    onClick={() => {
-                                        const newSections = value.filter((_: any, i: number) => i !== index);
-                                        onChange(newSections);
-                                    }}
-                                    className="px-2 py-1 text-red-500 hover:text-red-700"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                            <input
-                                type="text"
-                                value={section.description || ''}
-                                onChange={(e) => {
-                                    const newSections = [...value];
-                                    newSections[index] = { ...section, description: e.target.value };
-                                    onChange(newSections);
-                                }}
-                                className="w-full px-2 py-1 border rounded"
-                                placeholder="Description"
-                            />
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            onChange([
-                                ...value,
-                                {
-                                    name: '',
-                                    code: '',
-                                    capacity: 0,
-                                    unit: '',
-                                    description: ''
-                                }
-                            ]);
-                        }}
-                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Add Section
-                    </button>
-                </div>
-            )
-        },
-        {
-            name: "totalCapacity",
-            label: "Total Capacity",
-            type: "number",
-            required: true,
-            placeholder: "Enter total capacity"
-        },
-        {
-            name: "capacityUnit",
-            label: "Capacity Unit",
-            type: "text",
-            required: true,
-            placeholder: "Enter capacity unit"
-        },
-        {
-            name: "operatingHours",
-            label: "Operating Hours",
-            type: "text",
-            placeholder: "Enter operating hours"
         },
         {
             name: "isActive",
@@ -240,16 +115,6 @@ const WarehousesPage = () => {
             header: "Contact Number",
         },
         {
-            accessorKey: "totalCapacity",
-            header: "Total Capacity",
-            cell: ({ row }: any) => `${row.original.totalCapacity} ${row.original.capacityUnit}`
-        },
-        {
-            accessorKey: "storageSections",
-            header: "Storage Sections",
-            cell: ({ row }: any) => row.original.storageSections?.length || 0
-        },
-        {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
@@ -264,8 +129,9 @@ const WarehousesPage = () => {
     const handleSave = async ({ formData, action }: { formData: WarehouseFormData; action: string }) => {
         try {
             await createMaster({
-                db: "Warehouse",
-                action: action.toLowerCase(),
+                db: MONGO_MODELS.WAREHOUSE_MASTER,
+                action: action === 'Add' ? 'create' : 'update',
+                filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
                     isActive: formData.isActive === "Active"
@@ -305,7 +171,16 @@ const WarehousesPage = () => {
         ],
         dataTable: {
             columns: columns,
-            data: (warehousesResponse?.data || []) as any[]
+            data: (warehousesResponse?.data || []) as any[],
+            onRowClick: (row: any) => {
+                setDialogAction("Update");
+                setSelectedItem({
+                    ...row.original,
+                    location: row.original.location?._id,
+                    isActive: row.original.isActive ? "Active" : "Inactive"
+                });
+                setIsDialogOpen(true);
+            }
         },
         buttons: [
             {
@@ -318,9 +193,6 @@ const WarehousesPage = () => {
                         location: '',
                         contactPerson: '',
                         contactNumber: '',
-                        storageSections: [],
-                        totalCapacity: 0,
-                        capacityUnit: '',
                         isActive: "Active"
                     });
                     setIsDialogOpen(true);
@@ -341,7 +213,7 @@ const WarehousesPage = () => {
         <div className="h-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
-            <DynamicDialog
+            <DynamicDialog<WarehouseFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => setIsDialogOpen(false)}
                 selectedMaster="Warehouse"

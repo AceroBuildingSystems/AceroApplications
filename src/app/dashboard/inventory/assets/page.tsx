@@ -6,51 +6,92 @@ import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-
-interface ServiceRecord {
-    date: string;
-    type: string;
-    description: string;
-    cost?: number;
-    vendor: string;
-    nextServiceDue?: string;
-    attachments?: string[];
-}
-
-interface AssignmentRecord {
-    assignedTo: string;
-    assignedBy: string;
-    assignedDate: string;
-    returnDate?: string;
-    location: string;
-    department?: string;
-    remarks?: string;
-}
+import { MONGO_MODELS } from '@/shared/constants';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AssetFormData {
-    product: string;
+    _id?: string;
     serialNumber: string;
-    status: "in-stock" | "assigned" | "under-repair" | "disposed" | "in-transit";
-    purchaseInfo: {
-        date: string;
-        cost: number;
-        poNumber: string;
-        prNumber?: string;
-        invoiceNumber: string;
-        vendor: string;
-    };
-    warranty: {
-        startDate: string;
-        endDate: string;
-        type: string;
-        description?: string;
-    };
-    currentAssignment?: AssignmentRecord;
-    assignmentHistory: AssignmentRecord[];
-    serviceHistory: ServiceRecord[];
-    currentLocation: string;
+    product: string;
+    warehouse: string;
+    status: 'available' | 'assigned' | 'maintenance' | 'retired';
+    purchaseDate: string;
+    purchasePrice: number;
+    vendor: string;
+    poNumber: string;
+    prNumber?: string;
+    invoiceNumber: string;
+    warrantyStartDate: string;
+    warrantyEndDate: string;
+    warrantyDetails?: string;
+    specifications: Record<string, any>;
     isActive: string;
 }
+
+interface SpecificationsComponentProps {
+    accessData: Record<string, any>;
+    handleChange: (e: { target: { value: any } }, fieldName: string) => void;
+    selectedProduct: any;
+}
+
+const SpecificationsComponent = ({ accessData, handleChange, selectedProduct }: SpecificationsComponentProps) => {
+    const [specs, setSpecs] = useState<Record<string, any>>(accessData || {});
+
+    useEffect(() => {
+        setSpecs(accessData || {});
+    }, [accessData]);
+
+    if (!selectedProduct?.category?.specsRequired) {
+        return <div>Please select a product first</div>;
+    }
+
+    return (
+        <div className="space-y-2">
+            {Object.entries(selectedProduct.category.specsRequired).map(([key, type]) => (
+                <div key={key} className="flex gap-2 items-center">
+                    <label className="w-1/3">{key}:</label>
+                    {type === "boolean" ? (
+                        <Select
+                            value={String(specs[key] || "false")}
+                            onValueChange={(val) => {
+                                const newSpecs = {
+                                    ...specs,
+                                    [key]: val === "true"
+                                };
+                                setSpecs(newSpecs);
+                                handleChange({ target: { value: newSpecs } }, "specifications");
+                            }}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select value" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="true">Yes</SelectItem>
+                                <SelectItem value="false">No</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    ) : (
+                        <Input
+                            type={type === "number" ? "number" : "text"}
+                            value={String(specs[key] || "")}
+                            onChange={(e) => {
+                                const newSpecs = {
+                                    ...specs,
+                                    [key]: type === "number" ? Number(e.target.value) : e.target.value
+                                };
+                                setSpecs(newSpecs);
+                                handleChange({ target: { value: newSpecs } }, "specifications");
+                            }}
+                            className="flex-1"
+                        />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+};
 
 const AssetsPage = () => {
     const router = useRouter();
@@ -58,51 +99,53 @@ const AssetsPage = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<AssetFormData | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
     // API hooks
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
-        db: "Asset",
-        filter: { isActive: true }
+        db: MONGO_MODELS.ASSET_MASTER,
+        filter: { isActive: true },
+        populate: ['product', 'warehouse', 'vendor']
     });
 
     const { data: productsResponse } = useGetMasterQuery({
-        db: "Product",
+        db: MONGO_MODELS.PRODUCT_MASTER,
+        filter: { isActive: true },
+        populate: ['category']
+    });
+
+    const { data: warehousesResponse } = useGetMasterQuery({
+        db: MONGO_MODELS.WAREHOUSE_MASTER,
         filter: { isActive: true }
     });
 
     const { data: vendorsResponse } = useGetMasterQuery({
-        db: "Vendor",
-        filter: { isActive: true }
-    });
-
-    const { data: locationsResponse } = useGetMasterQuery({
-        db: "Location",
-        filter: { isActive: true }
-    });
-
-    const { data: departmentsResponse } = useGetMasterQuery({
-        db: "Department",
-        filter: { isActive: true }
-    });
-
-    const { data: usersResponse } = useGetMasterQuery({
-        db: "User",
+        db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true }
     });
 
     const [createMaster] = useCreateMasterMutation();
 
+    const handleProductChange = (productId: string) => {
+        const product = productsResponse?.data?.find((p: any) => p._id === productId);
+        if (product) {
+            setSelectedProduct(product);
+            // Reset specifications when product changes
+            if (selectedItem) {
+                setSelectedItem({
+                    ...selectedItem,
+                    product: productId,
+                    specifications: {}
+                });
+            }
+        }
+    };
+
     // Form fields configuration
     const formFields = [
         {
-            name: "product",
-            label: "Product",
-            type: "select",
-            required: true,
-            options: productsResponse?.data?.map((prod: any) => ({
-                label: `${prod.name} (${prod.code})`,
-                value: prod._id
-            })) || []
+            name: "_id",
+            type: "hidden"
         },
         {
             name: "serialNumber",
@@ -112,286 +155,92 @@ const AssetsPage = () => {
             placeholder: "Enter serial number"
         },
         {
-            name: "status",
-            label: "Status",
+            name: "product",
+            label: "Product",
             type: "select",
             required: true,
-            options: [
-                "in-stock",
-                "assigned",
-                "under-repair",
-                "disposed",
-                "in-transit"
-            ]
+            data: productsResponse?.data?.map((prod: any) => ({
+                name: `${prod.name} (${prod.code})`,
+                _id: prod._id
+            })) || [],
+            onChange: handleProductChange
         },
         {
-            name: "purchaseInfo",
-            label: "Purchase Information",
-            type: "custom",
-            CustomComponent: ({ value = {}, onChange }: any) => (
-                <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                        <input
-                            type="date"
-                            value={value.date || ''}
-                            onChange={(e) => onChange({ ...value, date: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        />
-                        <input
-                            type="number"
-                            value={value.cost || ''}
-                            onChange={(e) => onChange({ ...value, cost: Number(e.target.value) })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Cost"
-                        />
-                        <input
-                            type="text"
-                            value={value.poNumber || ''}
-                            onChange={(e) => onChange({ ...value, poNumber: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="PO Number"
-                        />
-                        <input
-                            type="text"
-                            value={value.prNumber || ''}
-                            onChange={(e) => onChange({ ...value, prNumber: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="PR Number"
-                        />
-                        <input
-                            type="text"
-                            value={value.invoiceNumber || ''}
-                            onChange={(e) => onChange({ ...value, invoiceNumber: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Invoice Number"
-                        />
-                        <select
-                            value={value.vendor || ''}
-                            onChange={(e) => onChange({ ...value, vendor: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        >
-                            <option value="">Select Vendor</option>
-                            {vendorsResponse?.data?.map((vendor: any) => (
-                                <option key={vendor._id} value={vendor._id}>
-                                    {vendor.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            )
-        },
-        {
-            name: "warranty",
-            label: "Warranty Information",
-            type: "custom",
-            CustomComponent: ({ value = {}, onChange }: any) => (
-                <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                        <input
-                            type="date"
-                            value={value.startDate || ''}
-                            onChange={(e) => onChange({ ...value, startDate: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        />
-                        <input
-                            type="date"
-                            value={value.endDate || ''}
-                            onChange={(e) => onChange({ ...value, endDate: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        />
-                        <input
-                            type="text"
-                            value={value.type || ''}
-                            onChange={(e) => onChange({ ...value, type: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Warranty Type"
-                        />
-                        <input
-                            type="text"
-                            value={value.description || ''}
-                            onChange={(e) => onChange({ ...value, description: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Description"
-                        />
-                    </div>
-                </div>
-            )
-        },
-        {
-            name: "currentAssignment",
-            label: "Current Assignment",
-            type: "custom",
-            CustomComponent: ({ value = {}, onChange }: any) => (
-                <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                        <select
-                            value={value.assignedTo || ''}
-                            onChange={(e) => onChange({ ...value, assignedTo: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        >
-                            <option value="">Select User</option>
-                            {usersResponse?.data?.map((user: any) => (
-                                <option key={user._id} value={user._id}>
-                                    {user.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="date"
-                            value={value.assignedDate || ''}
-                            onChange={(e) => onChange({ ...value, assignedDate: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        />
-                        <input
-                            type="date"
-                            value={value.returnDate || ''}
-                            onChange={(e) => onChange({ ...value, returnDate: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        />
-                        <select
-                            value={value.location || ''}
-                            onChange={(e) => onChange({ ...value, location: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        >
-                            <option value="">Select Location</option>
-                            {locationsResponse?.data?.map((loc: any) => (
-                                <option key={loc._id} value={loc._id}>
-                                    {loc.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            value={value.department || ''}
-                            onChange={(e) => onChange({ ...value, department: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                        >
-                            <option value="">Select Department</option>
-                            {departmentsResponse?.data?.map((dept: any) => (
-                                <option key={dept._id} value={dept._id}>
-                                    {dept.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="text"
-                            value={value.remarks || ''}
-                            onChange={(e) => onChange({ ...value, remarks: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Remarks"
-                        />
-                    </div>
-                </div>
-            )
-        },
-        {
-            name: "serviceHistory",
-            label: "Service History",
-            type: "custom",
-            CustomComponent: ({ value = [], onChange }: any) => (
-                <div className="space-y-2">
-                    {value.map((service: ServiceRecord, index: number) => (
-                        <div key={index} className="p-2 border rounded space-y-2">
-                            <div className="grid grid-cols-2 gap-2">
-                                <input
-                                    type="date"
-                                    value={service.date}
-                                    onChange={(e) => {
-                                        const newHistory = [...value];
-                                        newHistory[index] = { ...service, date: e.target.value };
-                                        onChange(newHistory);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                />
-                                <input
-                                    type="text"
-                                    value={service.type}
-                                    onChange={(e) => {
-                                        const newHistory = [...value];
-                                        newHistory[index] = { ...service, type: e.target.value };
-                                        onChange(newHistory);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                    placeholder="Service Type"
-                                />
-                                <textarea
-                                    value={service.description}
-                                    onChange={(e) => {
-                                        const newHistory = [...value];
-                                        newHistory[index] = { ...service, description: e.target.value };
-                                        onChange(newHistory);
-                                    }}
-                                    className="px-2 py-1 border rounded col-span-2"
-                                    placeholder="Description"
-                                />
-                                <input
-                                    type="number"
-                                    value={service.cost || ''}
-                                    onChange={(e) => {
-                                        const newHistory = [...value];
-                                        newHistory[index] = { ...service, cost: Number(e.target.value) };
-                                        onChange(newHistory);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                    placeholder="Cost"
-                                />
-                                <select
-                                    value={service.vendor}
-                                    onChange={(e) => {
-                                        const newHistory = [...value];
-                                        newHistory[index] = { ...service, vendor: e.target.value };
-                                        onChange(newHistory);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                >
-                                    <option value="">Select Vendor</option>
-                                    {vendorsResponse?.data?.map((vendor: any) => (
-                                        <option key={vendor._id} value={vendor._id}>
-                                            {vendor.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button
-                                onClick={() => {
-                                    const newHistory = value.filter((_: any, i: number) => i !== index);
-                                    onChange(newHistory);
-                                }}
-                                className="px-2 py-1 text-red-500 hover:text-red-700"
-                            >
-                                Remove Service Record
-                            </button>
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            onChange([
-                                ...value,
-                                {
-                                    date: new Date().toISOString().split('T')[0],
-                                    type: '',
-                                    description: '',
-                                    vendor: ''
-                                }
-                            ]);
-                        }}
-                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Add Service Record
-                    </button>
-                </div>
-            )
-        },
-        {
-            name: "currentLocation",
-            label: "Current Location",
+            name: "warehouse",
+            label: "Warehouse",
             type: "select",
             required: true,
-            options: locationsResponse?.data?.map((loc: any) => ({
-                label: loc.name,
-                value: loc._id
+            data: warehousesResponse?.data?.map((wh: any) => ({
+                name: wh.name,
+                _id: wh._id
             })) || []
+        },
+        {
+            name: "specifications",
+            label: "Specifications",
+            type: "custom",
+            CustomComponent: (props: any) => <SpecificationsComponent {...props} selectedProduct={selectedProduct} />
+        },
+        {
+            name: "purchaseDate",
+            label: "Purchase Date",
+            type: "date",
+            required: true
+        },
+        {
+            name: "purchasePrice",
+            label: "Purchase Price",
+            type: "number",
+            required: true,
+            placeholder: "Enter purchase price"
+        },
+        {
+            name: "vendor",
+            label: "Vendor",
+            type: "select",
+            required: true,
+            data: vendorsResponse?.data?.map((vendor: any) => ({
+                name: vendor.name,
+                _id: vendor._id
+            })) || []
+        },
+        {
+            name: "poNumber",
+            label: "PO Number",
+            type: "text",
+            required: true,
+            placeholder: "Enter PO number"
+        },
+        {
+            name: "prNumber",
+            label: "PR Number",
+            type: "text",
+            placeholder: "Enter PR number"
+        },
+        {
+            name: "invoiceNumber",
+            label: "Invoice Number",
+            type: "text",
+            required: true,
+            placeholder: "Enter invoice number"
+        },
+        {
+            name: "warrantyStartDate",
+            label: "Warranty Start Date",
+            type: "date",
+            required: true
+        },
+        {
+            name: "warrantyEndDate",
+            label: "Warranty End Date",
+            type: "date",
+            required: true
+        },
+        {
+            name: "warrantyDetails",
+            label: "Warranty Details",
+            type: "textarea",
+            placeholder: "Enter warranty details"
         },
         {
             name: "isActive",
@@ -405,43 +254,46 @@ const AssetsPage = () => {
     // Configure table columns
     const columns = [
         {
-            accessorKey: "product",
-            header: "Product",
-            cell: ({ row }: any) => row.original.product?.name || ''
+            accessorKey: "serialNumber",
+            header: "Serial Number",
         },
         {
-            accessorKey: "serialNumber",
-            header: "Serial Number"
+            accessorKey: "product",
+            header: "Product",
+            cell: ({ row }: any) => `${row.original.product?.name} (${row.original.product?.code})`
+        },
+        {
+            accessorKey: "warehouse",
+            header: "Warehouse",
+            cell: ({ row }: any) => row.original.warehouse?.name || ''
         },
         {
             accessorKey: "status",
             header: "Status",
             cell: ({ row }: any) => (
                 <div className={`px-2 py-1 rounded-full text-center ${
-                    row.original.status === 'in-stock' ? 'bg-green-100 text-green-800' :
+                    row.original.status === 'available' ? 'bg-green-100 text-green-800' :
                     row.original.status === 'assigned' ? 'bg-blue-100 text-blue-800' :
-                    row.original.status === 'under-repair' ? 'bg-yellow-100 text-yellow-800' :
-                    row.original.status === 'disposed' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
+                    row.original.status === 'maintenance' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
                 }`}>
-                    {row.original.status}
+                    {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
                 </div>
             )
         },
         {
-            accessorKey: "currentAssignment",
-            header: "Assigned To",
-            cell: ({ row }: any) => row.original.currentAssignment?.assignedTo?.name || 'Not Assigned'
+            accessorKey: "vendor",
+            header: "Vendor",
+            cell: ({ row }: any) => row.original.vendor?.name || ''
         },
         {
-            accessorKey: "currentLocation",
-            header: "Location",
-            cell: ({ row }: any) => row.original.currentLocation?.name || ''
+            accessorKey: "poNumber",
+            header: "PO Number",
         },
         {
-            accessorKey: "warranty.endDate",
+            accessorKey: "warrantyEndDate",
             header: "Warranty Until",
-            cell: ({ row }: any) => row.original.warranty?.endDate ? new Date(row.original.warranty.endDate).toLocaleDateString() : ''
+            cell: ({ row }: any) => new Date(row.original.warrantyEndDate).toLocaleDateString()
         },
         {
             accessorKey: "isActive",
@@ -458,10 +310,12 @@ const AssetsPage = () => {
     const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
         try {
             await createMaster({
-                db: "Asset",
-                action: action.toLowerCase(),
+                db: MONGO_MODELS.ASSET_MASTER,
+                action: action === 'Add' ? 'create' : 'update',
+                filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
+                    status: 'available',
                     isActive: formData.isActive === "Active"
                 }
             }).unwrap();
@@ -476,55 +330,70 @@ const AssetsPage = () => {
         searchFields: [
             {
                 key: "serialNumber",
-                label: "Serial Number",
+                label: "serialNumber",
                 type: "text" as const,
                 placeholder: "Search by serial number..."
             }
         ],
         filterFields: [
             {
+                key: "product",
+                label: "Product",
+                type: "select" as const,
+                placeholder: "Filter by product",
+                options: productsResponse?.data?.map((prod: any) => prod.name) || []
+            },
+            {
+                key: "warehouse",
+                label: "Warehouse",
+                type: "select" as const,
+                placeholder: "Filter by warehouse",
+                options: warehousesResponse?.data?.map((wh: any) => wh.name) || []
+            },
+            {
                 key: "status",
                 label: "Status",
                 type: "select" as const,
                 placeholder: "Filter by status",
-                options: ["in-stock", "assigned", "under-repair", "disposed", "in-transit"]
-            },
-            {
-                key: "currentLocation",
-                label: "Location",
-                type: "select" as const,
-                placeholder: "Filter by location",
-                options: locationsResponse?.data?.map((loc: any) => loc.name) || []
+                options: ["available", "assigned", "maintenance", "retired"]
             }
         ],
         dataTable: {
             columns: columns,
-            data: (assetsResponse?.data || []) as any[]
+            data: (assetsResponse?.data || []) as any[],
+            onRowClick: (row: any) => {
+                setDialogAction("Update");
+                const product = productsResponse?.data?.find((p: any) => p._id === row.original.product?._id);
+                setSelectedProduct(product);
+                setSelectedItem({
+                    ...row.original,
+                    product: row.original.product?._id,
+                    warehouse: row.original.warehouse?._id,
+                    vendor: row.original.vendor?._id,
+                    isActive: row.original.isActive ? "Active" : "Inactive"
+                });
+                setIsDialogOpen(true);
+            }
         },
         buttons: [
             {
                 label: "Add New",
                 action: () => {
                     setDialogAction("Add");
+                    setSelectedProduct(null);
                     setSelectedItem({
-                        product: '',
                         serialNumber: '',
-                        status: "in-stock",
-                        purchaseInfo: {
-                            date: new Date().toISOString().split('T')[0],
-                            cost: 0,
-                            poNumber: '',
-                            invoiceNumber: '',
-                            vendor: ''
-                        },
-                        warranty: {
-                            startDate: new Date().toISOString().split('T')[0],
-                            endDate: new Date().toISOString().split('T')[0],
-                            type: ''
-                        },
-                        assignmentHistory: [],
-                        serviceHistory: [],
-                        currentLocation: '',
+                        product: '',
+                        warehouse: '',
+                        status: 'available',
+                        purchaseDate: new Date().toISOString().split('T')[0],
+                        purchasePrice: 0,
+                        vendor: '',
+                        poNumber: '',
+                        invoiceNumber: '',
+                        warrantyStartDate: new Date().toISOString().split('T')[0],
+                        warrantyEndDate: new Date().toISOString().split('T')[0],
+                        specifications: {},
                         isActive: "Active"
                     });
                     setIsDialogOpen(true);
@@ -545,7 +414,7 @@ const AssetsPage = () => {
         <div className="h-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
-            <DynamicDialog
+            <DynamicDialog<AssetFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => setIsDialogOpen(false)}
                 selectedMaster="Asset"

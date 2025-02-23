@@ -4,16 +4,94 @@ import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useGetMasterQuery, useCreateMasterMutation, MasterApiResponse } from '@/services/endpoints/masterApi';
+import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
+import { MONGO_MODELS } from '@/shared/constants';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface CategoryFormData {
+    _id?: string;
     name: string;
     code: string;
     description?: string;
     specsRequired: Record<string, "string" | "number" | "boolean">;
-    isActive: boolean | string; // Can be string when coming from form
+    isActive: string;
 }
+
+const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Record<string, "string" | "number" | "boolean">; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
+    const [specs, setSpecs] = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
+    const [newSpecName, setNewSpecName] = useState('');
+    const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
+
+    useEffect(() => {
+        setSpecs(accessData || {});
+    }, [accessData]);
+
+    const updateSpecs = (newSpecs: Record<string, "string" | "number" | "boolean">) => {
+        setSpecs(newSpecs);
+        handleChange({ target: { value: newSpecs } }, "specsRequired");
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                {Object.entries(specs).map(([key, type], index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 border rounded">
+                        <span className="flex-1">{key}</span>
+                        <span className="text-gray-500">{String(type)}</span>
+                        <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => {
+                                const newSpecs = { ...specs };
+                                delete newSpecs[key];
+                                updateSpecs(newSpecs);
+                            }}
+                        >
+                            Remove
+                        </Button>
+                    </div>
+                ))}
+            </div>
+            <div className="flex gap-2">
+                <Input
+                    type="text"
+                    value={newSpecName}
+                    onChange={(e) => setNewSpecName(e.target.value)}
+                    placeholder="Specification name"
+                    className="flex-1"
+                />
+                <select
+                    value={newSpecType}
+                    onChange={(e) => setNewSpecType(e.target.value as "string" | "number" | "boolean")}
+                    className="px-2 py-1 border rounded"
+                >
+                    <option value="string">Text</option>
+                    <option value="number">Number</option>
+                    <option value="boolean">Yes/No</option>
+                </select>
+                <Button
+                    type="button"
+                    onClick={() => {
+                        if (newSpecName.trim()) {
+                            updateSpecs({
+                                ...specs,
+                                [newSpecName]: newSpecType
+                            });
+                            setNewSpecName('');
+                            setNewSpecType("string");
+                        }
+                    }}
+                    disabled={!newSpecName.trim()}
+                >
+                    Add Specification
+                </Button>
+            </div>
+        </div>
+    );
+};
 
 const ProductCategoriesPage = () => {
     const router = useRouter();
@@ -24,13 +102,18 @@ const ProductCategoriesPage = () => {
 
     // API hooks
     const { data: categoriesResponse, isLoading } = useGetMasterQuery({
-        db: "ProductCategory",
+        db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
         filter: { isActive: true }
     });
+
     const [createMaster] = useCreateMasterMutation();
 
     // Form fields configuration
     const formFields = [
+        {
+            name: "_id",
+            type: "hidden"
+        },
         {
             name: "name",
             label: "Name",
@@ -55,60 +138,7 @@ const ProductCategoriesPage = () => {
             name: "specsRequired",
             label: "Required Specifications",
             type: "custom",
-            CustomComponent: ({ value, onChange }: any) => (
-                <div className="space-y-2">
-                    {Object.entries(value || {}).map(([key, type], index) => (
-                        <div key={index} className="flex gap-2">
-                            <input
-                                type="text"
-                                value={key}
-                                onChange={(e) => {
-                                    const newSpecs = { ...value };
-                                    delete newSpecs[key];
-                                    newSpecs[e.target.value] = type;
-                                    onChange(newSpecs);
-                                }}
-                                className="flex-1 px-2 py-1 border rounded"
-                                placeholder="Specification name"
-                            />
-                            <select
-                                value={type as string}
-                                onChange={(e) => {
-                                    const newSpecs = { ...value };
-                                    newSpecs[key] = e.target.value as "string" | "number" | "boolean";
-                                    onChange(newSpecs);
-                                }}
-                                className="px-2 py-1 border rounded"
-                            >
-                                <option value="string">Text</option>
-                                <option value="number">Number</option>
-                                <option value="boolean">Yes/No</option>
-                            </select>
-                            <button
-                                onClick={() => {
-                                    const newSpecs = { ...value };
-                                    delete newSpecs[key];
-                                    onChange(newSpecs);
-                                }}
-                                className="px-2 py-1 text-red-500 hover:text-red-700"
-                            >
-                                Remove
-                            </button>
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const newSpecs = { ...value };
-                            newSpecs[`spec${Object.keys(value || {}).length + 1}`] = "string";
-                            onChange(newSpecs);
-                        }}
-                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Add Specification
-                    </button>
-                </div>
-            )
+            CustomComponent: SpecificationsComponent
         },
         {
             name: "isActive",
@@ -137,12 +167,13 @@ const ProductCategoriesPage = () => {
             accessorKey: "specsRequired",
             header: "Required Specifications",
             cell: ({ row }: any) => {
-                const specs = row.original.specsRequired;
+                const specs = row.original.specsRequired as Record<string, string>;
+                if (!specs) return null;
                 return (
                     <div className="max-w-[300px] overflow-hidden text-ellipsis">
-                        {Object.entries(specs || {}).map(([key, type]) => (
-                            `${key}: ${type}`
-                        )).join(", ")}
+                        {Object.entries(specs).map(([key, type]) => 
+                            `${key}: ${String(type)}`
+                        ).join(", ")}
                     </div>
                 );
             }
@@ -162,11 +193,12 @@ const ProductCategoriesPage = () => {
     const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }) => {
         try {
             await createMaster({
-                db: "ProductCategory",
-                action: action.toLowerCase(),
+                db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
+                action: action === 'Add' ? 'create' : 'update',
+                filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
-                    isActive: formData.isActive === "Active" // Convert string to boolean
+                    isActive: formData.isActive === "Active"
                 }
             }).unwrap();
             setIsDialogOpen(false);
@@ -196,7 +228,15 @@ const ProductCategoriesPage = () => {
         ],
         dataTable: {
             columns: columns,
-            data: (categoriesResponse?.data || []) as any[]
+            data: (categoriesResponse?.data || []) as any[],
+            onRowClick: (row: any) => {
+                setDialogAction("Update");
+                setSelectedItem({
+                    ...row.original,
+                    isActive: row.original.isActive ? "Active" : "Inactive"
+                });
+                setIsDialogOpen(true);
+            }
         },
         buttons: [
             {
@@ -208,7 +248,7 @@ const ProductCategoriesPage = () => {
                         code: '',
                         description: '',
                         specsRequired: {},
-                        isActive: "Active" // Set initial value as string
+                        isActive: "Active"
                     });
                     setIsDialogOpen(true);
                 },
@@ -228,7 +268,7 @@ const ProductCategoriesPage = () => {
         <div className="h-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
-            <DynamicDialog
+            <DynamicDialog<CategoryFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => setIsDialogOpen(false)}
                 selectedMaster="Product Category"

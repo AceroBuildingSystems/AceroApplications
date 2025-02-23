@@ -2,11 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus } from 'lucide-react';
+import { Plus, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { MONGO_MODELS } from '@/shared/constants';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'react-toastify';
 
 interface ContactPerson {
     name: string;
@@ -15,15 +18,8 @@ interface ContactPerson {
     phone: string;
 }
 
-interface PaymentDetails {
-    accountName: string;
-    accountNumber: string;
-    bankName: string;
-    swiftCode?: string;
-    taxId?: string;
-}
-
 interface VendorFormData {
+    _id?: string;
     name: string;
     code: string;
     email: string;
@@ -31,12 +27,100 @@ interface VendorFormData {
     website?: string;
     location: string;
     contactPersons: ContactPerson[];
-    paymentDetails: PaymentDetails;
-    registrationNumber?: string;
-    taxRegistrationNumber?: string;
-    creditPeriod?: number;
     isActive: string;
 }
+
+const ContactPersonsComponent = ({ accessData, handleChange }: { accessData: ContactPerson[]; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
+    const [contacts, setContacts] = useState<ContactPerson[]>(accessData || []);
+
+    useEffect(() => {
+        setContacts(accessData || []);
+    }, [accessData]);
+
+    const updateContacts = (newContacts: ContactPerson[]) => {
+        setContacts(newContacts);
+        handleChange({ target: { value: newContacts } }, "contactPersons");
+    };
+
+    return (
+        <div className="space-y-2">
+            {contacts.map((contact, index) => (
+                <div key={index} className="p-2 border rounded space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                        <Input
+                            type="text"
+                            value={contact.name}
+                            onChange={(e) => {
+                                const newContacts = [...contacts];
+                                newContacts[index] = { ...contact, name: e.target.value };
+                                updateContacts(newContacts);
+                            }}
+                            placeholder="Contact Name"
+                        />
+                        <Input
+                            type="text"
+                            value={contact.designation}
+                            onChange={(e) => {
+                                const newContacts = [...contacts];
+                                newContacts[index] = { ...contact, designation: e.target.value };
+                                updateContacts(newContacts);
+                            }}
+                            placeholder="Designation"
+                        />
+                        <Input
+                            type="email"
+                            value={contact.email}
+                            onChange={(e) => {
+                                const newContacts = [...contacts];
+                                newContacts[index] = { ...contact, email: e.target.value };
+                                updateContacts(newContacts);
+                            }}
+                            placeholder="Email"
+                        />
+                        <Input
+                            type="text"
+                            value={contact.phone}
+                            onChange={(e) => {
+                                const newContacts = [...contacts];
+                                newContacts[index] = { ...contact, phone: e.target.value };
+                                updateContacts(newContacts);
+                            }}
+                            placeholder="Phone"
+                        />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                            const newContacts = contacts.filter((_, i) => i !== index);
+                            updateContacts(newContacts);
+                        }}
+                    >
+                        Remove Contact
+                    </Button>
+                </div>
+            ))}
+            <Button
+                type="button"
+                onClick={() => {
+                    updateContacts([
+                        ...contacts,
+                        {
+                            name: '',
+                            designation: '',
+                            email: '',
+                            phone: ''
+                        }
+                    ]);
+                }}
+                className="w-full"
+            >
+                Add Contact Person
+            </Button>
+        </div>
+    );
+};
 
 const VendorsPage = () => {
     const router = useRouter();
@@ -55,11 +139,15 @@ const VendorsPage = () => {
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
     });
-    console.log('locationsResponse:', locationsResponse);
+
     const [createMaster] = useCreateMasterMutation();
 
     // Form fields configuration
     const formFields = [
+        {
+            name: "_id",
+            type: "hidden"
+        },
         {
             name: "name",
             label: "Name",
@@ -99,160 +187,16 @@ const VendorsPage = () => {
             label: "Location",
             type: "select",
             required: true,
-            options: locationsResponse?.data?.map((loc: any) => ({
-                label: loc.name,
-                value: loc._id
+            data: locationsResponse?.data?.map((loc: any) => ({
+                name: loc.name,
+                _id: loc._id
             })) || []
         },
         {
             name: "contactPersons",
             label: "Contact Persons",
             type: "custom",
-            CustomComponent: ({ value = [], onChange }: any) => (
-                <div className="space-y-2">
-                    {value.map((contact: ContactPerson, index: number) => (
-                        <div key={index} className="p-2 border rounded space-y-2">
-                            <div className="grid grid-cols-2 gap-2">
-                                <input
-                                    type="text"
-                                    value={contact.name}
-                                    onChange={(e) => {
-                                        const newContacts = [...value];
-                                        newContacts[index] = { ...contact, name: e.target.value };
-                                        onChange(newContacts);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                    placeholder="Contact Name"
-                                />
-                                <input
-                                    type="text"
-                                    value={contact.designation}
-                                    onChange={(e) => {
-                                        const newContacts = [...value];
-                                        newContacts[index] = { ...contact, designation: e.target.value };
-                                        onChange(newContacts);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                    placeholder="Designation"
-                                />
-                                <input
-                                    type="email"
-                                    value={contact.email}
-                                    onChange={(e) => {
-                                        const newContacts = [...value];
-                                        newContacts[index] = { ...contact, email: e.target.value };
-                                        onChange(newContacts);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                    placeholder="Email"
-                                />
-                                <input
-                                    type="text"
-                                    value={contact.phone}
-                                    onChange={(e) => {
-                                        const newContacts = [...value];
-                                        newContacts[index] = { ...contact, phone: e.target.value };
-                                        onChange(newContacts);
-                                    }}
-                                    className="px-2 py-1 border rounded"
-                                    placeholder="Phone"
-                                />
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    const newContacts = value.filter((_: any, i: number) => i !== index);
-                                    onChange(newContacts);
-                                }}
-                                className="px-2 py-1 text-red-500 hover:text-red-700"
-                            >
-                                Remove Contact
-                            </button>
-                        </div>
-                    ))}
-                    <button
-                        type="button"
-                        onClick={() => {
-                            onChange([
-                                ...value,
-                                {
-                                    name: '',
-                                    designation: '',
-                                    email: '',
-                                    phone: ''
-                                }
-                            ]);
-                        }}
-                        className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Add Contact Person
-                    </button>
-                </div>
-            )
-        },
-        {
-            name: "paymentDetails",
-            label: "Payment Details",
-            type: "custom",
-            CustomComponent: ({ value = {}, onChange }: any) => (
-                <div className="space-y-2">
-                    <div className="grid grid-cols-2 gap-2">
-                        <input
-                            type="text"
-                            value={value.accountName || ''}
-                            onChange={(e) => onChange({ ...value, accountName: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Account Name"
-                        />
-                        <input
-                            type="text"
-                            value={value.accountNumber || ''}
-                            onChange={(e) => onChange({ ...value, accountNumber: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Account Number"
-                        />
-                        <input
-                            type="text"
-                            value={value.bankName || ''}
-                            onChange={(e) => onChange({ ...value, bankName: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Bank Name"
-                        />
-                        <input
-                            type="text"
-                            value={value.swiftCode || ''}
-                            onChange={(e) => onChange({ ...value, swiftCode: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="SWIFT Code"
-                        />
-                        <input
-                            type="text"
-                            value={value.taxId || ''}
-                            onChange={(e) => onChange({ ...value, taxId: e.target.value })}
-                            className="px-2 py-1 border rounded"
-                            placeholder="Tax ID"
-                        />
-                    </div>
-                </div>
-            )
-        },
-        {
-            name: "registrationNumber",
-            label: "Registration Number",
-            type: "text",
-            placeholder: "Enter registration number"
-        },
-        {
-            name: "taxRegistrationNumber",
-            label: "Tax Registration Number",
-            type: "text",
-            placeholder: "Enter tax registration number"
-        },
-        {
-            name: "creditPeriod",
-            label: "Credit Period (Days)",
-            type: "number",
-            placeholder: "Enter credit period"
+            CustomComponent: ContactPersonsComponent
         },
         {
             name: "isActive",
@@ -302,11 +246,6 @@ const VendorsPage = () => {
             }
         },
         {
-            accessorKey: "creditPeriod",
-            header: "Credit Period",
-            cell: ({ row }: any) => row.original.creditPeriod ? `${row.original.creditPeriod} days` : '-'
-        },
-        {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
@@ -321,8 +260,9 @@ const VendorsPage = () => {
     const handleSave = async ({ formData, action }: { formData: VendorFormData; action: string }) => {
         try {
             await createMaster({
-                db: "Vendor",
-                action: action.toLowerCase(),
+                db: MONGO_MODELS.VENDOR_MASTER,
+                action: action === 'Add' ? 'create' : 'update',
+                filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
                     isActive: formData.isActive === "Active"
@@ -362,7 +302,16 @@ const VendorsPage = () => {
         ],
         dataTable: {
             columns: columns,
-            data: (vendorsResponse?.data || []) as any[]
+            data: (vendorsResponse?.data || []) as any[],
+            onRowClick: (row: any) => {
+                setDialogAction("Update");
+                setSelectedItem({
+                    ...row.original,
+                    location: row.original.location?._id,
+                    isActive: row.original.isActive ? "Active" : "Inactive"
+                });
+                setIsDialogOpen(true);
+            }
         },
         buttons: [
             {
@@ -375,12 +324,7 @@ const VendorsPage = () => {
                         email: '',
                         phone: '',
                         location: '',
-                        contactPersons: [], // Initialize empty array for contact persons
-                        paymentDetails: {
-                            accountName: '',
-                            accountNumber: '',
-                            bankName: ''
-                        },
+                        contactPersons: [],
                         isActive: "Active"
                     });
                     setIsDialogOpen(true);
@@ -401,7 +345,7 @@ const VendorsPage = () => {
         <div className="h-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
-            <DynamicDialog
+            <DynamicDialog<VendorFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => setIsDialogOpen(false)}
                 selectedMaster="Vendor"

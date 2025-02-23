@@ -8,13 +8,13 @@ const ContactPersonSchema = new Schema<ContactPerson>({
     phone: { type: String, required: true }
 }, { _id: false });
 
-const PaymentDetailsSchema = new Schema<PaymentDetails>({
-    accountName: { type: String, required: true },
-    accountNumber: { type: String, required: true },
-    bankName: { type: String, required: true },
-    swiftCode: { type: String },
-    taxId: { type: String }
-}, { _id: false });
+// const PaymentDetailsSchema = new Schema<PaymentDetails>({
+//     accountName: { type: String, required: true },
+//     accountNumber: { type: String, required: true },
+//     bankName: { type: String, required: true },
+//     swiftCode: { type: String },
+//     taxId: { type: String }
+// }, { _id: false });
 
 const VendorSchema: Schema<vendor> = new Schema({
     name: { type: String, required: true, unique: true },
@@ -29,10 +29,10 @@ const VendorSchema: Schema<vendor> = new Schema({
         autopopulate: true
     },
     contactPersons: [ContactPersonSchema],
-    paymentDetails: { type: PaymentDetailsSchema, required: true },
-    registrationNumber: { type: String },
-    taxRegistrationNumber: { type: String },
-    creditPeriod: { type: Number },
+    // paymentDetails: { type: PaymentDetailsSchema, required: true },
+    // registrationNumber: { type: String },
+    // taxRegistrationNumber: { type: String },
+    // creditPeriod: { type: Number },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String }

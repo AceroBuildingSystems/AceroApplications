@@ -1,53 +1,117 @@
-import mongoose, { Model, Schema } from "mongoose";
-import { inventory, BatchInfo, StockMovement } from "@/types/master/inventory.types";
+import mongoose, { Document, Model } from 'mongoose';
 
-const BatchInfoSchema = new Schema<BatchInfo>({
-    batchNumber: { type: String, required: true },
-    manufacturingDate: { type: Date },
-    expiryDate: { type: Date },
-    quantity: { type: Number, required: true },
-    purchasePrice: { type: Number, required: true },
-    purchaseDate: { type: Date, required: true },
-    invoiceNumber: { type: String, required: true },
-    poNumber: { type: String },
-    prNumber: { type: String }
-}, { _id: false });
+interface IInventory extends Document {
+    warehouse: mongoose.Types.ObjectId;
+    totalQuantity: number;
+    assets: mongoose.Types.ObjectId[];
+    isActive: boolean;
+    addedBy: mongoose.Types.ObjectId;
+    updatedBy: mongoose.Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
+}
 
-const StockMovementSchema = new Schema<StockMovement>({
-    type: { type: String, enum: ["in", "out"], required: true },
-    quantity: { type: Number, required: true },
-    date: { type: Date, required: true },
-    reference: { type: String, required: true },
-    remarks: { type: String },
-    batchNumber: { type: String }
-}, { _id: false });
+interface IInventoryMethods {
+}
 
-const InventorySchema: Schema<inventory> = new Schema({
-    product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
-        autopopulate: true
-    },
+interface IInventoryModel extends Model<IInventory, {}, IInventoryMethods> {
+    updateInventoryForAsset(warehouseId: string, assetId: string): Promise<void>;
+    transferAsset(assetId: string, fromWarehouseId: string, toWarehouseId: string): Promise<void>;
+    getWarehouseInventory(warehouseId: string): Promise<IInventory[]>;
+}
+
+const InventorySchema = new mongoose.Schema({
     warehouse: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Warehouse",
-        required: true,
-        autopopulate: true
+        ref: 'Warehouse',
+        required: true
     },
-    totalQuantity: { type: Number, required: true, default: 0 },
-    batches: [BatchInfoSchema],
-    movements: [StockMovementSchema],
-    lastStockCheck: { type: Date },
-    isActive: { type: Boolean, default: true },
-    addedBy: { type: String },
-    updatedBy: { type: String }
-}, { timestamps: true });
+    totalQuantity: {
+        type: Number,
+        default: 0
+    },
+    assets: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Asset'
+    }],
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
+}, {
+    timestamps: true
+});
 
-// Create a compound index for product and warehouse to ensure unique combination
-InventorySchema.index({ product: 1, warehouse: 1 }, { unique: true });
+// Create or update inventory when an asset is added
+InventorySchema.statics.updateInventoryForAsset = async function(warehouseId: string, assetId: string) {
+    const inventory = await this.findOne({ warehouse: warehouseId });
+    
+    if (inventory) {
+        // Update existing inventory
+        await this.findByIdAndUpdate(inventory._id, {
+            $inc: { totalQuantity: 1 },
+            $push: { assets: assetId }
+        });
+    } else {
+        // Create new inventory
+        await this.create({
+            warehouse: warehouseId,
+            totalQuantity: 1,
+            assets: [assetId]
+        });
+    }
+};
 
-InventorySchema.plugin(require('mongoose-autopopulate'));
-const Inventory: Model<inventory> = mongoose.models.Inventory || mongoose.model<inventory>("Inventory", InventorySchema);
+// Update inventory when an asset is transferred
+InventorySchema.statics.transferAsset = async function(assetId: string, fromWarehouseId: string, toWarehouseId: string) {
+    // Decrease quantity in source warehouse
+    await this.findOneAndUpdate(
+        { warehouse: fromWarehouseId },
+        {
+            $inc: { totalQuantity: -1 },
+            $pull: { assets: assetId }
+        }
+    );
 
+    // Increase quantity in destination warehouse
+    const toInventory = await this.findOne({ warehouse: toWarehouseId });
+    if (toInventory) {
+        await this.findByIdAndUpdate(toInventory._id, {
+            $inc: { totalQuantity: 1 },
+            $push: { assets: assetId }
+        });
+    } else {
+        await this.create({
+            warehouse: toWarehouseId,
+            totalQuantity: 1,
+            assets: [assetId]
+        });
+    }
+};
+
+// Get inventory levels for a warehouse
+InventorySchema.statics.getWarehouseInventory = async function(warehouseId: string) {
+    return this.findOne({ warehouse: warehouseId })
+        .populate({
+            path: 'assets',
+            populate: {
+                path: 'product',
+                model: 'Product'
+            }
+        });
+};
+
+const Inventory = mongoose.models.Inventory || mongoose.model<IInventory, IInventoryModel>('Inventory', InventorySchema);
+
+export type { IInventory, IInventoryModel };
 export default Inventory;

@@ -7,13 +7,19 @@ export interface MasterApiResponse {
   error?: any;
 }
 
+interface PopulateOptions {
+  path: string;
+  model?: string;
+  select?: string;
+}
+
 export interface GetMasterParams {
   db: string;
   filter?: object;
   sort?: object;
   page?: number;
   limit?: number;
-  populate?: string | string[];
+  populate?: (string | PopulateOptions)[];
 }
 
 export const masterApi = baseApi.injectEndpoints({
@@ -26,7 +32,7 @@ export const masterApi = baseApi.injectEndpoints({
         sort && params.append('sort', JSON.stringify(sort));
         page && params.append('page', page.toString());
         limit && params.append('limit', limit.toString());
-        populate && params.append('populate', Array.isArray(populate) ? JSON.stringify(populate) : populate);
+        populate && params.append('populate', JSON.stringify(populate));
         return `master?${params.toString()}`;
       },
       transformResponse: (response: MasterApiResponse) => response,

@@ -11,11 +11,11 @@ interface IMaintenanceRecord {
 }
 
 interface IAssignment {
-    assignedTo: string;
-    assignedType: 'user' | 'department';
+    assignedTo: mongoose.Types.ObjectId;
+    assignedType: 'User' | 'Department';
     assignedDate: Date;
     assignedBy: mongoose.Types.ObjectId;
-    location?: string;
+    location: mongoose.Types.ObjectId;
     remarks?: string;
     returnedDate?: Date;
 }
@@ -47,7 +47,7 @@ interface IAsset extends Document {
 }
 
 interface IAssetMethods {
-    assign(assignedTo: string, assignedType: 'user' | 'department', assignedBy: string, location?: string, remarks?: string): Promise<void>;
+    assign(assignedTo: string, assignedType: 'User' | 'Department', assignedBy: string, location: string, remarks?: string): Promise<void>;
     return(remarks?: string): Promise<void>;
     transfer(toWarehouseId: string): Promise<void>;
     addMaintenanceRecord(record: Omit<IMaintenanceRecord, 'date'>): Promise<void>;
@@ -125,39 +125,69 @@ const AssetSchema = new mongoose.Schema({
     // Assignment Information
     currentAssignment: {
         assignedTo: {
-            type: String,
-            ref: 'User'
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+            refPath: 'currentAssignment.assignedModel'
         },
         assignedType: {
             type: String,
-            enum: ['user', 'department']
+            enum: ['User', 'Department'],
+            required: true
         },
-        assignedDate: Date,
+        assignedModel: {
+            type: String,
+            required: true,
+            enum: ['User', 'Department']
+        },
+        assignedDate: {
+            type: Date,
+            required: true
+        },
         assignedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'User',
+            required: true
         },
-        location: String,
+        location: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Location',
+            required: true
+        },
         remarks: String
     },
 
     // Assignment History
     assignmentHistory: [{
         assignedTo: {
-            type: String,
-            ref: 'User'
+            type: mongoose.Schema.Types.ObjectId,
+            required: true,
+            refPath: 'assignmentHistory.assignedModel'
         },
         assignedType: {
             type: String,
-            enum: ['user', 'department']
+            enum: ['User', 'Department'],
+            required: true
         },
-        assignedDate: Date,
+        assignedModel: {
+            type: String,
+            required: true,
+            enum: ['User', 'Department']
+        },
+        assignedDate: {
+            type: Date,
+            required: true
+        },
         returnedDate: Date,
         assignedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'User',
+            required: true
         },
-        location: String,
+        location: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Location',
+            required: true
+        },
         remarks: String
     }],
 
@@ -202,9 +232,9 @@ AssetSchema.post('save', async function(this: IAsset) {
 });
 
 // Handle asset assignment
-AssetSchema.methods.assign = async function(assignedTo: string, assignedType: 'user' | 'department', assignedBy: string, location?: string, remarks?: string) {
+AssetSchema.methods.assign = async function(assignedTo: string, assignedType: 'User' | 'Department', assignedBy: string, location: string, remarks?: string) {
     // If already assigned, add to history first
-    if (this.currentAssignment?.assignedTo) {
+    if (this.currentAssignment) {
         this.assignmentHistory.push({
             ...this.currentAssignment,
             returnedDate: new Date()
@@ -213,11 +243,12 @@ AssetSchema.methods.assign = async function(assignedTo: string, assignedType: 'u
 
     // Update current assignment
     this.currentAssignment = {
-        assignedTo,
+        assignedTo: new mongoose.Types.ObjectId(assignedTo),
         assignedType,
+        assignedModel: assignedType, // Same as assignedType since we're using the model names
         assignedDate: new Date(),
         assignedBy: new mongoose.Types.ObjectId(assignedBy),
-        location,
+        location: new mongoose.Types.ObjectId(location),
         remarks
     };
 

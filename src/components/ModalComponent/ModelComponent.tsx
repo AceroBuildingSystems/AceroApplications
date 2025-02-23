@@ -50,6 +50,7 @@ interface DynamicDialogProps<T extends BaseFormData> {
   action: string;
   height?: string;
   width?: string;
+  isSubmitting?: boolean;
 }
 
 function DynamicDialog<T extends BaseFormData>({
@@ -62,11 +63,11 @@ function DynamicDialog<T extends BaseFormData>({
   action,
   height,
   width,
+  isSubmitting = false,
 }: DynamicDialogProps<T>) {
   const { user } = useUserAuthorised();
   const [formData, setFormData] = useState<Partial<T>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const formattedData = Object.keys(initialData).reduce((acc: Record<string, any>, key: string) => {
@@ -178,7 +179,6 @@ function DynamicDialog<T extends BaseFormData>({
       return;
     }
 
-    setIsSubmitting(true);
     try {
       const updatedData = {
         ...formData,
@@ -192,8 +192,6 @@ function DynamicDialog<T extends BaseFormData>({
     } catch (error) {
       console.error("Error saving data:", error);
       toast.error(`Error ${action === 'Add' ? 'creating' : 'updating'} ${selectedMaster}`);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -329,16 +327,9 @@ function DynamicDialog<T extends BaseFormData>({
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          {action === "Add" && (
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save"}
-            </Button>
-          )}
-          {action === "Update" && (
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? "Updating..." : "Update"}
-            </Button>
-          )}
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Assigning..." : "Assign"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

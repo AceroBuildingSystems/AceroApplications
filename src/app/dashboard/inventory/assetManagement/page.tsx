@@ -23,7 +23,7 @@ interface AssignmentFormData {
     _id: string;
     assignedTo: string;
     assignedType: 'User' | 'Department';
-    location: string;
+    location?: string;
     remarks?: string;
 }
 
@@ -35,7 +35,7 @@ interface HistoryDialogProps {
 
 const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
     if (!asset) return null;
-
+console.log({asset})
     const getAssigneeName = (assignment: any) => {
         if (!assignment) return '';
         const assignee = assignment.assignedTo;
@@ -43,11 +43,6 @@ const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
             return `${assignee.firstName} ${assignee.lastName}`;
         }
         return assignee.name;
-    };
-
-    const getLocationName = (assignment: any) => {
-        if (!assignment?.location) return '';
-        return assignment.location.name;
     };
 
     return (
@@ -76,10 +71,12 @@ const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
                                         <span className="font-medium">Date:</span>
                                         <span>{new Date(asset.currentAssignment.assignedDate).toLocaleDateString()}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="font-medium">Location:</span>
-                                        <span>{getLocationName(asset.currentAssignment)}</span>
-                                    </div>
+                                    {asset.currentAssignment.location && (
+                                        <div className="flex justify-between">
+                                            <span className="font-medium">Location:</span>
+                                            <span>{asset.currentAssignment.location.name}</span>
+                                        </div>
+                                    )}
                                     {asset.currentAssignment.remarks && (
                                         <div className="flex justify-between">
                                             <span className="font-medium">Remarks:</span>
@@ -122,10 +119,12 @@ const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
                                                         <span className="font-medium">Returned Date:</span>
                                                         <span>{new Date(history.returnedDate).toLocaleDateString()}</span>
                                                     </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="font-medium">Location:</span>
-                                                        <span>{getLocationName(history)}</span>
-                                                    </div>
+                                                    {history.location && (
+                                                        <div className="flex justify-between">
+                                                            <span className="font-medium">Location:</span>
+                                                            <span>{history.location.name}</span>
+                                                        </div>
+                                                    )}
                                                     {history.remarks && (
                                                         <div className="flex justify-between">
                                                             <span className="font-medium">Remarks:</span>
@@ -162,7 +161,6 @@ const AssetManagementPage = () => {
     // API hooks with proper population
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.ASSET_MASTER,
-        filter: { isActive: true },
         populate: [
             'product',
             'warehouse',
@@ -185,7 +183,7 @@ const AssetManagementPage = () => {
             }
         ]
     });
-
+    console.log({assetsResponse})
     const { data: locationResponse } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
@@ -311,9 +309,6 @@ const AssetManagementPage = () => {
                         <div className="text-sm text-muted-foreground">
                             {new Date(assignment.assignedDate).toLocaleDateString()}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                            {assignment.location?.name}
-                        </div>
                     </div>
                 );
             }
@@ -323,7 +318,7 @@ const AssetManagementPage = () => {
             header: "Actions",
             cell: ({ row }: any) => (
                 <div className="flex gap-2">
-                   
+                  
                         <Button
                             size="sm"
                             onClick={(e) => {
@@ -334,7 +329,7 @@ const AssetManagementPage = () => {
                         >
                             <UserPlus className="h-4 w-4" />
                         </Button>
-                    
+                   
                     {/* {row.original.status === 'assigned' && (
                         <Button
                             size="sm"
@@ -363,6 +358,7 @@ const AssetManagementPage = () => {
             )
         }
     ];
+    const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
     const handleAssign = (asset: any) => {
         setDialogAction("Assign");
@@ -370,6 +366,8 @@ const AssetManagementPage = () => {
             _id: asset._id,
             assignedType: 'User'
         });
+        console.log({asset})
+        setSelectedAsset(asset);
         setIsDialogOpen(true);
     };
 
@@ -406,7 +404,7 @@ const AssetManagementPage = () => {
     const handleSave = async ({ formData, action }: { formData: AssignmentFormData; action: string }) => {
         try {
             setActionLoading(true);
-            await createMaster({
+            const updatedData = ({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: 'update',
                 filter: { _id: formData._id },
@@ -415,15 +413,25 @@ const AssetManagementPage = () => {
                     currentAssignment: {
                         assignedTo: formData.assignedTo,
                         assignedType: formData.assignedType,
-                        assignedModel: formData.assignedType, // Same as assignedType since we're using model names
                         assignedDate: new Date(),
                         location: formData.location,
                         assignedBy: user._id,
                         remarks: formData.remarks
+                    },  
+                }
+            });
+
+            if(selectedAsset.currentAssignment){
+                updatedData.data.$push = {
+                    assignmentHistory: {
+                        ...selectedAsset.currentAssignment,
+                        returnedDate: new Date()
                     }
                 }
-            }).unwrap();
+            }
+            await createMaster(updatedData).unwrap();
             setIsDialogOpen(false);
+            setSelectedItem(null);
             toast.success('Asset assigned successfully');
         } catch (error) {
             console.error('Error assigning asset:', error);

@@ -127,17 +127,12 @@ const AssetSchema = new mongoose.Schema({
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            refPath: 'currentAssignment.assignedModel'
+            refPath: 'currentAssignment.assignedType'
         },
         assignedType: {
             type: String,
             enum: ['User', 'Department'],
             required: true
-        },
-        assignedModel: {
-            type: String,
-            required: true,
-            enum: ['User', 'Department']
         },
         assignedDate: {
             type: Date,
@@ -161,17 +156,12 @@ const AssetSchema = new mongoose.Schema({
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
-            refPath: 'assignmentHistory.assignedModel'
+            refPath: 'assignmentHistory.assignedType'
         },
         assignedType: {
             type: String,
             enum: ['User', 'Department'],
             required: true
-        },
-        assignedModel: {
-            type: String,
-            required: true,
-            enum: ['User', 'Department']
         },
         assignedDate: {
             type: Date,
@@ -245,7 +235,6 @@ AssetSchema.methods.assign = async function(assignedTo: string, assignedType: 'U
     this.currentAssignment = {
         assignedTo: new mongoose.Types.ObjectId(assignedTo),
         assignedType,
-        assignedModel: assignedType, // Same as assignedType since we're using the model names
         assignedDate: new Date(),
         assignedBy: new mongoose.Types.ObjectId(assignedBy),
         location: new mongoose.Types.ObjectId(location),

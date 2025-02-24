@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { validate } from '@/shared/functions';
 
 interface AssetFormData {
     _id?: string;
@@ -37,17 +38,17 @@ interface AssetFormData {
 interface SpecificationsComponentProps {
     accessData: Record<string, any>;
     handleChange: (e: { target: { value: any } }, fieldName: string) => void;
-    selectedProduct: any;
+    selectedItem: any;
 }
 
-const SpecificationsComponent = ({ accessData, handleChange, selectedProduct }: SpecificationsComponentProps) => {
+const SpecificationsComponent = ({ accessData, handleChange, selectedItem:selectedProduct }: SpecificationsComponentProps) => {
     const [specs, setSpecs] = useState<Record<string, any>>(accessData || {});
-
+    console.log({accessData,selectedProduct})
     useEffect(() => {
         setSpecs(accessData || {});
     }, [accessData]);
 
-    if (!selectedProduct?.category?.specsRequired) {
+    if (!selectedProduct?.product?.category?.specsRequired) {
         return (
             <Card>
                 <CardContent className="pt-6">
@@ -62,16 +63,16 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedProduct }: 
     return (
         <Card>
             <CardContent className="pt-6 space-y-4">
-                {Object.entries(selectedProduct.category.specsRequired).map(([key, type]) => (
+                {Object.entries(selectedProduct?.product?.category?.specsRequired || {}).map(([key, value]) => (
                     <div key={key} className="flex gap-2 items-center">
                         <label className="w-1/3 font-medium">{key}:</label>
-                        {type === "boolean" ? (
+                        {value.type === "boolean" ? (
                             <Select
-                                value={String(specs[key] || "false")}
+                                value={String(specs[key]?.value || "false")}
                                 onValueChange={(val) => {
                                     const newSpecs = {
                                         ...specs,
-                                        [key]: val === "true"
+                                        [key]: {type:value.type,value:val === "true"}
                                     };
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specifications");
@@ -87,12 +88,12 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedProduct }: 
                             </Select>
                         ) : (
                             <Input
-                                type={type === "number" ? "number" : "text"}
-                                value={String(specs[key] || "")}
+                                type={value.type === "number" ? "number" : "text"}
+                                value={String(specs[key]?.value || "")}
                                 onChange={(e) => {
                                     const newSpecs = {
                                         ...specs,
-                                        [key]: type === "number" ? Number(e.target.value) : e.target.value
+                                        [key]: {type:value.type,value:value.type === "number" ? Number(e.target.value) : e.target.value}
                                     };
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specifications");
@@ -119,8 +120,10 @@ const AssetsPage = () => {
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.ASSET_MASTER,
         filter: { isActive: true },
-        populate: ['product', 'warehouse', 'vendor']
+        populate: ['product', 'warehouse', 'vendor',"product.category"]
     });
+
+    console.log({assetsResponse});
 
     const { data: productsResponse } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_MASTER,
@@ -148,18 +151,31 @@ const AssetsPage = () => {
             if (selectedItem) {
                 setSelectedItem({
                     ...selectedItem,
-                    product: productId,
+                    product: product,
                     specifications: {}
                 });
             }
         }
     };
 
+    const statusData = [
+        { _id: true, name: "True" },
+        { _id: false, name: "False" },
+      ];
+
     // Form fields configuration with validation
-    const formFields = [
+    const formFields = [ 
         {
-            name: "_id",
-            type: "hidden"
+            name: "product",
+            label: "Product",
+            type: "select",
+            placeholder:"select product",
+            required: true,
+            data: productsResponse?.data?.map((prod: any) => ({
+                name: `${prod.category.name} (${prod.name}-${prod.model})`,
+                _id: prod._id
+            })) || [],
+            onChange: handleProductChange
         },
         {
             name: "serialNumber",
@@ -167,34 +183,14 @@ const AssetsPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter serial number",
-            validate: (value: string) => {
-                if (!/^[A-Z0-9-]+$/.test(value)) {
-                    return "Serial number must contain only uppercase letters, numbers, and hyphens";
-                }
-                if (value.length < 4) {
-                    return "Serial number must be at least 4 characters";
-                }
-                if (value.length > 50) {
-                    return "Serial number must be less than 50 characters";
-                }
-                return undefined;
-            }
+            validate: validate.mixString
         },
-        {
-            name: "product",
-            label: "Product",
-            type: "select",
-            required: true,
-            data: productsResponse?.data?.map((prod: any) => ({
-                name: `${prod.name} (${prod.code})`,
-                _id: prod._id
-            })) || [],
-            onChange: handleProductChange
-        },
+       
         {
             name: "warehouse",
             label: "Warehouse",
             type: "select",
+            placeholder:"select warehouse",
             required: true,
             data: warehousesResponse?.data?.map((wh: any) => ({
                 name: wh.name,
@@ -223,13 +219,7 @@ const AssetsPage = () => {
             label: "Purchase Date",
             type: "date",
             required: true,
-            validate: (value: string) => {
-                const purchaseDate = new Date(value);
-                if (purchaseDate > new Date()) {
-                    return "Purchase date cannot be in the future";
-                }
-                return undefined;
-            }
+            validate: validate.notFutureDate
         },
         {
             name: "purchasePrice",
@@ -237,20 +227,13 @@ const AssetsPage = () => {
             type: "number",
             required: true,
             placeholder: "Enter purchase price",
-            validate: (value: number) => {
-                if (value <= 0) {
-                    return "Purchase price must be greater than 0";
-                }
-                if (value > 999999999) {
-                    return "Purchase price is too high";
-                }
-                return undefined;
-            }
+            validate: validate.greaterThanZero
         },
         {
             name: "vendor",
             label: "Vendor",
             type: "select",
+            placeholder:"select vendor",
             required: true,
             data: vendorsResponse?.data?.map((vendor: any) => ({
                 name: vendor.name,
@@ -263,33 +246,14 @@ const AssetsPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter PO number",
-            validate: (value: string) => {
-                if (!/^[A-Z0-9-]+$/.test(value)) {
-                    return "PO number must contain only uppercase letters, numbers, and hyphens";
-                }
-                if (value.length < 3) {
-                    return "PO number must be at least 3 characters";
-                }
-                if (value.length > 20) {
-                    return "PO number must be less than 20 characters";
-                }
-                return undefined;
-            }
+            validate: validate.mixString
         },
         {
             name: "prNumber",
             label: "PR Number",
             type: "text",
             placeholder: "Enter PR number",
-            validate: (value: string) => {
-                if (value && !/^[A-Z0-9-]+$/.test(value)) {
-                    return "PR number must contain only uppercase letters, numbers, and hyphens";
-                }
-                if (value && value.length > 20) {
-                    return "PR number must be less than 20 characters";
-                }
-                return undefined;
-            }
+            validate:validate.mixString
         },
         {
             name: "invoiceNumber",
@@ -297,18 +261,7 @@ const AssetsPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter invoice number",
-            validate: (value: string) => {
-                if (!/^[A-Z0-9-]+$/.test(value)) {
-                    return "Invoice number must contain only uppercase letters, numbers, and hyphens";
-                }
-                if (value.length < 3) {
-                    return "Invoice number must be at least 3 characters";
-                }
-                if (value.length > 20) {
-                    return "Invoice number must be less than 20 characters";
-                }
-                return undefined;
-            }
+            validate: validate.mixString
         },
         {
             name: "warrantyStartDate",
@@ -343,34 +296,41 @@ const AssetsPage = () => {
             label: "Warranty Details",
             type: "textarea",
             placeholder: "Enter warranty details",
-            validate: (value: string) => {
-                if (value && value.length > 1000) {
-                    return "Warranty details must be less than 1000 characters";
-                }
-                return undefined;
-            }
+            validate: validate.desription
         },
         {
             name: "isActive",
             label: "Status",
             type: "select",
-            options: ["Active", "Inactive"],
+            placeholder: "Select status",
+            data: statusData,
             required: true
         }
     ];
+    const editAsset = (data: any) => {
+        console.log({data});
+        setSelectedItem(data)
+        setDialogAction("Update");
+        setIsDialogOpen(true);
+    }
 
     // Configure table columns
     const columns = [
         {
             accessorKey: "serialNumber",
-            header: "Serial Number",
+            header: "serialNumber",
+            cell: ({ row }: any) => (
+                <div className='text-red-700' onClick={() => editAsset(row.original)}>
+                    {row.original.serialNumber}
+                </div>
+            )
         },
         {
             accessorKey: "product",
             header: "Product",
             cell: ({ row }: any) => (
                 <Badge variant="outline">
-                    {`${row.original.product?.name} (${row.original.product?.code})`}
+                    {`${row.original.product?.name}`}
                 </Badge>
             )
         },
@@ -443,17 +403,19 @@ const AssetsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
         try {
-            await createMaster({
+            console.log({formData});
+            
+            const response = await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
                     status: 'available',
-                    isActive: formData.isActive === "Active"
+                    isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            setIsDialogOpen(false);
+            return response
         } catch (error) {
             console.error('Error saving asset:', error);
         }
@@ -543,9 +505,9 @@ const AssetsPage = () => {
             setLoading(false);
         }
     }, [assetsLoading]);
-
+console.log({selectedItem})
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
             <DynamicDialog<AssetFormData>
@@ -557,7 +519,6 @@ const AssetsPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
-                width="full"
             />
         </div>
     );

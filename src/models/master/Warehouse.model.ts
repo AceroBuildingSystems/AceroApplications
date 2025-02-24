@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 const WarehouseSchema = new mongoose.Schema(
     {
         name: { type: String, required: true, unique: true },
-        code: { type: String, required: true, unique: true },
         location: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Location",

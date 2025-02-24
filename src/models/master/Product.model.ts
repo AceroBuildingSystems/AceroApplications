@@ -5,15 +5,11 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    code: {
-        type: String,
-        required: true,
-        unique: true
-    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ProductCategory',
-        required: true
+        required: true,
+        autopopulate: true
     },
     brand: {
         type: String,
@@ -24,23 +20,6 @@ const ProductSchema = new mongoose.Schema({
         required: true
     },
     description: String,
-    // unitOfMeasure: {
-    //     type: String,
-    //     required: true
-    // },
-    // minimumStockLevel: Number,
-    // maximumStockLevel: Number,
-    // reorderPoint: Number,
-    // unitCost: Number,
-    // vendor: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Vendor',
-    //     required: true
-    // },
-    // alternateVendors: [{
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'Vendor'
-    // }],
     isActive: {
         type: Boolean,
         default: true
@@ -59,6 +38,7 @@ const ProductSchema = new mongoose.Schema({
     timestamps: true
 });
 
+ProductSchema.plugin(require('mongoose-autopopulate'));
 const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema);
 
 export default Product;

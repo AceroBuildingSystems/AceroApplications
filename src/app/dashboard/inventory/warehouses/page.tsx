@@ -7,11 +7,11 @@ import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { MONGO_MODELS } from '@/shared/constants';
+import { validate } from '@/shared/functions';
 
 interface WarehouseFormData {
     _id?: string;
     name: string;
-    code: string;
     location: string;
     contactPerson: string;
     contactNumber: string;
@@ -38,30 +38,26 @@ const WarehousesPage = () => {
 
     const [createMaster] = useCreateMasterMutation();
 
+    const statusData = [
+        { _id: true, name: "True" },
+        { _id: false, name: "False" },
+      ];
+
     // Form fields configuration
     const formFields = [
-        {
-            name: "_id",
-            type: "hidden"
-        },
         {
             name: "name",
             label: "Name",
             type: "text",
             required: true,
-            placeholder: "Enter warehouse name"
-        },
-        {
-            name: "code",
-            label: "Code",
-            type: "text",
-            required: true,
-            placeholder: "Enter warehouse code"
+            placeholder: "Enter warehouse name",
+            validate: validate.text
         },
         {
             name: "location",
             label: "Location",
             type: "select",
+            placeholder: "Select location",
             required: true,
             data: locationsResponse?.data?.map((loc: any) => ({
                 name: loc.name,
@@ -86,21 +82,30 @@ const WarehousesPage = () => {
             name: "isActive",
             label: "Status",
             type: "select",
-            options: ["Active", "Inactive"],
+            placeholder: "Select status",
+            data: statusData,
             required: true
         }
     ];
+
+    const editWarehouse = (data: any) => {
+        setSelectedItem(data)
+        setDialogAction("Update");
+        setIsDialogOpen(true);
+    }
 
     // Configure table columns
     const columns = [
         {
             accessorKey: "name",
             header: "Name",
+            cell: ({ row }: any) => (
+                <div className='text-red-700' onClick={() => editWarehouse(row.original)}>
+                    {row.original.name}
+                </div>
+            )
         },
-        {
-            accessorKey: "code",
-            header: "Code",
-        },
+
         {
             accessorKey: "location",
             header: "Location",
@@ -128,16 +133,16 @@ const WarehousesPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: WarehouseFormData; action: string }) => {
         try {
-            await createMaster({
+            const response = await createMaster({
                 db: MONGO_MODELS.WAREHOUSE_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
-                    isActive: formData.isActive === "Active"
+                    isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            setIsDialogOpen(false);
+            return response;
         } catch (error) {
             console.error('Error saving warehouse:', error);
         }
@@ -159,7 +164,7 @@ const WarehousesPage = () => {
                 label: "Location",
                 type: "select" as const,
                 placeholder: "Filter by location",
-                options: locationsResponse?.data?.map((loc: any) => loc.name) || []
+                data: locationsResponse?.data?.map((loc: any) => loc.name) || []
             },
             {
                 key: "isActive",
@@ -189,7 +194,6 @@ const WarehousesPage = () => {
                     setDialogAction("Add");
                     setSelectedItem({
                         name: '',
-                        code: '',
                         location: '',
                         contactPerson: '',
                         contactNumber: '',
@@ -210,7 +214,7 @@ const WarehousesPage = () => {
     }, [warehousesLoading]);
 
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
             <DynamicDialog<WarehouseFormData>
@@ -222,7 +226,6 @@ const WarehousesPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
-                width="full"
             />
         </div>
     );

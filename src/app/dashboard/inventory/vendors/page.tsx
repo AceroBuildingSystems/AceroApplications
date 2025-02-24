@@ -10,6 +10,8 @@ import { MONGO_MODELS } from '@/shared/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'react-toastify';
+import { validate } from '@/shared/functions';
+
 
 interface ContactPerson {
     name: string;
@@ -21,7 +23,6 @@ interface ContactPerson {
 interface VendorFormData {
     _id?: string;
     name: string;
-    code: string;
     email: string;
     phone: string;
     website?: string;
@@ -132,7 +133,8 @@ const VendorsPage = () => {
     // API hooks
     const { data: vendorsResponse, isLoading: vendorsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.VENDOR_MASTER,
-        filter: { isActive: true }
+        filter: { isActive: true },
+        populate: ['location']
     });
 
     const { data: locationsResponse } = useGetMasterQuery({
@@ -141,40 +143,35 @@ const VendorsPage = () => {
     });
 
     const [createMaster] = useCreateMasterMutation();
-
+    const statusData = [
+        { _id: true, name: "True" },
+        { _id: false, name: "False" },
+      ];
     // Form fields configuration
     const formFields = [
-        {
-            name: "_id",
-            type: "hidden"
-        },
         {
             name: "name",
             label: "Name",
             type: "text",
             required: true,
-            placeholder: "Enter vendor name"
-        },
-        {
-            name: "code",
-            label: "Code",
-            type: "text",
-            required: true,
-            placeholder: "Enter vendor code"
+            placeholder: "Enter vendor name",
+            validate: validate.text
         },
         {
             name: "email",
             label: "Email",
             type: "email",
             required: true,
-            placeholder: "Enter email address"
+            placeholder: "Enter email address",
+            validate: validate.email
         },
         {
             name: "phone",
             label: "Phone",
             type: "text",
             required: true,
-            placeholder: "Enter phone number"
+            placeholder: "Enter phone number",
+            validate: validate.phone
         },
         {
             name: "website",
@@ -187,6 +184,7 @@ const VendorsPage = () => {
             label: "Location",
             type: "select",
             required: true,
+            placeholder: "Select location",
             data: locationsResponse?.data?.map((loc: any) => ({
                 name: loc.name,
                 _id: loc._id
@@ -202,20 +200,27 @@ const VendorsPage = () => {
             name: "isActive",
             label: "Status",
             type: "select",
-            options: ["Active", "Inactive"],
+            placeholder: "Select Status",
+            data: statusData,
             required: true
         }
     ];
+    const editVendors = (data: any) => {
+        setSelectedItem(data)
+        setDialogAction("Update");
+        setIsDialogOpen(true);
+    }
 
     // Configure table columns
     const columns = [
         {
             accessorKey: "name",
             header: "Name",
-        },
-        {
-            accessorKey: "code",
-            header: "Code",
+            cell: ({ row }: any) => (
+                <div className='text-red-700' onClick={() => editVendors(row.original)}>
+                    {row.original.name}
+                </div>
+            )
         },
         {
             accessorKey: "email",
@@ -259,16 +264,16 @@ const VendorsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: VendorFormData; action: string }) => {
         try {
-            await createMaster({
+            const response = await createMaster({
                 db: MONGO_MODELS.VENDOR_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
-                    isActive: formData.isActive === "Active"
+                    isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            setIsDialogOpen(false);
+            return response;
         } catch (error) {
             console.error('Error saving vendor:', error);
         }
@@ -320,7 +325,6 @@ const VendorsPage = () => {
                     setDialogAction("Add");
                     setSelectedItem({
                         name: '',
-                        code: '',
                         email: '',
                         phone: '',
                         location: '',
@@ -342,7 +346,7 @@ const VendorsPage = () => {
     }, [vendorsLoading]);
 
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
             <DynamicDialog<VendorFormData>
@@ -354,7 +358,6 @@ const VendorsPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
-                width="full"
             />
         </div>
     );

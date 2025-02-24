@@ -184,7 +184,69 @@ const mapFieldsToIds = (data, entityType, referenceData) => {
     });
 };
 
-
+export const validate = {
+    required: (value: string) => (value ? undefined : "Required"),
+    text: (value: string) => {
+        if (value.length < 3) return "Must be at least 3 characters";
+        if (value.length > 100) return "Must be less than 100 characters";
+        return undefined;
+    },
+    textSmall:(value: string) => {
+        if (value.length < 2) return "Must be at least 2 characters";
+        if (value.length > 50) return "Must be less than 50 characters";
+        return undefined;
+    },
+    number: (value: string) => {
+        if (isNaN(Number(value))) return "Invalid number";
+        return undefined;
+    },
+    greaterThanZero: (value: string) => {
+        if (isNaN(Number(value)) || Number(value) <= 0) return "Must be greater than 0";
+        return undefined;
+    },
+    phone: (value: string) => {
+        const phoneRegex = /^\d{10}$/;
+        return phoneRegex.test(value) ? undefined : "Invalid phone number";
+    },
+    email:(value: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) return "Invalid email address";
+        if (value.length < 5) return "Email must be at least 5 characters";
+        if (value.length > 100) return "Email must be less than 100 characters";
+        return undefined;
+    },
+    desription:(value: string) => {
+        if (value && value.length > 500) return "Description must be less than 500 characters";
+        return undefined;
+    },
+    specification:(value: Record<string, string>) => {
+        if (Object.keys(value).length === 0) return "At least one specification is required";
+        return undefined;
+    },
+    mixString:(value: string) => {
+        if (!/^[A-Z0-9-]+$/.test(value)) {
+            return "Must contain only uppercase letters, numbers, and hyphens";
+        }
+        if (value.length < 4) {
+            return "Must be at least 4 characters";
+        }
+        if (value.length > 50) {
+            return "Must be less than 50 characters";
+        }
+        return undefined;
+    },
+    notFutureDate:(value: string) => {
+        const purchaseDate = new Date(value);
+        if (purchaseDate > new Date()) {
+            return "Dateate cannot be in the future";
+        }
+        return undefined;
+    },
+    locationSelected:(value: string) => {
+        if (!value) return "Location must be selected";
+        return undefined;
+    }
+}
 
 
 

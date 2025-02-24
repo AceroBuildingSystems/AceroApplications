@@ -62,12 +62,14 @@ const AssetSchema = new mongoose.Schema({
     serialNumber: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        sparse:true
     },
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
-        required: true
+        required: true,
+        autopopulate:true
     },
     warehouse: {
         type: mongoose.Schema.Types.ObjectId,
@@ -126,27 +128,26 @@ const AssetSchema = new mongoose.Schema({
     currentAssignment: {
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
+
             refPath: 'currentAssignment.assignedType'
         },
         assignedType: {
             type: String,
             enum: ['User', 'Department'],
-            required: true
+
         },
         assignedDate: {
             type: Date,
-            required: true
+
         },
         assignedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+
         },
         location: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Location',
-            required: true
         },
         remarks: String
     },
@@ -155,28 +156,28 @@ const AssetSchema = new mongoose.Schema({
     assignmentHistory: [{
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
-            required: true,
+
             refPath: 'assignmentHistory.assignedType'
         },
         assignedType: {
             type: String,
             enum: ['User', 'Department'],
-            required: true
+
         },
         assignedDate: {
             type: Date,
-            required: true
+
         },
         returnedDate: Date,
         assignedBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            required: true
+
         },
         location: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Location',
-            required: true
+
         },
         remarks: String
     }],
@@ -201,16 +202,16 @@ const AssetSchema = new mongoose.Schema({
     addedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     }
 }, {
     timestamps: true
 });
+
+AssetSchema.plugin(require('mongoose-autopopulate'));
 
 // Update inventory when asset is created
 AssetSchema.post('save', async function(this: IAsset) {

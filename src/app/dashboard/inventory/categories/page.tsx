@@ -10,11 +10,9 @@ import { MONGO_MODELS } from '@/shared/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'react-toastify';
-
+import { validate } from '@/shared/functions';
 interface CategoryFormData {
     _id?: string;
     name: string;
@@ -153,31 +151,21 @@ const ProductCategoriesPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter category name",
-            validate: (value: string) => {
-                if (value.length < 3) return "Name must be at least 3 characters";
-                if (value.length > 50) return "Name must be less than 50 characters";
-                return undefined;
-            }
+            validate: validate.text
         },
         {
             name: "description",
             label: "Description",
             type: "textarea",
             placeholder: "Enter category description",
-            validate: (value: string) => {
-                if (value && value.length > 500) return "Description must be less than 500 characters";
-                return undefined;
-            }
+            validate: validate.desription
         },
         {
             name: "specsRequired",
             label: "Required Specifications",
             type: "custom",
             CustomComponent: SpecificationsComponent,
-            validate: (value: Record<string, string>) => {
-                if (Object.keys(value).length === 0) return "At least one specification is required";
-                return undefined;
-            }
+            validate: validate.specification
         },
         {
             name: "isActive",
@@ -228,13 +216,13 @@ const ProductCategoriesPage = () => {
                 );
             }
         },
-        {
+       {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
-                <Badge variant={row.original.isActive ? "default" : "destructive"}>
+                <div className={`px-2 py-1 rounded-full text-center ${row.original.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {row.original.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+                </div>
             )
         }
     ];
@@ -312,7 +300,7 @@ const ProductCategoriesPage = () => {
             setLoading(false);
         }
     }, [isLoading]);
-console.log(categoriesResponse)
+
     return (
         <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />

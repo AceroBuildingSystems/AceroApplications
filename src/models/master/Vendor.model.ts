@@ -1,5 +1,5 @@
 import mongoose, { Model, Schema } from "mongoose";
-import { vendor, ContactPerson, PaymentDetails } from "@/types/master/vendor.types";
+import { vendor, ContactPerson } from "@/types/master/vendor.types";
 
 const ContactPersonSchema = new Schema<ContactPerson>({
     name: { type: String, required: true },
@@ -8,17 +8,9 @@ const ContactPersonSchema = new Schema<ContactPerson>({
     phone: { type: String, required: true }
 }, { _id: false });
 
-// const PaymentDetailsSchema = new Schema<PaymentDetails>({
-//     accountName: { type: String, required: true },
-//     accountNumber: { type: String, required: true },
-//     bankName: { type: String, required: true },
-//     swiftCode: { type: String },
-//     taxId: { type: String }
-// }, { _id: false });
 
 const VendorSchema: Schema<vendor> = new Schema({
     name: { type: String, required: true, unique: true },
-    code: { type: String, required: true, unique: true },
     email: { type: String, required: true },
     phone: { type: String, required: true },
     website: { type: String },
@@ -29,10 +21,6 @@ const VendorSchema: Schema<vendor> = new Schema({
         autopopulate: true
     },
     contactPersons: [ContactPersonSchema],
-    // paymentDetails: { type: PaymentDetailsSchema, required: true },
-    // registrationNumber: { type: String },
-    // taxRegistrationNumber: { type: String },
-    // creditPeriod: { type: Number },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String }

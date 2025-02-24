@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus, UserPlus, RotateCcw, History } from 'lucide-react';
+import { Plus, UserPlus, RotateCcw, History, Undo2, FileClock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'react-toastify';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
+import { validate } from '@/shared/functions';
 
 interface AssignmentFormData {
     _id: string;
@@ -47,9 +48,9 @@ console.log({asset})
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-w-3xl max-h-[90%] ">
                 <DialogHeader>
-                    <DialogTitle>Assignment History - {asset.product.serialNumber}</DialogTitle>
+                    <DialogTitle>Assignment History - {asset.serialNumber}</DialogTitle>
                 </DialogHeader>
                 <div className="mt-4">
                     <Card>
@@ -92,11 +93,11 @@ console.log({asset})
 
                     <Separator className="my-4" />
 
-                    <Card>
+                    <Card  >
                         <CardHeader>
                             <CardTitle className="text-sm font-medium">Assignment History</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className='overflow-y-auto max-h-[120px]' >
                             <ScrollArea className="h-[300px] pr-4">
                                 <div className="space-y-4">
                                     {asset.assignmentHistory?.length > 0 ? (
@@ -201,15 +202,17 @@ const AssetManagementPage = () => {
 
     const [createMaster] = useCreateMasterMutation();
 
+    const statusData = [
+        { _id: true, name: "True" },
+        { _id: false, name: "False" },
+      ];
+
     // Form fields for assignment
     const formFields = [
         {
-            name: "_id",
-            type: "hidden"
-        },
-        {
             name: "assignedType",
             label: "Assign To",
+            placeholder:"Select assign to",
             type: "select",
             required: true,
             data: [
@@ -221,6 +224,7 @@ const AssetManagementPage = () => {
         {
             name: "assignedTo",
             label: "Select User/Department",
+            placeholder: "Select user/department",
             type: "select",
             required: true,
             data: assignmentType === 'User' 
@@ -242,14 +246,12 @@ const AssetManagementPage = () => {
             label: "Location",
             type: "select",
             required: true,
+            placeholder: "Select location",
             data: locationResponse?.data?.map((location: any) => ({
                 name: location.name,
                 _id: location._id
             })) || [],
-            validate: (value: string) => {
-                if (!value) return "Location must be selected";
-                return undefined;
-            }
+            validate: validate.locationSelected
         },
         {
             name: "remarks",
@@ -330,7 +332,7 @@ const AssetManagementPage = () => {
                             <UserPlus className="h-4 w-4" />
                         </Button>
                    
-                    {/* {row.original.status === 'assigned' && (
+                    {row.original.status === 'assigned' && (
                         <Button
                             size="sm"
                             variant="outline"
@@ -340,9 +342,9 @@ const AssetManagementPage = () => {
                             }}
                             disabled={actionLoading}
                         >
-                            <RotateCcw className="h-4 w-4" />
+                            <Undo2 className="h-4 w-4" />
                         </Button>
-                    )} */}
+                    )}
                     <Button
                         size="sm"
                         variant="ghost"
@@ -352,7 +354,7 @@ const AssetManagementPage = () => {
                             setIsHistoryOpen(true);
                         }}
                     >
-                        <History className="h-4 w-4" />
+                        <FileClock className="h-4 w-4" />
                     </Button>
                 </div>
             )
@@ -429,10 +431,10 @@ const AssetManagementPage = () => {
                     }
                 }
             }
-            await createMaster(updatedData).unwrap();
-            setIsDialogOpen(false);
+            const response = await createMaster(updatedData).unwrap();
             setSelectedItem(null);
             toast.success('Asset assigned successfully');
+            return response
         } catch (error) {
             console.error('Error assigning asset:', error);
             toast.error('Failed to assign asset');
@@ -485,7 +487,7 @@ const AssetManagementPage = () => {
     }, [assetsLoading]);
 
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
             <DynamicDialog<AssignmentFormData>
@@ -498,7 +500,7 @@ const AssetManagementPage = () => {
                 action={dialogAction}
                 isSubmitting={actionLoading}
                 height="auto"
-                width="full"
+
             />
 
             <HistoryDialog

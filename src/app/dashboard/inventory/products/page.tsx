@@ -13,22 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { validate } from '@/shared/functions';
 
 interface ProductFormData {
     _id?: string;
     name: string;
-    code: string;
     category: string;
     brand: string;
     model: string;
     description?: string;
-    unitOfMeasure: string;
-    minimumStockLevel?: number;
-    maximumStockLevel?: number;
-    reorderPoint?: number;
-    unitCost?: number;
-    vendor: string;
-    alternateVendors?: string[];
     isActive: string;
 }
 
@@ -57,42 +50,26 @@ const ProductsPage = () => {
     });
 
     const [createMaster] = useCreateMasterMutation();
-
+    const statusData = [
+        { _id: true, name: "True" },
+        { _id: false, name: "False" },
+      ];
     // Form fields configuration with validation
     const formFields = [
-        {
-            name: "_id",
-            type: "hidden"
-        },
         {
             name: "name",
             label: "Name",
             type: "text",
             required: true,
             placeholder: "Enter product name",
-            validate: (value: string) => {
-                if (value.length < 3) return "Name must be at least 3 characters";
-                if (value.length > 100) return "Name must be less than 100 characters";
-                return undefined;
-            }
+            validate: validate.text
         },
-        {
-            name: "code",
-            label: "Code",
-            type: "text",
-            required: true,
-            placeholder: "Enter product code",
-            validate: (value: string) => {
-                if (!/^[A-Z0-9-]+$/.test(value)) return "Code must contain only uppercase letters, numbers, and hyphens";
-                if (value.length < 2) return "Code must be at least 2 characters";
-                if (value.length > 20) return "Code must be less than 20 characters";
-                return undefined;
-            }
-        },
+   
         {
             name: "category",
             label: "Category",
             type: "select",
+            placeholder: "Select category",
             required: true,
             data: categoriesResponse?.data?.map((cat: any) => ({
                 name: cat.name,
@@ -105,11 +82,7 @@ const ProductsPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter brand name",
-            validate: (value: string) => {
-                if (value.length < 2) return "Brand must be at least 2 characters";
-                if (value.length > 50) return "Brand must be less than 50 characters";
-                return undefined;
-            }
+            validate: validate.textSmall
         },
         {
             name: "model",
@@ -117,130 +90,45 @@ const ProductsPage = () => {
             type: "text",
             required: true,
             placeholder: "Enter model number",
-            validate: (value: string) => {
-                if (value.length < 2) return "Model must be at least 2 characters";
-                if (value.length > 50) return "Model must be less than 50 characters";
-                return undefined;
-            }
+            validate: validate.textSmall
         },
         {
             name: "description",
             label: "Description",
             type: "textarea",
             placeholder: "Enter product description",
-            validate: (value: string) => {
-                if (value && value.length > 1000) return "Description must be less than 1000 characters";
-                return undefined;
-            }
-        },
-        {
-            name: "unitOfMeasure",
-            label: "Unit of Measure",
-            type: "text",
-            required: true,
-            placeholder: "Enter unit of measure",
-            validate: (value: string) => {
-                if (value.length < 1) return "Unit of measure is required";
-                if (value.length > 20) return "Unit of measure must be less than 20 characters";
-                return undefined;
-            }
-        },
-        {
-            name: "minimumStockLevel",
-            label: "Minimum Stock Level",
-            type: "number",
-            placeholder: "Enter minimum stock level",
-            validate: (value: number, formData: ProductFormData) => {
-                if (value < 0) return "Minimum stock level cannot be negative";
-                if (formData.maximumStockLevel && value >= formData.maximumStockLevel) {
-                    return "Minimum stock level must be less than maximum stock level";
-                }
-                return undefined;
-            }
-        },
-        {
-            name: "maximumStockLevel",
-            label: "Maximum Stock Level",
-            type: "number",
-            placeholder: "Enter maximum stock level",
-            validate: (value: number, formData: ProductFormData) => {
-                if (value < 0) return "Maximum stock level cannot be negative";
-                if (formData.minimumStockLevel && value <= formData.minimumStockLevel) {
-                    return "Maximum stock level must be greater than minimum stock level";
-                }
-                return undefined;
-            }
-        },
-        {
-            name: "reorderPoint",
-            label: "Reorder Point",
-            type: "number",
-            placeholder: "Enter reorder point",
-            validate: (value: number, formData: ProductFormData) => {
-                if (value < 0) return "Reorder point cannot be negative";
-                if (formData.minimumStockLevel && value < formData.minimumStockLevel) {
-                    return "Reorder point should be at least the minimum stock level";
-                }
-                if (formData.maximumStockLevel && value > formData.maximumStockLevel) {
-                    return "Reorder point cannot be greater than maximum stock level";
-                }
-                return undefined;
-            }
-        },
-        {
-            name: "unitCost",
-            label: "Unit Cost",
-            type: "number",
-            placeholder: "Enter unit cost",
-            validate: (value: number) => {
-                if (value < 0) return "Unit cost cannot be negative";
-                if (value > 999999999) return "Unit cost is too high";
-                return undefined;
-            }
-        },
-        {
-            name: "vendor",
-            label: "Primary Vendor",
-            type: "select",
-            required: true,
-            data: vendorsResponse?.data?.map((vendor: any) => ({
-                name: vendor.name,
-                _id: vendor._id
-            })) || []
-        },
-        {
-            name: "alternateVendors",
-            label: "Alternate Vendors",
-            type: "multiselect",
-            data: vendorsResponse?.data?.map((vendor: any) => ({
-                label: vendor.name,
-                value: vendor._id
-            })) || [],
-            validate: (value: string[], formData: ProductFormData) => {
-                if (value.includes(formData.vendor)) {
-                    return "Primary vendor cannot be an alternate vendor";
-                }
-                return undefined;
-            }
+            validate: validate.desription
         },
         {
             name: "isActive",
             label: "Status",
             type: "select",
-            options: ["Active", "Inactive"],
+            placeholder: "Enter the status ",
+            data: statusData,
             required: true
         }
     ];
+
+    const editProducts = (data: any) => {
+        setSelectedItem(data)
+        setDialogAction("Update");
+        setIsDialogOpen(true);
+    }
 
     // Configure table columns
     const columns = [
         {
             accessorKey: "name",
             header: "Name",
+            cell: ({ row }: any) => (
+                <div className='text-red-700' onClick={() => editProducts(row.original)}>
+                    {row.original.name}
+                </div>
+            )
         },
         {
-            accessorKey: "code",
-            header: "Code",
+            accessorKey: "description",
+            header: "Description",
         },
         {
             accessorKey: "category",
@@ -260,21 +148,12 @@ const ProductsPage = () => {
             header: "Model",
         },
         {
-            accessorKey: "vendor",
-            header: "Primary Vendor",
-            cell: ({ row }: any) => (
-                <Badge variant="secondary">
-                    {row.original.vendor?.name || ''}
-                </Badge>
-            )
-        },
-        {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
-                <Badge variant={row.original.isActive ? "default" : "destructive"}>
+                <div className={`px-2 py-1 rounded-full text-center ${row.original.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                     {row.original.isActive ? 'Active' : 'Inactive'}
-                </Badge>
+                </div>
             )
         }
     ];
@@ -282,16 +161,17 @@ const ProductsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: ProductFormData; action: string }) => {
         try {
-            await createMaster({
+           const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
-                    isActive: formData.isActive === "Active"
+                    isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            setIsDialogOpen(false);
+
+            return response;
         } catch (error) {
             console.error('Error saving product:', error);
         }
@@ -345,7 +225,6 @@ const ProductsPage = () => {
                     setDialogAction("Add");
                     setSelectedItem({
                         name: '',
-                        code: '',
                         category: '',
                         brand: '',
                         model: '',
@@ -368,7 +247,7 @@ const ProductsPage = () => {
     }, [productsLoading]);
 
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
             <DynamicDialog<ProductFormData>
@@ -380,7 +259,6 @@ const ProductsPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
-                width="full"
             />
         </div>
     );

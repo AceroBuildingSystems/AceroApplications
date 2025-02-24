@@ -31,6 +31,7 @@ interface Field {
   CustomComponent?: React.ComponentType<{
     accessData: any;
     handleChange: (e: { target: { value: any } }, fieldName: string) => void;
+    selectedItem?: any;
   }>;
 }
 
@@ -188,8 +189,8 @@ function DynamicDialog<T extends BaseFormData>({
 
       const response = await onSave({ formData: updatedData, action });
       console.log({response})
-      if(response.error){
-        toast.error(response.error.message);
+      if(!response || response.error){
+        toast.error(response.error.message || "Something Went Wrong!");
         return;
       }
       toast.success(`${selectedMaster} ${action === 'Add' ? 'created' : 'updated'} successfully`);
@@ -201,12 +202,13 @@ function DynamicDialog<T extends BaseFormData>({
   };
 
   return (
+
     <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
         className={`max-w-full max-h-[90%] pointer-events-auto mx-2  ${height === 'auto' ? 'h-auto' : 'h-[75%]'} ${width === 'full' ? 'w-[95%] h-[90%]' : 'sm:max-w-md lg:max-w-3xl'}`}>
         <DialogTitle className="pl-1">{`${action} ${selectedMaster?.toProperCase()
           }`}</DialogTitle>
-        <div className="bg-white h-full overflow-y-auto p-2 rounded-md">
+        <div className="bg-white h-full max-h-[450px] overflow-y-auto p-2 rounded-md">
           <div className="space-y-4 pr-2 pl-1 my-1 overflow-y-auto">
             <form>
               <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4`}>
@@ -287,6 +289,7 @@ function DynamicDialog<T extends BaseFormData>({
                                 <field.CustomComponent 
                                   accessData={formData[field.name]} 
                                   handleChange={handleChange}
+                                  selectedItem={initialData}
                                 />
                                 {errors[field.name] && (
                                   <span className="text-sm text-destructive">{errors[field.name]}</span>
@@ -333,7 +336,7 @@ function DynamicDialog<T extends BaseFormData>({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Assigning..." : "Assign"}
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </DialogFooter>
       </DialogContent>

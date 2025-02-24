@@ -32,9 +32,5 @@ import Quotation from "./aqm/QuotationModel.model"
 import ProposalRevisions from "./aqm/ProposalRevisions.model"
 import Proposal from "./aqm/Proposals.model"
 
-//Asset and inventory
-import Asset from "./master/Asset.model"
-import Vendor from "./master/Vendor.model"
-
 export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, Team, TeamMember,Currency, Customer,
-     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation, Asset, Vendor }
+     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation }

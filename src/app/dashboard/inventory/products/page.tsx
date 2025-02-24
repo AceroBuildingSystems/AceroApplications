@@ -43,7 +43,7 @@ const ProductsPage = () => {
     const { data: productsResponse, isLoading: productsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_MASTER,
         filter: { isActive: true },
-        populate: ['category', 'vendor']
+        populate: ['category']
     });
 
     const { data: categoriesResponse } = useGetMasterQuery({

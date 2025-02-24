@@ -49,7 +49,7 @@ console.log({asset})
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Assignment History - {asset.serialNumber}</DialogTitle>
+                    <DialogTitle>Assignment History - {asset.product.serialNumber}</DialogTitle>
                 </DialogHeader>
                 <div className="mt-4">
                     <Card>

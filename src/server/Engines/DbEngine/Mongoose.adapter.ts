@@ -189,6 +189,7 @@ export class MongooseAdapter implements DatabaseAdapter {
       return { status: ERROR, message: `Model ${modelName} not found` };
 
     let doc = null;
+    console.debug(options)
     if (options.bulkInsert) {
       doc = await model.insertMany(options.data);
     } else {

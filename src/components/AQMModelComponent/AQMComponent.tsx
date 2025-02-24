@@ -14,7 +14,7 @@ import mongoose, { set } from "mongoose";
 import { Combobox } from "../ui/ComboBoxWrapper";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
-import { LogOut, Save } from 'lucide-react';
+import { LogOut, Save, Check, X } from 'lucide-react';
 
 import { Switch } from "../ui/switch";
 import {
@@ -689,6 +689,51 @@ const QuotationDialog = ({
           return;
         };
 
+        if (status === 'approved' || status === 'rejected') {
+          if (formData['rejectReason'] === null || formData['rejectReason'] === '') {
+            toast.error('Please enter reason to reject.')
+            return;
+          }
+          if (status === 'rejected') {
+            const rejectedData = {
+              _id: initialData['_id'],
+              status: status,
+              rejectReason: formData['rejectReason'],
+              rejectedDate: new Date()
+            };
+
+            const response = await onSave({ formData: rejectedData, action, master });
+console.log(response?.data?.data?.salesEngineer?.user?.email);
+            const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Rejected : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalRequestRejected", senderName: 'Sales Director', approveUrl: '', rejectUrl: '', reason: formData['rejectReason'] };
+            await sendEmail(emailData);
+            toast.success(`Quote approval request rejected successfully.`);
+          }
+          else {
+
+            const approvedData = {
+              _id: formData['_id'],
+              status: status
+            };
+
+            const response = await onSave({ formData: approvedData, action, master });
+
+            const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Approved : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalApproved", senderName: 'Sales Director', approveUrl: '', rejectUrl: '' };
+            await sendEmail(emailData);
+            toast.success(`Quote approval request approved successfully.`);
+          }
+
+         
+          setFormData({});
+          setOfferRevisions([]);
+          setDrawingRevisions([]);
+          setProposalDataIds({});
+
+          closeDialog();
+
+          return;
+        };
+
+
         const updatedProposalRevData = proposalRevData.map((item, index) =>
           index === proposalRevData.length - 1 // Check if it's the last index
             ? { ...item, changes: { ...item.changes, ...formData, status } } // Merge existing changes with new ones
@@ -795,7 +840,7 @@ const QuotationDialog = ({
           await sendEmail(emailData);
         }
 
-      }
+      };
       setFormData({});
       setOfferRevisions([]);
       setDrawingRevisions([]);
@@ -1085,7 +1130,32 @@ const QuotationDialog = ({
           <div className="h-full flex flex-col min-h-0">
             {/* Title/Header Section */}
             <div className="flex items-center justify-between py-3 ">
-              <div className="font-semibold text-base">{formData?.quoteNo ? `${selectedMaster?.toProperCase()}   (${initialData?.country?.countryCode}-${initialData?.year?.toString().slice(-2)}-${formData?.quoteNo})` : selectedMaster?.toProperCase()}</div>
+              <div className="flex  items-center gap-3 font-semibold text-base">
+                <div>
+                  {formData?.quoteNo ? `${selectedMaster?.toProperCase()}   (${initialData?.country?.countryCode}-${initialData?.year?.toString().slice(-2)}-${formData?.quoteNo})` : selectedMaster?.toProperCase()}
+                </div>
+                <div className="flex gap-2">
+                  {action === 'Update' && initialData?.status === 'submitted' && initialData?.salesEngineer?.team?.teamHead[0]?._id === user?._id && <Button
+                    effect="expandIcon"
+                    icon={Check}
+                    iconPlacement="right"
+                    onClick={() => handleSubmitQuotation('approved')}
+                    className={`w-28 bg-green-600 hover:bg-green-700 duration-300`}
+                  >
+                    Approve
+                  </Button>}
+
+                  {action === 'Update' && initialData?.status === 'submitted' && initialData?.salesEngineer?.team?.teamHead[0]?._id === user?._id && <Button
+                    effect="expandIcon"
+                    icon={X}
+                    iconPlacement="right"
+                    onClick={() => handleSubmitQuotation('rejected')}
+                    className={`w-28 bg-red-600 hover:bg-red-700 duration-300`}
+                  >
+                    Reject
+                  </Button>}
+                </div>
+              </div>
               <div className="flex gap-2">
 
                 {<Button
@@ -1150,7 +1220,7 @@ const QuotationDialog = ({
                       <div className="bg-white flex-1 h-[calc(100vh-180px)] overflow-y-auto p-2 rounded-md py-3">
                         {section !== "CycleTimeDetails" && (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {fields.filter(field => field.section === section).map((field, index) => (
-                            <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""} ${field.visibility ? '' : 'hidden'} ${(field.name === "approvalAuthority" || field.name === "plotNumber") && region !== "GCC" ? "hidden" : ""} ${(field.name === "quoteNo") && (initialData?.status === undefined || initialData?.status === 'draft') ? 'hidden' : ''}`}>
+                            <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""} ${field.visibility ? '' : 'hidden'} ${(field.name === "approvalAuthority" || field.name === "plotNumber") && region !== "GCC" ? "hidden" : ""} ${(field.name === "quoteNo") && (initialData?.status === undefined || initialData?.status === 'draft') ? 'hidden' : ''} ${(field.name === "rejectReason") && (initialData?.status === undefined || (initialData?.status !== 'submitted' && initialData?.status !== 'rejected')) ? 'hidden' : ''}`}>
                               <div className="flex justify-between items-center">
                                 <div className="flex gap-2 items-center">
                                   {field.label && <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>}

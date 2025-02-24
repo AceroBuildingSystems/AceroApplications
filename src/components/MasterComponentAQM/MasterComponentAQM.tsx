@@ -1,0 +1,391 @@
+"use client"
+
+import React from 'react'
+import DashboardLoader from '../ui/DashboardLoader';
+import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from '../ui/button';
+import { Plus, Import, Download, Upload, ChevronsUpDown, Check, Filter, FilterX } from 'lucide-react';
+import { use } from 'chai';
+import { DataTable } from '../TableComponent/TableComponent';
+import { useState } from 'react';
+import { SelectGroup, SelectItem, SelectLabel } from '@radix-ui/react-select';
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { useEffect } from 'react';
+import { ObjectId } from 'mongoose';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
+import { cn } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import * as XLSX from "xlsx";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { Separator } from '../ui/separator';
+
+// Interface for individual Input and Select field configurations
+interface FieldConfig {
+    key: string
+    label: string; // The label for the field
+    type: 'text' | 'email' | 'select'; // Type of the field (input or select)
+    placeholder?: string; // Placeholder for input fields (optional)
+    options?: string[]; // Options for select fields (optional)
+}
+
+// Interface for Button configuration
+interface ButtonConfig {
+    label: string; // The label for the button
+    action: () => void; // Function to handle button click
+    icon?: React.ElementType; // Icon for the button
+    className?: string; // Optional CSS class for styling
+}
+
+// Interface for Data Table configuration
+interface DataTableConfig {
+    columns: string[]; // Column names for the table
+    data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
+}
+
+// Main interface for the page configuration
+interface PageConfig {
+    searchFields?: FieldConfig[]; // Array of search field configurations
+    filterFields?: FieldConfig[]; // Array of filter field configurations
+    dataTable: DataTableConfig; // Data table configuration
+    buttons?: ButtonConfig[]; // Array of button configurations
+}
+
+interface MasterComponentProps {
+    config: PageConfig;
+    loadingState: boolean;
+    rowClassMap: any;
+    handleExport: any;
+}
+
+
+const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, handleExport }) => {
+
+    const [searchValues, setSearchValues] = useState<Record<string, string>>({});
+    const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
+    const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
+
+    const availableFilters: FieldConfig[] = [
+        ...(config?.filterFields || []),
+        { key: "status", label: 'status', type: "select" as const, options: config?.filterData?.statusNames, placeholder: 'Select Status', filterBy: "name", name: 'Status By Color' },
+        { key: "quoteStatus", label: 'quoteStatus', type: "select" as const, options: config?.filterData?.quoteStatusNames, placeholder: 'Select Quote Status', filterBy: "id", name: 'Quote Status' },
+
+    ];
+
+    // Track active filters (default to config filters)
+    const [activeFilters, setActiveFilters] = useState<FieldConfig[]>([]);
+    const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({});
+    console.log(activeFilters);
+    const toggleFilterOpen = (key: string, isOpen: boolean) => {
+        setOpenFilters((prev) => ({
+            ...prev,
+            [key]: isOpen, // Toggle only the clicked filter
+        }));
+    };
+
+
+    useEffect(() => {
+        setFilteredData(config?.dataTable?.data)
+    }, [config, loadingState])
+
+    // Handle input field change
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
+        const newSearchValues = { ...searchValues, [field]: e.target.value };
+
+        setSearchValues(newSearchValues);
+        // filterData(newSearchValues, filterValues); // Trigger filterData after search change
+    };
+
+    // Handle filter field change (select)
+    const handleFilterChange = (value: string | null, field: string) => {
+
+        const newFilterValues = { ...filterValues, [field]: value };
+
+        setFilterValues(newFilterValues);
+        // filterData(searchValues, newFilterValues); // Trigger filterData after filter change
+    };
+
+    // Toggle filters dynamically
+    const toggleFilter = (filter: FieldConfig) => {
+        setActiveFilters(prev => {
+            if (prev.some(f => f.key === filter.key)) {
+                // Remove filter
+                setFilterValues(prev => {
+                    const updatedFilters = { ...prev };
+                    delete updatedFilters[filter.key];
+                    return updatedFilters;
+                });
+                return prev.filter(f => f.key !== filter.key);
+            } else {
+                // Add filter
+                return [...prev, filter];
+            }
+        });
+    };
+
+    useEffect(() => {
+
+        filterData(searchValues, filterValues); // Trigger filtering after search/filter change
+    }, [searchValues, filterValues]);
+    const searchFields = ['jobNo', 'quoteNo', 'projectName']
+    // Filter data based on search and filter criteria
+    const filterData = (searchValues: any, filterValues: any) => {
+        console.log(searchValues);
+
+        const filtered = config?.dataTable?.data?.filter((item) => {
+            // Check if item matches search criteria
+            const matchesSearch = searchFields.some((field) => {
+                // Make sure the field exists in the item and is not null/undefined
+                const value = item[field];
+                const searchQuery = searchValues['name']||'';
+                // Check if the field value matches the search query
+                if (value) {
+                    console.log(value,searchQuery)
+                    return searchQuery.toLowerCase().includes(value.toString().toLowerCase());
+                }
+                return false;
+            });
+
+            // Check if item matches filter criteria
+            const matchesFilter = activeFilters.every((field) => {
+                const key = field.key;
+                console.log(field)
+                console.log(filterValues);
+                const filterValue = filterValues[key];
+                console.log(filterValue);
+                // If no filter value, pass the filter
+                if (filterValue === null) return true;
+
+                // Use filterBy to determine comparison
+                if (field.filterBy === "id") {
+                    console.log(item);
+                    return item[key]?.name === filterValue; // Compare ID for quoteStatus
+                } else {
+                    return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
+                }
+            });
+
+            return matchesSearch || matchesFilter;
+        });
+
+        console.log(filtered);
+        setFilteredData(filtered); // Update filtered data state
+    };
+
+
+    const resetFilters = () => {
+        setActiveFilters([]);
+        setSearchValues({});
+        setFilterValues({});
+    };
+    const [open, setOpen] = React.useState(false)
+    const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+
+    return (
+        <>
+            <DashboardLoader loading={loadingState}>
+                <div className="flex flex-col gap-1 w-full h-full px-4">
+
+                    {/* Filter Section */}
+                    <div className="flex flex-row justify-between gap-2">
+                        <div className="flex flex-row items-center gap-2  w-full">
+
+                            {/* Add Filter & Reset Buttons */}
+                            <Popover>
+                                <PopoverTrigger asChild>
+
+                                    <div>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Filter className="h-5 w-5 mr-2 cursor-pointer" />
+                                                </TooltipTrigger>
+                                                <TooltipContent>
+                                                    Add Filter
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+
+                                    </div>
+                                </PopoverTrigger>
+                                {/* Popover Content */}
+                                <PopoverContent className="fixed top-1/2 w-[600px] mt-2">
+
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        {/* Render Filter Buttons */}
+                                        {config?.filterFields?.map((filter, index) => (
+                                            <React.Fragment key={index}>
+                                                <Button
+                                                    variant={activeFilters.some((f) => f.key === filter.key) ? "default" : "outline"}
+                                                    onClick={() => toggleFilter(filter)}
+                                                    className="text-sm px-3 py-1"
+                                                >
+                                                    {filter.name}
+                                                </Button>
+
+                                                {/* Render Separator if it's not the last button */}
+                                                {index !== config?.filterFields.length - 1 && (
+                                                    <Separator className="h-7 w-[1px] bg-slate-400" orientation="vertical" />
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+
+                                    </div>
+                                    <Separator className="my-3" />
+                                    {/* Render Filter Dropdowns inside Popover */}
+                                    <div className=" space-y-2">
+                                        {activeFilters.map((field, index) => (
+                                            <div key={index} className="flex w-[200px] flex-col">
+                                                <span className="text-sm font-medium">{field.label}</span>
+
+                                                {/* Dropdown */}
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="outline" className="w-full justify-between">
+                                                            {filterValues[field.key] || "Select..."}
+                                                            <Check className="ml-2 h-4 w-4 opacity-50" />
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-[200px] p-0">
+                                                        <Command>
+                                                            <CommandInput placeholder={`Search ${field.label}`} />
+                                                            <CommandList>
+                                                                <CommandEmpty>No {field.label} found.</CommandEmpty>
+                                                                <CommandGroup>
+                                                                    {field.options?.map((option) => (
+                                                                        field.filterBy === 'id' ?
+                                                                            <CommandItem
+                                                                                key={option.id}
+                                                                                onSelect={() => {
+                                                                                    handleFilterChange(option.name, field.label);
+                                                                                    toggleFilterOpen(field.key, false); // Close Popover
+                                                                                }}
+                                                                            >
+                                                                                <Check
+                                                                                    className={cn(
+                                                                                        "mr-2 h-4 w-4",
+                                                                                        filterValues[field.label] === option.name ? "opacity-100" : "opacity-0"
+                                                                                    )}
+                                                                                />
+                                                                                {option.name}
+                                                                            </CommandItem>
+                                                                            :
+                                                                            <CommandItem
+                                                                                key={option}
+                                                                                onSelect={() => {
+                                                                                    handleFilterChange(option, field.label);
+                                                                                    toggleFilterOpen(field.key, false); // Close Popover
+                                                                                }}
+                                                                            >
+                                                                                <Check
+                                                                                    className={cn(
+                                                                                        "mr-2 h-4 w-4",
+                                                                                        filterValues[field.label] === option ? "opacity-100" : "opacity-0"
+                                                                                    )}
+                                                                                />
+                                                                                {option}
+                                                                            </CommandItem>
+                                                                    ))}
+                                                                </CommandGroup>
+                                                            </CommandList>
+                                                        </Command>
+                                                    </PopoverContent>
+                                                </Popover>
+
+                                            </div>
+
+                                        ))}
+                                        <div className='flex justify-end'>
+                                            {activeFilters.length > 0 && (<Button
+                                                effect="expandIcon"
+                                                icon={FilterX}
+                                                iconPlacement="right"
+                                                className={`h-7 px-2 bg-red-600 hover:bg-red-700 duration-300`}
+                                                onClick={resetFilters}
+                                            >
+                                                Reset
+                                            </Button>)}
+                                        </div>
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Search Text Bar & Filters (Now filters start from here) */}
+                            <div className="flex items-center gap-1  flex-grow">
+                                {/* Search Fields */}
+                                {config.searchFields?.map((field, index) => (
+                                    <div key={index} className="flex-1  max-w-[200px]">
+                                        <Input
+                                            type={field.type}
+                                            placeholder={field.placeholder}
+                                            value={searchValues[field.label] || ''}
+                                            onChange={(e) => handleSearchChange(e, field.label)}
+                                            className="w-full"
+                                        />
+                                    </div>
+                                ))}
+
+
+                            </div>
+                        </div>
+
+                        {/* Button Section */}
+                        <div className="flex gap-1">
+                            {config.buttons?.map((button, index) => (
+                                <div key={index} className="relative">
+                                    <Button
+                                        effect="expandIcon"
+                                        icon={button.icon}
+                                        iconPlacement="right"
+                                        onClick={() => {
+                                            if (button.dropdownOptions) {
+                                                setActiveDropdown(index === activeDropdown ? null : index);
+                                            } else {
+                                                button.action();
+                                            }
+                                        }}
+                                        className={`w-28 ${button.className}`}
+                                    >
+                                        {button.label}
+                                    </Button>
+
+                                    {/* Dropdown Options */}
+                                    {button.dropdownOptions && activeDropdown === index && (
+                                        <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
+                                            {button.dropdownOptions.map((option, optionIndex) => (
+                                                <div
+                                                    key={optionIndex}
+                                                    className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
+                                                    onClick={() => {
+                                                        handleExport(option.value, filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data);
+                                                        setActiveDropdown(null);
+                                                    }}
+                                                >
+                                                    {option.label}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Data Table */}
+                    <div className="h-[90%]">
+                        <DataTable
+                            data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data}
+                            columns={config?.dataTable?.columns || []}
+                            rowClassMap={rowClassMap}
+                        />
+                    </div>
+                </div>
+            </DashboardLoader>
+
+        </>
+
+    )
+}
+
+export default MasterComponentAQM

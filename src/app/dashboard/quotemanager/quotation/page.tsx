@@ -2,11 +2,10 @@
 
 import React from 'react'
 import Layout from '../layout'
-import MasterComponent from '@/components/MasterComponent/MasterComponent'
+import MasterComponentAQM from '@/components/MasterComponentAQM/MasterComponentAQM'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, IdCardIcon, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
-import { Plus, Import, Download, Upload } from 'lucide-react';
+import { ArrowUpDown,Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
@@ -19,11 +18,10 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
-import { bulkImport } from '@/shared/functions';
+import { bulkImport, bulkImportQuotation } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-import { useGetApplicationQuery } from "@/services/endpoints/applicationApi";
+import { useGetApplicationQuery, useCreateApplicationMutation, useLazyGetApplicationQuery } from "@/services/endpoints/applicationApi";
 import * as XLSX from "xlsx";
-import { createAction } from '@reduxjs/toolkit';
 
 const page = () => {
     const proposalOffer = []
@@ -65,12 +63,145 @@ const page = () => {
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
+    const countryNames = quotationDataNew?.reduce((acc: any[], quotation: { country: { _id: string; name: string } }) => {
+        const { _id, name } = quotation?.country;
+
+        if (_id && name) {
+            // Use a Set to track seen _id values
+            if (!acc.seen.has(_id)) {
+                acc.seen.add(_id); // Add the _id to the Set
+                acc.result.push({ id: _id, name }); // Add the country object to the result
+            }
+        }
+
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
+    const cityNames = quotationDataNew?.reduce((acc: any[], quotation: { state: { _id: string; name: string } }) => {
+        if (quotation?.state) {
+            const { _id, name } = quotation?.state;
+
+            if (_id && name) {
+                // Use a Set to track seen _id values
+                if (!acc.seen.has(_id)) {
+                    acc.seen.add(_id); // Add the _id to the Set
+                    acc.result.push({ id: _id, name }); // Add the state object to the result
+                }
+            }
+        }
+        // Ensure we always return the accumulator
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
+    const approvalAuthorityNames = quotationDataNew?.reduce((acc: any[], quotation: { approvalAuthority: { _id: string; name: string } }) => {
+        if (quotation?.approvalAuthority) {
+            const { _id, name } = quotation?.approvalAuthority;
+
+            if (_id && name) {
+                // Use a Set to track seen _id values
+                if (!acc.seen.has(_id)) {
+                    acc.seen.add(_id); // Add the _id to the Set
+                    acc.result.push({ id: _id, name }); // Add the state object to the result
+                }
+            }
+        }
+        // Ensure we always return the accumulator
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
+    const companyNames = quotationDataNew?.reduce((acc: any[], quotation: { company: { _id: string; name: string } }) => {
+        if (quotation?.company) {
+            const { _id, name } = quotation?.company;
+
+            if (_id && name) {
+                // Use a Set to track seen _id values
+                if (!acc.seen.has(_id)) {
+                    acc.seen.add(_id); // Add the _id to the Set
+                    acc.result.push({ id: _id, name }); // Add the state object to the result
+                }
+            }
+        }
+        // Ensure we always return the accumulator
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
+    const customerTypeNames = quotationDataNew?.reduce((acc: any[], quotation: { customerType: { _id: string; name: string } }) => {
+        if (quotation?.customerType) {
+            const { _id, name } = quotation?.customerType;
+
+            if (_id && name) {
+                // Use a Set to track seen _id values
+                if (!acc.seen.has(_id)) {
+                    acc.seen.add(_id); // Add the _id to the Set
+                    acc.result.push({ id: _id, name }); // Add the state object to the result
+                }
+            }
+        }
+        // Ensure we always return the accumulator
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
+    const regionNames = quotationDataNew?.reduce((acc: any[], quotation: { country: { region: { continent: { name: string } } } }) => {
+        const continentName = quotation?.country?.region?.continent?.name;
+
+        if (continentName && !acc.includes(continentName)) {
+            acc.push(continentName); // Add continent name if it's not already included
+        }
+        return acc;
+    }, []);
+
+    const areaNames = quotationDataNew?.reduce((acc: any[], quotation: { country: { region: { name: string } } }) => {
+        const regionName = quotation?.country?.region?.name;
+
+        if (regionName && !acc.includes(regionName)) {
+            acc.push(regionName); // Add continent name if it's not already included
+        }
+        return acc;
+    }, []);
+
+    const salesEngineerNames = quotationDataNew?.reduce((acc: any[], quotation: { salesEngineer: { _id: string; user: { shortName: string } } }) => {
+        const { _id, user } = quotation?.salesEngineer;
+        const shortName = user?.shortName?.toProperCase();
+        // Check if the sales engineer's id is not already in the accumulator
+        if (_id && user) {
+            // Use a Set to track seen _id values
+            if (!acc.seen.has(_id)) {
+                acc.seen.add(_id); // Add the _id to the Set
+                acc.result.push(shortName); // Add the country object to the result
+            }
+        }
+
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
+    const salesSupportEngineerNames = quotationDataNew?.reduce((acc: any[], quotation: { salesSupportEngineer: Array<{ _id: string; user: { shortName: string } }> }) => {
+        // Ensure we're accessing the first element of the salesSupportEngineer array
+        const { _id, user } = quotation?.salesSupportEngineer[0] || {};
+        const shortName = user?.shortName?.toProperCase();
+
+        // Check if _id and shortName are valid
+        if (_id && shortName) {
+            // Check if the _id is not already in the accumulator (via Set for uniqueness)
+            if (!acc.seen.has(_id)) {
+                acc.seen.add(_id); // Add _id to the Set
+                acc.result.push(shortName); // Add the proper shortName to the result
+            }
+        }
+
+        return acc;
+    }, { seen: new Set(), result: [] }).result;
+
 
     const { data: quoteStatusData = [], isLoading: quoteStatusLoading } = useGetMasterQuery({
         db: MONGO_MODELS.QUOTE_STATUS_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
+
+
+    const quoteStatusNames = quoteStatusData?.data
+        ?.filter((status) => status !== undefined) // Remove undefined entries
+        ?.map((status) => ({ id: status._id, name: status.name })) || []; // Store id & name
 
     const quoteStatus = quoteStatusData?.data?.filter((option) => option?.name === 'A - Active')[0]?._id;
 
@@ -121,6 +252,7 @@ const page = () => {
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
+
     const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading } = useGetMasterQuery({
         db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
         filter: { isActive: true },
@@ -239,14 +371,11 @@ const page = () => {
         name: (i + 0).toString()
     }));
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createApplication, { isLoading: isCreatingApplication }] = useCreateApplicationMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
     const loading = approvalAuthorityLoading || quotationLoading || countryLoading || customerContactLoading || customerLoading || quoteStatusLoading || countryLoading || stateLoading || teamLoading;
-
-
-
 
 
     const onchangeData = async ({ id, fieldName, name, parentId, position, email, phone, location }) => {
@@ -356,6 +485,7 @@ const page = () => {
         { label: 'Selling Team', name: "sellingTeam", type: "select", data: teamData?.data, format: 'ObjectId', required: true, placeholder: 'Select Selling Team', section: 'QuoteDetails', visibility: true },
         { label: 'Responsible Team', name: "responsibleTeam", type: "select", data: teamData?.data, format: 'ObjectId', required: true, placeholder: 'Responsible Team', section: 'QuoteDetails', visibility: true },
         { label: 'Quote Details Remark', name: "quoteDetailsRemark", type: "text", required: false, placeholder: 'Quote Details Remark', section: 'QuoteDetails', visibility: true, },
+        { label: 'Reject Reason', name: "rejectReason", type: "text", required: false, placeholder: 'Reject Reason', section: 'QuoteDetails', visibility: true, },
 
         { label: 'Company Name', name: "company", type: "select", data: customerData?.data, format: 'ObjectId', required: false, placeholder: 'Select Company', section: 'CustomerDetails', visibility: true, addNew: true },
         { label: 'Contact Name', name: "contact", type: "select", data: contactData, format: 'ObjectId', required: false, placeholder: 'Select Contact', section: 'CustomerDetails', visibility: true, addNew: true },
@@ -475,11 +605,11 @@ const page = () => {
         const formattedData = {
             db: MONGO_MODELS[master],
             action: action === 'Add' ? 'create' : 'update',
-            filter: { "_id": formData._id },
+            filter: { "_id": formData?._id },
             data: formData,
         };
 
-        const response = await createMaster(formattedData);
+        const response = await createApplication(formattedData);
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
@@ -555,10 +685,29 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createAction, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "QuotationMaster" });
+        bulkImportQuotation({
+            roleData: [], continentData: [], regionData: [],
+            countryData,
+            quoteStatusData,
+            teamMemberData,
+            teamData,
+            customerData,
+            customerContactData,
+            customerTypeData,
+            sectorData,
+            industryData,
+            buildingData,
+            stateData,
+            approvalAuthorityData,
+            projectTypeData,
+            paintTypeData,
+            currencyData,
+            incotermData, quotationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation"
+        });
     };
 
     const handleExport = (type: string, quotationDataNew: any[]) => {
+        console.log(type, quotationDataNew)
         if (!quotationDataNew || quotationDataNew.length === 0) {
             toast.error("No data to export");
             return;
@@ -583,160 +732,165 @@ const page = () => {
         // Your delete logic for user page
     };
 
-    const quotationColumns = [
-        {
-            id: "select",
-            header: ({ table }: { table: any }) => (
-                <Checkbox
-                    checked={
-                        table.getIsAllPageRowsSelected() ||
-                        (table.getIsSomePageRowsSelected() && "indeterminate")
-                    }
-                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-                    aria-label="Select all"
-                />
-            ),
-            cell: ({ row }: { row: any }) => (
-                <Checkbox
-                    checked={row.getIsSelected()}
-                    onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    aria-label="Select row"
-                />
-            ),
-            enableSorting: false,
-            enableHiding: false,
-        },
-        {
-            accessorKey: "year",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className=" items-center space-x-2 hidden"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    const getQuotationColumns = (teamRole) => {
+        const columns = [
+            {
+                id: "select",
+                header: ({ table }: { table: any }) => (
+                    <Checkbox
+                        checked={
+                            table.getIsAllPageRowsSelected() ||
+                            (table.getIsSomePageRowsSelected() && "indeterminate")
+                        }
+                        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                        aria-label="Select all"
+                    />
+                ),
+                cell: ({ row }: { row: any }) => (
+                    <Checkbox
+                        checked={row.getIsSelected()}
+                        onCheckedChange={(value) => row.toggleSelected(!!value)}
+                        aria-label="Select row"
+                    />
+                ),
+                enableSorting: false,
+                enableHiding: false,
+            },
+            {
+                accessorKey: "year",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className=" items-center space-x-2 hidden"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>year</span>
-                    <ArrowUpDown size={15} />
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='hidden' onClick={() => editQuotation(row.original)}>{row.getValue("year") || "Add Quote No"}</div>,
-            enableHiding: true,  // Allows hiding the column
-            enableSorting: false, // You can disable sorting here if needed
-        },
-        {
-            accessorKey: "quoteNo",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>year</span>
+                        <ArrowUpDown size={15} />
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div className='hidden' onClick={() => editQuotation(row.original)}>{row.getValue("year") || "Add Quote No"}</div>,
+                enableHiding: true,  // Allows hiding the column
+                enableSorting: false, // You can disable sorting here if needed
+            },
+            {
+                accessorKey: "quoteNo",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Quote No</span>
-                    <ArrowUpDown size={15} />
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editQuotation(row.original)}>{row.getValue("quoteNo") && `${row.getValue("country")?.countryCode}-${row.getValue("year")?.toString().slice(-2)}-${row.getValue("quoteNo")}` || "Add Quote No"}</div>,
-        },
-        {
-            accessorKey: "revNo",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>Quote No</span>
+                        <ArrowUpDown size={15} />
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editQuotation(row.original)}>{row.getValue("quoteNo") && `${row.getValue("country")?.countryCode}-${row.getValue("year")?.toString().slice(-2)}-${row.getValue("quoteNo")}` || "Add Quote No"}</div>,
+            },
+            {
+                accessorKey: "revNo",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Rev No</span>
-                    <ArrowUpDown size={15} />
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div >{row.getValue("revNo")}</div>,
-        },
-        {
-            accessorKey: "option",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>Rev No</span>
+                        <ArrowUpDown size={15} />
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div >{row.getValue("revNo")}</div>,
+            },
+            {
+                accessorKey: "option",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Option</span>
-                    <ArrowUpDown size={15} />
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div>{row.getValue("option")}</div>,
-        },
-        {
-            accessorKey: "quoteStatus",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>Option</span>
+                        <ArrowUpDown size={15} />
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div>{row.getValue("option")}</div>,
+            },
+            {
+                accessorKey: "quoteStatus",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Quote Status</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className="w-28 p-2 border rounded-md flex items-center justify-center text-center" onClick={() => editQuoteStatus(row.original)}>
-                {quoteStatusData?.data.find(data => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
-        },
-        {
-            accessorKey: "bookingProbability",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>Quote Status</span> {/* Label */}
+                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div className="w-28 p-2 border rounded-md flex items-center justify-center text-center" onClick={() => editQuoteStatus(row.original)}>
+                    {quoteStatusData?.data.find(data => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
+            },
+            {
+                accessorKey: "bookingProbability",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Probability</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div>{row.getValue("bookingProbability")}</div>,
-        },
-        {
-            accessorKey: "region",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>Probability</span> {/* Label */}
+                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div>{row.getValue("bookingProbability")}</div>,
+            },
+            {
+                accessorKey: "region",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Region</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div>{countryData?.data.find(data => data._id === row.getValue("country")?._id)?.region?.name}</div>,
-        },
-        {
-            accessorKey: "country",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        <span>Region</span> {/* Label */}
+                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div>{countryData?.data.find(data => data._id === row.getValue("country")?._id)?.region?.continent?.name}</div>,
+            },
+            {
+                accessorKey: "country",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Country</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div>{countryData?.data.find(data => data._id === row.getValue("country")?._id)?.name}</div>,
-        },
+                    >
+                        <span>Country</span> {/* Label */}
+                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div>{countryData?.data.find(data => data._id === row.getValue("country")?._id)?.name}</div>,
+            },
 
-        {
-            accessorKey: "salesEngineer",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        ];
 
-                >
-                    <span>Sales Engineer</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find(data => data._id === row.getValue("salesEngineer")?._id)?.user?.shortName.toProperCase()}</div>,
-        },
-        {
+        if (teamRole !== 'Engineer') {
+            columns.push({
+                accessorKey: "salesEngineer",
+                header: ({ column }: { column: any }) => (
+                    <button
+                        className="flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                    >
+                        <span>Sales Engineer</span> {/* Label */}
+                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                    </button>
+                ),
+                cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find(data => data._id === row.getValue("salesEngineer")?._id)?.user?.shortName.toProperCase()}</div>,
+            },)
+        };
+        columns.push({
             accessorKey: "company",
             header: ({ column }: { column: any }) => (
                 <button
@@ -749,8 +903,8 @@ const page = () => {
                 </button>
             ),
             cell: ({ row }: { row: any }) => <div>{customerData?.data.find(data => data._id === row.getValue("company")?._id)?.name}</div>,
-        },
-        {
+        },)
+        columns.push({
             accessorKey: "projectName",
             header: ({ column }: { column: any }) => (
                 <button
@@ -763,17 +917,34 @@ const page = () => {
                 </button>
             ),
             cell: ({ row }: { row: any }) => <div>{row.getValue("projectName")}</div>,
-        },
+        },)
+        return columns;
+    };
 
-    ];
+    const quotationColumns = getQuotationColumns(teamRole);
+
+    const statusNames = ['draft', 'quoterequested', 'incomplete', 'submitted', 'rejected', 'approved'];
+
+    const bookingProbabilityNames = ['Low', 'Medium', 'High'];
 
     const quotationConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by approval authority' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search anything..' },
 
         ],
         filterFields: [
-            // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
+            { key: "status", label: 'status', type: "select" as const, options: statusNames, placeholder: 'Select Status', filterBy: "name", name: 'Status By Color' },
+            { key: "quoteStatus", label: 'quoteStatus', type: "select" as const, options: quoteStatusNames, placeholder: 'Select Quote Status', filterBy: "id", name: 'Quote Status' },
+            { key: "region", label: 'region', type: "select" as const, options: regionNames, placeholder: 'Select Region', filterBy: "name", name: 'Region' },
+            { key: "area", label: 'area', type: "select" as const, options: areaNames, placeholder: 'Select Area', filterBy: "name", name: 'Area' },
+            { key: "country", label: 'country', type: "select" as const, options: countryNames, placeholder: 'Select Country', filterBy: "id", name: 'Country' },
+            { key: "salesEngineerName", label: 'salesEngineerName', type: "select" as const, options: salesEngineerNames, placeholder: 'Select Sales Engineer', filterBy: "name", name: 'Sales Engineer' },
+            { key: "salesSupportEngineerName", label: 'salesSupportEngineerName', type: "select" as const, options: salesSupportEngineerNames, placeholder: 'Select Sales Engineer', filterBy: "name", name: 'Sales Support Engineer' },
+            { key: "state", label: 'state', type: "select" as const, options: cityNames, placeholder: 'Select City', filterBy: "id", name: 'City' },
+            { key: "approvalAuthority", label: 'approvalAuthority', type: "select" as const, options: approvalAuthorityNames, placeholder: 'Select Approval Authority', filterBy: "id", name: 'Approval Authority' },
+            { key: "company", label: 'company', type: "select" as const, options: companyNames, placeholder: 'Select Customer', filterBy: "id", name: 'Customer' },
+            { key: "customerType", label: 'customerType', type: "select" as const, options: customerTypeNames, placeholder: 'Select Customer Type', filterBy: "id", name: 'Customer Type' },
+            { key: "bookingProbability", label: 'bookingProbability', type: "select" as const, options: bookingProbabilityNames, placeholder: 'Select Booking Probability', filterBy: "name", name: 'Booking Probability' },
 
         ],
         dataTable: {
@@ -782,11 +953,11 @@ const page = () => {
         },
 
         buttons: [
-
+           
             { label: 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
                 label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type,quotationDataNew) }
+                    { label: "Export to Excel", value: "excel", action: handleExport }
                 ]
             },
 
@@ -806,8 +977,7 @@ const page = () => {
 
     return (
         <>
-
-            <MasterComponent config={quotationConfig} loadingState={loading} rowClassMap={rowClassMap} />
+            <MasterComponentAQM config={quotationConfig} loadingState={loading} rowClassMap={rowClassMap} handleExport={handleExport} />
             <QuotationDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

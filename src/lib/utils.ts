@@ -44,10 +44,15 @@ export const transformQuoteData = (data, user, teamMemberData) => {
   if (!Array.isArray(data)) {
     return [];
   }
+  const transformData = data.reduce((acc, obj) => {
+    
+        acc.push({...obj, region: obj?.country?.region?.continent?.name, area:obj?.country?.region?.name, salesEngineerName:obj?.salesEngineer?.user?.shortName,salesSupportEngineerName:obj?.salesSupportEngineer[0]?.user?.shortName});
+    return acc;
+}, []);
   const userId = user?._id;
   const teamRole = teamMemberData?.find(data => data?.user?._id === userId)?.teamRole[0]?.name;
-  return data.filter((quote) => {
-    const handledBy = quote?.salesEngineer;
+  return transformData.filter((quote) => {
+    const handledBy = quote?.handleBy;
 
     if (!handledBy || !userId) return false; // Skip if there's no handledBy data or userId
 
@@ -87,7 +92,8 @@ export const transformDataForExcel = (data) => {
     "Region": item.country?.region?.continent?.name || '',
     "Area": item.country?.region?.name || '',
     "Country": item.country?.name || '',
-    "QuoteNo": item.quoteNo && item.country?.countryCode - item.year?.toString().slice(-2) - item.quoteNo || '',
+    "Year": item.year || '',
+    "QuoteNo": item.quoteNo ? `${item.country?.countryCode}-${item.year?.toString().slice(-2)}-${item.quoteNo}` : '',
     "Option": item.option || '',
     "SO": item.sellingTeam?.name || '',
     "RO": item.responsibleTeam?.name || '',

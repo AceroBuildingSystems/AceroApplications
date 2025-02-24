@@ -87,7 +87,7 @@ const page = () => {
                 sort: { name: 'asc' },
             });
 
-            const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Rejected : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteRequestRejected", senderName: 'Sales Director', approveUrl: '', rejectUrl: '', reason: reason };
+            const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Rejected : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalRequestRejected", senderName: 'Sales Director', approveUrl: '', rejectUrl: '', reason: reason };
             await sendEmail(emailData);
             toast.success(`Quote approval request rejected successfully.`);
 

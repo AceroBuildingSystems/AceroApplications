@@ -141,18 +141,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
     const [open, setOpen] = React.useState(false)
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
-    const getRowStyle = (status) => {
-        switch (status) {
-          case 'approved':
-            return { backgroundColor: '#d1fae5', color: '#064e3b' };  // Green background for approved
-          case 'pending':
-            return { backgroundColor: '#fef3c7', color: '#7a5800' };  // Yellow background for pending
-          case 'rejected':
-            return { backgroundColor: '#fee2e2', color: '#9b111e' };  // Red background for rejected
-          default:
-            return { backgroundColor: '#f3f4f6', color: '#374151' };  // Default gray color for other statuses
-        }
-      };
+   
 
     return (
         <>

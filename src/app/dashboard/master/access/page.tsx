@@ -132,6 +132,7 @@ const Access = () => {
         `Error encountered: ${response?.error?.data?.message?.message}`
       );
     }
+    return response;
   };
 
   const editAccess = (rowData) => {

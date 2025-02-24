@@ -38,6 +38,7 @@ import ProductCategory from "./master/ProductCategory.model"
 import Product from "./master/Product.model"
 import Warehouse from "./master/Warehouse.model"
 import Inventory from "./master/Inventory.model"
+import UnitMeasurement from "./master/UnitMeasurement"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -46,5 +47,5 @@ export {
     PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
     ProposalRevisions, Proposal, Quotation,
     // Asset and Inventory exports
-    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory 
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement
 }

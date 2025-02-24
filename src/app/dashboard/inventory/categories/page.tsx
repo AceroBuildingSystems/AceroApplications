@@ -13,11 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'react-toastify';
 
 interface CategoryFormData {
     _id?: string;
     name: string;
-    code: string;
     description?: string;
     specsRequired: Record<string, "string" | "number" | "boolean">;
     isActive: string;
@@ -27,19 +27,26 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
     const [specs, setSpecs] = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
     const [newSpecName, setNewSpecName] = useState('');
     const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
+    const [unitMeasurement,setUnitMeasurement] = useState<string>('');  
+    const { data: unitMeasurementData = [], isLoading:unitMeasurementLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
+        filter: { isActive: true }
+    });
+
 
     useEffect(() => {
         setSpecs(accessData || {});
     }, [accessData]);
-
+    console.log(specs)
     return (
         <Card>
             <CardContent className="pt-6 space-y-4">
                 <div className="space-y-2">
-                    {Object.entries(specs).map(([key, type], index) => (
+                    {Object.entries(specs).map(([key, value], index) => (
                         <div key={index} className="flex items-center gap-2 p-2 border rounded">
                             <span className="flex-1 font-medium">{key}</span>
-                            <Badge variant="secondary">{String(type)}</Badge>
+                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find(unit=>unit._id === value.unit)?.name)}</Badge>
+                            <Badge variant="primary">{String(value.type)}</Badge>
                             <Button
                                 type="button"
                                 variant="destructive"
@@ -64,6 +71,22 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                         placeholder="Specification name"
                         className="flex-1"
                     />
+
+                    <Select
+                        value={unitMeasurement}
+                        onValueChange={(value) => setUnitMeasurement(value as any)}
+                    >
+                        
+                        <SelectTrigger className="w-[180px]">
+                            <SelectValue placeholder="unit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {unitMeasurementData && unitMeasurementData?.data?.map(unitData=>{
+                                return <SelectItem value={unitData._id}>{unitData.name}</SelectItem>
+                            })}
+                        </SelectContent>
+                    </Select>
+                    
                     <Select
                         value={newSpecType}
                         onValueChange={(value) => setNewSpecType(value as "string" | "number" | "boolean")}
@@ -83,11 +106,12 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                             if (newSpecName.trim()) {
                                 const newSpecs = {
                                     ...specs,
-                                    [newSpecName]: newSpecType
+                                    [newSpecName]: {type:newSpecType,unit:unitMeasurement}
                                 };
                                 setSpecs(newSpecs);
                                 handleChange({ target: { value: newSpecs } }, "specsRequired");
                                 setNewSpecName('');
+                                setUnitMeasurement('');
                                 setNewSpecType("string");
                             }
                         }}
@@ -116,12 +140,13 @@ const ProductCategoriesPage = () => {
 
     const [createMaster] = useCreateMasterMutation();
 
+    const statusData = [
+        { _id: true, name: "True" },
+        { _id: false, name: "False" },
+      ];
+
     // Form fields configuration with validation
     const formFields = [
-        {
-            name: "_id",
-            type: "hidden"
-        },
         {
             name: "name",
             label: "Name",
@@ -131,19 +156,6 @@ const ProductCategoriesPage = () => {
             validate: (value: string) => {
                 if (value.length < 3) return "Name must be at least 3 characters";
                 if (value.length > 50) return "Name must be less than 50 characters";
-                return undefined;
-            }
-        },
-        {
-            name: "code",
-            label: "Code",
-            type: "text",
-            required: true,
-            placeholder: "Enter category code",
-            validate: (value: string) => {
-                if (!/^[A-Z0-9-]+$/.test(value)) return "Code must contain only uppercase letters, numbers, and hyphens";
-                if (value.length < 2) return "Code must be at least 2 characters";
-                if (value.length > 20) return "Code must be less than 20 characters";
                 return undefined;
             }
         },
@@ -170,22 +182,31 @@ const ProductCategoriesPage = () => {
         {
             name: "isActive",
             label: "Status",
+            placeholder: "Select the status",
             type: "select",
-            options: ["Active", "Inactive"],
+            data: statusData,
             required: true
         }
     ];
+
+    const editCategories = (data: any) => {
+        setSelectedItem(data)
+        setDialogAction("Update");
+        setIsDialogOpen(true);
+    }
 
     // Configure table columns
     const columns = [
         {
             accessorKey: "name",
             header: "Name",
+            cell: ({ row }: any) => (
+                <div className='text-red-700' onClick={() => editCategories(row.original)}>
+                    {row.original.name}
+                </div>
+            )
         },
-        {
-            accessorKey: "code",
-            header: "Code",
-        },
+
         {
             accessorKey: "description",
             header: "Description",
@@ -194,13 +215,13 @@ const ProductCategoriesPage = () => {
             accessorKey: "specsRequired",
             header: "Required Specifications",
             cell: ({ row }: any) => {
-                const specs = row.original.specsRequired as Record<string, string>;
+                const specs = row.original.specsRequired as Record<string, Object>;
                 if (!specs) return null;
                 return (
                     <div className="flex flex-wrap gap-1 max-w-[300px]">
-                        {Object.entries(specs).map(([key, type], index) => (
+                        {Object.entries(specs).map(([key, value], index) => (
                             <Badge key={index} variant="outline">
-                                {key}: {String(type)}
+                                {key}: {String(value?.type || "")}
                             </Badge>
                         ))}
                     </div>
@@ -221,16 +242,16 @@ const ProductCategoriesPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }) => {
         try {
-            await createMaster({
+            const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
-                    isActive: formData.isActive === "Active"
+                    isActive: formData.isActive ?? true
                 }
-            }).unwrap();
-            setIsDialogOpen(false);
+            });
+            return response;
         } catch (error) {
             console.error('Error saving category:', error);
         }
@@ -274,7 +295,6 @@ const ProductCategoriesPage = () => {
                     setDialogAction("Add");
                     setSelectedItem({
                         name: '',
-                        code: '',
                         description: '',
                         specsRequired: {},
                         isActive: "Active"
@@ -292,9 +312,9 @@ const ProductCategoriesPage = () => {
             setLoading(false);
         }
     }, [isLoading]);
-
+console.log(categoriesResponse)
     return (
-        <div className="h-full">
+        <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />
             
             <DynamicDialog<CategoryFormData>
@@ -306,7 +326,6 @@ const ProductCategoriesPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
-                width="full"
             />
         </div>
     );

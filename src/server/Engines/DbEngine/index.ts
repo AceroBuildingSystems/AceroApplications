@@ -22,7 +22,8 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Product,
   ProductCategory,
   Warehouse,
-  Inventory
+  Inventory,
+  UnitMeasurement
 } from '@/models';
 
 
@@ -72,6 +73,7 @@ function getMongooseAdapter(): MongooseAdapter {
     QUOTATION_MASTER: Quotation,
     ASSET_MASTER: Asset,
     VENDOR_MASTER: Vendor,
+    UNIT_MEASUREMENT_MASTER:UnitMeasurement
     });
   }
   return dbEngineInstance;

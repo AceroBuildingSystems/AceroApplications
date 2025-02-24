@@ -186,7 +186,12 @@ function DynamicDialog<T extends BaseFormData>({
         updatedBy: user._id
       } as T;
 
-      await onSave({ formData: updatedData, action });
+      const response = await onSave({ formData: updatedData, action });
+      console.log({response})
+      if(response.error){
+        toast.error(response.error.message);
+        return;
+      }
       toast.success(`${selectedMaster} ${action === 'Add' ? 'created' : 'updated'} successfully`);
       handleClose();
     } catch (error) {
@@ -236,7 +241,7 @@ function DynamicDialog<T extends BaseFormData>({
                                   onChange={(e) => handleChange(e, field.name, field.format)}
                                   value={formData[field.name] || ""}
                                   placeholder={field.placeholder || ""}
-                                  className={errors[field.name] ? "border-destructive" : ""}
+                                  className={`${errors[field.name] ? "border-destructive" : ""} w-full outline-1 outline-red-900 rounded-lg shadow-md p-4 outline-double bg-gray-100`}
                                 />
                                 {errors[field.name] && (
                                   <span className="text-sm text-destructive">{errors[field.name]}</span>

@@ -489,7 +489,10 @@ const AssetManagementPage = () => {
             
             <DynamicDialog<AssignmentFormData>
                 isOpen={isDialogOpen}
-                closeDialog={() => setIsDialogOpen(false)}
+                closeDialog={() => {
+                    setSelectedItem(null)
+                    setIsDialogOpen(false)
+                }}
                 selectedMaster="Asset Assignment"
                 onSave={handleSave}
                 fields={formFields}

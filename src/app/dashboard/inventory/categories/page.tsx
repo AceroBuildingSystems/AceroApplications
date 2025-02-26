@@ -306,7 +306,10 @@ const ProductCategoriesPage = () => {
             
             <DynamicDialog<CategoryFormData>
                 isOpen={isDialogOpen}
-                closeDialog={() => setIsDialogOpen(false)}
+                closeDialog={() => {
+                    setSelectedItem(null)
+                    setIsDialogOpen(false)
+                }}
                 selectedMaster="Product Category"
                 onSave={handleSave}
                 fields={formFields}

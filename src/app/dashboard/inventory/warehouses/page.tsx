@@ -219,7 +219,10 @@ const WarehousesPage = () => {
             
             <DynamicDialog<WarehouseFormData>
                 isOpen={isDialogOpen}
-                closeDialog={() => setIsDialogOpen(false)}
+                closeDialog={() => {
+                    setSelectedItem(null)
+                    setIsDialogOpen(false)
+                }}
                 selectedMaster="Warehouse"
                 onSave={handleSave}
                 fields={formFields}

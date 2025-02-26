@@ -14,8 +14,8 @@ const ActivityLogSchema: Schema = new Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
   action: { type: String, required: true },
   module: { type: String, required: true },
-  recordId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  outcome: { type: String, required: true },
+  recordId: { type: mongoose.Schema.Types.ObjectId },
+  outcome: { type: String },
   timestamp: { type: Date, default: Date.now },
   details: { type: Object },
 });

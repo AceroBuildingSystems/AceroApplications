@@ -82,11 +82,10 @@ function DynamicDialog<T extends BaseFormData>({
       }
       return acc;
     }, {});
-    
     setFormData(formattedData as Partial<T>);
     setErrors({});
   }, [initialData]);
-  
+
   // Handle form data changes
   const handleChange = (
     e: { target: { value: any } } | any[] | string | null,

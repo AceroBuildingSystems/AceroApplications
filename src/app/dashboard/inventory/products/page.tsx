@@ -252,7 +252,10 @@ const ProductsPage = () => {
             
             <DynamicDialog<ProductFormData>
                 isOpen={isDialogOpen}
-                closeDialog={() => setIsDialogOpen(false)}
+                closeDialog={() => {
+                    setSelectedItem(null)
+                    setIsDialogOpen(false)
+                }}
                 selectedMaster="Product"
                 onSave={handleSave}
                 fields={formFields}

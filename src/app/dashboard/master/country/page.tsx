@@ -68,7 +68,6 @@ const page = () => {
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
     const [action, setAction] = useState('Add');
-
     // Open the dialog and set selected master type
     const openDialog = (masterType) => {
         setSelectedMaster(masterType);

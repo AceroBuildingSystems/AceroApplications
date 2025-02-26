@@ -351,7 +351,10 @@ const VendorsPage = () => {
             
             <DynamicDialog<VendorFormData>
                 isOpen={isDialogOpen}
-                closeDialog={() => setIsDialogOpen(false)}
+                closeDialog={() => {
+                    setSelectedItem(null)
+                    setIsDialogOpen(false)
+                }}
                 selectedMaster="Vendor"
                 onSave={handleSave}
                 fields={formFields}

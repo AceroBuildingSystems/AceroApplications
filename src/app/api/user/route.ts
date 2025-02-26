@@ -26,7 +26,6 @@ export async function GET(request:NextRequest) {
 export async function POST(request:NextRequest) {
   const body = await request.json()
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET})
-  console.log("BODY",body)
   if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED,data:{}}, { status: 400 })
 
   let response:any = {};
@@ -66,7 +65,6 @@ export async function PUT(request:NextRequest) {
   if(!body.data.id) {
     return NextResponse.json({status:ERROR, message:ACCESS_ID_REQUIRED, data:{}}, { status: 400 })
   }
-  console.log(body)
   response = await userManager.updateAccess(body)
   
   if(response.status === SUCCESS) {

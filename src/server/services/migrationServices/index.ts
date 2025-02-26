@@ -61,10 +61,6 @@ export const putUsers = catchAsync(async (data) => {
       }
     })
   );
-
-  // Log the update results
-  console.log(updateResult);
-
   return { status: SUCCESS, updateResult };
 });
 

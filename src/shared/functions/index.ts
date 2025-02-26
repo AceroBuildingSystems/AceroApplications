@@ -189,10 +189,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 currencyData: currencyData?.data || [],
                 incotermData: incotermData?.data || []
             };
-
-            console.log(formData)
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
-            console.log(finalData);
             const enrichedData = finalData.map((item) => ({
                 ...item,
                 addedBy: user?._id,
@@ -223,14 +220,14 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                         changes: {}
                     },
                 ]).flat();
-                console.log(revisionData)
+
                 const revisionResponse = await createUser({
                     action: "create",
                     db: "PROPOSAL_REVISION_MASTER",
                     bulkInsert: true,
                     data: revisionData,
                 });
-                console.log(revisionResponse)
+
                 if (revisionResponse.error) {
                     throw new Error(revisionResponse.error.data.message);
                 }
@@ -239,7 +236,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 if (insertedRevisions.length !== revisionData.length) {
                     throw new Error("Mismatch in inserted ProposalRevision records.");
                 }
-                console.log(insertedRevisions)
+     
                 // Step 2: Insert Proposal Entries
                 const proposalData = enrichedData.map((item, index) => [
                     {
@@ -255,7 +252,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                         updatedBy: item.updatedBy,
                     },
                 ]).flat();
-                console.log(proposalData);
+
                 const proposalResponse = await createUser({
                     action: "create",
                     db: "PROPOSAL_MASTER",
@@ -434,14 +431,14 @@ const fieldMappingConfig = {
 const mapFieldsToIds = (data, entityType, referenceData) => {
 
     const mappings = fieldMappingConfig[entityType];
-    console.log(mappings);
+
     return data.map((item) => {
         const transformedItem = { ...item };
         if (mappings) {
             Object.entries(mappings).forEach(([field, { source, key, value, transform }]) => {
-                console.log(referenceData[source])
+        
                 const referenceArray = referenceData[source]?.data || referenceData[source];
-                console.log(referenceArray);
+              
                 if (!Array.isArray(referenceArray)) {
                     console.error(`Invalid reference data for source: ${source}`, referenceData[source]);
                     transformedItem[field] = undefined; // Default to empty if reference data is invalid
@@ -450,7 +447,7 @@ const mapFieldsToIds = (data, entityType, referenceData) => {
 
                 if (transform) {
                     // Apply transform function if defined
-                    console.log(transform(item[field], referenceArray))
+          
                     transformedItem[field] = transform(item[field], referenceArray);
                 } else {
                     // Default mapping lookup

@@ -23,11 +23,9 @@
 //             updatedBy: '113035'
 //         }));
 
-//         console.log(designationDocuments);
 //         // Insert distinct designations into the "designations" collection
 //         const insertedResult = await Designation.insertMany(designationDocuments);
 
-//         console.log(insertedResult);
 
 //         return NextResponse.json({ type: SUCCESS, message: "Distinct designations added", data: insertedResult }, { status: 200 })
 //     } catch (err) {

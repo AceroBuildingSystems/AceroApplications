@@ -536,7 +536,6 @@ const Access = () => {
             replaceAll:true
         }
     })
-    console.log("REFRESHING....")
       router.refresh()
       refetchUsers()
       closeDialog()

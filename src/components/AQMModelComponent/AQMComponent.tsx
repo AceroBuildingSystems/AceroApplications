@@ -589,6 +589,7 @@ const QuotationDialog = ({
         }
 
         // Update the last index
+        // Add switch staements
         if (status === 'delete') {
           const updatedProposalRevData = proposalRevData.map((item, index) =>
             index === proposalRevData.length - 1 // Check if it's the last index

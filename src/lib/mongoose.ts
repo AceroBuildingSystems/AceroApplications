@@ -1,4 +1,5 @@
 import mongoose from "mongoose"
+import * as models from '@/models'
 
 const MONGODB_URI = process.env.environment === 'production' 
   ? process.env.NEXT_PUBLIC_PROD_MONGODB_URI 
@@ -16,7 +17,11 @@ declare global {
 let cached = global.mongoose
 
 if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null }
+  cached = global.mongoose = { 
+    Types: mongoose.Types,
+    conn: null, 
+    promise: null 
+  }
 }
 
 async function dbConnect() {
@@ -28,6 +33,14 @@ async function dbConnect() {
     const opts = {
       bufferCommands: false,
     }
+
+    // Register all models before connecting
+    Object.values(models).forEach(model => {
+      if (model.modelName && !mongoose.models[model.modelName]) {
+        model.init()
+      }
+    })
+
     // @ts-ignore
     cached.promise = mongoose.connect(MONGODB_URI!, opts).then(() => {
       return mongoose

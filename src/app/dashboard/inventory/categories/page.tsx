@@ -13,17 +13,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { validate } from '@/shared/functions';
-import useUserAuthorised from '@/hooks/useUserAuthorised';
 interface CategoryFormData {
     _id?: string;
     name: string;
     description?: string;
-    specsRequired: Record<string, { type: "string" | "number" | "boolean", unit: string }>;
+    specsRequired: Record<string, "string" | "number" | "boolean">;
     isActive: string;
 }
 
-const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Record<string, { type: "string" | "number" | "boolean", unit: string }>; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
-    const [specs, setSpecs] = useState<Record<string, { type: "string" | "number" | "boolean", unit: string }>>(accessData || {});
+const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Record<string, "string" | "number" | "boolean">; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
+    const [specs, setSpecs] = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
     const [newSpecName, setNewSpecName] = useState('');
     const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
     const [unitMeasurement,setUnitMeasurement] = useState<string>('');  
@@ -43,14 +42,14 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                     {Object.entries(specs).map(([key, value], index) => (
                         <div key={index} className="flex items-center gap-2 p-2 border rounded">
                             <span className="flex-1 font-medium">{key}</span>
-                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find((unit:any) => unit._id === value.unit)?.name)}</Badge>
-                            <Badge variant="outline">{String(value.type)}</Badge>
+                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find(unit=>unit._id === value.unit)?.name)}</Badge>
+                            <Badge variant="primary">{String(value.type)}</Badge>
                             <Button
                                 type="button"
                                 variant="destructive"
                                 size="sm"
                                 onClick={() => {
-                                    const newSpecs: Record<string, { type: "string" | "number" | "boolean"; unit: string }> = { ...specs };
+                                    const newSpecs = { ...specs };
                                     delete newSpecs[key];
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specsRequired");
@@ -102,15 +101,15 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                         type="button"
                         onClick={() => {
                             if (newSpecName.trim()) {
-                                const newSpecs: Record<string, { type: "string" | "number" | "boolean"; unit: string }> = {
+                                const newSpecs = {
                                     ...specs,
-                                    [newSpecName]: {type:newSpecType, unit:unitMeasurement}
+                                    [newSpecName]: {type:newSpecType,unit:unitMeasurement}
                                 };
                                 setSpecs(newSpecs);
                                 handleChange({ target: { value: newSpecs } }, "specsRequired");
                                 setNewSpecName('');
+                                setUnitMeasurement('');
                                 setNewSpecType("string");
-                                setUnitMeasurement('')
                             }
                         }}
                         disabled={!newSpecName.trim()}
@@ -129,7 +128,6 @@ const ProductCategoriesPage = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<CategoryFormData | null>(null);
-    const { user } = useUserAuthorised();
 
     // API hooks
     const { data: categoriesResponse, isLoading } = useGetMasterQuery({
@@ -210,7 +208,7 @@ const ProductCategoriesPage = () => {
                     <div className="flex flex-wrap gap-1 max-w-[300px]">
                         {Object.entries(specs).map(([key, value], index) => (
                             <Badge key={index} variant="outline">
-                                {key}: {String((value as any)?.type || "")}
+                                {key}: {String(value?.type || "")}
                             </Badge>
                         ))}
                     </div>
@@ -229,17 +227,16 @@ const ProductCategoriesPage = () => {
     ];
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }): Promise<any> => {
+    const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }) => {
         try {
             const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
+                filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
                     ...formData,
                     isActive: formData.isActive ?? true
-                },
-                userId: user._id,
-                recordActivity: true
+                }
             });
             return response;
         } catch (error) {

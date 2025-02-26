@@ -9,6 +9,7 @@ import { role } from "./master/role.types";
 import { employeeType } from "./master/employeeType.types";
 import { team } from "./master/team.types";
 import { teamMember } from "./master/teamMember.types";
+import { unitMeasurement } from "./master/unitMeasurement.types";
 
 export type {
   UserDocument,
@@ -21,5 +22,6 @@ export type {
   role,
   employeeType,
   team,
-  teamMember
+  teamMember,
+  unitMeasurement
 };

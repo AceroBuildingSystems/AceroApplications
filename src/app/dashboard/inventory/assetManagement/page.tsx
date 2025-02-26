@@ -36,7 +36,6 @@ interface HistoryDialogProps {
 
 const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
     if (!asset) return null;
-
     const getAssigneeName = (assignment: any) => {
         if (!assignment) return '';
         const assignee = assignment.assignedTo;

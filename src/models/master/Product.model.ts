@@ -1,0 +1,44 @@
+import mongoose from 'mongoose';
+
+const ProductSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    category: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ProductCategory',
+        required: true,
+        autopopulate: true
+    },
+    brand: {
+        type: String,
+        required: true
+    },
+    model: {
+        type: String,
+        required: true
+    },
+    description: String,
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    addedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    updatedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    }
+}, {
+    timestamps: true
+});
+
+ProductSchema.plugin(require('mongoose-autopopulate'));
+const Product = mongoose.models.Product || mongoose.model('Product', ProductSchema);
+
+export default Product;

@@ -1,4 +1,3 @@
-
 // MASTER MODELS 
 import Access from "./master/Access.model"
 import Department from "./master/Department.model"
@@ -31,9 +30,23 @@ import Quotation from "./aqm/QuotationModel.model"
 // AQM
 import ProposalRevisions from "./aqm/ProposalRevisions.model"
 import Proposal from "./aqm/Proposals.model"
+
+// Asset and Inventory
+import Asset from "./master/Asset.model"
+import Vendor from "./master/Vendor.model"
+import ProductCategory from "./master/ProductCategory.model"
+import Product from "./master/Product.model"
+import Warehouse from "./master/Warehouse.model"
+import Inventory from "./master/Inventory.model"
+import UnitMeasurement from "./master/UnitMeasurement"
 import Option from "./aqm/OptionsModel.model"
 
-export { Access,Department,Designation,EmployeeType,Organisation,Role,User, Continent, Region, Country, QuoteStatus, Team, TeamMember,Currency, Customer,
-     CustomerType,CustomerContact,IndustryType,BuildingType, ProjectType, PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, ProposalRevisions, Proposal, Quotation, Option }
-
-
+export { 
+    Access, Department, Designation, EmployeeType, Organisation, Role, User, 
+    Continent, Region, Country, QuoteStatus, Team, TeamMember, Currency, Customer,
+    CustomerType, CustomerContact, IndustryType, BuildingType, ProjectType, 
+    PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
+    ProposalRevisions, Proposal, Quotation,Option,
+    // Asset and Inventory exports
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement
+}

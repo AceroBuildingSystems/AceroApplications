@@ -132,6 +132,7 @@ const Access = () => {
         `Error encountered: ${response?.error?.data?.message?.message}`
       );
     }
+    return response;
   };
 
   const editAccess = (rowData) => {
@@ -455,7 +456,6 @@ const Access = () => {
       }
       setAccessComponentData((prev) => {
         if (data) {
-          
           const findIdx = prev.findIndex((d) => d._id === data._id);
 
           if (findIdx !== -1) {

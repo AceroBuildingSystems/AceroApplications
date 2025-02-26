@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 import MultipleSelector from "../ui/multiple-selector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { log } from "console";
 import { MONGO_MODELS, SUCCESS } from "@/shared/constants";
 import { useCreateApplicationMutation, useGetApplicationQuery, useLazyGetApplicationQuery } from "@/services/endpoints/applicationApi";
 import { toast } from "react-toastify";
@@ -233,14 +232,15 @@ const QuotationDialog = ({
       const { sentToEstimation, receivedFromEstimation } = item;
 
       // Ensure both dates are valid
-      if (!sentToEstimation || !receivedFromEstimation) {
+      if (!sentToEstimation) {
         console.log("Error: sentToEstimation or receivedFromEstimation should be there", item);
+        alert("Error: sentToEstimation should not be empty.");
         return item;
       }
 
       // Check if receivedFromEstimation is less than sentToCustomer
       if (receivedFromEstimation < sentToEstimation) {
-        console.log("Error: receivedFromEstimation cannot be less than sentToCustomer for item", item);
+       
         alert("Error: receivedFromEstimation cannot be less than sentToCustomer.");
         const updatedFormData = {
           ...item,
@@ -258,8 +258,7 @@ const QuotationDialog = ({
       return item; // Return the updated item
     });
   }
-  console.log(formData);
-  console.log(proposalRevData);
+ 
   const handleChange = (e, fieldName, format, type, data, field, revNo, customFunction = () => { }) => {
 
     let value: string | null = "";
@@ -300,8 +299,6 @@ const QuotationDialog = ({
         } else if (format === "Date") {
           formattedValue = value ? new Date(value) : null; // Convert to Date object
         }
-
-        console.log(formattedValue);
         const updatedFormData = {
           ...prev,
           [fieldName]: formattedValue,
@@ -389,7 +386,6 @@ const QuotationDialog = ({
         } else if (format === "Date") {
           formattedValue = value ? new Date(value) : null; // Convert to Date object
         }
-        console.log(fieldName, formattedValue)
         const updatedFormData = {
           ...prev,
           [fieldName]: formattedValue,
@@ -402,7 +398,6 @@ const QuotationDialog = ({
             }`.trim();
         }
 
-        console.log(updatedFormData);
         return updatedFormData;
       });
     }
@@ -428,7 +423,6 @@ const QuotationDialog = ({
             }`.trim();
         }
 
-        console.log(updatedFormData);
         return updatedFormData;
       });
     }
@@ -703,7 +697,6 @@ const QuotationDialog = ({
             };
 
             const response = await onSave({ formData: rejectedData, action, master });
-console.log(response?.data?.data?.salesEngineer?.user?.email);
             const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Rejected : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalRequestRejected", senderName: 'Sales Director', approveUrl: '', rejectUrl: '', reason: formData['rejectReason'] };
             await sendEmail(emailData);
             toast.success(`Quote approval request rejected successfully.`);
@@ -740,7 +733,6 @@ console.log(response?.data?.data?.salesEngineer?.user?.email);
             : item
         );
 
-        console.log(updatedProposalRevData);
         const revisionTypesProposal = [{
           data: updatedProposalRevData
         }
@@ -1031,7 +1023,6 @@ console.log(response?.data?.data?.salesEngineer?.user?.email);
 
     setApprovalAuthorityData(data)
     setFormDataSecondary({});
-    console.log(field)
     switch (type) {
       case "Company Name":
         setSecondaryFields(customerfields);

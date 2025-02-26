@@ -76,7 +76,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     // Track active filters (default to config filters)
     const [activeFilters, setActiveFilters] = useState<FieldConfig[]>([]);
     const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({});
-    console.log(activeFilters);
+   
     const toggleFilterOpen = (key: string, isOpen: boolean) => {
         setOpenFilters((prev) => ({
             ...prev,
@@ -131,8 +131,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     const searchFields = ['jobNo', 'quoteNo', 'projectName']
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-        console.log(searchValues);
-
+       
         const filtered = config?.dataTable?.data?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = searchFields.some((field) => {
@@ -141,7 +140,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                 const searchQuery = searchValues['name']||'';
                 // Check if the field value matches the search query
                 if (value) {
-                    console.log(value,searchQuery)
+                  
                     return searchQuery.toLowerCase().includes(value.toString().toLowerCase());
                 }
                 return false;
@@ -150,16 +149,14 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
             // Check if item matches filter criteria
             const matchesFilter = activeFilters.every((field) => {
                 const key = field.key;
-                console.log(field)
-                console.log(filterValues);
+        
                 const filterValue = filterValues[key];
-                console.log(filterValue);
-                // If no filter value, pass the filter
+              
                 if (filterValue === null) return true;
 
                 // Use filterBy to determine comparison
                 if (field.filterBy === "id") {
-                    console.log(item);
+                  
                     return item[key]?.name === filterValue; // Compare ID for quoteStatus
                 } else {
                     return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
@@ -169,7 +166,6 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
             return matchesSearch || matchesFilter;
         });
 
-        console.log(filtered);
         setFilteredData(filtered); // Update filtered data state
     };
 

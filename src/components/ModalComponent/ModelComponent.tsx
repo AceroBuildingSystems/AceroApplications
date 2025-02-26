@@ -90,7 +90,7 @@ const DynamicDialog = ({
         updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
           }`.trim();
       }
-      console.log(updatedFormData)
+     
       return updatedFormData;
     });
   };
@@ -120,7 +120,7 @@ const DynamicDialog = ({
   // Handle form submission
   const handleSubmit = async () => {
     try {
-      console.log(user)
+     
       const updatedData = {
         ...formData, // Spread the existing properties of the object
         addedBy: user._id,

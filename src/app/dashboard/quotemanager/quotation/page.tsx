@@ -16,7 +16,6 @@ import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
-import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
 import { bulkImport, bulkImportQuotation } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
@@ -707,7 +706,7 @@ const page = () => {
     };
 
     const handleExport = (type: string, quotationDataNew: any[]) => {
-        console.log(type, quotationDataNew)
+      
         if (!quotationDataNew || quotationDataNew.length === 0) {
             toast.error("No data to export");
             return;

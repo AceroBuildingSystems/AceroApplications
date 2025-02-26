@@ -456,7 +456,7 @@ const Access = () => {
       }
       setAccessComponentData((prev) => {
         if (data) {
-          console.log("data in access", { data, prev });
+
           const findIdx = prev.findIndex((d) => d._id === data._id);
 
           if (findIdx !== -1) {
@@ -537,7 +537,7 @@ const Access = () => {
             replaceAll:true
         }
     })
-    console.log("REFRESHING....")
+
       router.refresh()
       refetchUsers()
       closeDialog()

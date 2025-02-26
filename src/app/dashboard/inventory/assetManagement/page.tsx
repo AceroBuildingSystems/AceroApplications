@@ -36,7 +36,6 @@ interface HistoryDialogProps {
 
 const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
     if (!asset) return null;
-console.log({asset})
     const getAssigneeName = (assignment: any) => {
         if (!assignment) return '';
         const assignee = assignment.assignedTo;
@@ -184,7 +183,6 @@ const AssetManagementPage = () => {
             }
         ]
     });
-    console.log({assetsResponse})
     const { data: locationResponse } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
@@ -368,7 +366,7 @@ const AssetManagementPage = () => {
             _id: asset._id,
             assignedType: 'User'
         });
-        console.log({asset})
+
         setSelectedAsset(asset);
         setIsDialogOpen(true);
     };

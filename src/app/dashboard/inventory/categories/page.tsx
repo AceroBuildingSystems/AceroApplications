@@ -35,7 +35,7 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
     useEffect(() => {
         setSpecs(accessData || {});
     }, [accessData]);
-    console.log(specs)
+
     return (
         <Card>
             <CardContent className="pt-6 space-y-4">

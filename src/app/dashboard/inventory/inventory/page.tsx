@@ -43,7 +43,7 @@ interface SpecificationsComponentProps {
 
 const SpecificationsComponent = ({ accessData, handleChange, selectedItem:selectedProduct }: SpecificationsComponentProps) => {
     const [specs, setSpecs] = useState<Record<string, any>>(accessData || {});
-    console.log({accessData,selectedProduct})
+
     useEffect(() => {
         setSpecs(accessData || {});
     }, [accessData]);
@@ -122,8 +122,6 @@ const AssetsPage = () => {
         filter: { isActive: true },
         populate: ['product', 'warehouse', 'vendor',"product.category"]
     });
-
-    console.log({assetsResponse});
 
     const { data: productsResponse } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_MASTER,
@@ -308,7 +306,6 @@ const AssetsPage = () => {
         }
     ];
     const editAsset = (data: any) => {
-        console.log({data});
         setSelectedItem(data)
         setDialogAction("Update");
         setIsDialogOpen(true);
@@ -403,7 +400,6 @@ const AssetsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
         try {
-            console.log({formData});
             
             const response = await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
@@ -505,7 +501,7 @@ const AssetsPage = () => {
             setLoading(false);
         }
     }, [assetsLoading]);
-console.log({selectedItem})
+
     return (
         <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} />

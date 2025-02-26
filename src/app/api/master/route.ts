@@ -91,22 +91,22 @@ export async function POST(request:NextRequest) {
 
   if(!body) return NextResponse.json({status:ERROR, message:INVALID_REQUEST, data:{}}, { status: 400 })
 
-  const {db,action,data} = body
+  const {db,action,data, userId, recordActivity} = body
 
   if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
   
 
-  body.data.addedBy = createMongooseObjectId(body.addedBy)
-  body.data.updatedBy = createMongooseObjectId(body.updatedBy)
+  data.addedBy = createMongooseObjectId(body.addedBy)
+  data.updatedBy = createMongooseObjectId(body.updatedBy)
 
   let response:any = {}
   
   switch(action){
     case "create":
-      response = await masterdataManager.createMasterData(body)
+      response = await masterdataManager.createMasterData({db, data, userId, recordActivity})
       break;
     case "update":
-      response = await masterdataManager.updateMasterData(body)
+      response = await masterdataManager.updateMasterData({db, data, filter: {"_id": data._id}, userId, recordActivity})
       break;
     default:
       response = {status:ERROR, message:INVALID_REQUEST}

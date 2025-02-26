@@ -23,11 +23,10 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   ProductCategory,
   Warehouse,
   Inventory,
-  UnitMeasurement
+  UnitMeasurement,
+  Notification,
+  ActivityLog
 } from '@/models';
-
-
-
 
 
 
@@ -73,7 +72,9 @@ function getMongooseAdapter(): MongooseAdapter {
     QUOTATION_MASTER: Quotation,
     ASSET_MASTER: Asset,
     VENDOR_MASTER: Vendor,
-    UNIT_MEASUREMENT_MASTER:UnitMeasurement
+    UNIT_MEASUREMENT_MASTER:UnitMeasurement,
+    NOTIFICATION_MASTER: Notification,
+    ACTIVITY_LOG_MASTER: ActivityLog
     });
   }
   return dbEngineInstance;

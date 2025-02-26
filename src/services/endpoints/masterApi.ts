@@ -22,6 +22,14 @@ export interface GetMasterParams {
   populate?: (string | PopulateOptions)[];
 }
 
+interface CreateMasterParams {
+  db: string;
+  action: string;
+  data: any;
+  userId: string;
+  recordActivity: boolean;
+}
+
 export const masterApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMaster: builder.query<MasterApiResponse, GetMasterParams>({
@@ -39,7 +47,7 @@ export const masterApi = baseApi.injectEndpoints({
       providesTags: ['Master'],
     }),
 
-    createMaster: builder.mutation<MasterApiResponse, any>({
+    createMaster: builder.mutation<MasterApiResponse, CreateMasterParams>({
       query: (masterData) => ({
         url: 'master',
         method: 'POST',

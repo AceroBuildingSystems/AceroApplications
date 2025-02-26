@@ -39,6 +39,8 @@ import Product from "./master/Product.model"
 import Warehouse from "./master/Warehouse.model"
 import Inventory from "./master/Inventory.model"
 import UnitMeasurement from "./master/UnitMeasurement"
+import Notification from "./Notification.model"
+import ActivityLog from "./ActivityLog.model"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -47,5 +49,5 @@ export {
     PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
     ProposalRevisions, Proposal, Quotation,
     // Asset and Inventory exports
-    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement,Notification,ActivityLog
 }

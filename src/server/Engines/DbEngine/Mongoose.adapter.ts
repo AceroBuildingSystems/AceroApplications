@@ -120,7 +120,7 @@ export class MongooseAdapter implements DatabaseAdapter {
     // Populate
     if (options.populate && options.populate.length > 0) {
       // If populate options are explicitly given, use them
-      options.populate.forEach((p) => {
+      options.populate.forEach((p: any) => {
         query = query.populate(p);
       });
     } else {
@@ -207,6 +207,7 @@ export class MongooseAdapter implements DatabaseAdapter {
 
 
 
+
   
 
   /**
@@ -245,13 +246,29 @@ export class MongooseAdapter implements DatabaseAdapter {
       doc.push(result); // result will contain update details, not documents
     } else {
       // Perform single document update (findOneAndUpdate)
-    
-      doc = await model.findOneAndUpdate(options.filter || {}, options.data, {
+      let oldData: any = null;
+      let doc: any = null;
+      const findOneAndUpdateOptions: any = {
         new: true,
         upsert: options.upsert ?? false,
         runValidators: true,
-      });
+        returnOriginal: false,
+      };
+
+      if (options.returnOriginal === false) {
+        const existingDocument = await model.findOne(options.filter || {}).lean();
+        doc = await model.findOneAndUpdate(options.filter || {}, options.data, findOneAndUpdateOptions).lean();
+        oldData = existingDocument
+      }else{
+        doc = await model.findOneAndUpdate(options.filter || {}, options.data, {
+          new: true,
+          upsert: options.upsert ?? false,
+          runValidators: true,
+        }).lean();
+      }
+      
       if (!doc) return { status: ERROR, message: "Document not found" };
+      return { status: SUCCESS, data: doc, oldData };
     }
 
     return { status: SUCCESS, data: doc };
@@ -298,7 +315,7 @@ export class MongooseAdapter implements DatabaseAdapter {
         const getNestedValue = (obj: any, path: string) => {
           return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
         };
-      
+    
         // Find the index of the array item matching the filter
         const itemIndex = array.findIndex((item: any) =>
           Object.entries(arrayFilter).every(([key, value]) => {
@@ -309,7 +326,7 @@ export class MongooseAdapter implements DatabaseAdapter {
             return itemValue === value;
           })
         );
-      
+    
         // Add or update logic
         if (itemIndex === -1) {
           if (!addIfNotFound) {

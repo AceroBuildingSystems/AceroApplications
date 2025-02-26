@@ -4,6 +4,7 @@ export interface QueryResult {
   status: string;
   message?: string;
   data?: any;
+  oldData?: any;
   pagination?: {
     total: number;
     page: number;
@@ -36,6 +37,7 @@ export interface UpdateOptions {
   data: any;
   bulkUpdate?: boolean;
   upsert?: boolean;
+  returnOriginal?: boolean;
 }
 
 export interface UpdateInArrayOptions {

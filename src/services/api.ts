@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery, retry } from '@reduxjs/toolkit/query/react'
 import { API_BASE_URL, ENVIRONMENT, API_PROD_BASE_URL } from '@/lib/constants'
+import { notificationApi } from './endpoints/notification';
 
 // Create a custom base query with retry logic
 const baseQueryWithRetry = retry(
@@ -17,6 +18,6 @@ const baseQueryWithRetry = retry(
 export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithRetry,
-  tagTypes: ['User', 'Post', 'Comment', 'Master', 'Application', 'Assets'], // Added 'Assets'
-  endpoints: () => ({}), // We'll inject endpoints from other files
+  tagTypes: ['User', 'Post', 'Comment', 'Master', 'Application', 'Assets', 'Notification', 'ActivityLog'],
+  endpoints: () => ({}),
 })

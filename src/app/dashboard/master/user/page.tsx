@@ -111,7 +111,6 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
 
   // Save function to send data to an API or database
   const saveData = async ({formData, action}) => {
-   console.log({formData})
     const formattedData = {
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
@@ -138,7 +137,6 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
 
 
   const editUser = (rowData: RowData) => {
-    console.log(rowData);
     setAction('Update');
     setInitialData(rowData);
     openDialog("employee");
@@ -260,11 +258,6 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
       cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
     },
   ];
-
- 
-  
-  
-console.log(roleNames);
 
   const userConfig = {
     searchFields: [

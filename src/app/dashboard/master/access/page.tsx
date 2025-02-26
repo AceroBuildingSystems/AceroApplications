@@ -455,7 +455,7 @@ const Access = () => {
       }
       setAccessComponentData((prev) => {
         if (data) {
-          console.log("data in access", { data, prev });
+          
           const findIdx = prev.findIndex((d) => d._id === data._id);
 
           if (findIdx !== -1) {

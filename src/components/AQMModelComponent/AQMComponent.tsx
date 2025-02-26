@@ -14,7 +14,7 @@ import mongoose, { set } from "mongoose";
 import { Combobox } from "../ui/ComboBoxWrapper";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
-import { LogOut, Save } from 'lucide-react';
+import { LogOut, Save, Check, X } from 'lucide-react';
 
 import { Switch } from "../ui/switch";
 import {
@@ -24,16 +24,17 @@ import {
   Import,
   Plus,
   PlusIcon,
-  Trash2Icon,
+  Trash2Icon, SendHorizontal
 } from "lucide-react";
 import MultipleSelector from "../ui/multiple-selector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { log } from "console";
 import { MONGO_MODELS, SUCCESS } from "@/shared/constants";
-import { useCreateApplicationMutation } from "@/services/endpoints/applicationApi";
+import { useCreateApplicationMutation, useGetApplicationQuery, useLazyGetApplicationQuery } from "@/services/endpoints/applicationApi";
 import { toast } from "react-toastify";
+import { useSendEmailMutation } from "@/services/endpoints/emailApi";
+import moment from "moment";
 
-const DynamicDialog = ({
+const QuotationDialog = ({
   isOpen,
   closeDialog,
   selectedMaster,
@@ -56,13 +57,19 @@ const DynamicDialog = ({
   const { user, status, authenticated } = useUserAuthorised();
 
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateApplicationMutation();
+  const [getApplication, { data: applicationData, isLoading, error }] = useLazyGetApplicationQuery();
+
+
+  const [sendEmail, { isLoading: isSendEMail }] = useSendEmailMutation();
 
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [proposalRevData, setProposalRevData] = useState<Record<string, any>>([]);
   const [drawingRevData, setDrawingRevData] = useState<Record<string, any>>([]);
-  const [proposalData, setProposalData] = useState<Record<string, any>>({});
+  const [proposalDataIds, setProposalDataIds] = useState<Record<string, any>>({});
   const [offerRevisions, setOfferRevisions] = useState<Record<string, any>>([]);
   const [drawingRevisions, setDrawingRevisions] = useState<Record<string, any>>([]);
+
+  const [sellingTeamData, setSellingTeamData] = useState<Record<string, any>>({});
 
   const [formDataSecondary, setFormDataSecondary] = useState<Record<string, any>>({});
   const [isSecondaryDialogOpen, setIsSecondaryDialogOpen] = useState(false);
@@ -85,6 +92,8 @@ const DynamicDialog = ({
   const [incotermDescription, setIncotermDescription] = useState('');
 
   const [isHelp, setIsHelp] = useState(false);
+  const [isProposalOffer, setIsProposalOffer] = useState(true);
+  const [isChecked, setIsChecked] = useState(false);
 
 
   // Dynamically generate fields based on selectedMaster
@@ -93,7 +102,7 @@ const DynamicDialog = ({
     { label: 'Customer Name', name: "name", type: "text", required: true, placeholder: 'Customer Name', section: 'Form2' },
     { label: 'Website', name: "website", type: "text", placeholder: 'Website', section: 'Form2' },
     { label: 'Email', name: "email", type: "email", placeholder: 'Email', section: 'Form2' },
-    { label: 'Phone', name: "phone", type: "text", placeholder: 'Phone', section: 'Form2' },
+    { label: 'Phone', name: "phone", type: "number", placeholder: 'Phone', section: 'Form2' },
     { label: 'Address', name: "address", type: "text", placeholder: 'Address', section: 'Form2' },
     { label: 'Customer Type', name: "customerType", type: "select", data: customerTypeData, placeholder: 'Select Customer Type', section: 'Form2' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status', section: 'Form2' },
@@ -102,7 +111,7 @@ const DynamicDialog = ({
   const customerContactfields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; section?: string; addNew?: boolean; visibility?: boolean; onAddMore?: () => void; }> = [
     { label: 'Contact Name', name: "name", type: "text", required: true, placeholder: 'Customer Name', section: 'Form2' },
     { label: 'Email', name: "email", type: "email", placeholder: 'Email', section: 'Form2' },
-    { label: 'Phone', name: "phone", type: "text", placeholder: 'Phone', section: 'Form2' },
+    { label: 'Phone', name: "phone", type: "number", placeholder: 'Phone', section: 'Form2' },
     { label: 'Position', name: "position", type: "text", placeholder: 'Position', section: 'Form2' },
     { label: 'Customer', name: "customer", type: "select", data: customerData, placeholder: 'Select Customer', section: 'Form2' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status', section: 'Form2' },
@@ -140,7 +149,8 @@ const DynamicDialog = ({
       }
       return acc;
     }, {});
-
+    setRegion(initialData?.country?.region?.name);
+    setSellingTeamData(initialData?.sellingTeam)
     const proposalRevisions = {
       proposals: formattedData?.proposals?.map(data => data._id), // Map `location` to just the `_id`s
       offerrevisions: formattedData?.proposals?.[0]?.revisions.map(data => data._id),
@@ -150,14 +160,43 @@ const DynamicDialog = ({
 
     };
 
+
     if (initialData?.contact) {
       formattedData = { ...formattedData, email: initialData?.contact?.email, phone: initialData?.contact?.phone, position: initialData?.contact?.position }
     }
     setFormData(formattedData);
-
     if (initialData?.proposals) {
-      setProposalRevData(proposalRevisions?.offerRevisionsdata);
-      setDrawingRevData(proposalRevisions?.drawingRevisionsdata)
+      setProposalRevData(
+        proposalRevisions?.offerRevisionsdata?.map(item => ({
+          ...item,
+          sentToEstimation: item.sentToEstimation ? new Date(item.sentToEstimation) : null,
+          receivedFromEstimation: item.receivedFromEstimation ? new Date(item.receivedFromEstimation) : null,
+          sentToCustomer: item.sentToCustomer ? new Date(item.sentToCustomer) : null,
+          createdAt: item.createdAt ? new Date(item.createdAt) : null,
+          updatedAt: item.updatedAt ? new Date(item.updatedAt) : null
+        })) || []
+      );
+
+      setDrawingRevData(
+        proposalRevisions?.drawingRevisionsdata?.map(item => ({
+          ...item,
+          sentToEstimation: item.sentToEstimation ? new Date(item.sentToEstimation) : null,
+          receivedFromEstimation: item.receivedFromEstimation ? new Date(item.receivedFromEstimation) : null,
+          sentToCustomer: item.sentToCustomer ? new Date(item.sentToCustomer) : null,
+          createdAt: item.createdAt ? new Date(item.createdAt) : null,
+          updatedAt: item.updatedAt ? new Date(item.updatedAt) : null
+        })) || []
+      );
+
+      setOfferRevisions(proposalRevisions?.offerrevisions);
+      setDrawingRevisions(proposalRevisions?.drawingrevisions);
+      setProposalDataIds(proposalRevisions?.proposals);
+      if (action === 'Update') {
+        formattedData = { ...formattedData, revNo: proposalRevisions?.offerRevisionsdata?.at(-1)?.revNo };
+        setFormData(formattedData);
+      }
+
+
     }
     else {
       setProposalRevData((prev) => {
@@ -186,11 +225,44 @@ const DynamicDialog = ({
 
   }, [initialData]);
 
-  // Handle form data changes
-  const handleChange = (e, fieldName, format, type, data, field) => {
+
+
+  function updateCycleTimeForArray(dataArray) {
+    return dataArray.map(item => {
+      const { sentToEstimation, receivedFromEstimation } = item;
+
+      // Ensure both dates are valid
+      if (!sentToEstimation) {
+        console.log("Error: sentToEstimation or receivedFromEstimation should be there", item);
+        alert("Error: sentToEstimation should not be empty.");
+        return item;
+      }
+
+      // Check if receivedFromEstimation is less than sentToCustomer
+      if (receivedFromEstimation < sentToEstimation) {
+       
+        alert("Error: receivedFromEstimation cannot be less than sentToCustomer.");
+        const updatedFormData = {
+          ...item,
+          ['receivedFromEstimation']: sentToEstimation,
+          ['cycleTime']: 0
+        };
+
+        return updatedFormData; // Skip calculation if the condition is violated
+      }
+
+      const cycleTime = (receivedFromEstimation - sentToEstimation) / (1000 * 60 * 60 * 24); // Convert ms to days
+
+      item.cycleTime = cycleTime.toString();
+
+      return item; // Return the updated item
+    });
+  }
+ 
+  const handleChange = (e, fieldName, format, type, data, field, revNo, customFunction = () => { }) => {
 
     let value: string | null = "";
-    fieldName === 'country' && setRegion(data?.filter((item) => item._id === e)[0]?.region?.name);
+    fieldName === 'country' && setRegion(field?.data?.filter((item) => item._id === e)[0]?.region?.name);
 
     fieldName === 'industryType' && setIndustryType(data?.filter((item) => item._id === e)[0]?.name);
 
@@ -200,7 +272,8 @@ const DynamicDialog = ({
 
     fieldName === 'incoterm' && setIncotermDescription(data?.filter((item) => item._id === e)[0]?.description);
 
-    (fieldName === "company" || fieldName === 'country' || fieldName === 'state') && onchangeData({ id: e, fieldName, name: 'approvalAuthority' });
+    (fieldName === "company" || fieldName === 'country' || fieldName === 'state' || fieldName === 'salesEngineer') && onchangeData({ id: e, fieldName, name: 'approvalAuthority' });
+
 
 
     if (type === "multiselect") {
@@ -208,11 +281,16 @@ const DynamicDialog = ({
     } else if (type === "select") {
       value = e; // Ensure single select values are stored correctly
     } else {
-      value = e.target.value || "";
+
+      value = e.target.value.toString() || "";
+      if (fieldName === "quoteNo") {
+        if (value !== undefined && value.length > 5) {
+          value = value.slice(0, 5); // Truncate to the first 5 characters
+        }
+      }
     }
 
     if (field?.section !== 'CycleTimeDetails') {
-
 
       setFormData((prev) => {
         let formattedValue = value;
@@ -221,7 +299,6 @@ const DynamicDialog = ({
         } else if (format === "Date") {
           formattedValue = value ? new Date(value) : null; // Convert to Date object
         }
-
         const updatedFormData = {
           ...prev,
           [fieldName]: formattedValue,
@@ -229,48 +306,52 @@ const DynamicDialog = ({
 
         if (fieldName === "company") {
 
-          updatedFormData['customerType'] = data?.filter((item) => item._id === e)[0]?.customerType?._id;
+          updatedFormData['customerType'] = data?.filter((item) => item?._id === e)[0]?.customerType?._id;
         }
         if (fieldName === "contact") {
-          updatedFormData['position'] = data?.filter((item) => item._id === e)[0]?.position;
-          updatedFormData['phone'] = data?.filter((item) => item._id === e)[0]?.phone;
-          updatedFormData['email'] = data?.filter((item) => item._id === e)[0]?.email;
+          updatedFormData['position'] = data?.filter((item) => item?._id === e)[0]?.position;
+          updatedFormData['phone'] = data?.filter((item) => item?._id === e)[0]?.phone;
+          updatedFormData['email'] = data?.filter((item) => item?._id === e)[0]?.email;
+        }
+        if (fieldName === "salesEngineer") {
+          updatedFormData['sellingTeam'] = data?.filter((item) => item?._id === e)[0]?.team;
+          setSellingTeamData(data?.filter((item) => item?._id === e)[0]);
+
         }
 
-
-        // Update `fullName` if `firstName` or `lastName` changes
         // Need to generalise later for other master components
         if (fieldName === "firstName" || fieldName === "lastName") {
           updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
             }`.trim();
         }
-
-        console.log(updatedFormData)
+        customFunction(updatedFormData[fieldName])
 
         return updatedFormData;
       });
     }
 
 
-    {
+    ((field?.section === 'CycleTimeDetails' && field?.subSection === 'ProposalOffer') || fieldName === 'revNo') && setProposalRevData((prev) => {
+      let formattedValue = value;
+      if (format === "ObjectId") {
+        formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+      } else if (format === "Date") {
+        formattedValue = value ? new Date(value) : null; // Convert to Date object
+      }
 
-      ((field?.section === 'CycleTimeDetails' && field?.subSection === 'ProposalOffer') || fieldName === 'revNo') && setProposalRevData((prev) => {
-        let formattedValue = value;
-        if (format === "ObjectId") {
-          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
-        } else if (format === "Date") {
-          formattedValue = value ? new Date(value) : null; // Convert to Date object
+      const updatedFormData = prev.map(item => {
+        if (item.revNo === revNo || fieldName === 'revNo') { // Only update the specific revNo
+          return { ...item, [fieldName]: formattedValue };
         }
+        return item;
+      });
 
-        const updatedFormData = prev.map(item =>
-          ({ ...item, [fieldName]: formattedValue })
-        );
+      const updatedData = updateCycleTimeForArray(updatedFormData.sort((a, b) => a.revNo - b.revNo));
 
-        console.log(updatedFormData)
+      customFunction(updatedData?.[revNo]?.[fieldName])
+      return updatedData.sort((a, b) => a.revNo - b.revNo);
+    })
 
-        return updatedFormData;
-      })
-    };
 
     {
       ((field?.section === 'CycleTimeDetails' && field?.subSection === 'ProposalDrawing') || fieldName === 'revNo') && setDrawingRevData((prev) => {
@@ -281,25 +362,30 @@ const DynamicDialog = ({
           formattedValue = value ? new Date(value) : null; // Convert to Date object
         }
 
-        const updatedFormData = prev.map(item =>
-          ({ ...item, [fieldName]: formattedValue })
-        );
+        const updatedFormData = prev.map(item => {
+          if (item.revNo === revNo || fieldName === 'revNo') { // Only update the specific revNo
+            return { ...item, [fieldName]: formattedValue };
+          }
+          return item;
+        });
 
-        console.log(updatedFormData)
 
-        return updatedFormData;
+        const updatedData = updateCycleTimeForArray(updatedFormData.sort((a, b) => a.revNo - b.revNo));
+
+        customFunction(updatedData?.[revNo]?.[fieldName])
+
+        return updatedData.sort((a, b) => a.revNo - b.revNo);
       })
     };
 
     {
-      (field?.section === 'Form2') && setFormDataSecondary((prev) => {
+      (field?.section === 'Form2' || data === 'Form2') && setFormDataSecondary((prev) => {
         let formattedValue = value;
         if (format === "ObjectId") {
           formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
         } else if (format === "Date") {
           formattedValue = value ? new Date(value) : null; // Convert to Date object
         }
-
         const updatedFormData = {
           ...prev,
           [fieldName]: formattedValue,
@@ -311,7 +397,6 @@ const DynamicDialog = ({
           updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
             }`.trim();
         }
-
 
         return updatedFormData;
       });
@@ -338,7 +423,6 @@ const DynamicDialog = ({
             }`.trim();
         }
 
-        console.log(updatedFormData);
         return updatedFormData;
       });
     }
@@ -374,7 +458,7 @@ const DynamicDialog = ({
 
     const formattedData = {
       db: MONGO_MODELS[master],
-      action: action === 'Add' ? 'create' : 'update',
+      action: action === 'Add' ? 'create' : (formData._id ? 'update' : 'create'),
       filter: { "_id": formData._id },
       data: formData,
     };
@@ -385,78 +469,374 @@ const DynamicDialog = ({
       toast.error(`Error encountered: ${response?.error?.data?.message?.errorResponse?.errmsg}`);
       return new Error({ message: "Something went wrong!", data: "" })
     }
-    return response;
+
+    if (formattedData?.action === 'create') return response;
 
   };
 
   const addRevisionsToProposal = async (data, master) => {
-    const response = await Promise.allSettled(data.map(pType => {
-      const updatedData = {
-        ...pType.data,
-        addedBy: user?._id,
-        updatedBy: user?._id
-      };
+    const response = await Promise.allSettled(data.flatMap(pType => {
+      // Ensure `pType.data` is an array and iterate over it
+      return Array.isArray(pType.data) ? pType.data.map(obj => {
+        const updatedData = {
+          ...obj,
+          addedBy: user?._id,
+          updatedBy: user?._id
+        };
+        return saveDataQuotation({ formData: updatedData, action, master });
+      }) : [];
+    }));
 
-
-      return saveDataQuotation({ formData: updatedData, action, master });
-    }))
-    return response
-  }
+    return response;
+  };
 
   // Handle form submission
-  const handleSubmitQuotation = async () => {
+  const handleSubmitQuotation = async (status) => {
     try {
+      if (!(formData?.country && formData?.salesEngineer && formData?.salesSupportEngineer?.length > 0 && formData?.rcvdDateFromCustomer && formData?.sellingTeam && formData?.responsibleTeam)) {
+
+        toast.error(`Please fill the required fields.`);
+        return;
+      }
+      let emailData = {}
+      const master = 'QUOTATION_MASTER';
       if (action === 'Add') {
-        if(!(formData?.country && formData?.salesEngineer && formData?.salesSupportEngineer && formData?.rcvdDateFromCustomer && formData?.sellingTeam && formData?.responsibleTeam)){
-         
-          toast.error(`Please fill the required fields.`);
-          return;
-        }
+
+        const updatedProposalRevData = proposalRevData.map((item, index) =>
+          index === proposalRevData.length - 1 // Check if it's the last index
+            ? { ...item, changes: { ...item.changes, ...formData, status } } // Merge existing changes with new ones
+            : item
+        );
+
         const revisionTypes = [{
-          data: proposalRevData[0]
+          data: proposalRevData
         },
         {
-          data: drawingRevData[0]
+          data: drawingRevData
         }
         ]
-        const responseIds = await addRevisionsToProposal(revisionTypes, 'PROPOSAL_REVISION_MASTER')
-        // {status:"fulfilled",value:} 
+        const responseIds = await addRevisionsToProposal(revisionTypes, 'PROPOSAL_REVISION_MASTER');
 
         const proposalData = [{
-          data: { revisions: [...offerRevisions, responseIds[0]?.value?.data?.data?._id], type: "ProposalOffer" }
+          data: [{ revisions: [...offerRevisions, responseIds[0]?.value?.data?.data?._id], type: "ProposalOffer" }]
         },
         {
-          data: { revisions: [...drawingRevisions, responseIds[1]?.value?.data?.data?._id], type: "ProposalDrawing" }
+          data: [{ revisions: [...drawingRevisions, responseIds[1]?.value?.data?.data?._id], type: "ProposalDrawing" }]
         }
         ]
 
         const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
 
         const proposals = proposalIds.map(item => item.value?.data?.data?._id).filter(id => id);
-        //
-        delete formData?.phone;
-        delete formData?.email;
-        delete formData?.position;
-        const quotationData = {
-          data: { ...formData, proposals: proposals, status: 'Draft', handleBy: formData?.salesEngineer }
-        }
-        
 
-        await onSave({formData:quotationData?.data, action, master:'QUOTATION_MASTER'})
-        
+        const quotationData = {
+          data: {
+            ...formData, proposals: proposals, status: status, handleBy: formData?.salesEngineer, addedBy: user?._id,
+            updatedBy: user?._id
+          }
+        };
+
+        const response = await onSave({ formData: quotationData?.data, action, master: master });
+
+        if (status === 'quoterequested') {
+
+          const quoteData = {
+            'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
+            'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
+            'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
+            'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
+            'Position': response?.data?.data?.contact?.position, 'Customer Type': response?.data?.data?.customerType?.name,
+            'Project Details': '',
+            'Project Name': response?.data?.data?.projectName, 'Sector': response?.data?.data?.sector?.name, 'Industry Type': response?.data?.data?.industryType?.name,
+            'Other Industry Type': response?.data?.data?.otherIndustryType, 'Building Type': response?.data?.data?.buildingType?.name, 'Other Building Type': response?.data?.data?.otherBuildingType,
+            'Building Usage': response?.data?.data?.buildingUsage, 'City': response?.data?.data?.state?.name, 'Approval Authority': response?.data?.data?.approvalAuthority?.code,
+            'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
+            'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
+          };
+          emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          await sendEmail(emailData);
+        };
+
       }
       else {
-        delete formData?.phone;
-        delete formData?.email;
-        delete formData?.position;
-        delete formData?.proposals;
-        const quotationData = {
-          data: { ...formData, status: 'Pending' }
+
+        if (formData['quoteNo'] && !/^\d{5}$/.test(formData['quoteNo'])) {
+          toast.error('Quote No should be of 5 digits.')
+          return;
         }
 
-        await onSave({formData:quotationData?.data, action, master:'QUOTATION_MASTER'})
-        
-      }
+        if ((formData['quoteNo'] === null || formData['quoteNo'] === '') && status === 'incomplete') {
+          toast.error('Please enter quote no to proceed.')
+          return;
+        }
+
+        if (formData['quoteNo']) {
+          const { data } = await getApplication({
+            db: 'QUOTATION_MASTER',
+            filter: { year: formData['year'], option: formData['option'], quoteNo: formData['quoteNo'], _id: { $ne: initialData['_id'] } },
+            sort: { name: 'asc' },
+          });
+
+          if (data?.data?.length > 0) {
+            toast.error('Quotation already exists. Please check quotation no and option.');
+            return;
+          } else {
+            console.log("No matching records found!");
+          }
+        }
+
+        // Update the last index
+        if (status === 'delete') {
+          const updatedProposalRevData = proposalRevData.map((item, index) =>
+            index === proposalRevData.length - 1 // Check if it's the last index
+              ? { ...item, changes: { ...item.changes, ...formData, isActive: false } } // Merge existing changes with new ones
+              : item
+          );
+
+          const revisionTypesProposal = [{
+            data: updatedProposalRevData
+          }
+          ]
+
+          const revisionTypesDrawing = [
+            {
+              data: drawingRevData
+            }
+          ]
+          const responseIdsProposal = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
+
+          const responseIdsDrawing = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
+
+          const proposalData = [{
+            data: [{
+              _id: proposalDataIds[0], revisions: [
+                ...offerRevisions,
+                responseIdsProposal[0]?.value?.data?.data?._id || undefined, // Ensures valid ID or nothing
+              ].filter(Boolean), type: "ProposalOffer"
+            }]
+          },
+          {
+            data: [{
+              _id: proposalDataIds[1], revisions: [
+                ...drawingRevisions,
+                responseIdsDrawing[0]?.value?.data?.data?._id || undefined,
+              ].filter(Boolean), type: "ProposalDrawing"
+            }]
+          }
+          ]
+
+          const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
+
+          delete formData?.proposals;
+          const quotationData = {
+            data: {
+              ...formData, isActive: false,
+              updatedBy: user?._id
+            }
+          }
+          const response = await onSave({ formData: quotationData?.data, action, master: master });
+
+          const quoteData = {
+            'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
+            'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
+            'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
+            'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
+            'Position': response?.data?.data?.contact?.position, 'Customer Type': response?.data?.data?.customerType?.name,
+            'Project Details': '',
+            'Project Name': response?.data?.data?.projectName, 'Sector': response?.data?.data?.sector?.name, 'Industry Type': response?.data?.data?.industryType?.name,
+            'Other Industry Type': response?.data?.data?.otherIndustryType, 'Building Type': response?.data?.data?.buildingType?.name, 'Other Building Type': response?.data?.data?.otherBuildingType,
+            'Building Usage': response?.data?.data?.buildingUsage, 'City': response?.data?.data?.state?.name, 'Approval Authority': response?.data?.data?.approvalAuthority?.code,
+            'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
+            'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
+            'Cycle Time Details': '',
+            'Rev No (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
+            'Cycle Time (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
+            'Rev No (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
+            'Cycle Time (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
+            'Technical Details': '',
+            'No Of Buildings': response?.data?.data?.noOfBuilding, 'Project Type': response?.data?.data?.projectType?.name, 'Paint Type': response?.data?.data?.paintType?.name,
+            'Other Paint Type': response?.data?.data?.otherPaintType, 'Projected Area (Sqr Mtr)': response?.data?.data?.projectedArea, 'Total Weight (Tons)': response?.data?.data?.totalWt,
+            'Mezzanine Area (Sq Mtr)': response?.data?.data?.mezzanineArea, 'Mezzanine Weight (Tons)': response?.data?.data?.mezzanineWt,
+            'Commercial Details': '',
+            'Currency': response?.data?.data?.currency?.name, 'Total Estimated Price': response?.data?.data?.totalEstPrice, 'Q22 Value (AED)': response?.data?.data?.q22Value,
+            'Special BuyOut Price': response?.data?.data?.spBuyoutPrice, 'Freight Price': response?.data?.data?.freightPrice, 'Incoterm': response?.data?.data?.incoterm?.name,
+            'Incoterm Description': response?.data?.data?.incotermDescription, 'Booking Probability': response?.data?.data?.bookingProbability,
+
+          };
+
+          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Deleted`, templateData: quoteData, fileName: "aqmTemplates/quoteDeleted", senderName: user?.shortName?.toProperCase(), approveUrl: ``, rejectUrl: `` };
+          await sendEmail(emailData);
+
+          setFormData({});
+          setOfferRevisions([]);
+          setDrawingRevisions([]);
+          setProposalDataIds({});
+
+          closeDialog();
+
+          return;
+        };
+
+        if (status === 'approved' || status === 'rejected') {
+          if (formData['rejectReason'] === null || formData['rejectReason'] === '') {
+            toast.error('Please enter reason to reject.')
+            return;
+          }
+          if (status === 'rejected') {
+            const rejectedData = {
+              _id: initialData['_id'],
+              status: status,
+              rejectReason: formData['rejectReason'],
+              rejectedDate: new Date()
+            };
+
+            const response = await onSave({ formData: rejectedData, action, master });
+            const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Rejected : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalRequestRejected", senderName: 'Sales Director', approveUrl: '', rejectUrl: '', reason: formData['rejectReason'] };
+            await sendEmail(emailData);
+            toast.success(`Quote approval request rejected successfully.`);
+          }
+          else {
+
+            const approvedData = {
+              _id: formData['_id'],
+              status: status
+            };
+
+            const response = await onSave({ formData: approvedData, action, master });
+
+            const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Approved : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalApproved", senderName: 'Sales Director', approveUrl: '', rejectUrl: '' };
+            await sendEmail(emailData);
+            toast.success(`Quote approval request approved successfully.`);
+          }
+
+         
+          setFormData({});
+          setOfferRevisions([]);
+          setDrawingRevisions([]);
+          setProposalDataIds({});
+
+          closeDialog();
+
+          return;
+        };
+
+
+        const updatedProposalRevData = proposalRevData.map((item, index) =>
+          index === proposalRevData.length - 1 // Check if it's the last index
+            ? { ...item, changes: { ...item.changes, ...formData, status } } // Merge existing changes with new ones
+            : item
+        );
+
+        const revisionTypesProposal = [{
+          data: updatedProposalRevData
+        }
+        ]
+
+        const revisionTypesDrawing = [
+          {
+            data: drawingRevData
+          }
+        ]
+        const responseIdsProposal = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
+
+        const responseIdsDrawing = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
+
+        const proposalData = [{
+          data: [{
+            _id: proposalDataIds[0], revisions: [
+              ...offerRevisions,
+              responseIdsProposal[0]?.value?.data?.data?._id || undefined, // Ensures valid ID or nothing
+            ].filter(Boolean), type: "ProposalOffer"
+          }]
+        },
+        {
+          data: [{
+            _id: proposalDataIds[1], revisions: [
+              ...drawingRevisions,
+              responseIdsDrawing[0]?.value?.data?.data?._id || undefined,
+            ].filter(Boolean), type: "ProposalDrawing"
+          }]
+        }
+        ]
+
+        const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
+
+        delete formData?.proposals;
+        const quotationData = {
+          data: {
+            ...formData, status: status,
+            updatedBy: user?._id
+          }
+        }
+        const response = await onSave({ formData: quotationData?.data, action, master: master });
+        if (status === 'quoterequested') {
+          const quoteData = {
+            'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
+            'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
+            'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
+            'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
+            'Position': response?.data?.data?.contact?.position, 'Customer Type': response?.data?.data?.customerType?.name,
+            'Project Details': '',
+            'Project Name': response?.data?.data?.projectName, 'Sector': response?.data?.data?.sector?.name, 'Industry Type': response?.data?.data?.industryType?.name,
+            'Other Industry Type': response?.data?.data?.otherIndustryType, 'Building Type': response?.data?.data?.buildingType?.name, 'Other Building Type': response?.data?.data?.otherBuildingType,
+            'Building Usage': response?.data?.data?.buildingUsage, 'City': response?.data?.data?.state?.name, 'Approval Authority': response?.data?.data?.approvalAuthority?.code,
+            'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
+            'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
+          };
+
+          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          await sendEmail(emailData);
+        }
+        if (status === 'submitted') {
+          const quoteData = {
+            'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
+            'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
+            'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
+            'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
+            'Position': response?.data?.data?.contact?.position, 'Customer Type': response?.data?.data?.customerType?.name,
+            'Project Details': '',
+            'Project Name': response?.data?.data?.projectName, 'Sector': response?.data?.data?.sector?.name, 'Industry Type': response?.data?.data?.industryType?.name,
+            'Other Industry Type': response?.data?.data?.otherIndustryType, 'Building Type': response?.data?.data?.buildingType?.name, 'Other Building Type': response?.data?.data?.otherBuildingType,
+            'Building Usage': response?.data?.data?.buildingUsage, 'City': response?.data?.data?.state?.name, 'Approval Authority': response?.data?.data?.approvalAuthority?.code,
+            'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
+            'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
+            'Cycle Time Details': '',
+            'Rev No (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
+            'Cycle Time (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
+            'Rev No (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
+            'Cycle Time (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
+            'Technical Details': '',
+            'No Of Buildings': response?.data?.data?.noOfBuilding, 'Project Type': response?.data?.data?.projectType?.name, 'Paint Type': response?.data?.data?.paintType?.name,
+            'Other Paint Type': response?.data?.data?.otherPaintType, 'Projected Area (Sqr Mtr)': response?.data?.data?.projectedArea, 'Total Weight (Tons)': response?.data?.data?.totalWt,
+            'Mezzanine Area (Sq Mtr)': response?.data?.data?.mezzanineArea, 'Mezzanine Weight (Tons)': response?.data?.data?.mezzanineWt,
+            'Commercial Details': '',
+            'Currency': response?.data?.data?.currency?.name, 'Total Estimated Price': response?.data?.data?.totalEstPrice, 'Q22 Value (AED)': response?.data?.data?.q22Value,
+            'Special BuyOut Price': response?.data?.data?.spBuyoutPrice, 'Freight Price': response?.data?.data?.freightPrice, 'Incoterm': response?.data?.data?.incoterm?.name,
+            'Incoterm Description': response?.data?.data?.incotermDescription, 'Booking Probability': response?.data?.data?.bookingProbability,
+
+          };
+
+          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Submitted For Approval : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: quoteData, fileName: "aqmTemplates/quoteApprovalRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteApproval?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteApproval?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          await sendEmail(emailData);
+        }
+
+      };
+      setFormData({});
+      setOfferRevisions([]);
+      setDrawingRevisions([]);
+      setProposalDataIds({});
 
       closeDialog();
     } catch (error) {
@@ -504,15 +884,20 @@ const DynamicDialog = ({
 
         }
       }
-
-      // Save the data to the database (e.g., via an API call)
-      const response = await onSave({ formData: updatedData, action, master });
-      // const response = await onSave({ formData: updatedData, action, master });
-
+      let emailData = {};
+      const response = await onSave({ formData: updatedData, action: 'create', master });
       switch (master) {
         case "CUSTOMER_MASTER":
+          const companyData = {
+            'Company Name': response?.data?.data?.name, 'Website': response?.data?.data?.website, 'Email': response?.data?.data?.email,
+            'Phone': response?.data?.data?.phone, 'Address': response?.data?.data?.address, 'Customer Type': response?.data?.data?.customerType?.name
+          };
           await onchangeData({ id: response?.data?.data?.customer?._id, fieldName: 'company', name: response?.data?.data?.name })
           handleChange(response?.data?.data?._id, "company", "ObjectId", "select");
+          emailData = { recipient: sellingTeamData?.email, subject: 'New Customer Added', templateData: companyData, fileName: "aqmTemplates/newCustomerTemplate", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+
+          await sendEmail(emailData);
+
           break;
 
         case "CUSTOMER_CONTACT_MASTER":
@@ -528,13 +913,20 @@ const DynamicDialog = ({
           break;
 
         case "APPROVAL_AUTHORITY_MASTER":
+          const authorityData = {
+            'Authority Code': response?.data?.data?.code, 'Authority Name': response?.data?.data?.name, 'Emirate': response?.data?.data?.location[0]?.state?.name
+          };
           await onchangeData({ id: response?.data?.data?._id, fieldName: 'approvalAuthority', name: response?.data?.data?.code, parentId: response?.data?.data?.location?.state?._id, location: response?.data?.data?.location })
           handleChange(response?.data?.data?._id, "state", "ObjectId", "select");
+
+          emailData = { recipient: sellingTeamData?.email, subject: 'New Approval Authority Added', templateData: authorityData, fileName: "aqmTemplates/newApprovalAuthority", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          const response1 = await sendEmail(emailData);
           break;
 
         default:
           break;
       }
+      toast.success('Data added successfully.');
       Form === 'Form2' ? setIsSecondaryDialogOpen(false) : setIsNewDialogOpen(false);;
       // closeDialog();
     } catch (error) {
@@ -542,21 +934,24 @@ const DynamicDialog = ({
     }
   };
 
-
-  const renderField = (field, placeholder) => {
+  const renderField = (field, placeholder, subSection, rev) => {
 
     switch (field.type) {
 
       case "multiselect":
+
         return (
           <MultipleSelector
-            value={(formData[field.name] || []).map((id) => ({
+            value={field?.section === 'Form2' ? (formDataSecondary[field.name] || []).map((id) => ({
+              value: id,
+              label: field.data.find((option) => option.value === id)?.label || "Unknown",
+            })) : (formData[field.name] || []).map((id) => ({
               value: id,
               label: field.data.find((option) => option.value === id)?.label || "Unknown",
             }))}
-            onChange={(selected) => handleChange(selected, field.name, "", "multiselect", field?.data, field)}
-            defaultOptions={field.data}
-            placeholder={field.placeholder || "Select options..."}
+            onChange={(selected) => handleChange(selected, field.name, "", "multiselect", field?.data, field, rev)}
+            options={field?.data || []}
+            placeholder={field?.placeholder || "Select options..."}
           />
         );
       case "textarea":
@@ -569,19 +964,39 @@ const DynamicDialog = ({
           />
         );
       case "select":
+        switch (action === 'Update' && field.name === 'revNo') {
+          case true:
+            return (<Input
+              type='text'
+              onChange={(e) => handleChange(e, field.name, field?.format, 'text', field?.data, field, rev?.revNo)}
+              value={field?.section !== 'CycleTimeDetails' ? (field?.section === 'Form2' ? formDataSecondary[field.name] : formData[field.name]) : (rev?.[field.name] || "")}
+              readOnly={field.readOnly}
+              placeholder={field.placeholder || placeholder || ""}
+              required={field.required || false}
+              className="w-full"
+            />);
 
-        return <Combobox field={field} formData={formData} handleChange={handleChange} placeholder={field.placeholder || ""} />;
+          case false:
+            return <Combobox field={field} formData={field?.section === 'Form2' ? formDataSecondary : formData} handleChange={handleChange} placeholder={field.placeholder || ""} />;
+
+        }
+
       case "date":
+
         return (
+
           <DatePicker
 
-            currentDate={field.section !== 'CycleTimeDetails' ? formData[field.name] : (field?.subSection === 'ProposalOffer' ? proposalRevData[field.name] : drawingRevData[field.name])}
-            handleChange={(selectedDate) => {
+            currentDate={field?.section !== 'CycleTimeDetails' ? formData[field.name] : (rev?.[field.name] ? new Date(rev[field.name]) : undefined)}
+            handleChange={(selectedDate, setDate) => {
               handleChange(
                 { target: { value: selectedDate?.toISOString() || "" } },
                 field.name,
-                field?.format, field?.data, field
-              );
+                field?.format, field?.type, field?.data, field, rev?.revNo,
+                setDate
+              )
+
+              return true
             }}
             placeholder={field.placeholder || ""}
 
@@ -593,8 +1008,8 @@ const DynamicDialog = ({
         return (
           <Input
             type={field.type}
-            onChange={(e) => handleChange(e, field.name, field?.format, field?.type, field?.data, field)}
-            value={field.section !== 'CycleTimeDetails' ? formData[field.name] : ((field?.subSection === 'ProposalOffer' ? proposalRevData[field.name] : drawingRevData[field.name]) || placeholder || "")}
+            onChange={(e) => handleChange(e, field.name, field?.format, field?.type, field?.data, field, rev?.revNo)}
+            value={field?.section !== 'CycleTimeDetails' ? (field?.section === 'Form2' ? formDataSecondary[field.name] : formData[field.name]) : (rev?.[field.name] || "")}
             readOnly={field.readOnly}
             placeholder={field.placeholder || placeholder || ""}
             required={field.required || false}
@@ -604,7 +1019,7 @@ const DynamicDialog = ({
     }
   };
 
-  const openSecondaryDialog = (type, data) => {
+  const openSecondaryDialog = (type, data, field) => {
 
     setApprovalAuthorityData(data)
     setFormDataSecondary({});
@@ -615,12 +1030,12 @@ const DynamicDialog = ({
 
       case "Contact Name":
         setSecondaryFields(customerContactfields);
-        handleChange(formData["company"], "customer", "ObjectId", "select");
+        handleChange(formData["company"], "customer", "ObjectId", "select", "Form2", field);
         break;
 
       case "City":
         setSecondaryFields(cityfields);
-        handleChange(formData["country"], "country", "ObjectId", "select");
+        handleChange(formData["country"], "country", "ObjectId", "select", "Form2", field);
         break;
 
       case "Approval Authority (GCC Only)":
@@ -647,6 +1062,53 @@ const DynamicDialog = ({
 
   };
 
+  const handleAddRev = () => {
+
+    const newObjectOffer = {
+      revNo: proposalRevData[0]?.revNo + 1,
+      sentToEstimation: null,
+      receivedFromEstimation: null,
+      sentToCustomer: null,
+      cycleTime: 0,
+      notes: ""
+    };
+
+    const newObjectDrawing = {
+      revNo: drawingRevData[0]?.revNo + 1,
+      sentToEstimation: null,
+      receivedFromEstimation: null,
+      sentToCustomer: null,
+      cycleTime: 0,
+      notes: ""
+    };
+    if (!proposalRevData[0]?.sentToCustomer) {
+      toast.error('Please fill all the details and save the current revision first.');
+      return;
+    }
+    // Add new object to existing array
+    isProposalOffer && proposalRevData[0]?.sentToCustomer && (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length) && setFormData(formData => ({ ...formData, revNo: proposalRevData[0]?.revNo + 1 }));
+
+    isProposalOffer ? (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length) && proposalRevData[0]?.sentToCustomer && setProposalRevData(prevData => [...prevData, newObjectOffer]) : (drawingRevData.length === initialData?.proposals?.[1]?.revisions.length) && drawingRevData[0]?.sentToCustomer && setDrawingRevData(prevData => [...prevData, newObjectDrawing]);
+  };
+
+  const handleCheckboxChange = () => {
+    if (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length + 1) {
+      setIsChecked((prev) => !prev); // Toggle checkbox state
+
+      if (!isChecked) {
+        // If checked, add proposalRevData[0] (without _id) to drawingRevData
+        const { _id, ...dataWithoutId } = proposalRevData[0] || {};
+        setDrawingRevData([...drawingRevData, dataWithoutId]);
+      } else {
+        // If unchecked, retain only the previous drawingRevData (remove newly added data)
+        setDrawingRevData((prevData) =>
+          prevData.filter((item) => !proposalRevData.some((p) => p._id === item._id))
+        );
+      }
+    }
+
+  };
+
   return (
     <>
 
@@ -654,39 +1116,71 @@ const DynamicDialog = ({
         <DialogContent
           className={`max-w-full pointer-events-auto mx-2 h-screen max-h-[95vh] ${width === 'full' ? 'w-[97%] h-[95%]' : 'sm:max-w-md lg:max-w-3xl'}`}
         >
-          <DialogTitle className="pl-1 hidden">{`${action} ${selectedMaster?.toProperCase()}`}</DialogTitle>
+          <DialogTitle className="pl-1 hidden">{formData?.quoteNo ? `${action} ${selectedMaster?.toProperCase()} ${initialData?.country?.countryCode}-${initialData?.year?.toString().slice(-2)}-${formData?.quoteNo}` : `${action} ${selectedMaster?.toProperCase()}`}</DialogTitle>
 
           <div className="h-full flex flex-col min-h-0">
             {/* Title/Header Section */}
             <div className="flex items-center justify-between py-3 ">
-              <div className="font-bold text-lg">{selectedMaster?.toProperCase()}</div>
+              <div className="flex  items-center gap-3 font-semibold text-base">
+                <div>
+                  {formData?.quoteNo ? `${selectedMaster?.toProperCase()}   (${initialData?.country?.countryCode}-${initialData?.year?.toString().slice(-2)}-${formData?.quoteNo})` : selectedMaster?.toProperCase()}
+                </div>
+                <div className="flex gap-2">
+                  {action === 'Update' && initialData?.status === 'submitted' && initialData?.salesEngineer?.team?.teamHead[0]?._id === user?._id && <Button
+                    effect="expandIcon"
+                    icon={Check}
+                    iconPlacement="right"
+                    onClick={() => handleSubmitQuotation('approved')}
+                    className={`w-28 bg-green-600 hover:bg-green-700 duration-300`}
+                  >
+                    Approve
+                  </Button>}
+
+                  {action === 'Update' && initialData?.status === 'submitted' && initialData?.salesEngineer?.team?.teamHead[0]?._id === user?._id && <Button
+                    effect="expandIcon"
+                    icon={X}
+                    iconPlacement="right"
+                    onClick={() => handleSubmitQuotation('rejected')}
+                    className={`w-28 bg-red-600 hover:bg-red-700 duration-300`}
+                  >
+                    Reject
+                  </Button>}
+                </div>
+              </div>
               <div className="flex gap-2">
 
-                {(action === "Add" || action === "Update") && <Button
+                {<Button
                   effect="expandIcon"
-                  className={`w-28 bg-blue-600 hover:bg-blue-700 duration-300`}
-                >
-                  Get Quote No
-                </Button>}
-                {(action === "Add") && <Button
-                  effect="expandIcon"
-                  icon={Save}
+                  icon={initialData?.quoteNo && SendHorizontal}
                   iconPlacement="right"
-                  onClick={handleSubmitQuotation}
-                  className={`w-28 bg-green-600 hover:bg-green-700 duration-300`}
+                  className={`w-28 bg-blue-600 hover:bg-blue-700 ${initialData?.quoteNo && ' bg-green-600 hover:bg-green-700'} duration-300`}
+                  onClick={() => handleSubmitQuotation(initialData?.quoteNo ? 'submitted' : 'quoterequested')}
                 >
-                  Save
+                  {initialData?.quoteNo ? 'Submit' : 'Get Quote No'}
                 </Button>}
 
-                {(action === "Update") && <Button
+                {<Button
                   effect="expandIcon"
                   icon={Save}
                   iconPlacement="right"
-                  onClick={handleSubmitQuotation}
+                  onClick={() => handleSubmitQuotation((initialData?.status !== 'draft' && initialData?.status) ? 'incomplete' : 'draft')}
                   className={`w-28  bg-green-600 hover:bg-green-700 ${initialData?.quoteNo && ' bg-blue-600 hover:bg-blue-700'} duration-300`}
                 >
-                  {initialData?.quoteNo ? 'Update' : 'Save'}
+                  {(initialData?.status !== 'draft' && initialData?.status) ? 'Update' : 'Save'}
                 </Button>}
+
+                {action === 'Update' && <Button
+                  effect="expandIcon"
+                  icon={initialData?._id ? Trash2Icon : Save}
+                  iconPlacement="right"
+                  onClick={() => handleSubmitQuotation(initialData?._id ? 'delete' : 'draft')}
+                  className={`w-28 bg-green-600 hover:bg-green-700 duration-300 ${initialData?._id ? 'bg-red-700 hover:bg-red-800' : ''}`}
+                >
+                  {initialData?._id ? 'Delete' : 'Save'}
+                </Button>}
+
+
+
 
               </div>
             </div>
@@ -702,7 +1196,7 @@ const DynamicDialog = ({
                   {action !== 'Add' && (<TabsTrigger value="CycleTimeDetails" width={"full"}>Cycle Time Details</TabsTrigger>)}
                   {action !== 'Add' && (<TabsTrigger value="TechnicalDetails" width={"full"}>Technical Details</TabsTrigger>)}
                   {action !== 'Add' && (<TabsTrigger value="CommercialDetails" width={"full"}>Commercial Details</TabsTrigger>)}
-                  {action !== 'Add' && (
+                  {action !== 'Add' && initialData?.quoteStatus?.name === 'J - Job' && (
                     <TabsTrigger value="JobDetails" width={"full"}>Job Details</TabsTrigger>
                   )}
                 </TabsList>
@@ -717,11 +1211,11 @@ const DynamicDialog = ({
                       <div className="bg-white flex-1 h-[calc(100vh-180px)] overflow-y-auto p-2 rounded-md py-3">
                         {section !== "CycleTimeDetails" && (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {fields.filter(field => field.section === section).map((field, index) => (
-                            <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""} ${field.visibility ? '' : 'hidden'} ${(field.name === "approvalAuthority" || field.name === "plotNumber") && region !== "GCC" ? "hidden" : ""} ${(field.name === "quoteNo") && initialData?.status === 'Draft' ? "hidden" : ""}`}>
+                            <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""} ${field.visibility ? '' : 'hidden'} ${(field.name === "approvalAuthority" || field.name === "plotNumber") && region !== "GCC" ? "hidden" : ""} ${(field.name === "quoteNo") && (initialData?.status === undefined || initialData?.status === 'draft') ? 'hidden' : ''} ${(field.name === "rejectReason") && (initialData?.status === undefined || (initialData?.status !== 'submitted' && initialData?.status !== 'rejected')) ? 'hidden' : ''}`}>
                               <div className="flex justify-between items-center">
                                 <div className="flex gap-2 items-center">
                                   {field.label && <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>}
-                                  {field.addNew && <Label className="cursor-pointer text-blue-600  " onClick={() => openSecondaryDialog(field.label)}>Add New</Label>}
+                                  {field.addNew && <Label className="cursor-pointer text-blue-600  " onClick={() => openSecondaryDialog(field.label, field?.data, field)}>Add New</Label>}
 
                                 </div>
                                 {field.addHelp && <Label className="cursor-pointer text-red-600  " onClick={() => { openSecondaryDialog(field?.title, field?.data); setIsHelp(true) }}>Help</Label>}
@@ -758,18 +1252,18 @@ const DynamicDialog = ({
 
                                 <div className="flex items-center gap-2 w-5/6">
                                   <TabsList className="">
-                                    <TabsTrigger value="ProposalOffer" width={"full"}>Proposal Offer</TabsTrigger>
-                                    <TabsTrigger value="ProposalDrawing" width={"full"}>Proposal Drawing</TabsTrigger>
+                                    <TabsTrigger onClick={() => setIsProposalOffer(true)} value="ProposalOffer" width={"full"}>Proposal Offer</TabsTrigger>
+                                    <TabsTrigger onClick={() => setIsProposalOffer(false)} value="ProposalDrawing" width={"full"}>Proposal Drawing</TabsTrigger>
                                   </TabsList>
 
                                   <div className='pl-10 flex gap-2'>
                                     <label className='pt-[1px]'>
                                       <input
-                                        className=''
                                         type="checkbox"
-                                        checked={true}
-                                        onChange={() => { }}
+                                        checked={isChecked}
+                                        onChange={handleCheckboxChange}
                                       />
+
                                     </label>
 
 
@@ -778,9 +1272,10 @@ const DynamicDialog = ({
                                   </div>
                                 </div>
                                 <div>
-                                  {action === "Add" && <Button
+                                  {initialData?.proposals && <Button
                                     effect="expandIcon"
                                     className={`w-28 duration-300`}
+                                    onClick={handleAddRev}
                                   >
                                     Add Rev No
                                   </Button>}
@@ -801,7 +1296,7 @@ const DynamicDialog = ({
                                             {fields.filter(field => field.subSection === "ProposalOffer").map((field, index) => (
                                               <div key={index} className="flex flex-col gap-1 mb-2">
                                                 <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>
-                                                {renderField(field, '', 'ProposalOffer')}
+                                                {renderField(field, '', 'ProposalOffer', rev)}
                                               </div>
                                             ))}
                                           </div>
@@ -827,14 +1322,14 @@ const DynamicDialog = ({
                                 <TabsContent value="ProposalDrawing">
                                   <div className="h-full overflow-y-auto px-2">
                                     {action !== 'Add' ? (
-                                      drawingRevData.sort((a, b) => b.revNumber - a.revNumber).map((rev, revIndex) => (
+                                      drawingRevData.sort((a, b) => b.revNo - a.revNo).map((rev, revIndex) => (
                                         <div key={revIndex} className="mb-4 p-3 bg-white rounded-md shadow-md">
                                           <h3 className="text-base font-semibold mb-2">Proposal Drawing - RevNo: R{rev.revNo}</h3>
                                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {fields.filter(field => field.subSection === "ProposalDrawing").map((field, index) => (
                                               <div key={index} className="flex flex-col gap-1 mb-2">
                                                 <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>
-                                                {renderField(field, '', 'ProposalDrawing')}
+                                                {renderField(field, '', 'ProposalDrawing', rev)}
                                               </div>
                                             ))}
                                           </div>
@@ -912,77 +1407,9 @@ const DynamicDialog = ({
                       {field.label && <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>}
                       {field.addNew && <Label className="cursor-pointer text-blue-600 " onClick={() => openNewDialog(field.label)}>Add New</Label>}
                     </div>
-                    {
-                      (() => {
-                        switch (field.type) {
-                          case "multiselect":
 
-                            return (
+                    {renderField(field)}
 
-                              <MultipleSelector
-                                value={(formDataSecondary[field.name] || []).map((id) => ({
-                                  value: id,
-                                  label: field.data.find((option) => option.value === id)?.label || "Unknown",
-                                }))} // Convert stored `_id`s back to { label, value }
-                                onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
-                                defaultOptions={field.data} // Ensure `field.data` is in [{ label, value }] format
-                                placeholder={field.placeholder || "Select options..."}
-                              />
-                            );
-                          case "textarea":
-                            return (
-                              <textarea
-                                rows={3}
-                                onChange={(e) => handleChange(e, field.name, field?.format)}
-                                value={formDataSecondary[field.name] || ""}
-                                placeholder={field.placeholder || ""}
-                              />
-                            );
-                          case "select":
-                            return (
-                              <Combobox
-                                field={field}
-                                formData={formDataSecondary}
-                                handleChange={handleChange}
-                                placeholder={field.placeholder || ""}
-                              />
-                            );
-                          case "date":
-                            return (
-
-                              <DatePicker
-                                currentDate={formDataSecondary[field.name]}
-                                handleChange={(selectedDate) => {
-                                  handleChange(
-                                    {
-                                      target: { value: selectedDate?.toISOString() || "" },
-                                    }, // Pass the date in ISO format
-                                    field.name,
-                                    field?.format
-                                  );
-                                }}
-                                placeholder={field.placeholder}
-                              />
-                            );
-                          case "custom":
-                            return (
-                              <><field.CustomComponent accessData={formData[field.name]} /></>
-                            )
-
-                          default:
-                            return (
-                              <Input
-                                type={field.type}
-                                onChange={(e) => handleChange(e, field.name, field?.format)}
-                                value={formDataSecondary[field.name] || ""}
-                                readOnly={field.readOnly}
-                                placeholder={field.placeholder || ""}
-                                required={field.required || false}
-                              />
-                            );
-                        }
-                      })()
-                    }
                   </div>
                 ))}
               </div>}
@@ -993,7 +1420,7 @@ const DynamicDialog = ({
             <Button variant="secondary" onClick={() => { setIsSecondaryDialogOpen(false) }}>
               Cancel
             </Button>
-            {action === "Add" && <Button onClick={()=>{handleSubmit('Form2', formDataSecondary)}}>Save</Button>}
+            {<Button onClick={() => { handleSubmit('Form2', formDataSecondary) }}>Save</Button>}
 
           </DialogFooter>}
         </DialogContent>
@@ -1016,77 +1443,7 @@ const DynamicDialog = ({
                       {field.label && <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>}
                       {field.addNew && <Label className="cursor-pointer text-blue-600  border-blue-500" >Add New</Label>}
                     </div>
-                    {
-                      (() => {
-                        switch (field.type) {
-                          case "multiselect":
-
-                            return (
-
-                              <MultipleSelector
-                                value={(formDataNew[field.name] || []).map((id) => ({
-                                  value: id,
-                                  label: field.data.find((option) => option.value === id)?.label || "Unknown",
-                                }))} // Convert stored `_id`s back to { label, value }
-                                onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
-                                defaultOptions={field.data} // Ensure `field.data` is in [{ label, value }] format
-                                placeholder={field.placeholder || "Select options..."}
-                              />
-                            );
-                          case "textarea":
-                            return (
-                              <textarea
-                                rows={3}
-                                onChange={(e) => handleChange(e, field.name, field?.format)}
-                                value={formDataNew[field.name] || ""}
-                                placeholder={field.placeholder || ""}
-                              />
-                            );
-                          case "select":
-                            return (
-                              <Combobox
-                                field={field}
-                                formData={formDataNew}
-                                handleChange={handleChange}
-                                placeholder={field.placeholder || ""}
-                              />
-                            );
-                          case "date":
-                            return (
-
-                              <DatePicker
-                                currentDate={formDataNew[field.name]}
-                                handleChange={(selectedDate) => {
-                                  handleChange(
-                                    {
-                                      target: { value: selectedDate?.toISOString() || "" },
-                                    }, // Pass the date in ISO format
-                                    field.name,
-                                    field?.format
-                                  );
-                                }}
-                                placeholder={field.placeholder}
-                              />
-                            );
-                          case "custom":
-                            return (
-                              <><field.CustomComponent accessData={formDataNew[field.name]} /></>
-                            )
-
-                          default:
-                            return (
-                              <Input
-                                type={field.type}
-                                onChange={(e) => handleChange(e, field.name, field?.format)}
-                                value={formDataNew[field.name] || ""}
-                                readOnly={field.readOnly}
-                                placeholder={field.placeholder || ""}
-                                required={field.required || false}
-                              />
-                            );
-                        }
-                      })()
-                    }
+                    {renderField(field)}
                   </div>
                 ))}
               </div>
@@ -1097,7 +1454,7 @@ const DynamicDialog = ({
             <Button variant="secondary" onClick={() => { setIsNewDialogOpen(false) }}>
               Cancel
             </Button>
-            {action === "Add" && <Button onClick={()=>{handleSubmit('Form3', formDataNew)}}>Save</Button>}
+            {action === "Add" && <Button onClick={() => { handleSubmit('Form3', formDataNew) }}>Save</Button>}
 
           </DialogFooter>
         </DialogContent>
@@ -1108,4 +1465,4 @@ const DynamicDialog = ({
   );
 };
 
-export default DynamicDialog;
+export default QuotationDialog;

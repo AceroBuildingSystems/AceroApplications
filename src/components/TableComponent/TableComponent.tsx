@@ -41,11 +41,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 interface DataTableProps<T> {
   data: T[];
   columns: ColumnDef<T>[];
+  rowClassMap: (status: any) => string;
 }
 
 
 
-export function DataTable<T>({ data, columns }: DataTableProps<T>) {
+export function DataTable<T>({ data, columns,rowClassMap}: DataTableProps<T>) {
   
   const rowNo = ['10', '20', '30', '40', '50'];
 
@@ -171,11 +172,11 @@ export function DataTable<T>({ data, columns }: DataTableProps<T>) {
                 table?.getRowModel()?.rows?.map((row, index) => (
                   <TableRow
                     key={row.id}
-                    className=""
+                    className={ rowClassMap && rowClassMap[row.original?.status]}
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="rounded-md">
+                      <TableCell key={cell.id} >
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()

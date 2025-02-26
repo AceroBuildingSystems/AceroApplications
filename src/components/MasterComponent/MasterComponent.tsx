@@ -53,12 +53,13 @@ interface PageConfig {
 interface MasterComponentProps {
     config: PageConfig;
     loadingState: boolean;
+    rowClassMap:any;
 }
 
 
 
 
-const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState }) => {
+const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,rowClassMap }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
@@ -140,6 +141,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
 
     const [open, setOpen] = React.useState(false)
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
+   
 
     return (
         <>
@@ -283,7 +285,9 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState 
                     </div>
 
                     <div className='h-[90%]' >
-                        {<DataTable data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []} />}
+                        {<DataTable data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
+                        rowClassMap={rowClassMap}
+                         />}
                     </div>
                 </div>
 

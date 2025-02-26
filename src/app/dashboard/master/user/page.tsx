@@ -59,8 +59,8 @@ const { user, status, authenticated } = useUserAuthorised();
     return acc;
   }, []);
 
-  const roleNames = distinctRoles?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
-  ?.map((role: { name: any; }) => role?.name);             // Extract only the 'name' property
+const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
+?.map((role: { name: any; }) => role.name);             // Extract only the 'name' property
 
 
   interface RowData {
@@ -111,7 +111,6 @@ const { user, status, authenticated } = useUserAuthorised();
 
   // Save function to send data to an API or database
   const saveData = async ({formData, action}) => {
-   console.log({formData})
     const formattedData = {
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
@@ -138,7 +137,6 @@ const { user, status, authenticated } = useUserAuthorised();
 
 
   const editUser = (rowData: RowData) => {
-    console.log(rowData);
     setAction('Update');
     setInitialData(rowData);
     openDialog("employee");
@@ -260,11 +258,6 @@ const { user, status, authenticated } = useUserAuthorised();
       cell: ({ row }: { row: any }) => <div>{row.getValue("lastName")}</div>,
     },
   ];
-
- 
-  
-  
-
 
   const userConfig = {
     searchFields: [

@@ -1,7 +1,8 @@
+
 "use client"
 
 import * as React from "react"
-import { format, getMonth, getYear, setMonth, setYear } from "date-fns"
+import { format, getMonth, getYear, setMonth, setYear, setHours, setMinutes } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -52,21 +53,29 @@ export function DatePicker({
 
   const handleMonthChange = (month: string) => {
     const newDate = setMonth(date, months.indexOf(month));
-    setDate(newDate);
-    handleChange(newDate)
+    const customChange = handleChange(newDate,setDate)
+    if(!customChange){
+      setDate(newDate);
+    }
   }
 
   const handleYearChange = (year: string) => {
     const newDate = setYear(date, parseInt(year));
-    setDate(newDate)
-    handleChange(newDate)
+    const customChange = handleChange(newDate,setDate)
+    if(!customChange){
+      setDate(newDate);
+    }
 
   }
 
   const handleSelect = (selectedData: Date | undefined) => {
     if (selectedData) {
-      setDate(selectedData)
-      handleChange(selectedData)
+      const now = new Date();
+      const newDate = setHours(setMinutes(selectedData, now.getMinutes()), now.getHours()); // Set default time
+      const customChange = handleChange(newDate,setDate)
+      if(!customChange){
+        setDate(newDate);
+      }
     }
   }
 

@@ -35,5 +35,6 @@ export const usersApi = baseApi.injectEndpoints({
 
 export const {
   useGetApplicationQuery, // Query hook for fetching master data
+  useLazyGetApplicationQuery,
   useCreateApplicationMutation
 } = usersApi;

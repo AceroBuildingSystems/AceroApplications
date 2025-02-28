@@ -6,7 +6,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -20,17 +20,17 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 const page = () => {
 const { user, status, authenticated } = useUserAuthorised();
-  const { data: customerContactData = [], isLoading: customerContactLoading } = useGetMasterQuery({
+  const { data: customerContactData = [], isLoading: customerContactLoading }:any = useGetMasterQuery({
     db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
     sort: { name: 'asc' },
   });
-  const { data: customerData = [], isLoading: customerLoading } = useGetMasterQuery({
+  const { data: customerData = [], isLoading: customerLoading }:any = useGetMasterQuery({
     db: MONGO_MODELS.CUSTOMER_MASTER,
     sort: { name: 'asc' },
   });
   
 
-  const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -71,7 +71,7 @@ const { user, status, authenticated } = useUserAuthorised();
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -84,7 +84,7 @@ const { user, status, authenticated } = useUserAuthorised();
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({ formData, action }) => {
+  const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
     const formattedData = {
         db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
@@ -130,7 +130,7 @@ const { user, status, authenticated } = useUserAuthorised();
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER, masterName: "CustomerContact" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER, masterName: "CustomerContact" });
   };
 
   const handleExport = () => {
@@ -285,7 +285,7 @@ const { user, status, authenticated } = useUserAuthorised();
   return (
     <>
 
-      <MasterComponent config={customerContactConfig} loadingState={loading} />
+      <MasterComponent config={customerContactConfig} loadingState={loading} rowClassMap={undefined} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

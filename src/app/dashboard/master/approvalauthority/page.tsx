@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,8 +8,7 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -25,17 +23,17 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading } = useGetMasterQuery({
+    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
         sort: { name: 'asc' },
     });
 
-    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+    const { data: locationData = [], isLoading: locationLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         sort: { name: 'asc' },
     });
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -44,7 +42,7 @@ const page = () => {
 
   
 
-    const formattedLocationData = locationData?.data?.map((option) => ({
+    const formattedLocationData = locationData?.data?.map((option: { name: any; _id: any; }) => ({
         label: option.name, // Display name
         value: option._id, // Unique ID as value
       }));
@@ -85,7 +83,7 @@ const page = () => {
     };
 
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action }) => {
+    const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
         const formattedData = {
             db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
@@ -118,11 +116,11 @@ const page = () => {
     };
 
 
-    const editUser = (rowData: RowData) => {
+    const editUser = (rowData: any) => {
         setAction('Update');
         const transformedData = {
             ...rowData, // Keep the existing fields
-            location: rowData.location.map(loc => loc._id) // Map `location` to just the `_id`s
+            location: rowData.location.map((loc: { _id: any; }) => loc._id) // Map `location` to just the `_id`s
           };
     
         setInitialData(transformedData);
@@ -248,7 +246,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={approvalAuthorityConfig} loadingState={loading} />
+            <MasterComponent config={approvalAuthorityConfig} loadingState={loading} rowClassMap={undefined} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

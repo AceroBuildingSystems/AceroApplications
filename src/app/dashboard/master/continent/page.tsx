@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,8 +8,8 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import {useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -25,7 +24,7 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
    
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: continentData = [], isLoading: continentLoading } = useGetMasterQuery({
+  const { data: continentData = [], isLoading: continentLoading }:any = useGetMasterQuery({
       db: MONGO_MODELS.CONTINENT_MASTER,
       sort: { name: 'asc' },
     });
@@ -59,7 +58,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -72,7 +71,7 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}) => {
+  const saveData = async ({formData, action}: { formData: any; action: string }) => {
    
     const formattedData = {
         db: MONGO_MODELS.CONTINENT_MASTER,
@@ -83,7 +82,7 @@ const page = () => {
 
 
 
-    const response = await createMaster(formattedData);
+    const response:any = await createMaster(formattedData);
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
@@ -118,7 +117,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData : [], action: "Add", user, createUser:createMaster,db:MONGO_MODELS.CONTINENT_MASTER, masterName:"Continent" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CONTINENT_MASTER, masterName: "Continent" });
   };
 
   const handleExport = () => {
@@ -215,7 +214,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={continentConfig} loadingState={loading} />
+      <MasterComponent config={continentConfig} loadingState={loading} rowClassMap={undefined} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

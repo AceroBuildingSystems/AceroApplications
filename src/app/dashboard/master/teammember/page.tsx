@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,8 +8,8 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, transformData, userTransformData } from '@/lib/utils';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -24,33 +23,33 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: teamMemberData = [], isLoading: teamMemberLoading } = useGetMasterQuery({
+    const { data: teamMemberData = [], isLoading: teamMemberLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         sort: { name: 'asc' },
     });
-    const { data: userData = [], isLoading: userLoading } = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER,sort: { name: 'asc' }, });
+    const { data: userData = [], isLoading: userLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER,sort: { name: 'asc' }, });
 
-    const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery({ db: MONGO_MODELS.ROLE_MASTER,sort: { name: 'asc' }, });
+    const { data: roleData = [], isLoading: roleLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.ROLE_MASTER,sort: { name: 'asc' }, });
 
-    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER,sort: { name: 'asc' }, });
+    const { data: teamData = [], isLoading: teamLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER,sort: { name: 'asc' }, });
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = teamMemberLoading || roleLoading || userLoading || teamLoading;
+    const loading = teamMemberLoading || roleLoading || userLoading || teamLoading|| isCreatingMaster;
 
-    const formattedRoleData = roleData?.data?.map((option) => ({
+    const formattedRoleData = roleData?.data?.map((option: { name: string; _id: any; }) => ({
         label: option?.name?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
       }));
 
-      const formattedUserData = userData?.data?.map((option) => ({
+      const formattedUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
         label: option?.shortName?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
       }));
 
-      const transformUserData = userData?.data?.map((option) => ({
+      const transformUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
         name: option?.shortName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
       }));
@@ -59,12 +58,6 @@ const page = () => {
           { fieldName: 'name', path: ['user', 'shortName'] }
         ];
         const transformedData = transformData(teamMemberData?.data, fieldsToAdd);
-
-// const formattedData = userData?.data?.map(item => ({
-//     _id: item._id,
-//     name: `${item?.shortName?.toProperCase()}`
-//   }));
-
   
     interface RowData {
         id: string;
@@ -90,7 +83,7 @@ const page = () => {
     const [action, setAction] = useState('Add');
 
     // Open the dialog and set selected master type
-    const openDialog = (masterType) => {
+    const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
@@ -103,7 +96,7 @@ const page = () => {
     };
 
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action }) => {
+    const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
         const formattedData = {
             db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
@@ -134,13 +127,13 @@ const page = () => {
     };
 
 
-    const editUser = (rowData: RowData) => {
+    const editUser = (rowData: any) => {
       
         setAction('Update');
         const transformedData = {
             ...rowData, // Keep the existing fields
-            teamRole: rowData?.teamRole.map(role => role._id), // Map `location` to just the `_id`s
-            teamReportingTo: rowData?.teamReportingTo.map(reporting => reporting._id)
+            teamRole: rowData?.teamRole.map((role: { _id: any; }) => role._id), // Map `location` to just the `_id`s
+            teamReportingTo: rowData?.teamReportingTo.map((reporting: { _id: any; }) => reporting._id)
           };
   
         setInitialData(transformedData);
@@ -157,7 +150,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
     };
 
     const handleExport = () => {
@@ -296,7 +289,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={teamMemberConfig} loadingState={loading} />
+            <MasterComponent config={teamMemberConfig} loadingState={loading} rowClassMap={undefined} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

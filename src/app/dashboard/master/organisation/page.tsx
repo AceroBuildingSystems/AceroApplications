@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,8 +8,8 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -24,26 +23,26 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({
+    const { data: organisationData = [], isLoading: organisationLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.ORGANISATION_MASTER,
         sort: { name: 'asc' },
     });
 
-    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+    const { data: locationData = [], isLoading: locationLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         sort: { name: 'asc' },
     });
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = organisationLoading || locationLoading;
+    const loading = organisationLoading || locationLoading || isCreatingMaster;
 
     // Flatten each object in the array
    
 
-    const flattenedData = organisationData?.data?.map((item) => {
+    const flattenedData = organisationData?.data?.map((item: { [x: string]: any; location: any; }) => {
         const { location, ...rest } = item;
 
         return {
@@ -110,7 +109,7 @@ const page = () => {
     const [action, setAction] = useState('Add');
 
     // Open the dialog and set selected master type
-    const openDialog = (masterType) => {
+    const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
@@ -123,10 +122,10 @@ const page = () => {
     };
     const addressFields = ["state", "pinCode", "country", "area", "location"];
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action }) => {
+    const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
         let formattedData = Object.entries(formData).reduce(
-            (result, [key, value]) => {
+            (result:any, [key, value]) => {
                 if (addressFields.includes(key)) {
                     // Add to 'address' object
                     result.address = { ...result.address, [key]: value };
@@ -183,7 +182,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: "ORGANISATION_MASTER", masterName: "Organisation" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: "ORGANISATION_MASTER", masterName: "Organisation" });
     };
 
     const handleExport = () => {
@@ -302,7 +301,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={organisationConfig} loadingState={loading} />
+            <MasterComponent config={organisationConfig} loadingState={loading} rowClassMap={undefined} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

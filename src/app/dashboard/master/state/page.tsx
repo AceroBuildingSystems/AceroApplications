@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,8 +8,8 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -24,17 +23,17 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: stateData = [], isLoading: stateLoading } = useGetMasterQuery({
+    const { data: stateData = [], isLoading: stateLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.STATE_MASTER,
         sort: { name: 'asc' },
     });
-    const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({ db: MONGO_MODELS.COUNTRY_MASTER });
+    const { data: countryData = [], isLoading: countryLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.COUNTRY_MASTER });
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = stateLoading || countryLoading;
+    const loading = stateLoading || countryLoading || isCreatingMaster;
 
     interface RowData {
         id: string;
@@ -58,7 +57,7 @@ const page = () => {
     const [action, setAction] = useState('Add');
 
     // Open the dialog and set selected master type
-    const openDialog = (masterType) => {
+    const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
@@ -71,7 +70,7 @@ const page = () => {
     };
 
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action }) => {
+    const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
         const formattedData = {
             db: MONGO_MODELS.STATE_MASTER,
@@ -129,7 +128,6 @@ const page = () => {
         console.log('UserPage Delete button clicked');
         // Your delete logic for user page
     };
-
 
 
     const stateColumns = [
@@ -228,7 +226,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={stateConfig} loadingState={loading} />
+            <MasterComponent config={stateConfig} loadingState={loading} rowClassMap={undefined} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

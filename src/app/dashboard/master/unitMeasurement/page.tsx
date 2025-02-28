@@ -17,18 +17,18 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
    
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: unitMeasurementData = [], isLoading: continentLoading } = useGetMasterQuery({
+  const { data: unitMeasurementData = [], isLoading: continentLoading }:any = useGetMasterQuery({
       db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
       sort: { name: 'asc' },
     });
 
     console.log({unitMeasurementData})
   
-  const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  continentLoading;
+  const loading =  continentLoading|| isCreatingMaster;
 
 
   interface RowData {
@@ -53,7 +53,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -66,7 +66,7 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}) => {
+  const saveData = async ({formData, action}: { formData: any, action: string }) => {
    
     const formattedData = {
         db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
@@ -77,7 +77,7 @@ const page = () => {
 
 
 
-    const response = await createMaster(formattedData);
+    const response:any = await createMaster(formattedData);
 
     
     if (response.data?.status === SUCCESS && action === 'Add') {
@@ -112,7 +112,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], unitMeasurementData : [], action: "Add", user, createUser:createMaster,db:MONGO_MODELS.UNIT_MEASUREMENT_MASTER, masterName:"UnitMeasurement" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser:createMaster, db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER, masterName: "UnitMeasurement" });
   };
 
   const handleExport = () => {
@@ -209,7 +209,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={continentConfig} loadingState={loading} />
+      <MasterComponent config={continentConfig} loadingState={loading} rowClassMap={undefined} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

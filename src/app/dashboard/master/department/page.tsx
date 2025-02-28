@@ -6,7 +6,7 @@ import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
@@ -19,12 +19,12 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 const page = () => {
 const { user, status, authenticated } = useUserAuthorised();
-  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
+  const { data: departmentData = [], isLoading: departmentLoading }:any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     sort: { name: -1 },
   });
 
-  const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -53,7 +53,7 @@ const { user, status, authenticated } = useUserAuthorised();
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -66,7 +66,7 @@ const { user, status, authenticated } = useUserAuthorised();
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({ formData, action }) => {
+  const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
     const formattedData = {
       db: 'DEPARTMENT_MASTER',
@@ -75,9 +75,7 @@ const { user, status, authenticated } = useUserAuthorised();
       data: formData,
     };
 
-
-
-    const response = await createMaster(formattedData);
+    const response:any = await createMaster(formattedData);
 
 
     if (response.data?.status === SUCCESS && action === 'Add') {
@@ -222,7 +220,7 @@ const { user, status, authenticated } = useUserAuthorised();
   return (
     <>
 
-      <MasterComponent config={departmentConfig} loadingState={loading} />
+      <MasterComponent config={departmentConfig} loadingState={loading} rowClassMap={undefined} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

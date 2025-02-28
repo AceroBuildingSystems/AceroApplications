@@ -9,7 +9,7 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { organisationTransformData, userTransformData } from '@/lib/utils';
+import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
@@ -22,16 +22,16 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 const page = () => {
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
+  const { data: designationData = [], isLoading: designationLoading }:any = useGetMasterQuery({
       db: 'DESIGNATION_MASTER',
       sort: { name: -1 },
     });
   
-  const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  designationLoading;
+  const loading =  designationLoading||isCreatingMaster;
 
 
   interface RowData {
@@ -56,7 +56,7 @@ const page = () => {
   const [action, setAction] = useState('Add');
 
   // Open the dialog and set selected master type
-  const openDialog = (masterType) => {
+  const openDialog = (masterType: React.SetStateAction<string>) => {
     setSelectedMaster(masterType);
 
     setDialogOpen(true);
@@ -69,7 +69,7 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}) => {
+  const saveData = async ({formData, action}: { formData: any, action: string }) => {
    
     const formattedData = {
       db: 'DESIGNATION_MASTER',
@@ -113,7 +113,7 @@ const page = () => {
   };
 
  const handleImport = () => {
-      bulkImport({ roleData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
+      bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
     };
 
   const handleExport = () => {
@@ -210,7 +210,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={designationConfig} loadingState={loading} />
+      <MasterComponent config={designationConfig} loadingState={loading} rowClassMap={undefined} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

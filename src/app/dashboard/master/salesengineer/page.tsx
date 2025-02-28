@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,7 +8,7 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -25,23 +24,23 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: salesEngData = [], isLoading: salesEngLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.SALES_ENGINEER_MASTER,
+    const { data: salesEngData = [], isLoading: salesEngLoading }:any = useGetMasterQuery({
+        db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         sort: { name: 'asc' },
     });
-    const { data: userData = [], isLoading: userLoading } = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER });
+    const { data: userData = [], isLoading: userLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER });
 
-    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({ db: MONGO_MODELS.SALES_TEAM_MASTER });
+    const { data: teamData = [], isLoading: teamLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER });
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = salesEngLoading || userLoading || teamLoading;
+    const loading = salesEngLoading || userLoading || teamLoading|| isCreatingMaster;
 
-    const engData = userData?.data?.filter(data => data?.department?.name === 'Sales General');
+    const engData = userData?.data?.filter((data: { department: { name: string; }; }) => data?.department?.name === 'Sales General');
 
-    const formattedData = engData?.map(item => ({
+    const formattedData = engData?.map((item: { _id: any; shortName: string; }) => ({
         _id: item._id,
         name: `${item.shortName.toProperCase()}`
     }));
@@ -76,7 +75,7 @@ const page = () => {
     const [action, setAction] = useState('Add');
 
     // Open the dialog and set selected master type
-    const openDialog = (masterType) => {
+    const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
@@ -89,7 +88,7 @@ const page = () => {
     };
 
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action }) => {
+    const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
         const formattedData = {
             db: MONGO_MODELS.SALES_ENGINEER_MASTER,
@@ -136,7 +135,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.SALES_ENGINEER_MASTER, masterName: "SalesEngineer" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.SALES_ENGINEER_MASTER, masterName: "SalesEngineer" });
     };
 
     const handleExport = () => {
@@ -261,7 +260,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={salesEngConfig} loadingState={loading} />
+            <MasterComponent config={salesEngConfig} loadingState={loading} rowClassMap={undefined} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

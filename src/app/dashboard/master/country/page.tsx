@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
@@ -9,8 +8,8 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, transformData, userTransformData } from '@/lib/utils';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { SUCCESS } from '@/shared/constants';
@@ -25,21 +24,21 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({
+    const { data: countryData = [], isLoading: countryLoading }:any = useGetMasterQuery({
         db: 'COUNTRY_MASTER',
         sort: { name: 'asc' },
     });
-    const { data: regionData = [], isLoading: regionLoading } = useGetMasterQuery({
+    const { data: regionData = [], isLoading: regionLoading }:any = useGetMasterQuery({
         db: 'REGION_MASTER',
         sort: { name: 'asc' },
     });
     
 
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = regionLoading || countryLoading;
+    const loading = regionLoading || countryLoading||isCreatingMaster;
 
     interface RowData {
         id: string;
@@ -69,7 +68,7 @@ const page = () => {
     const [initialData, setInitialData] = useState({});
     const [action, setAction] = useState('Add');
     // Open the dialog and set selected master type
-    const openDialog = (masterType) => {
+    const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
@@ -82,7 +81,7 @@ const page = () => {
     };
 
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action }) => {
+    const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
         const formattedData = {
             db: 'COUNTRY_MASTER',
@@ -129,7 +128,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData, action: "Add", user, createUser: createMaster, db: "COUNTRY_MASTER", masterName: "Country" });
+        bulkImport({ roleData: [], continentData: [], regionData, countryData, action: "Add", user, createUser: createMaster, db: "COUNTRY_MASTER", masterName: "Country" });
     };
 
     const handleExport = () => {
@@ -254,7 +253,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={countryConfig} loadingState={loading} />
+            <MasterComponent config={countryConfig} loadingState={loading} rowClassMap={undefined} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

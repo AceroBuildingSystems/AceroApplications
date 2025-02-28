@@ -44,16 +44,8 @@ interface DataTableConfig {
     data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 
-// Main interface for the page configuration
-interface PageConfig {
-    searchFields?: FieldConfig[]; // Array of search field configurations
-    filterFields?: FieldConfig[]; // Array of filter field configurations
-    dataTable: DataTableConfig; // Data table configuration
-    buttons?: ButtonConfig[]; // Array of button configurations
-}
-
 interface MasterComponentProps {
-    config: PageConfig;
+    config: any;
     loadingState: boolean;
     rowClassMap: any;
     handleExport: any;
@@ -76,7 +68,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     // Track active filters (default to config filters)
     const [activeFilters, setActiveFilters] = useState<FieldConfig[]>([]);
     const [openFilters, setOpenFilters] = useState<{ [key: string]: boolean }>({});
-   
+
     const toggleFilterOpen = (key: string, isOpen: boolean) => {
         setOpenFilters((prev) => ({
             ...prev,
@@ -128,42 +120,48 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
         filterData(searchValues, filterValues); // Trigger filtering after search/filter change
     }, [searchValues, filterValues]);
-    const searchFields = ['jobNo', 'quoteNo', 'projectName']
+    const searchFields = ['jobNo', 'quoteNo', 'projectName', 'company']
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-       
+
         const filtered = config?.dataTable?.data?.filter((item) => {
             // Check if item matches search criteria
             const matchesSearch = searchFields.some((field) => {
                 // Make sure the field exists in the item and is not null/undefined
+                // console.log(item)
+                // console.log(field)
                 const value = item[field];
-                const searchQuery = searchValues['name']||'';
+                const searchQuery = searchValues['name'] || '';
+                console.log(searchQuery, value);
+                // console.log(value);
                 // Check if the field value matches the search query
                 if (value) {
-                  
-                    return searchQuery.toLowerCase().includes(value.toString().toLowerCase());
+                    const fieldValue = typeof value === 'object' && value !== null ? value?.name : value;
+                    return fieldValue.toString().toLowerCase().includes(searchQuery.toString().toLowerCase());
                 }
-                return false;
+                else {
+                    if (searchQuery === '') return true;
+                    return false;
+                }
             });
 
             // Check if item matches filter criteria
             const matchesFilter = activeFilters.every((field) => {
-                const key = field.key;
-        
+                const key = field?.key;
+
                 const filterValue = filterValues[key];
-              
                 if (filterValue === null) return true;
 
                 // Use filterBy to determine comparison
                 if (field.filterBy === "id") {
-                  
+
                     return item[key]?.name === filterValue; // Compare ID for quoteStatus
                 } else {
                     return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
                 }
             });
-
-            return matchesSearch || matchesFilter;
+           
+            return matchesSearch && matchesFilter;
         });
 
         setFilteredData(filtered); // Update filtered data state
@@ -369,7 +367,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                     </div>
 
                     {/* Data Table */}
-                    <div className="h-[90%]">
+                    <div className="h-[85%]">
                         <DataTable
                             data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data}
                             columns={config?.dataTable?.columns || []}

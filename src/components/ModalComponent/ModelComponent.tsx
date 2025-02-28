@@ -25,7 +25,7 @@ interface Field {
   readOnly?: boolean;
   format?: string;
   visibility?: boolean;
-  section?:string[];
+  section?: string[];
   data?: any[];
   options?: string[];
   onChange?: (value: string) => void;
@@ -93,14 +93,15 @@ function DynamicDialog<T extends BaseFormData>({
     format?: string,
     type?: string,
     data?: any[],
-    field?: Field
+    field?: Field,
+    revNo, customFunction = () => { }
   ) => {
     let value: any = "";
 
     ////////// Needs refactoring cant hardcode
     fieldName === 'quoteStatus' && setSelectedStatus(field?.data?.find((data) => data._id === e)?.name);
     ////////////////////
-    
+
     if (type === "multiselect") {
       value = (e as any[]).map((item: { value: any }) => item.value);
     } else if (type === "select") {
@@ -137,7 +138,7 @@ function DynamicDialog<T extends BaseFormData>({
           return newErrors;
         });
       }
-
+      customFunction(updatedFormData[fieldName])
       return updatedFormData;
     });
   };
@@ -196,8 +197,8 @@ function DynamicDialog<T extends BaseFormData>({
         updatedData.addedBy = user._id;
       }
 
-      const response:any = await onSave({ formData: updatedData, action });
-      if(!response || response?.error){
+      const response: any = await onSave({ formData: updatedData, action });
+      if (!response || response?.error) {
         toast.error(response?.error.message || "Something Went Wrong!");
         return;
       }
@@ -240,7 +241,7 @@ function DynamicDialog<T extends BaseFormData>({
                                     label: field.data?.find((option) => option.value === id)?.label || "Unknown",
                                   }))}
                                   onChange={(selected) => handleChange(selected, field.name, "", "multiselect")}
-                                  options={field.data} 
+                                  options={field.data}
                                   placeholder={field.placeholder || "Select options..."}
                                 />
                                 {errors[field.name] && (
@@ -280,15 +281,20 @@ function DynamicDialog<T extends BaseFormData>({
                           case "date":
                             return (
                               <div>
+                              
                                 <DatePicker
-                                  currentDate={formData[field.name]}
-                                  handleChange={(selectedDate: Date | null) => {
+                                  currentDate={formData[field.name]|| undefined}
+                                  handleChange={(selectedDate, setDate) => {
                                     handleChange(
                                       { target: { value: selectedDate?.toISOString() || "" } },
                                       field.name,
-                                      field.format
-                                    );
+                                      field?.format, field?.type, field?.data, field, '',
+                                      setDate
+                                    )
+                      
+                                    return true
                                   }}
+                                
                                   placeholder={field.placeholder}
                                 />
                                 {errors[field.name] && (
@@ -299,8 +305,8 @@ function DynamicDialog<T extends BaseFormData>({
                           case "custom":
                             return field.CustomComponent ? (
                               <div>
-                                <field.CustomComponent 
-                                  accessData={formData[field.name]} 
+                                <field.CustomComponent
+                                  accessData={formData[field.name]}
                                   handleChange={handleChange}
                                   selectedItem={initialData}
                                 />

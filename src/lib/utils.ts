@@ -33,7 +33,7 @@ export const organisationTransformData = (data) => {
   const transformedData = data?.map((organisation) => {
     return {
       _id: organisation._id,
-      name: organisation.address?.location || '',
+      name: organisation.name || '',
     };
   })
 

@@ -253,7 +253,8 @@ const QuotationDialog = ({
 
       const cycleTime = (receivedFromEstimation - sentToEstimation) / (1000 * 60 * 60 * 24); // Convert ms to days
 
-      item.cycleTime = cycleTime.toString();
+
+      item.cycleTime = Math.trunc(cycleTime).toString();
 
       return item; // Return the updated item
     });
@@ -591,97 +592,102 @@ const QuotationDialog = ({
         // Update the last index
         // Add switch staements
         if (status === 'delete') {
-          const updatedProposalRevData = proposalRevData.map((item, index) =>
-            index === proposalRevData.length - 1 // Check if it's the last index
-              ? { ...item, changes: { ...item.changes, ...formData, isActive: false } } // Merge existing changes with new ones
-              : item
-          );
-
-          const revisionTypesProposal = [{
-            data: updatedProposalRevData
-          }
-          ]
-
-          const revisionTypesDrawing = [
+          const confirmDelete = window.confirm("Are you sure you want to delete this item?");
+          if(confirmDelete){
+            const updatedProposalRevData = proposalRevData.map((item, index) =>
+              index === proposalRevData.length - 1 // Check if it's the last index
+                ? { ...item, changes: { ...item.changes, ...formData, isActive: false } } // Merge existing changes with new ones
+                : item
+            );
+  
+            const revisionTypesProposal = [{
+              data: updatedProposalRevData
+            }
+            ]
+  
+            const revisionTypesDrawing = [
+              {
+                data: drawingRevData
+              }
+            ]
+            const responseIdsProposal = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
+  
+            const responseIdsDrawing = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
+  
+            const proposalData = [{
+              data: [{
+                _id: proposalDataIds[0], revisions: [
+                  ...offerRevisions,
+                  responseIdsProposal[0]?.value?.data?.data?._id || undefined, // Ensures valid ID or nothing
+                ].filter(Boolean), type: "ProposalOffer"
+              }]
+            },
             {
-              data: drawingRevData
+              data: [{
+                _id: proposalDataIds[1], revisions: [
+                  ...drawingRevisions,
+                  responseIdsDrawing[0]?.value?.data?.data?._id || undefined,
+                ].filter(Boolean), type: "ProposalDrawing"
+              }]
             }
-          ]
-          const responseIdsProposal = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
-
-          const responseIdsDrawing = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
-
-          const proposalData = [{
-            data: [{
-              _id: proposalDataIds[0], revisions: [
-                ...offerRevisions,
-                responseIdsProposal[0]?.value?.data?.data?._id || undefined, // Ensures valid ID or nothing
-              ].filter(Boolean), type: "ProposalOffer"
-            }]
-          },
-          {
-            data: [{
-              _id: proposalDataIds[1], revisions: [
-                ...drawingRevisions,
-                responseIdsDrawing[0]?.value?.data?.data?._id || undefined,
-              ].filter(Boolean), type: "ProposalDrawing"
-            }]
-          }
-          ]
-
-          const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
-
-          delete formData?.proposals;
-          const quotationData = {
-            data: {
-              ...formData, isActive: false,
-              updatedBy: user?._id
+            ]
+  
+            const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
+  
+            delete formData?.proposals;
+            const quotationData = {
+              data: {
+                ...formData, isActive: false,
+                updatedBy: user?._id
+              }
             }
-          }
-          const response = await onSave({ formData: quotationData?.data, action, master: master });
-
-          const quoteData = {
-            'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
-            'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
-            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
-            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
-            'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
-            'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
-            'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
-            'Position': response?.data?.data?.contact?.position, 'Customer Type': response?.data?.data?.customerType?.name,
-            'Project Details': '',
-            'Project Name': response?.data?.data?.projectName, 'Sector': response?.data?.data?.sector?.name, 'Industry Type': response?.data?.data?.industryType?.name,
-            'Other Industry Type': response?.data?.data?.otherIndustryType, 'Building Type': response?.data?.data?.buildingType?.name, 'Other Building Type': response?.data?.data?.otherBuildingType,
-            'Building Usage': response?.data?.data?.buildingUsage, 'City': response?.data?.data?.state?.name, 'Approval Authority': response?.data?.data?.approvalAuthority?.code,
-            'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
-            'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
-            'Cycle Time Details': '',
-            'Rev No (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
-            'Cycle Time (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
-            'Rev No (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
-            'Cycle Time (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
-            'Technical Details': '',
-            'No Of Buildings': response?.data?.data?.noOfBuilding, 'Project Type': response?.data?.data?.projectType?.name, 'Paint Type': response?.data?.data?.paintType?.name,
-            'Other Paint Type': response?.data?.data?.otherPaintType, 'Projected Area (Sqr Mtr)': response?.data?.data?.projectedArea, 'Total Weight (Tons)': response?.data?.data?.totalWt,
-            'Mezzanine Area (Sq Mtr)': response?.data?.data?.mezzanineArea, 'Mezzanine Weight (Tons)': response?.data?.data?.mezzanineWt,
-            'Commercial Details': '',
-            'Currency': response?.data?.data?.currency?.name, 'Total Estimated Price': response?.data?.data?.totalEstPrice, 'Q22 Value (AED)': response?.data?.data?.q22Value,
-            'Special BuyOut Price': response?.data?.data?.spBuyoutPrice, 'Freight Price': response?.data?.data?.freightPrice, 'Incoterm': response?.data?.data?.incoterm?.name,
-            'Incoterm Description': response?.data?.data?.incotermDescription, 'Booking Probability': response?.data?.data?.bookingProbability,
-
+            const response = await onSave({ formData: quotationData?.data, action, master: master });
+  
+            const quoteData = {
+              'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
+              'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
+              'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
+              'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+              'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
+              'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
+              'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
+              'Position': response?.data?.data?.contact?.position, 'Customer Type': response?.data?.data?.customerType?.name,
+              'Project Details': '',
+              'Project Name': response?.data?.data?.projectName, 'Sector': response?.data?.data?.sector?.name, 'Industry Type': response?.data?.data?.industryType?.name,
+              'Other Industry Type': response?.data?.data?.otherIndustryType, 'Building Type': response?.data?.data?.buildingType?.name, 'Other Building Type': response?.data?.data?.otherBuildingType,
+              'Building Usage': response?.data?.data?.buildingUsage, 'City': response?.data?.data?.state?.name, 'Approval Authority': response?.data?.data?.approvalAuthority?.code,
+              'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
+              'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
+              'Cycle Time Details': '',
+              'Rev No (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
+              'Cycle Time (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Offer)': response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[0]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
+              'Rev No (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.revNo, 'Sent To Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToEstimation).format("DD-MMM-YYYY hh:mm A") : '', 'Received From Estimation (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.receivedFromEstimation).format("DD-MMM-YYYY hh:mm A") : '',
+              'Cycle Time (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.cycleTime, 'Sent To Customer (Proposal Drawing)': response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer ? moment(response?.data?.data?.proposals[1]?.revisions?.at(-1)?.sentToCustomer).format("DD-MMM-YYYY hh:mm A") : '',
+              'Technical Details': '',
+              'No Of Buildings': response?.data?.data?.noOfBuilding, 'Project Type': response?.data?.data?.projectType?.name, 'Paint Type': response?.data?.data?.paintType?.name,
+              'Other Paint Type': response?.data?.data?.otherPaintType, 'Projected Area (Sqr Mtr)': response?.data?.data?.projectedArea, 'Total Weight (Tons)': response?.data?.data?.totalWt,
+              'Mezzanine Area (Sq Mtr)': response?.data?.data?.mezzanineArea, 'Mezzanine Weight (Tons)': response?.data?.data?.mezzanineWt,
+              'Commercial Details': '',
+              'Currency': response?.data?.data?.currency?.name, 'Total Estimated Price': response?.data?.data?.totalEstPrice, 'Q22 Value (AED)': response?.data?.data?.q22Value,
+              'Special BuyOut Price': response?.data?.data?.spBuyoutPrice, 'Freight Price': response?.data?.data?.freightPrice, 'Incoterm': response?.data?.data?.incoterm?.name,
+              'Incoterm Description': response?.data?.data?.incotermDescription, 'Booking Probability': response?.data?.data?.bookingProbability,
+  
+            };
+  
+            emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Deleted`, templateData: quoteData, fileName: "aqmTemplates/quoteDeleted", senderName: user?.shortName?.toProperCase(), approveUrl: ``, rejectUrl: `` };
+            await sendEmail(emailData);
+  
+            setFormData({});
+            setOfferRevisions([]);
+            setDrawingRevisions([]);
+            setProposalDataIds({});
+  
+            closeDialog();
+  
+            return;
           };
-
-          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Deleted`, templateData: quoteData, fileName: "aqmTemplates/quoteDeleted", senderName: user?.shortName?.toProperCase(), approveUrl: ``, rejectUrl: `` };
-          await sendEmail(emailData);
-
-          setFormData({});
-          setOfferRevisions([]);
-          setDrawingRevisions([]);
-          setProposalDataIds({});
-
-          closeDialog();
-
           return;
+          
         };
 
         if (status === 'approved' || status === 'rejected') {

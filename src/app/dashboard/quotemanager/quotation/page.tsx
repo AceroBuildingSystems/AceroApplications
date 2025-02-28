@@ -1,15 +1,13 @@
 "use client";
 
 import React from 'react'
-import Layout from '../layout'
 import MasterComponentAQM from '@/components/MasterComponentAQM/MasterComponentAQM'
 import DashboardLoader from '@/components/ui/DashboardLoader'
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { ArrowUpDown,Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
-import { useCreateUserMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData, transformDataForExcel, transformQuoteData, userTransformData } from '@/lib/utils';
+import { organisationTransformData, transformDataForExcel, transformQuoteData } from '@/lib/utils';
 import QuotationDialog from '@/components/AQMModelComponent/AQMComponent';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -23,8 +21,8 @@ import { useGetApplicationQuery, useCreateApplicationMutation, useLazyGetApplica
 import * as XLSX from "xlsx";
 
 const page = () => {
-    const proposalOffer = []
-    const proposalDrawing = []
+    const proposalOffer: unknown = []
+    const proposalDrawing: unknown = []
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
 
@@ -41,15 +39,15 @@ const page = () => {
 
     const [revNo, setRevNo] = useState(0);
 
-    const { user, status, authenticated } = useUserAuthorised();
+    const { user, status, authenticated }:any = useUserAuthorised();
 
-    const { data: quotationData = [], isLoading: quotationLoading } = useGetApplicationQuery({
+    const { data: quotationData = [], isLoading: quotationLoading }: any = useGetApplicationQuery({
         db: MONGO_MODELS.QUOTATION_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: teamMemberData = [], isLoading: teamMemberLoading } = useGetMasterQuery({
+    const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
@@ -57,12 +55,12 @@ const page = () => {
 
     const quotationDataNew = transformQuoteData(quotationData?.data, user, teamMemberData?.data);
 
-    const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({
+    const { data: countryData = [], isLoading: countryLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.COUNTRY_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const countryNames = quotationDataNew?.reduce((acc: any[], quotation: { country: { _id: string; name: string } }) => {
+    const countryNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { country: { _id: string; name: string } }) => {
         const { _id, name } = quotation?.country;
 
         if (_id && name) {
@@ -76,7 +74,7 @@ const page = () => {
         return acc;
     }, { seen: new Set(), result: [] }).result;
 
-    const cityNames = quotationDataNew?.reduce((acc: any[], quotation: { state: { _id: string; name: string } }) => {
+    const cityNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { state: { _id: string; name: string } }) => {
         if (quotation?.state) {
             const { _id, name } = quotation?.state;
 
@@ -92,7 +90,7 @@ const page = () => {
         return acc;
     }, { seen: new Set(), result: [] }).result;
 
-    const approvalAuthorityNames = quotationDataNew?.reduce((acc: any[], quotation: { approvalAuthority: { _id: string; name: string } }) => {
+    const approvalAuthorityNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { approvalAuthority: { _id: string; name: string } }) => {
         if (quotation?.approvalAuthority) {
             const { _id, name } = quotation?.approvalAuthority;
 
@@ -108,7 +106,7 @@ const page = () => {
         return acc;
     }, { seen: new Set(), result: [] }).result;
 
-    const companyNames = quotationDataNew?.reduce((acc: any[], quotation: { company: { _id: string; name: string } }) => {
+    const companyNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { company: { _id: string; name: string } }) => {
         if (quotation?.company) {
             const { _id, name } = quotation?.company;
 
@@ -124,7 +122,7 @@ const page = () => {
         return acc;
     }, { seen: new Set(), result: [] }).result;
 
-    const customerTypeNames = quotationDataNew?.reduce((acc: any[], quotation: { customerType: { _id: string; name: string } }) => {
+    const customerTypeNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { customerType: { _id: string; name: string } }) => {
         if (quotation?.customerType) {
             const { _id, name } = quotation?.customerType;
 
@@ -158,7 +156,7 @@ const page = () => {
         return acc;
     }, []);
 
-    const salesEngineerNames = quotationDataNew?.reduce((acc: any[], quotation: { salesEngineer: { _id: string; user: { shortName: string } } }) => {
+    const salesEngineerNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { salesEngineer: { _id: string; user: { shortName: string } } }) => {
         const { _id, user } = quotation?.salesEngineer;
         const shortName = user?.shortName?.toProperCase();
         // Check if the sales engineer's id is not already in the accumulator
@@ -173,7 +171,7 @@ const page = () => {
         return acc;
     }, { seen: new Set(), result: [] }).result;
 
-    const salesSupportEngineerNames = quotationDataNew?.reduce((acc: any[], quotation: { salesSupportEngineer: Array<{ _id: string; user: { shortName: string } }> }) => {
+    const salesSupportEngineerNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { salesSupportEngineer: Array<{ _id: string; user: { shortName: string } }> }) => {
         // Ensure we're accessing the first element of the salesSupportEngineer array
         const { _id, user } = quotation?.salesSupportEngineer[0] || {};
         const shortName = user?.shortName?.toProperCase();
@@ -191,7 +189,7 @@ const page = () => {
     }, { seen: new Set(), result: [] }).result;
 
 
-    const { data: quoteStatusData = [], isLoading: quoteStatusLoading } = useGetMasterQuery({
+    const { data: quoteStatusData = [], isLoading: quoteStatusLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.QUOTE_STATUS_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
@@ -199,101 +197,101 @@ const page = () => {
 
 
     const quoteStatusNames = quoteStatusData?.data
-        ?.filter((status) => status !== undefined) // Remove undefined entries
-        ?.map((status) => ({ id: status._id, name: status.name })) || []; // Store id & name
+        ?.filter((status:any) => status !== undefined) // Remove undefined entries
+        ?.map((status:any) => ({ id: status._id, name: status.name })) || []; // Store id & name
 
-    const quoteStatus = quoteStatusData?.data?.filter((option) => option?.name === 'A - Active')[0]?._id;
+    const quoteStatus = quoteStatusData?.data?.filter((option:any) => option?.name === 'A - Active')[0]?._id;
 
 
 
-    const { data: teamData = [], isLoading: teamLoading } = useGetMasterQuery({
+    const { data: teamData = [], isLoading: teamLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: customerData = [], isLoading: customerLoading } = useGetMasterQuery({
+    const { data: customerData = [], isLoading: customerLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: customerContactData = [], isLoading: customerContactLoading } = useGetMasterQuery({
+    const { data: customerContactData = [], isLoading: customerContactLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: customerTypeData = [], isLoading: customerTypeLoading } = useGetMasterQuery({
+    const { data: customerTypeData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: sectorData = [], isLoading: sectorLoading } = useGetMasterQuery({
+    const { data: sectorData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.SECTOR_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: industryData = [], isLoading: industryLoading } = useGetMasterQuery({
+    const { data: industryData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.INDUSTRY_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: buildingData = [], isLoading: buildingLoading } = useGetMasterQuery({
+    const { data: buildingData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.BUILDING_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: fullstateData = [], isLoading: stateLoading } = useGetMasterQuery({
+    const { data: fullstateData = [], isLoading: stateLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.STATE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading } = useGetMasterQuery({
+    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+    const { data: locationData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: projectTypeData = [], isLoading: projectTypeLoading } = useGetMasterQuery({
+    const { data: projectTypeData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.PROJECT_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: paintTypeData = [], isLoading: paintTypeLoading } = useGetMasterQuery({
+    const { data: paintTypeData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.PAINT_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: currencyData = [], isLoading: currencyLoading } = useGetMasterQuery({
+    const { data: currencyData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.CURRENCY_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: incotermData = [], isLoading: incotermLoading } = useGetMasterQuery({
+    const { data: incotermData = [] }:any = useGetMasterQuery({
         db: MONGO_MODELS.INCOTERM_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const formattedLocationData = locationData?.data?.map((option) => ({
+    const formattedLocationData = locationData?.data?.map((option:any) => ({
         label: option.name, // Display name
         value: option._id, // Unique ID as value
     }));
 
-    const teamId = teamMemberData?.data?.filter(data => data?.user?._id === user?._id)?.[0]?.team?._id;
-    const teamRole = teamMemberData?.data?.filter(data => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
+    const teamId = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.team?._id;
+    const teamRole = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
 
-    let salesEngData = teamMemberData?.data?.filter(data => data?.team?._id === teamId)?.map((option) => ({
+    let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === teamId)?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
         name: option?.user?.shortName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
         team: option?.team?._id,
@@ -302,7 +300,7 @@ const page = () => {
     }));
 
     if (teamRole === 'Engineer') {
-        salesEngData = teamMemberData?.data?.filter(data => data?.user?._id === user?._id)?.map((option) => ({
+        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
             name: option?.user?.shortName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
@@ -312,7 +310,7 @@ const page = () => {
     }
 
     if (user?.role?.name === 'Admin') {
-        salesEngData = teamMemberData?.data?.map((option) => ({
+        salesEngData = teamMemberData?.data?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
             name: option?.user?.shortName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
@@ -369,26 +367,26 @@ const page = () => {
         _id: i + 0,
         name: (i + 0).toString()
     }));
-
-    const [createApplication, { isLoading: isCreatingApplication }] = useCreateApplicationMutation();
+    
+    const [createApplication]:any = useCreateApplicationMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = approvalAuthorityLoading || quotationLoading || countryLoading || customerContactLoading || customerLoading || quoteStatusLoading || countryLoading || stateLoading || teamLoading;
+    const loading = approvalAuthorityLoading || quotationLoading || countryLoading || customerContactLoading || customerLoading || quoteStatusLoading || countryLoading || stateLoading || teamLoading||teamMemberLoading;
 
 
-    const onchangeData = async ({ id, fieldName, name, parentId, position, email, phone, location }) => {
+    const onchangeData = async ({ id, fieldName, name, parentId, position, email, phone, location }: { id: string; fieldName: string; name: string; parentId?: string; position?: string; email?: string; phone?: string; location?: string }) => {
 
         switch (fieldName) {
             case "company":
-                const contactData1 = await customerContactData?.data?.filter(contact => contact?.customer?._id === id);
+                const contactData1 = await customerContactData?.data?.filter((contact: { customer: { _id: any; }; }) => contact?.customer?._id === id);
 
                 setContactData(contactData1);
                 break;
 
             case "contact":
 
-                const contactData2 = await customerContactData?.data?.filter(contact => contact?.customer?._id === parentId);
+                const contactData2 = await customerContactData?.data?.filter((contact: { customer: { _id: any; }; }) => contact?.customer?._id === parentId);
                 contactData2.push({ _id: id, name: name, position: position, email: email, phone: phone });
 
                 setContactData(contactData2);
@@ -397,7 +395,7 @@ const page = () => {
 
             case "country":
 
-                const stateData1 = await fullstateData?.data?.filter(state => state?.country?._id === id)?.map(state => ({
+                const stateData1 = await fullstateData?.data?.filter((state: { country: { _id: any; }; }) => state?.country?._id === id)?.map((state: { name: any; _id: any; }) => ({
                     name: state?.name,
                     _id: state?._id
                 }));
@@ -408,8 +406,8 @@ const page = () => {
             case "state":
                 switch (name) {
                     case 'approvalAuthority':
-                        const approvalData = await approvalAuthorityData?.data?.filter(item => item.location.some(loc => loc.state._id === id)
-                        )?.map(data => ({
+                        const approvalData = await approvalAuthorityData?.data?.filter((item: { location: any[]; }) => item.location.some((loc: { state: { _id: any; }; }) => loc.state._id === id)
+                        )?.map((data: { code: any; _id: any; location: any; }) => ({
                             name: data?.code,
                             _id: data?._id,
                             location: data?.location
@@ -419,7 +417,7 @@ const page = () => {
                         break;
 
                     default:
-                        const stateData2 = await fullstateData?.data?.filter(state => state?.country?._id === parentId)?.map(state => ({
+                        const stateData2 = await fullstateData?.data?.filter((state: { country: { _id: any; }; }) => state?.country?._id === parentId)?.map((state: { name: any; _id: any; }) => ({
                             name: state?.name,
                             _id: state?._id,
 
@@ -433,8 +431,8 @@ const page = () => {
                 break;
 
             case "salesEngineer":
-                const teamId1 = teamMemberData?.data?.filter(data => data?._id === id)?.[0]?.team?._id;
-                const formattedTeamMemberData = teamMemberData?.data?.filter(data => data?.team?._id === teamId1)?.map((option) => ({
+                const teamId1 = teamMemberData?.data?.filter((data: { _id: any; }) => data?._id === id)?.[0]?.team?._id;
+                const formattedTeamMemberData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === teamId1)?.map((option: { user: { shortName: string; }; _id: any; }) => ({
                     label: option?.user?.shortName?.toProperCase(), // Display name
                     value: option?._id, // Unique ID as value
                 }));
@@ -445,8 +443,8 @@ const page = () => {
 
             case "approvalAuthority":
 
-                const approvalData = await approvalAuthorityData?.data?.filter(item => item.location.some(loc => loc.state._id === parentId)
-                )?.map(data => ({
+                const approvalData = await approvalAuthorityData?.data?.filter((item: { location: any[]; }) => item.location.some((loc: { state: { _id: any; }; }) => loc.state._id === parentId)
+                )?.map((data: { code: any; _id: any; location: any; }) => ({
                     name: data?.code,
                     _id: data?._id,
                     location: data?.location
@@ -464,14 +462,7 @@ const page = () => {
 
     }
 
-    interface RowData {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-    }
-
-    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; section?: string; subSection?: string; elementType?: any[]; addNew?: boolean; addHelp?: boolean; visibility?: boolean; title?: string; onAddMore?: () => void; }> = [
+    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; section?: string; subSection?: string; elementType?: any; addNew?: boolean; addHelp?: boolean; visibility?: boolean; title?: string; onAddMore?: () => void; }> = [
         { label: 'Country', name: "country", type: "select", data: countryData?.data, format: 'ObjectId', required: true, placeholder: 'Select Country', section: 'QuoteDetails', visibility: true },
         { label: 'Year', name: "year", type: "select", data: yearData, required: true, placeholder: 'Select Year', section: 'QuoteDetails', visibility: true },
         { label: 'Quote No', name: "quoteNo", type: "number", required: false, placeholder: 'Quote No', section: 'QuoteDetails', visibility: true },
@@ -551,14 +542,14 @@ const page = () => {
     const statusField: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; section?: string[]; subSection?: string; elementType?: any[]; addNew?: boolean; addHelp?: boolean; visibility?: boolean; title?: string; onAddMore?: () => void; }> = [
         { label: 'New Status', name: "quoteStatus", type: "select", data: quoteStatusData?.data, format: 'ObjectId', required: true, placeholder: 'Select Status', visibility: true },
         { label: 'Select Forecast Month', name: "forecastMonth", type: "select", data: monthsData, required: false, placeholder: 'Select Month', section: ['HOT QUOTE'], visibility: false },
-        { label: 'Job No', name: "jobNo", type: "text", required: true, placeholder: 'Job No', section: ['J - Job'], visibility: false },
-        { label: 'Job Entry Date', name: "jobDate", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: ['J - Job'], visibility: false },
-        { label: 'Shipping Forecast Month', name: "forecastMonth", type: "select", data: monthsData, required: true, placeholder: 'Select Month', section: ['J - Job'], visibility: false },
-        { label: 'Payment Terms', name: "paymentTerm", type: "text", required: true, placeholder: 'Payment Term', section: ['J - Job'], visibility: false },
-        { label: 'Intial Shipped Date', name: "initialShipDate", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: ['JOB SHIPPED'], visibility: false },
-        { label: 'Final Shipped Date', name: "finalShipDate", type: "date", format: 'Date', required: true, placeholder: 'Select Date', section: ['JOB SHIPPED'], visibility: false },
-        { label: 'Lost To', name: "lostTo", type: "text", required: true, placeholder: 'Lost To', section: ['L - Lost'], visibility: false },
-        { label: 'Lost To Others', name: "lostToOthers", type: "text", required: true, placeholder: 'Lost To Others', section: ['L - Lost'], visibility: false },
+        { label: 'Job No', name: "jobNo", type: "text", required: false, placeholder: 'Job No', section: ['J - Job'], visibility: false },
+        { label: 'Job Entry Date', name: "jobDate", type: "date", format: 'Date', required: false, placeholder: 'Select Date', section: ['J - Job'], visibility: false },
+        { label: 'Shipping Forecast Month', name: "forecastMonth", type: "select", data: monthsData, required: false, placeholder: 'Select Month', section: ['J - Job'], visibility: false },
+        { label: 'Payment Terms', name: "paymentTerm", type: "text", required: false, placeholder: 'Payment Term', section: ['J - Job'], visibility: false },
+        { label: 'Intial Shipped Date', name: "initialShipDate", type: "date", format: 'Date', required: false, placeholder: 'Select Date', section: ['JOB SHIPPED'], visibility: false },
+        { label: 'Final Shipped Date', name: "finalShipDate", type: "date", format: 'Date', required: false, placeholder: 'Select Date', section: ['JOB SHIPPED'], visibility: false },
+        { label: 'Lost To', name: "lostTo", type: "text", required: false, placeholder: 'Lost To', section: ['L - Lost'], visibility: false },
+        { label: 'Lost To Others', name: "lostToOthers", type: "text", required: false, placeholder: 'Lost To Others', section: ['L - Lost'], visibility: false },
         { label: 'Reason', name: "reason", type: "text", placeholder: 'Reason', section: ['C - Cancel', 'D - Declined', 'H - Hold', 'L - Lost'], visibility: false },
         { label: 'Remarks', name: "remarks", type: "text", required: false, placeholder: 'Remarks', section: ['J - Job', 'JOB SHIPPED', 'HOT QUOTE'], visibility: false },
 
@@ -599,16 +590,21 @@ const page = () => {
     };
 
     // Save function to send data to an API or database
-    const saveData = async ({ formData, action, master = 'QUOTATION_MASTER' }) => {
+    const saveData = async ({ formData, action, master = 'QUOTATION_MASTER' }: { formData: any; action: string; master?: keyof typeof MONGO_MODELS }): Promise<any> => {
 
-        const formattedData = {
+        const formattedData:{
+            db: string;
+            action: string;
+            filter: { _id: any; };
+            data: any;
+        } = {
             db: MONGO_MODELS[master],
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData?._id },
             data: formData,
         };
 
-        const response = await createApplication(formattedData);
+        const response:any = await createApplication(formattedData);
 
 
         if (response.data?.status === SUCCESS && action === 'Add') {
@@ -624,7 +620,7 @@ const page = () => {
         }
 
         if (response?.error?.data?.message?.message) {
-            return new Error({ message: "Something went wrong!", data: "" })
+            throw new Error("Something went wrong!");
             toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
         }
 
@@ -632,18 +628,18 @@ const page = () => {
     };
 
 
-    const editQuotation = (rowData: RowData) => {
+    const editQuotation = (rowData: any) => {
         setAction('Update');
         const transformedData = {
             ...rowData, // Keep the existing fields
-            salesSupportEngineer: rowData?.salesSupportEngineer.map(eng => eng._id), // Map `location` to just the `_id`s
+            salesSupportEngineer: rowData?.salesSupportEngineer.map((eng: { _id: any; }) => eng._id), // Map `location` to just the `_id`s
 
         };
 
-        const contactData1 = customerContactData?.data?.filter(contact => contact?.customer?._id === rowData?.company?._id);
+        const contactData1 = customerContactData?.data?.filter((contact: { customer: { _id: any; }; }) => contact?.customer?._id === rowData?.company?._id);
 
         setContactData(contactData1);
-        const stateData1 = fullstateData?.data?.filter(state => state?.country?._id === rowData?.country?._id)?.map(state => ({
+        const stateData1 = fullstateData?.data?.filter((state: { country: { _id: any; }; }) => state?.country?._id === rowData?.country?._id)?.map((state: { name: any; _id: any; }) => ({
             name: state?.name,
             _id: state?._id
         }));
@@ -651,7 +647,7 @@ const page = () => {
         setStateData(stateData1);
 
 
-        const formattedTeamMemberData = teamMemberData?.data?.filter(data => data?.team?._id === rowData?.sellingTeam?._id)?.map((option) => ({
+        const formattedTeamMemberData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === rowData?.sellingTeam?._id)?.map((option: { user: { shortName: string; }; _id: any; }) => ({
             label: option?.user?.shortName?.toProperCase(), // Display name
             value: option?._id, // Unique ID as value
         }));
@@ -664,11 +660,11 @@ const page = () => {
         // Your add logic for user page
     };
 
-    const editQuoteStatus = (rowData: RowData) => {
+    const editQuoteStatus = (rowData: any) => {
         setAction('Update');
         const transformedData = {
             ...rowData, // Keep the existing fields
-            salesSupportEngineer: rowData?.salesSupportEngineer.map(eng => eng._id), // Map `location` to just the `_id`s
+            salesSupportEngineer: rowData?.salesSupportEngineer.map((eng: { _id: any; }) => eng._id), // Map `location` to just the `_id`s
 
         };
         setInitialData(transformedData);
@@ -726,12 +722,8 @@ const page = () => {
         XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
-    const handleDelete = () => {
-        console.log('UserPage Delete button clicked');
-        // Your delete logic for user page
-    };
 
-    const getQuotationColumns = (teamRole) => {
+    const getQuotationColumns = (teamRole: string) => {
         const columns = [
             {
                 id: "select",
@@ -826,7 +818,7 @@ const page = () => {
                     </button>
                 ),
                 cell: ({ row }: { row: any }) => <div className="w-28 p-2 border rounded-md flex items-center justify-center text-center" onClick={() => editQuoteStatus(row.original)}>
-                    {quoteStatusData?.data.find(data => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
+                    {quoteStatusData?.data.find((data: { _id: any; }) => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
             },
             {
                 accessorKey: "bookingProbability",
@@ -854,7 +846,7 @@ const page = () => {
                         <ArrowUpDown size={15} /> {/* Sorting Icon */}
                     </button>
                 ),
-                cell: ({ row }: { row: any }) => <div>{countryData?.data.find(data => data._id === row.getValue("country")?._id)?.region?.continent?.name}</div>,
+                cell: ({ row }: { row: any }) => <div>{countryData?.data.find((data: { _id: any; }) => data._id === row.getValue("country")?._id)?.region?.continent?.name}</div>,
             },
             {
                 accessorKey: "country",
@@ -868,7 +860,7 @@ const page = () => {
                         <ArrowUpDown size={15} /> {/* Sorting Icon */}
                     </button>
                 ),
-                cell: ({ row }: { row: any }) => <div>{countryData?.data.find(data => data._id === row.getValue("country")?._id)?.name}</div>,
+                cell: ({ row }: { row: any }) => <div>{countryData?.data.find((data: { _id: any; }) => data._id === row.getValue("country")?._id)?.name}</div>,
             },
 
         ];
@@ -886,7 +878,7 @@ const page = () => {
                         <ArrowUpDown size={15} /> {/* Sorting Icon */}
                     </button>
                 ),
-                cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find(data => data._id === row.getValue("salesEngineer")?._id)?.user?.shortName.toProperCase()}</div>,
+                cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find((data: { _id: any; }) => data._id === row.getValue("salesEngineer")?._id)?.user?.shortName.toProperCase()}</div>,
             },)
         };
         columns.push({
@@ -901,7 +893,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div>{customerData?.data.find(data => data._id === row.getValue("company")?._id)?.name}</div>,
+            cell: ({ row }: { row: any }) => <div>{customerData?.data.find((data: { _id: any; }) => data._id === row.getValue("company")?._id)?.name}</div>,
         },)
         columns.push({
             accessorKey: "projectName",

@@ -26,23 +26,23 @@ import 'jspdf-autotable';
 const page = () => {
   
 const { user, status, authenticated } = useUserAuthorised();
-  const { data: userData = [], isLoading: userLoading } = useGetUsersQuery();
-  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
+  const { data: userData = [], isLoading: userLoading }:any = useGetUsersQuery();
+  const { data: departmentData = [], isLoading: departmentLoading }:any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { createdAt: -1 },
   });
-   const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
+   const { data: designationData = [], isLoading: designationLoading }:any = useGetMasterQuery({
       db: 'DESIGNATION_MASTER',
     });
-    const { data: roleData = [], isLoading: roleLoading } = useGetMasterQuery( {db:"ROLE_MASTER" });
-    const { data: employeeTypeData = [], isLoading: employeeTypeLoading } = useGetMasterQuery({db: 'EMPLOYEE_TYPE_MASTER'});
-    const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({db:"ORGANISATION_MASTER"} );
-  const [createUser, { isLoading: isCreatingUser }] = useUserOperationsMutation();
+    const { data: roleData = [], isLoading: roleLoading }:any = useGetMasterQuery( {db:"ROLE_MASTER" });
+    const { data: employeeTypeData = [], isLoading: employeeTypeLoading }:any = useGetMasterQuery({db: 'EMPLOYEE_TYPE_MASTER'});
+    const { data: organisationData = [], isLoading: organisationLoading }:any = useGetMasterQuery({db:"ORGANISATION_MASTER"} );
+  const [createUser, { isLoading: isCreatingUser }]:any = useUserOperationsMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading;
+  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading||isCreatingUser;
 
   const fieldsToAdd = [
     { fieldName: 'roleName', path: ['role', 'name'] }
@@ -62,14 +62,12 @@ const { user, status, authenticated } = useUserAuthorised();
 const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
 ?.map((role: { name: any; }) => role.name);             // Extract only the 'name' property
 
-
   interface RowData {
     id: string;
     name: string;
     email: string;
     role: string;
   }
-
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
     { label: 'Employee ID', name: "empId", type: "text",required: true, placeholder:'Employee ID'  },
@@ -110,7 +108,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}) => {
+  const saveData = async ({formData, action}: { formData: any; action: string }) => {
     const formattedData = {
       action: action === 'Add' ? 'create' : 'update',
       filter : {"_id": formData._id},
@@ -135,7 +133,6 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
    
   };
 
-
   const editUser = (rowData: RowData) => {
     setAction('Update');
     setInitialData(rowData);
@@ -150,7 +147,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, action: "Add", user, createUser, db:undefined, masterName:"User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], action: "Add", user, createUser, db: undefined, masterName: "User" });
   };
 
   const exportToExcel = (data: any[]) => {
@@ -164,17 +161,12 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
     XLSX.writeFile(workbook, 'exported_data.xlsx');
   };
 
-  const exportToPDF = (data) => {
+  const exportToPDF = (data: any[]) => {
     const doc = new jsPDF();
     doc.text('Exported Data', 14, 10);
 
     const tableColumns = Object.keys(data[0] || {});
     const tableRows = data.map((item) => tableColumns.map((key) => item[key]));
-
-    // doc.autoTable({
-    //   head: [tableColumns],
-    //   body: tableRows,
-    // });
 
     doc.save('exported_data.pdf');
   };
@@ -188,8 +180,6 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
     console.log('UserPage Delete button clicked');
     // Your delete logic for user page
   };
-
-
 
   const userColumns = [
     {
@@ -287,7 +277,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   return (
     <>
 
-      <MasterComponent config={userConfig} loadingState={loading} />
+      <MasterComponent config={userConfig} loadingState={loading} rowClassMap={undefined} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}
@@ -296,7 +286,6 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
         fields={fields}
         initialData={initialData}
         action={action}
-        user={user}
       />
     </>
 

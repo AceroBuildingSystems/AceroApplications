@@ -42,16 +42,8 @@ interface DataTableConfig {
     data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 
-// Main interface for the page configuration
-interface PageConfig {
-    searchFields?: FieldConfig[]; // Array of search field configurations
-    filterFields?: FieldConfig[]; // Array of filter field configurations
-    dataTable: DataTableConfig; // Data table configuration
-    buttons?: ButtonConfig[]; // Array of button configurations
-}
-
 interface MasterComponentProps {
-    config: PageConfig;
+    config: any;
     loadingState: boolean;
     rowClassMap:any;
 }

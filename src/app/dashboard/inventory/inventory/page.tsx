@@ -2,19 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus } from 'lucide-react';
+import { Box, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { MONGO_MODELS } from '@/shared/constants';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { validate } from '@/shared/functions';
+import BulkAddDialog from '@/components/ModalComponent/BulkAddDialog';
+import { Input } from '@/components/ui/input';
 
 interface AssetFormData {
     _id?: string;
@@ -32,7 +30,7 @@ interface AssetFormData {
     warrantyEndDate: string;
     warrantyDetails?: string;
     specifications: Record<string, any>;
-    isActive: string;
+    isActive: boolean;
 }
 
 interface SpecificationsComponentProps {
@@ -112,6 +110,7 @@ const AssetsPage = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<AssetFormData | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -161,7 +160,6 @@ const AssetsPage = () => {
         { _id: false, name: "False" },
       ];
 
-    // Form fields configuration with validation
     const formFields = [ 
         {
             name: "product",
@@ -311,7 +309,8 @@ const AssetsPage = () => {
         setIsDialogOpen(true);
     }
 
-    // Configure table columns
+    
+
     const columns = [
         {
             accessorKey: "serialNumber",
@@ -397,26 +396,36 @@ const AssetsPage = () => {
         }
     ];
 
-    // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }): Promise<void> => {
+    const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
+        console.log("handle save called with:", action, formData.serialNumber);
+        
         try {
-            
-            const response = await createMaster({
-                db: MONGO_MODELS.ASSET_MASTER,
-                action: action === 'Add' ? 'create' : 'update',
-                filter: formData._id ? { _id: formData._id } : undefined,
-                data: {
-                    ...formData,
-                    status: 'available',
-                    isActive: formData.isActive ?? true
+            // Wrap in Promise to ensure only one call is made
+            return await new Promise(async (resolve, reject) => {
+                try {
+                    const response = await createMaster({
+                        db: MONGO_MODELS.ASSET_MASTER,
+                        action: action === 'Add' ? 'create' : 'update',
+                        filter: formData._id ? { _id: formData._id } : undefined,
+                        data: {
+                            ...formData,
+                            status: 'available',
+                            isActive: formData.isActive ?? true
+                        }
+                    }).unwrap();
+                    
+                    console.log("API call successful:", response);
+                    resolve(response);
+                } catch (error) {
+                    console.error('Error saving asset:', error);
+                    reject(error);
                 }
-            }).unwrap();
-            // handle success if needed
+            });
         } catch (error) {
-            console.error('Error saving asset:', error);
+            console.error('Error in handleSave:', error);
+            return { error };
         }
     };
-
     // Configure page layout
     const pageConfig = {
         searchFields: [
@@ -462,36 +471,19 @@ const AssetsPage = () => {
                     product: row.original.product?._id,
                     warehouse: row.original.warehouse?._id,
                     vendor: row.original.vendor?._id,
-                    isActive: row.original.isActive ? "Active" : "Inactive"
+                    isActive: row.original.isActive
                 });
                 setIsDialogOpen(true);
             }
         },
         buttons: [
             {
-                label: "Add New",
+                label: "Add Product",
                 action: () => {
-                    setDialogAction("Add");
-                    setSelectedProduct(null);
-                    setSelectedItem({
-                        serialNumber: '',
-                        product: '',
-                        warehouse: '',
-                        status: 'available',
-                        purchaseDate: new Date().toISOString().split('T')[0],
-                        purchasePrice: 0,
-                        vendor: '',
-                        poNumber: '',
-                        invoiceNumber: '',
-                        warrantyStartDate: new Date().toISOString().split('T')[0],
-                        warrantyEndDate: new Date().toISOString().split('T')[0],
-                        specifications: {},
-                        isActive: "Active"
-                    });
-                    setIsDialogOpen(true);
+                    setIsBulkDialogOpen(true);
                 },
-                icon: Plus,
-                className: "bg-primary text-white hover:bg-primary/90"
+                icon: Box,
+                className: "bg-neutral-800 text-white hover:bg-neutral-800/90"
             }
         ]
     };
@@ -506,7 +498,7 @@ const AssetsPage = () => {
         <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
-            <DynamicDialog<AssetFormData>
+            {/* <DynamicDialog<AssetFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => {
                     setSelectedItem(null)
@@ -518,6 +510,15 @@ const AssetsPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
+            /> */}
+            
+            <BulkAddDialog
+                isOpen={isBulkDialogOpen}
+                closeDialog={() => setIsBulkDialogOpen(false)}
+                onSave={handleSave}
+                products={productsResponse?.data || []}
+                warehouses={warehousesResponse?.data || []}
+                vendors={vendorsResponse?.data || []}
             />
         </div>
     );

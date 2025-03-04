@@ -41,12 +41,10 @@ const InventorySchema = new mongoose.Schema({
     addedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
     }
 }, {
     timestamps: true
@@ -67,7 +65,8 @@ InventorySchema.statics.updateInventoryForAsset = async function(warehouseId: st
         await this.create({
             warehouse: warehouseId,
             totalQuantity: 1,
-            assets: [assetId]
+            assets: [assetId],
+
         });
     }
 };

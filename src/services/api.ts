@@ -11,7 +11,7 @@ const baseQueryWithRetry = retry(
     },
     credentials: 'include', // For handling cookies if needed
   }),
-  { maxRetries: 2 } // Retry failed requests up to 2 times
+  { maxRetries: 0 } // Retry failed requests up to 2 times
 )
 
 export const baseApi = createApi({

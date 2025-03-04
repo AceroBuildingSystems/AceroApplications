@@ -199,14 +199,8 @@ const AssetSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    addedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    },
-    updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-    }
+    addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, {
     timestamps: true
 });

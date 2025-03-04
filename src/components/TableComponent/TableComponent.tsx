@@ -37,16 +37,15 @@ import {
 } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-
-interface DataTableProps<T> {
+interface DataTableProps<T extends { status: string }> {
   data: T[];
   columns: ColumnDef<T>[];
-  rowClassMap: (status: any) => string;
+  rowClassMap: Record<string, string>; // Mapping of status to CSS class names
 }
 
 
 
-export function DataTable<T>({ data, columns,rowClassMap}: DataTableProps<T>) {
+export function DataTable<T extends { status: string }>({ data, columns, rowClassMap }: DataTableProps<T>) {
   
   const rowNo = ['10', '20', '30', '40', '50'];
 

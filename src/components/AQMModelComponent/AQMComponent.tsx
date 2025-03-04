@@ -1,8 +1,9 @@
+'use client'
+
 import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogFooter,
   DialogOverlay,
@@ -14,27 +15,41 @@ import mongoose, { set } from "mongoose";
 import { Combobox } from "../ui/ComboBoxWrapper";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
-import { LogOut, Save, Check, X } from 'lucide-react';
+import { Save, Check, X } from 'lucide-react';
 
-import { Switch } from "../ui/switch";
 import {
-  ArrowUpDown,
-  DeleteIcon,
-  Download,
-  Import,
-  Plus,
-  PlusIcon,
   Trash2Icon, SendHorizontal
 } from "lucide-react";
-import MultipleSelector from "../ui/multiple-selector";
+import MultipleSelector, { Option } from "../ui/multiple-selector";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MONGO_MODELS, SUCCESS } from "@/shared/constants";
-import { useCreateApplicationMutation, useGetApplicationQuery, useLazyGetApplicationQuery } from "@/services/endpoints/applicationApi";
+import { useCreateApplicationMutation, useLazyGetApplicationQuery } from "@/services/endpoints/applicationApi";
 import { toast } from "react-toastify";
 import { useSendEmailMutation } from "@/services/endpoints/emailApi";
 import moment from "moment";
 
-const QuotationDialog = ({
+interface QuotationDialogProps {
+  isOpen: boolean;
+  closeDialog: () => void;
+  selectedMaster: string;
+  onSave: (data: any) => Promise<void>;
+  fields: Array<any>;
+  initialData: any;
+  action: string;
+  height: string;
+  width: string;
+  customerData: Array<any>;
+  customerTypeData: Array<any>;
+  statusData: Array<any>;
+  onchangeData: (data: any) => void;
+  countryData: Array<any>;
+  proposalOffer: Array<any>;
+  proposalDrawing: Array<any>;
+  locationData: Array<any>;
+  stateData: Array<any>;
+}
+
+const QuotationDialog: React.FC<QuotationDialogProps> = ({
   isOpen,
   closeDialog,
   selectedMaster,
@@ -54,20 +69,19 @@ const QuotationDialog = ({
   locationData,
   stateData,
 }) => {
-  const { user, status, authenticated } = useUserAuthorised();
+  const { user }: any = useUserAuthorised();
 
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateApplicationMutation();
   const [getApplication, { data: applicationData, isLoading, error }] = useLazyGetApplicationQuery();
 
-
-  const [sendEmail, { isLoading: isSendEMail }] = useSendEmailMutation();
+  const [sendEmail, { isLoading: isSendEMail }]: any = useSendEmailMutation();
 
   const [formData, setFormData] = useState<Record<string, any>>({});
-  const [proposalRevData, setProposalRevData] = useState<Record<string, any>>([]);
-  const [drawingRevData, setDrawingRevData] = useState<Record<string, any>>([]);
+  const [proposalRevData, setProposalRevData] = useState<any[]>([]);
+  const [drawingRevData, setDrawingRevData]: any = useState<Record<string, any>>([]);
   const [proposalDataIds, setProposalDataIds] = useState<Record<string, any>>({});
-  const [offerRevisions, setOfferRevisions] = useState<Record<string, any>>([]);
-  const [drawingRevisions, setDrawingRevisions] = useState<Record<string, any>>([]);
+  const [offerRevisions, setOfferRevisions]: any = useState<Record<string, any>>([]);
+  const [drawingRevisions, setDrawingRevisions]: any = useState<Record<string, any>>([]);
 
   const [sellingTeamData, setSellingTeamData] = useState<Record<string, any>>({});
 
@@ -75,7 +89,7 @@ const QuotationDialog = ({
   const [isSecondaryDialogOpen, setIsSecondaryDialogOpen] = useState(false);
   const [secondaryDialogType, setSecondaryDialogType] = useState("");
 
-  const [secondaryFields, setSecondaryFields] = useState([]);
+  const [secondaryFields, setSecondaryFields]: any = useState([]);
 
   const [approvalAuthorityData, setApprovalAuthorityData] = useState([]);
 
@@ -83,7 +97,7 @@ const QuotationDialog = ({
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [newDialogType, setNewDialogType] = useState("");
 
-  const [newFields, setNewFields] = useState([]);
+  const [newFields, setNewFields]: any = useState([]);
 
   const [region, setRegion] = useState('');
   const [industryType, setIndustryType] = useState('');
@@ -152,9 +166,9 @@ const QuotationDialog = ({
     setRegion(initialData?.country?.region?.name);
     setSellingTeamData(initialData?.sellingTeam)
     const proposalRevisions = {
-      proposals: formattedData?.proposals?.map(data => data._id), // Map `location` to just the `_id`s
-      offerrevisions: formattedData?.proposals?.[0]?.revisions.map(data => data._id),
-      drawingrevisions: formattedData?.proposals?.[1]?.revisions.map(data => data._id),
+      proposals: formattedData?.proposals?.map((data: { _id: any; }) => data._id), // Map `location` to just the `_id`s
+      offerrevisions: formattedData?.proposals?.[0]?.revisions.map((data: { _id: any; }) => data._id),
+      drawingrevisions: formattedData?.proposals?.[1]?.revisions.map((data: { _id: any; }) => data._id),
       offerRevisionsdata: formattedData?.proposals?.[0]?.revisions,
       drawingRevisionsdata: formattedData?.proposals?.[1]?.revisions,
 
@@ -167,7 +181,7 @@ const QuotationDialog = ({
     setFormData(formattedData);
     if (initialData?.proposals) {
       setProposalRevData(
-        proposalRevisions?.offerRevisionsdata?.map(item => ({
+        proposalRevisions?.offerRevisionsdata?.map((item: { sentToEstimation: string | number | Date; receivedFromEstimation: string | number | Date; sentToCustomer: string | number | Date; createdAt: string | number | Date; updatedAt: string | number | Date; }) => ({
           ...item,
           sentToEstimation: item.sentToEstimation ? new Date(item.sentToEstimation) : null,
           receivedFromEstimation: item.receivedFromEstimation ? new Date(item.receivedFromEstimation) : null,
@@ -178,7 +192,7 @@ const QuotationDialog = ({
       );
 
       setDrawingRevData(
-        proposalRevisions?.drawingRevisionsdata?.map(item => ({
+        proposalRevisions?.drawingRevisionsdata?.map((item: { sentToEstimation: string | number | Date; receivedFromEstimation: string | number | Date; sentToCustomer: string | number | Date; createdAt: string | number | Date; updatedAt: string | number | Date; }) => ({
           ...item,
           sentToEstimation: item.sentToEstimation ? new Date(item.sentToEstimation) : null,
           receivedFromEstimation: item.receivedFromEstimation ? new Date(item.receivedFromEstimation) : null,
@@ -204,18 +218,18 @@ const QuotationDialog = ({
           return []
         }
 
-        if (!prev) {
+        if (!Array.isArray(prev)) {
           return [{ revNo: initialData?.revNo }]
         } else {
           return [...prev, { revNo: initialData?.revNo }]
         }
       });
-      setDrawingRevData((prev) => {
+      setDrawingRevData((prev: any) => {
         if (initialData?.revNo === null || initialData?.revNo === undefined) {
           return []
         }
 
-        if (!prev) {
+        if (!Array.isArray(prev)) {
           return [{ revNo: initialData?.revNo }]
         } else {
           return [...prev, { revNo: initialData?.revNo }]
@@ -227,10 +241,10 @@ const QuotationDialog = ({
 
 
 
-  function updateCycleTimeForArray(dataArray) {
+  function updateCycleTimeForArray(dataArray: any[]) {
     return dataArray.map(item => {
       const { sentToEstimation, receivedFromEstimation } = item;
-
+      
       // Ensure both dates are valid
       if (!sentToEstimation) {
         console.log("Error: sentToEstimation or receivedFromEstimation should be there", item);
@@ -240,7 +254,7 @@ const QuotationDialog = ({
 
       // Check if receivedFromEstimation is less than sentToCustomer
       if (receivedFromEstimation < sentToEstimation) {
-       
+
         alert("Error: receivedFromEstimation cannot be less than sentToCustomer.");
         const updatedFormData = {
           ...item,
@@ -251,39 +265,50 @@ const QuotationDialog = ({
         return updatedFormData; // Skip calculation if the condition is violated
       }
 
-      const cycleTime = (receivedFromEstimation - sentToEstimation) / (1000 * 60 * 60 * 24); // Convert ms to days
-
-
-      item.cycleTime = Math.trunc(cycleTime).toString();
+      const rcvdDate:Date = new Date(receivedFromEstimation);
+      const sentDate:Date = new Date(sentToEstimation);
+      if (rcvdDate.getTime() === 0 || sentDate.getTime() === 0) {
+        console.log("Error: One or both date values are invalid.");
+        item.cycleTime = 0; // Ensure it's a string if required
+    } else {
+        // Calculate cycle time in days
+        const cycleTime = (rcvdDate.getTime() - sentDate.getTime()) / (1000 * 60 * 60 * 24);
+        item.cycleTime = Math.trunc(cycleTime).toString();
+    }
 
       return item; // Return the updated item
     });
   }
- 
-  const handleChange = (e, fieldName, format, type, data, field, revNo, customFunction = () => { }) => {
 
-    let value: string | null = "";
+  const handleChange = (e: { target: { value: any } } | any[] | string | null | React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement> | null, fieldName: string, format: string, type: string, data: any[], field: { data: any[]; section: string; subSection?: string; } | undefined, revNo: any, customFunction = (dateValue: any) => { }) => {
+
+    let value: any|string | null = "";
     fieldName === 'country' && setRegion(field?.data?.filter((item) => item._id === e)[0]?.region?.name);
 
-    fieldName === 'industryType' && setIndustryType(data?.filter((item) => item._id === e)[0]?.name);
+    fieldName === 'industryType' && Array.isArray(data) && setIndustryType(data?.filter((item) => item._id === e)[0]?.name);
 
-    fieldName === 'buildingType' && setBuildingType(data?.filter((item) => item._id === e)[0]?.name);
+    fieldName === 'buildingType' && Array.isArray(data) && setBuildingType(data?.filter((item) => item._id === e)[0]?.name);
 
-    fieldName === 'paintType' && setPaintType(data?.filter((item) => item._id === e)[0]?.name);
+    fieldName === 'paintType' && Array.isArray(data) && setPaintType(data?.filter((item) => item._id === e)[0]?.name);
 
-    fieldName === 'incoterm' && setIncotermDescription(data?.filter((item) => item._id === e)[0]?.description);
+    fieldName === 'incoterm' && Array.isArray(data) && setIncotermDescription(data?.filter((item) => item._id === e)[0]?.description);
 
     (fieldName === "company" || fieldName === 'country' || fieldName === 'state' || fieldName === 'salesEngineer') && onchangeData({ id: e, fieldName, name: 'approvalAuthority' });
 
-
-
     if (type === "multiselect") {
-      value = e.map((item) => item.value); // Store only `_id`s
+      value = Array.isArray(e) ? e.map((item) => item.value) : ''; // Store only `_id`s as a comma-separated string
     } else if (type === "select") {
-      value = e; // Ensure single select values are stored correctly
+      value = typeof e === 'string' ? e : ""; // Ensure single select values are stored correctly
     } else {
+      if (typeof e === 'string') {
+        value = e;
+       
+      } else if (Array.isArray(e)) {
+        value = e.map((item) => item.value).join(",");
+      } else {
+        value = (e as { target: { value: any } }).target.value ?? "";
+      }
 
-      value = e.target.value.toString() || "";
       if (fieldName === "quoteNo") {
         if (value !== undefined && value.length > 5) {
           value = value.slice(0, 5); // Truncate to the first 5 characters
@@ -296,9 +321,9 @@ const QuotationDialog = ({
       setFormData((prev) => {
         let formattedValue = value;
         if (format === "ObjectId") {
-          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : ""; // Validate ObjectId format
         } else if (format === "Date") {
-          formattedValue = value ? new Date(value) : null; // Convert to Date object
+          formattedValue = value ? new Date(value).toISOString() : ""; // Convert to ISO string or empty string
         }
         const updatedFormData = {
           ...prev,
@@ -306,16 +331,19 @@ const QuotationDialog = ({
         };
 
         if (fieldName === "company") {
+          updatedFormData['customerType'] = data.filter((item) => item?._id === e)[0]?.customerType?._id;
 
-          updatedFormData['customerType'] = data?.filter((item) => item?._id === e)[0]?.customerType?._id;
         }
         if (fieldName === "contact") {
-          updatedFormData['position'] = data?.filter((item) => item?._id === e)[0]?.position;
-          updatedFormData['phone'] = data?.filter((item) => item?._id === e)[0]?.phone;
-          updatedFormData['email'] = data?.filter((item) => item?._id === e)[0]?.email;
+
+          updatedFormData['position'] = data.filter((item) => item?._id === e)[0]?.position;
+          updatedFormData['phone'] = data.filter((item) => item?._id === e)[0]?.phone;
+          updatedFormData['email'] = data.filter((item) => item?._id === e)[0]?.email;
+
         }
         if (fieldName === "salesEngineer") {
-          updatedFormData['sellingTeam'] = data?.filter((item) => item?._id === e)[0]?.team;
+
+          updatedFormData['sellingTeam'] = data.filter((item) => item?._id === e)[0]?.team;
           setSellingTeamData(data?.filter((item) => item?._id === e)[0]);
 
         }
@@ -325,7 +353,7 @@ const QuotationDialog = ({
           updatedFormData.fullName = `${updatedFormData.firstName || ""} ${updatedFormData.lastName || ""
             }`.trim();
         }
-        customFunction(updatedFormData[fieldName])
+        customFunction(updatedFormData[fieldName as keyof typeof updatedFormData])
 
         return updatedFormData;
       });
@@ -335,9 +363,9 @@ const QuotationDialog = ({
     ((field?.section === 'CycleTimeDetails' && field?.subSection === 'ProposalOffer') || fieldName === 'revNo') && setProposalRevData((prev) => {
       let formattedValue = value;
       if (format === "ObjectId") {
-        formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+        formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : ""; // Validate ObjectId format
       } else if (format === "Date") {
-        formattedValue = value ? new Date(value) : null; // Convert to Date object
+        formattedValue = value ? new Date(value).toISOString() : ""; // Convert to ISO string or empty string
       }
 
       const updatedFormData = prev.map(item => {
@@ -350,17 +378,18 @@ const QuotationDialog = ({
       const updatedData = updateCycleTimeForArray(updatedFormData.sort((a, b) => a.revNo - b.revNo));
 
       customFunction(updatedData?.[revNo]?.[fieldName])
+
       return updatedData.sort((a, b) => a.revNo - b.revNo);
     })
 
 
     {
-      ((field?.section === 'CycleTimeDetails' && field?.subSection === 'ProposalDrawing') || fieldName === 'revNo') && setDrawingRevData((prev) => {
+      ((field?.section === 'CycleTimeDetails' && field?.subSection === 'ProposalDrawing') || fieldName === 'revNo') && setDrawingRevData((prev: { revNo: any; }[]) => {
         let formattedValue = value;
         if (format === "ObjectId") {
-          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : ""; // Validate ObjectId format
         } else if (format === "Date") {
-          formattedValue = value ? new Date(value) : null; // Convert to Date object
+          formattedValue = value ? new Date(value).toISOString() : ""; // Convert to ISO string or empty string
         }
 
         const updatedFormData = prev.map(item => {
@@ -369,23 +398,23 @@ const QuotationDialog = ({
           }
           return item;
         });
-
-
+  
         const updatedData = updateCycleTimeForArray(updatedFormData.sort((a, b) => a.revNo - b.revNo));
-
+  
         customFunction(updatedData?.[revNo]?.[fieldName])
+  
 
         return updatedData.sort((a, b) => a.revNo - b.revNo);
       })
     };
 
     {
-      (field?.section === 'Form2' || data === 'Form2') && setFormDataSecondary((prev) => {
+      (field?.section === 'Form2') && setFormDataSecondary((prev) => {
         let formattedValue = value;
         if (format === "ObjectId") {
-          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : ""; // Validate ObjectId format
         } else if (format === "Date") {
-          formattedValue = value ? new Date(value) : null; // Convert to Date object
+          formattedValue = value ? new Date(value).toISOString() : ""; // Convert to ISO string or empty string
         }
         const updatedFormData = {
           ...prev,
@@ -407,9 +436,9 @@ const QuotationDialog = ({
       (field?.section === 'Form3') && setFormDataNew((prev) => {
         let formattedValue = value;
         if (format === "ObjectId") {
-          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null; // Validate ObjectId format
+          formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : ""; // Validate ObjectId format
         } else if (format === "Date") {
-          formattedValue = value ? new Date(value) : null; // Convert to Date object
+          formattedValue = value ? new Date(value).toISOString() : ""; // Convert to ISO string or empty string
         }
 
         const updatedFormData = {
@@ -455,36 +484,36 @@ const QuotationDialog = ({
   };
 
 
-  const saveDataQuotation = async ({ formData, action, master }) => {
+  const saveDataQuotation = async ({ formData, action, master }: { formData: Record<string, any>, action: string, master: keyof typeof MONGO_MODELS }) => {
 
-    const formattedData = {
+    const formattedData: any = {
       db: MONGO_MODELS[master],
       action: action === 'Add' ? 'create' : (formData._id ? 'update' : 'create'),
       filter: { "_id": formData._id },
       data: formData,
     };
 
-    const response = await createMaster(formattedData);
+    const response: any = await createMaster(formattedData);
 
     if (response?.error?.data?.message) {
       toast.error(`Error encountered: ${response?.error?.data?.message?.errorResponse?.errmsg}`);
-      return new Error({ message: "Something went wrong!", data: "" })
+      return new Error("Something went wrong!")
     }
 
     if (formattedData?.action === 'create') return response;
 
   };
 
-  const addRevisionsToProposal = async (data, master) => {
+  const addRevisionsToProposal = async (data: any[], master: string) => {
     const response = await Promise.allSettled(data.flatMap(pType => {
       // Ensure `pType.data` is an array and iterate over it
-      return Array.isArray(pType.data) ? pType.data.map(obj => {
+      return Array.isArray(pType.data) ? pType.data.map((obj: any) => {
         const updatedData = {
           ...obj,
           addedBy: user?._id,
           updatedBy: user?._id
         };
-        return saveDataQuotation({ formData: updatedData, action, master });
+        return saveDataQuotation({ formData: updatedData, action, master: master as keyof typeof MONGO_MODELS });
       }) : [];
     }));
 
@@ -492,18 +521,19 @@ const QuotationDialog = ({
   };
 
   // Handle form submission
-  const handleSubmitQuotation = async (status) => {
+  const handleSubmitQuotation = async (status: string) => {
     try {
       if (!(formData?.country && formData?.salesEngineer && formData?.salesSupportEngineer?.length > 0 && formData?.rcvdDateFromCustomer && formData?.sellingTeam && formData?.responsibleTeam)) {
 
         toast.error(`Please fill the required fields.`);
         return;
       }
+     
       let emailData = {}
       const master = 'QUOTATION_MASTER';
       if (action === 'Add') {
 
-        const updatedProposalRevData = proposalRevData.map((item, index) =>
+        const updatedProposalRevData = proposalRevData.map((item: { changes: any; }, index: number) =>
           index === proposalRevData.length - 1 // Check if it's the last index
             ? { ...item, changes: { ...item.changes, ...formData, status } } // Merge existing changes with new ones
             : item
@@ -516,7 +546,7 @@ const QuotationDialog = ({
           data: drawingRevData
         }
         ]
-        const responseIds = await addRevisionsToProposal(revisionTypes, 'PROPOSAL_REVISION_MASTER');
+        const responseIds: any = await addRevisionsToProposal(revisionTypes, 'PROPOSAL_REVISION_MASTER');
 
         const proposalData = [{
           data: [{ revisions: [...offerRevisions, responseIds[0]?.value?.data?.data?._id], type: "ProposalOffer" }]
@@ -526,9 +556,9 @@ const QuotationDialog = ({
         }
         ]
 
-        const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
+        const proposalIds: any = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
 
-        const proposals = proposalIds.map(item => item.value?.data?.data?._id).filter(id => id);
+        const proposals = proposalIds.map((item: { value: { data: { data: { _id: any; }; }; }; }) => item.value?.data?.data?._id).filter((id: any) => id);
 
         const quotationData = {
           data: {
@@ -537,7 +567,7 @@ const QuotationDialog = ({
           }
         };
 
-        const response = await onSave({ formData: quotationData?.data, action, master: master });
+        const response: any = await onSave({ formData: quotationData?.data, action, master: master });
 
         if (status === 'quoterequested') {
 
@@ -557,7 +587,8 @@ const QuotationDialog = ({
             'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
             'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
           };
-          emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          
+          emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           await sendEmail(emailData);
         };
 
@@ -575,7 +606,7 @@ const QuotationDialog = ({
         }
 
         if (formData['quoteNo']) {
-          const { data } = await getApplication({
+          const { data }: any = await getApplication({
             db: 'QUOTATION_MASTER',
             filter: { year: formData['year'], option: formData['option'], quoteNo: formData['quoteNo'], _id: { $ne: initialData['_id'] } },
             sort: { name: 'asc' },
@@ -593,27 +624,27 @@ const QuotationDialog = ({
         // Add switch staements
         if (status === 'delete') {
           const confirmDelete = window.confirm("Are you sure you want to delete this item?");
-          if(confirmDelete){
-            const updatedProposalRevData = proposalRevData.map((item, index) =>
+          if (confirmDelete) {
+            const updatedProposalRevData = proposalRevData.map((item: { changes: any; }, index: number) =>
               index === proposalRevData.length - 1 // Check if it's the last index
                 ? { ...item, changes: { ...item.changes, ...formData, isActive: false } } // Merge existing changes with new ones
                 : item
             );
-  
+
             const revisionTypesProposal = [{
               data: updatedProposalRevData
             }
             ]
-  
+
             const revisionTypesDrawing = [
               {
                 data: drawingRevData
               }
             ]
-            const responseIdsProposal = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
-  
-            const responseIdsDrawing = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
-  
+            const responseIdsProposal: any = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
+
+            const responseIdsDrawing: any = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
+
             const proposalData = [{
               data: [{
                 _id: proposalDataIds[0], revisions: [
@@ -631,9 +662,9 @@ const QuotationDialog = ({
               }]
             }
             ]
-  
+
             const proposalIds = await addRevisionsToProposal(proposalData, 'PROPOSAL_MASTER');
-  
+
             delete formData?.proposals;
             const quotationData = {
               data: {
@@ -641,8 +672,8 @@ const QuotationDialog = ({
                 updatedBy: user?._id
               }
             }
-            const response = await onSave({ formData: quotationData?.data, action, master: master });
-  
+            const response: any = await onSave({ formData: quotationData?.data, action, master: master });
+
             const quoteData = {
               'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
               'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
@@ -671,23 +702,23 @@ const QuotationDialog = ({
               'Currency': response?.data?.data?.currency?.name, 'Total Estimated Price': response?.data?.data?.totalEstPrice, 'Q22 Value (AED)': response?.data?.data?.q22Value,
               'Special BuyOut Price': response?.data?.data?.spBuyoutPrice, 'Freight Price': response?.data?.data?.freightPrice, 'Incoterm': response?.data?.data?.incoterm?.name,
               'Incoterm Description': response?.data?.data?.incotermDescription, 'Booking Probability': response?.data?.data?.bookingProbability,
-  
+
             };
-  
+
             emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Deleted`, templateData: quoteData, fileName: "aqmTemplates/quoteDeleted", senderName: user?.shortName?.toProperCase(), approveUrl: ``, rejectUrl: `` };
             await sendEmail(emailData);
-  
+
             setFormData({});
             setOfferRevisions([]);
             setDrawingRevisions([]);
             setProposalDataIds({});
-  
+
             closeDialog();
-  
+
             return;
           };
           return;
-          
+
         };
 
         if (status === 'approved' || status === 'rejected') {
@@ -703,7 +734,7 @@ const QuotationDialog = ({
               rejectedDate: new Date()
             };
 
-            const response = await onSave({ formData: rejectedData, action, master });
+            const response: any = await onSave({ formData: rejectedData, action, master });
             const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Rejected : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalRequestRejected", senderName: 'Sales Director', approveUrl: '', rejectUrl: '', reason: formData['rejectReason'] };
             await sendEmail(emailData);
             toast.success(`Quote approval request rejected successfully.`);
@@ -715,14 +746,14 @@ const QuotationDialog = ({
               status: status
             };
 
-            const response = await onSave({ formData: approvedData, action, master });
+            const response: any = await onSave({ formData: approvedData, action, master });
 
             const emailData = { recipient: response?.data?.data?.salesEngineer?.user?.email, subject: `Quote Approved : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: '', fileName: "aqmTemplates/quoteApprovalApproved", senderName: 'Sales Director', approveUrl: '', rejectUrl: '' };
             await sendEmail(emailData);
             toast.success(`Quote approval request approved successfully.`);
           }
 
-         
+
           setFormData({});
           setOfferRevisions([]);
           setDrawingRevisions([]);
@@ -733,8 +764,7 @@ const QuotationDialog = ({
           return;
         };
 
-
-        const updatedProposalRevData = proposalRevData.map((item, index) =>
+        const updatedProposalRevData = proposalRevData.map((item: { changes: any; }, index: number) =>
           index === proposalRevData.length - 1 // Check if it's the last index
             ? { ...item, changes: { ...item.changes, ...formData, status } } // Merge existing changes with new ones
             : item
@@ -750,9 +780,9 @@ const QuotationDialog = ({
             data: drawingRevData
           }
         ]
-        const responseIdsProposal = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
+        const responseIdsProposal: any = await addRevisionsToProposal(revisionTypesProposal, 'PROPOSAL_REVISION_MASTER')
 
-        const responseIdsDrawing = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
+        const responseIdsDrawing: any = await addRevisionsToProposal(revisionTypesDrawing, 'PROPOSAL_REVISION_MASTER')
 
         const proposalData = [{
           data: [{
@@ -781,7 +811,7 @@ const QuotationDialog = ({
             updatedBy: user?._id
           }
         }
-        const response = await onSave({ formData: quotationData?.data, action, master: master });
+        const response: any = await onSave({ formData: quotationData?.data, action, master: master });
         if (status === 'quoterequested') {
           const quoteData = {
             'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
@@ -799,8 +829,8 @@ const QuotationDialog = ({
             'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
             'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
           };
-
-          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+         
+          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           await sendEmail(emailData);
         }
         if (status === 'submitted') {
@@ -852,7 +882,7 @@ const QuotationDialog = ({
   };
 
   // Handle form submission
-  const handleSubmit = async (Form, data) => {
+  const handleSubmit = async (Form: string, data: Record<string, any>) => {
     try {
 
       const updatedData = {
@@ -861,7 +891,7 @@ const QuotationDialog = ({
         updatedBy: user?._id
       };
 
-      let master;
+      let master: keyof typeof MONGO_MODELS = "CUSTOMER_MASTER"; // Default value
       if (Form === 'Form2') {
         switch (secondaryDialogType) {
           case "Company Name":
@@ -892,7 +922,7 @@ const QuotationDialog = ({
         }
       }
       let emailData = {};
-      const response = await onSave({ formData: updatedData, action: 'create', master });
+      const response: any = await onSave({ formData: updatedData, action: 'create', master });
       switch (master) {
         case "CUSTOMER_MASTER":
           const companyData = {
@@ -900,7 +930,7 @@ const QuotationDialog = ({
             'Phone': response?.data?.data?.phone, 'Address': response?.data?.data?.address, 'Customer Type': response?.data?.data?.customerType?.name
           };
           await onchangeData({ id: response?.data?.data?.customer?._id, fieldName: 'company', name: response?.data?.data?.name })
-          handleChange(response?.data?.data?._id, "company", "ObjectId", "select");
+          handleChange(response?.data?.data?._id, "company", "ObjectId", "select", [], undefined, undefined);
           emailData = { recipient: sellingTeamData?.email, subject: 'New Customer Added', templateData: companyData, fileName: "aqmTemplates/newCustomerTemplate", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
 
           await sendEmail(emailData);
@@ -910,13 +940,13 @@ const QuotationDialog = ({
         case "CUSTOMER_CONTACT_MASTER":
 
           await onchangeData({ id: response?.data?.data?._id, fieldName: 'contact', name: response?.data?.data?.name, parentId: response?.data?.data?.customer?._id, position: response?.data?.data?.position, email: response?.data?.data?.email, phone: response?.data?.data?.phone })
-          handleChange(response?.data?.data?._id, "contact", "ObjectId", "select", [response?.data?.data]);
+          handleChange(response?.data?.data?._id, "contact", "ObjectId", "select", [response?.data?.data], undefined, undefined);
 
           break;
 
         case "STATE_MASTER":
           await onchangeData({ id: response?.data?.data?._id, fieldName: 'state', name: response?.data?.data?.name, parentId: response?.data?.data?.country?._id })
-          handleChange(response?.data?.data?._id, "state", "ObjectId", "select");
+          handleChange(response?.data?.data?._id, "state", "ObjectId", "select", [], undefined, undefined);
           break;
 
         case "APPROVAL_AUTHORITY_MASTER":
@@ -924,7 +954,7 @@ const QuotationDialog = ({
             'Authority Code': response?.data?.data?.code, 'Authority Name': response?.data?.data?.name, 'Emirate': response?.data?.data?.location[0]?.state?.name
           };
           await onchangeData({ id: response?.data?.data?._id, fieldName: 'approvalAuthority', name: response?.data?.data?.code, parentId: response?.data?.data?.location?.state?._id, location: response?.data?.data?.location })
-          handleChange(response?.data?.data?._id, "state", "ObjectId", "select");
+          handleChange(response?.data?.data?._id, "state", "ObjectId", "select", [], undefined, undefined);
 
           emailData = { recipient: sellingTeamData?.email, subject: 'New Approval Authority Added', templateData: authorityData, fileName: "aqmTemplates/newApprovalAuthority", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           const response1 = await sendEmail(emailData);
@@ -941,92 +971,126 @@ const QuotationDialog = ({
     }
   };
 
-  const renderField = (field, placeholder, subSection, rev) => {
+  interface FieldObject {
+    addNew: string;
+    label: string;
+    name: string;
+    type: string;
+    section: string;
+    subSection?: string;
+    data: { value: any; label: string }[];
+    placeholder?: string;
+    format: string;
+    required?: boolean;
+    readOnly?: boolean;
+    CustomComponent?: React.FC<{ accessData: any }>;
+  }
 
-    switch (field.type) {
+  interface RevType {
+    [key: string]: any;
+    revNo?: string | number;
+  }
 
-      case "multiselect":
+  const renderField = (
+    field: FieldObject | FieldObject[] | undefined,
+    placeholder: string | undefined,
+    subSection: string | undefined,
+    rev: RevType | undefined
+  ) => {
+    if (field && "type" in field) {
+      switch (field.type) {
+        case "multiselect":
+          return (
+            <MultipleSelector
+              value={(field.section === "Form2" ? formDataSecondary[field.name] : formData[field.name])?.map((id: any) => ({
+                value: id,
+                label: field.data?.find((option) => option.value === id)?.label || "Unknown",
+              })) || []}
+              onChange={(selected) => handleChange(selected, field.name, "", "multiselect", field?.data, { ...field, subSection: field.subSection || '' }, rev?.revNo)}
+              options={field.data || []}
+              placeholder={field.placeholder || "Select options..."}
+            />
+          );
 
-        return (
-          <MultipleSelector
-            value={field?.section === 'Form2' ? (formDataSecondary[field.name] || []).map((id) => ({
-              value: id,
-              label: field.data.find((option) => option.value === id)?.label || "Unknown",
-            })) : (formData[field.name] || []).map((id) => ({
-              value: id,
-              label: field.data.find((option) => option.value === id)?.label || "Unknown",
-            }))}
-            onChange={(selected) => handleChange(selected, field.name, "", "multiselect", field?.data, field, rev)}
-            options={field?.data || []}
-            placeholder={field?.placeholder || "Select options..."}
-          />
-        );
-      case "textarea":
-        return (
-          <textarea
-            rows={3}
-            onChange={(e) => handleChange(e, field.name, field?.format, field)}
-            value={formData[field.name] || ""}
-            placeholder={field.placeholder || ""}
-          />
-        );
-      case "select":
-        switch (action === 'Update' && field.name === 'revNo') {
-          case true:
-            return (<Input
-              type='text'
-              onChange={(e) => handleChange(e, field.name, field?.format, 'text', field?.data, field, rev?.revNo)}
-              value={field?.section !== 'CycleTimeDetails' ? (field?.section === 'Form2' ? formDataSecondary[field.name] : formData[field.name]) : (rev?.[field.name] || "")}
+        case "textarea":
+          return (
+            <textarea
+              rows={3}
+              onChange={(e) => handleChange(e, field.name, field?.format, field.type, field.data, field, undefined)}
+              value={formData[field.name] || ""}
+              placeholder={field.placeholder || ""}
+            />
+          );
+
+        case "select":
+          if (action === "Update" && field.name === "revNo") {
+            return (
+              <Input
+                type="text"
+                onChange={(e) => handleChange(e, field.name, field.format, "text", field.data, field, rev?.revNo)}
+                value={
+                  field.section !== "CycleTimeDetails"
+                    ? field.section === "Form2"
+                      ? formDataSecondary[field.name]
+                      : formData[field.name]
+                    : rev?.[field.name] || ""
+                }
+                readOnly={field.readOnly}
+                placeholder={field.placeholder || placeholder || ""}
+                required={field.required || false}
+                className="w-full"
+              />
+            );
+          } else {
+            return <Combobox field={field} formData={field.section === "Form2" ? formDataSecondary : formData} handleChange={handleChange} placeholder={field.placeholder || ""} />;
+          }
+
+        case "date":
+        
+          return (
+            <DatePicker
+              currentDate={field.section !== "CycleTimeDetails" ? formData[field.name] : rev?.[field.name] ? new Date(rev[field.name]) : undefined}
+              handleChange={(selectedDate: { toISOString: () => any; }, setDate: (() => void) | undefined) => {
+                handleChange({ target: { value: selectedDate?.toISOString() || "" } }, 
+                field.name, 
+                field.format, 
+                field.type, 
+                field.data, 
+                field, 
+                rev?.revNo, 
+                setDate);
+                return true;
+              }}
+              placeholder={field.placeholder || ""}
+            />
+          );
+
+        case "custom":
+          return field.CustomComponent ? <field.CustomComponent accessData={formData[field.name]} /> : null;
+
+        default:
+          return (
+            <Input
+              type={field.type}
+              onChange={(e) => handleChange(e, field.name, field.format, field.type, field.data, field, rev?.revNo)}
+              value={
+                field.section !== "CycleTimeDetails"
+                  ? field.section === "Form2"
+                    ? formDataSecondary[field.name]
+                    : formData[field.name]
+                  : rev?.[field.name] || ""
+              }
               readOnly={field.readOnly}
               placeholder={field.placeholder || placeholder || ""}
               required={field.required || false}
               className="w-full"
-            />);
-
-          case false:
-            return <Combobox field={field} formData={field?.section === 'Form2' ? formDataSecondary : formData} handleChange={handleChange} placeholder={field.placeholder || ""} />;
-
-        }
-
-      case "date":
-
-        return (
-
-          <DatePicker
-
-            currentDate={field?.section !== 'CycleTimeDetails' ? formData[field.name] : (rev?.[field.name] ? new Date(rev[field.name]) : undefined)}
-            handleChange={(selectedDate, setDate) => {
-              handleChange(
-                { target: { value: selectedDate?.toISOString() || "" } },
-                field.name,
-                field?.format, field?.type, field?.data, field, rev?.revNo,
-                setDate
-              )
-
-              return true
-            }}
-            placeholder={field.placeholder || ""}
-
-          />
-        );
-      case "custom":
-        return <field.CustomComponent accessData={formData[field.name]} />;
-      default:
-        return (
-          <Input
-            type={field.type}
-            onChange={(e) => handleChange(e, field.name, field?.format, field?.type, field?.data, field, rev?.revNo)}
-            value={field?.section !== 'CycleTimeDetails' ? (field?.section === 'Form2' ? formDataSecondary[field.name] : formData[field.name]) : (rev?.[field.name] || "")}
-            readOnly={field.readOnly}
-            placeholder={field.placeholder || placeholder || ""}
-            required={field.required || false}
-            className="w-full"
-          />
-        );
+            />
+          );
+      }
     }
   };
 
-  const openSecondaryDialog = (type, data, field) => {
+  const openSecondaryDialog = (type: React.SetStateAction<string>, data: React.SetStateAction<never[]>, field: { data: any[]; section: string; subSection?: string; } | undefined) => {
 
     setApprovalAuthorityData(data)
     setFormDataSecondary({});
@@ -1037,12 +1101,12 @@ const QuotationDialog = ({
 
       case "Contact Name":
         setSecondaryFields(customerContactfields);
-        handleChange(formData["company"], "customer", "ObjectId", "select", "Form2", field);
+        handleChange(formData["company"], "customer", "ObjectId", "select", [], field, undefined);
         break;
 
       case "City":
         setSecondaryFields(cityfields);
-        handleChange(formData["country"], "country", "ObjectId", "select", "Form2", field);
+        handleChange(formData["country"], "country", "ObjectId", "select", [], field, undefined);
         break;
 
       case "Approval Authority (GCC Only)":
@@ -1059,7 +1123,7 @@ const QuotationDialog = ({
 
   };
 
-  const openNewDialog = (type) => {
+  const openNewDialog = (type: React.SetStateAction<string>) => {
 
     setFormDataNew({});
 
@@ -1095,11 +1159,12 @@ const QuotationDialog = ({
     // Add new object to existing array
     isProposalOffer && proposalRevData[0]?.sentToCustomer && (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length) && setFormData(formData => ({ ...formData, revNo: proposalRevData[0]?.revNo + 1 }));
 
-    isProposalOffer ? (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length) && proposalRevData[0]?.sentToCustomer && setProposalRevData(prevData => [...prevData, newObjectOffer]) : (drawingRevData.length === initialData?.proposals?.[1]?.revisions.length) && drawingRevData[0]?.sentToCustomer && setDrawingRevData(prevData => [...prevData, newObjectDrawing]);
+    isProposalOffer ? (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length) && proposalRevData[0]?.sentToCustomer && setProposalRevData(prevData => [...prevData, newObjectOffer]) : (drawingRevData.length === initialData?.proposals?.[1]?.revisions.length) && drawingRevData[0]?.sentToCustomer && setDrawingRevData((prevData: any) => [...prevData, newObjectDrawing]);
   };
 
   const handleCheckboxChange = () => {
-    if (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length + 1) {
+  
+    if (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length+1) {
       setIsChecked((prev) => !prev); // Toggle checkbox state
 
       if (!isChecked) {
@@ -1108,8 +1173,8 @@ const QuotationDialog = ({
         setDrawingRevData([...drawingRevData, dataWithoutId]);
       } else {
         // If unchecked, retain only the previous drawingRevData (remove newly added data)
-        setDrawingRevData((prevData) =>
-          prevData.filter((item) => !proposalRevData.some((p) => p._id === item._id))
+        setDrawingRevData((prevData: any[]) =>
+          prevData.filter((item: { _id: any; }) => !proposalRevData.some((p: { _id: any; }) => p._id === item._id))
         );
       }
     }
@@ -1225,7 +1290,7 @@ const QuotationDialog = ({
                                   {field.addNew && <Label className="cursor-pointer text-blue-600  " onClick={() => openSecondaryDialog(field.label, field?.data, field)}>Add New</Label>}
 
                                 </div>
-                                {field.addHelp && <Label className="cursor-pointer text-red-600  " onClick={() => { openSecondaryDialog(field?.title, field?.data); setIsHelp(true) }}>Help</Label>}
+                                {field.addHelp && <Label className="cursor-pointer text-red-600  " onClick={() => { openSecondaryDialog(field?.title, field?.data, undefined); setIsHelp(true) }}>Help</Label>}
                               </div>
 
                               <div className=" flex gap-2 w-full">
@@ -1234,13 +1299,13 @@ const QuotationDialog = ({
                                     ((field.name === 'industryType' && industryType === 'Others') ||
                                       (field.name === 'buildingType' && buildingType === 'Others') || (field.name === 'paintType' && paintType === 'Others') || (field.name === 'incoterm' && incotermDescription))
                                     ? 'w-1/3' : 'w-full'} duration-300`}>
-                                  {renderField(field)}
+                                  {renderField(field, undefined, undefined, undefined)}
                                 </div>
                                 {field?.elementType && <div className={`flex  ${field?.elementType &&
                                   ((field.name === 'industryType' && industryType === 'Others') ||
                                     (field.name === 'buildingType' && buildingType === 'Others') || (field.name === 'paintType' && paintType === 'Others') || (field.name === 'incoterm' && incotermDescription))
                                   ? 'w-2/3' : 'hidden'} duration-300`}>
-                                  {renderField(field?.elementType, incotermDescription)}
+                                  {renderField(field?.elementType, incotermDescription, undefined, undefined)}
                                 </div>}
 
                               </div>
@@ -1316,7 +1381,7 @@ const QuotationDialog = ({
                                           {fields.filter(field => field.subSection === "ProposalOffer").map((field, index) => (
                                             <div key={index} className="flex flex-col gap-1 mb-2">
                                               <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>
-                                              {renderField(field, '', 'ProposalOffer')}
+                                              {renderField(field, '', 'ProposalOffer', undefined)}
                                             </div>
                                           ))}
                                         </div>
@@ -1329,7 +1394,7 @@ const QuotationDialog = ({
                                 <TabsContent value="ProposalDrawing">
                                   <div className="h-full overflow-y-auto px-2">
                                     {action !== 'Add' ? (
-                                      drawingRevData.sort((a, b) => b.revNo - a.revNo).map((rev, revIndex) => (
+                                      drawingRevData.sort((a: { revNo: number; }, b: { revNo: number; }) => (b.revNo as number) - (a.revNo as number)).map((rev: any, revIndex: React.Key | null | undefined) => (
                                         <div key={revIndex} className="mb-4 p-3 bg-white rounded-md shadow-md">
                                           <h3 className="text-base font-semibold mb-2">Proposal Drawing - RevNo: R{rev.revNo}</h3>
                                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1349,7 +1414,7 @@ const QuotationDialog = ({
                                           {fields.filter(field => field.subSection === "ProposalDrawing").map((field, index) => (
                                             <div key={index} className="flex flex-col gap-1 mb-2">
                                               <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>
-                                              {renderField(field, '', 'ProposalDrawing')}
+                                              {renderField(field, '', 'ProposalDrawing', undefined)}
                                             </div>
                                           ))}
                                         </div>
@@ -1392,11 +1457,11 @@ const QuotationDialog = ({
                     Location
                   </div>
                 </div>
-                {approvalAuthorityData?.map((item) => (
+                {approvalAuthorityData?.map((item: any) => (
                   <div key={item._id} className="text-sm w-full flex justify-between">
                     <div className="w-1/2 py-2">{item?.name}</div>
                     <div className="w-1/2 py-2">
-                      {item?.location.map((loc) => (
+                      {item?.location.map((loc: { _id: React.Key | null | undefined; name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; }) => (
                         <div key={loc?._id}>{loc?.name}</div>
                       ))}
                     </div>
@@ -1408,14 +1473,14 @@ const QuotationDialog = ({
               {!isHelp && <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 `}>
 
                 {/* 1 column on small screens, 2 on large */}
-                {secondaryFields.map((field, index) => (
+                {secondaryFields.map((field: FieldObject, index: number) => (
                   <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""}`}>
                     <div className="flex gap-2 items-center">
                       {field.label && <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>}
-                      {field.addNew && <Label className="cursor-pointer text-blue-600 " onClick={() => openNewDialog(field.label)}>Add New</Label>}
+                      {field.addNew && <Label className="cursor-pointer text-blue-600 " onClick={() => openNewDialog(field?.label)}>Add New</Label>}
                     </div>
 
-                    {renderField(field)}
+                    {renderField(field, undefined, undefined, undefined)}
 
                   </div>
                 ))}
@@ -1444,13 +1509,13 @@ const QuotationDialog = ({
               <div className={`grid grid-cols-1 lg:grid-cols-2 gap-4 `}>
 
                 {/* 1 column on small screens, 2 on large */}
-                {newFields.map((field, index) => (
+                {newFields.map((field: FieldObject, index: number) => (
                   <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""}`}>
                     <div className="flex gap-2 items-center">
                       {field.label && <Label>{field.label} {field.required && <span className="text-red-600">*</span>}</Label>}
                       {field.addNew && <Label className="cursor-pointer text-blue-600  border-blue-500" >Add New</Label>}
                     </div>
-                    {renderField(field)}
+                    {renderField(field, undefined, undefined, undefined)}
                   </div>
                 ))}
               </div>

@@ -142,7 +142,8 @@ const WarehousesPage = () => {
                     isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            return response;
+            // handle the response if needed
+            return;
         } catch (error) {
             console.error('Error saving warehouse:', error);
         }
@@ -215,7 +216,7 @@ const WarehousesPage = () => {
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} />
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
             <DynamicDialog<WarehouseFormData>
                 isOpen={isDialogOpen}

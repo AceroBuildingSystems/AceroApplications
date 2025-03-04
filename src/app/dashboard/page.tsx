@@ -24,6 +24,6 @@ export default function Page() {
   const [customLoadingState, setCustomLoadingState] = useState(true);
 
   return (
-    <DashboardLoader loading={customLoadingState}/>
+    <DashboardLoader loading={customLoadingState} children={undefined}/>
   );
 }

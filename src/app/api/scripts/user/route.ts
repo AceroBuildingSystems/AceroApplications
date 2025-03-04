@@ -7,7 +7,7 @@ import { SUCCESS, ERROR, BULK_INSERT, INSERT_ONE } from '@/shared/constants'
 import { userManager } from '@/server/managers/userManager'
 
 
-export async function GET(request:NextRequest,response:NextResponse) {
+export async function GET() {
     try {
         const users = await userManager.getUsers();
        
@@ -20,7 +20,7 @@ export async function GET(request:NextRequest,response:NextResponse) {
 }
 
 
-export async function POST(request:NextRequest,response:NextResponse) {
+export async function POST(request:NextRequest) {
     try {
         await dbConnect()
         const {action,encryptPassword,data} = await request.json()

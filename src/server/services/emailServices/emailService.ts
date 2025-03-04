@@ -58,12 +58,12 @@ export const sendEmail = async (
             html: htmlContent, // Rendered HTML content
         };
 
-        const info = await transporter.sendMail(mailOptions);
+        const info:any = await transporter.sendMail(mailOptions);
         if(info.status === ERROR){
             return info
         }
         return {status:SUCCESS,message: "Email sent!",data:info,statusCode:200}
-    } catch (error) {
+    } catch (error: any) {
         return {status:ERROR,message: "something went wrong",data:error.message,statusCode:500}
     }
 };

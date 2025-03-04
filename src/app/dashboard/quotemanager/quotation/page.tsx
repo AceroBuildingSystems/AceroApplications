@@ -2,27 +2,23 @@
 
 import React from 'react'
 import MasterComponentAQM from '@/components/MasterComponentAQM/MasterComponentAQM'
-import DashboardLoader from '@/components/ui/DashboardLoader'
-import { DataTable } from '@/components/TableComponent/TableComponent'
-import { ArrowUpDown,Plus, Import, Download, Upload } from 'lucide-react';
+import { ArrowUpDown,Plus, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
-import { organisationTransformData, transformDataForExcel, transformQuoteData } from '@/lib/utils';
+import { transformDataForExcel, transformQuoteData } from '@/lib/utils';
 import QuotationDialog from '@/components/AQMModelComponent/AQMComponent';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
+import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
-import { RowExpanding } from '@tanstack/react-table';
-import { createMasterData } from '@/server/services/masterDataServices';
-import { bulkImport, bulkImportQuotation } from '@/shared/functions';
+import { bulkImportQuotation } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-import { useGetApplicationQuery, useCreateApplicationMutation, useLazyGetApplicationQuery } from "@/services/endpoints/applicationApi";
+import { useGetApplicationQuery, useCreateApplicationMutation } from "@/services/endpoints/applicationApi";
 import * as XLSX from "xlsx";
 
 const page = () => {
-    const proposalOffer: unknown = []
-    const proposalDrawing: unknown = []
+    const proposalOffer: any[] = []
+    const proposalDrawing: any[] = []
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
 

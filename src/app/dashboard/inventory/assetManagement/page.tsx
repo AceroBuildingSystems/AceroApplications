@@ -156,7 +156,7 @@ const AssetManagementPage = () => {
     const [actionLoading, setActionLoading] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [assignmentType, setAssignmentType] = useState<'User' | 'Department'>('User');
-    const { user } = useUserAuthorised();
+    const { user }:any = useUserAuthorised();
 
     // API hooks with proper population
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
@@ -374,7 +374,7 @@ const AssetManagementPage = () => {
         try {
             setActionLoading(true);
             // Add to history before clearing current assignment
-            const currentAssignment = { ...asset.currentAssignment };
+            const currentAssignment:any = { ...asset.currentAssignment };
             await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: 'update',
@@ -400,10 +400,10 @@ const AssetManagementPage = () => {
     };
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: AssignmentFormData; action: string }) => {
+    const handleSave = async ({ formData, action }: { formData: AssignmentFormData; action: string }): Promise<void> => {
         try {
             setActionLoading(true);
-            const updatedData = ({
+            const updatedData:any = ({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: 'update',
                 filter: { _id: formData._id },
@@ -431,7 +431,6 @@ const AssetManagementPage = () => {
             const response = await createMaster(updatedData).unwrap();
             setSelectedItem(null);
             toast.success('Asset assigned successfully');
-            return response
         } catch (error) {
             console.error('Error assigning asset:', error);
             toast.error('Failed to assign asset');
@@ -485,7 +484,7 @@ const AssetManagementPage = () => {
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} />
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
             <DynamicDialog<AssignmentFormData>
                 isOpen={isDialogOpen}

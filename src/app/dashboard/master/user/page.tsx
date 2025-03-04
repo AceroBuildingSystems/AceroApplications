@@ -147,7 +147,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], action: "Add", user, createUser, db: undefined, masterName: "User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
   };
 
   const exportToExcel = (data: any[]) => {

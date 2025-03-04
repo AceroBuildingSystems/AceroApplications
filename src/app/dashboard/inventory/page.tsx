@@ -19,6 +19,8 @@ import {
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS } from '@/shared/constants';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
 
 interface MaintenanceRecord {
     status: 'PENDING' | 'COMPLETED' | 'OVERDUE';
@@ -40,7 +42,7 @@ interface Product {
 
 export default function InventoryPage() {
     const router = useRouter();
-    const { data: products = [], isLoading } =  useGetMasterQuery({
+    const { data: products = { data: [] }, isLoading } =  useGetMasterQuery({
             db: MONGO_MODELS.PRODUCT_MASTER,
             filter: { isActive: true },
             populate: ['category']
@@ -48,7 +50,7 @@ export default function InventoryPage() {
 
     // Calculate statistics
     const stats = React.useMemo(() => {
-        if (!products?.data) return {
+        if (!products.data) return {
             totalProducts: 0,
             totalAssets: 0,
             lowStock: 0,

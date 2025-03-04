@@ -37,7 +37,7 @@ interface AssetFormData {
 
 interface SpecificationsComponentProps {
     accessData: Record<string, any>;
-    handleChange: (e: { target: { value: any } }, fieldName: string) => void;
+    handleChange: (e: { target: { value: Record<string, any> } }, fieldName: string) => void;
     selectedItem: any;
 }
 
@@ -66,13 +66,13 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem:select
                 {Object.entries(selectedProduct?.product?.category?.specsRequired || {}).map(([key, value]) => (
                     <div key={key} className="flex gap-2 items-center">
                         <label className="w-1/3 font-medium">{key}:</label>
-                        {value.type === "boolean" ? (
+                        {(value as { type: string }).type === "boolean" ? (
                             <Select
                                 value={String(specs[key]?.value || "false")}
                                 onValueChange={(val) => {
                                     const newSpecs = {
                                         ...specs,
-                                        [key]: {type:value.type,value:val === "true"}
+                                        [key]: {type: (value as { type: string }).type, value: val === "true"}
                                     };
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specifications");
@@ -88,12 +88,12 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem:select
                             </Select>
                         ) : (
                             <Input
-                                type={value.type === "number" ? "number" : "text"}
+                                type={(value as { type: string }).type === "number" ? "number" : "text"}
                                 value={String(specs[key]?.value || "")}
                                 onChange={(e) => {
                                     const newSpecs = {
                                         ...specs,
-                                        [key]: {type:value.type,value:value.type === "number" ? Number(e.target.value) : e.target.value}
+                                        [key]: {type: (value as { type: string }).type, value: (value as { type: string }).type === "number" ? Number(e.target.value) : e.target.value}
                                     };
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specifications");
@@ -398,7 +398,7 @@ const AssetsPage = () => {
     ];
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
+    const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }): Promise<void> => {
         try {
             
             const response = await createMaster({
@@ -411,7 +411,7 @@ const AssetsPage = () => {
                     isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            return response
+            // handle success if needed
         } catch (error) {
             console.error('Error saving asset:', error);
         }
@@ -504,7 +504,7 @@ const AssetsPage = () => {
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} />
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
             <DynamicDialog<AssetFormData>
                 isOpen={isDialogOpen}

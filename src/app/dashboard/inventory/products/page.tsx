@@ -22,7 +22,9 @@ interface ProductFormData {
     brand: string;
     model: string;
     description?: string;
+    unitOfMeasure?: string;
     isActive: string;
+    vendor?: string;
 }
 
 const ProductsPage = () => {
@@ -171,7 +173,7 @@ const ProductsPage = () => {
                 }
             }).unwrap();
 
-            return response;
+            return;
         } catch (error) {
             console.error('Error saving product:', error);
         }
@@ -248,7 +250,7 @@ const ProductsPage = () => {
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} />
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
             <DynamicDialog<ProductFormData>
                 isOpen={isDialogOpen}

@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 
-export const transformData = (data, fieldsToAdd) => {
+export const transformData = (data: any[], fieldsToAdd: any[]) => {
   const transformedData = data?.map((item) => {
     let transformedItem = { ...item };
 
@@ -16,7 +16,7 @@ export const transformData = (data, fieldsToAdd) => {
       const { fieldName, path } = field;
 
       // Get the value from the path and add it to the item with the fieldName
-      const value = path.reduce((acc, part) => acc?.[part], item);
+      const value = path.reduce((acc: { [x: string]: any; }, part: string | number) => acc?.[part], item);
       transformedItem[fieldName] = value || '';  // Default to empty string if value doesn't exist
     });
 
@@ -27,7 +27,7 @@ export const transformData = (data, fieldsToAdd) => {
 };
 
 
-export const organisationTransformData = (data) => {
+export const organisationTransformData = (data: any[]) => {
 
 
   const transformedData = data?.map((organisation) => {
@@ -40,7 +40,7 @@ export const organisationTransformData = (data) => {
   return transformedData
 };
 
-export const transformQuoteData = (data, user, teamMemberData) => {
+export const transformQuoteData = (data: any[], user: { _id: any; role: { name: any; }; }, teamMemberData: any[]) => {
   if (!Array.isArray(data)) {
     return [];
   }
@@ -51,7 +51,7 @@ export const transformQuoteData = (data, user, teamMemberData) => {
 }, []);
   const userId = user?._id;
   const teamRole = teamMemberData?.find(data => data?.user?._id === userId)?.teamRole[0]?.name;
-  return transformData.filter((quote) => {
+  return transformData.filter((quote: { handleBy: any; }) => {
     const handledBy = quote?.handleBy;
 
     if (!handledBy || !userId) return false; // Skip if there's no handledBy data or userId
@@ -87,7 +87,7 @@ export const transformQuoteData = (data, user, teamMemberData) => {
 };
 
 
-export const transformDataForExcel = (data) => {
+export const transformDataForExcel = (data: any[]) => {
   return data.map((item) => ({
     "Region": item.country?.region?.continent?.name || '',
     "Area": item.country?.region?.name || '',

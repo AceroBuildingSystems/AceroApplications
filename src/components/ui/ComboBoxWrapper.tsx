@@ -31,11 +31,11 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={`w-full justify-between ${(field && field?.data?.find((data) => data._id === formData[field.name])?.name ||
-                        field && field?.data?.find((data) => data._id === formData[field.name]?.shortName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
+                    className={`w-full justify-between ${(field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.shortName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
                 >
-                    {field && field?.data?.find((data) => data._id === formData[field.name])?.name ||
-                        field && field?.data?.find((data) => data._id === formData[field.name])?.shortName ||
+                    {field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.shortName ||
                         placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -65,7 +65,7 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                                 All
                             </CommandItem>
 
-                            {field?.data?.map((data) => (
+                            {field?.data?.map((data: { _id: React.Key | null | undefined; name: string | undefined; shortName: any }) => (
                                 <CommandItem
                                     className="cursor-pointer"
                                     key={data._id}

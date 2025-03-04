@@ -59,7 +59,7 @@ export async function PUT(request:NextRequest) {
   const body = await request.json()
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET})
 
-  let response = {}
+  let response:any = {}
   
   if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED,data:{}}, { status: 400 })
   if(!body.data.id) {

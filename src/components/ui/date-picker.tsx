@@ -30,7 +30,7 @@ export function DatePicker({
   placeholder
 }: DatePickerProps) {
 
-  const [date, setDate] = React.useState<Date>(currentDate);
+  const [date, setDate]:any = React.useState<Date | undefined>(currentDate);
 
   const months = [
     'January',

@@ -4,7 +4,6 @@ import { MenuItem } from '../types';
 import * as XLSX from "xlsx";
 import { toast } from 'react-toastify';
 import { SUCCESS } from '@/shared/constants';
-import { IndustryType, Quotation, QuoteStatus } from '@/models';
 
 
 export const createMongooseObjectId = (id: any) => {
@@ -67,7 +66,19 @@ export const isObjectEmpty = (obj: any) => {
 };
 
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, action, user, createUser, db, masterName }) => {
+interface BulkImportParams {
+    roleData: any;
+    continentData: any;
+    regionData: any;
+    countryData: any;
+    action: string;
+    user: any;
+    createUser: (data: any) => Promise<any>;
+    db: string;
+    masterName: string;
+}
+
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, action, user, createUser, db, masterName }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -84,7 +95,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
             const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
             // Transform the sheet data based on the entity
-            const formData = mapExcelToEntity(sheetData, masterName);
+            const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
             const referenceData = {
                 roleData: roleData?.data || [],
                 continentData: continentData?.data || [],
@@ -95,7 +106,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
 
-            const enrichedData = finalData.map((item) => ({
+            const enrichedData = finalData.map((item: any) => ({
                 ...item,
                 addedBy: user?._id,
                 updatedBy: user?._id,
@@ -126,7 +137,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
                 }
             } catch (err) {
-                toast.error(`Error during import: ${err.message}`);
+                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                toast.error(`Error during import: ${errorMessage}`);
             }
         };
         reader.readAsBinaryString(file);
@@ -134,6 +146,34 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
     input.click();
 };
 
+
+interface BulkImportQuotationParams {
+    roleData: any;
+    continentData: any;
+    regionData: any;
+    countryData: any;
+    quoteStatusData: any;
+    teamMemberData: any;
+    teamData: any;
+    customerData: any;
+    customerContactData: any;
+    customerTypeData: any;
+    sectorData: any;
+    industryData: any;
+    buildingData: any;
+    stateData: any;
+    approvalAuthorityData: any;
+    projectTypeData: any;
+    paintTypeData: any;
+    currencyData: any;
+    incotermData: any;
+    quotationData: any;
+    action: string;
+    user: any;
+    createUser: (data: any) => Promise<any>;
+    db: string;
+    masterName: string;
+}
 
 export const bulkImportQuotation = async ({ roleData, continentData, regionData, countryData,
     quoteStatusData,
@@ -150,7 +190,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
     projectTypeData,
     paintTypeData,
     currencyData,
-    incotermData, quotationData, action, user, createUser, db, masterName }) => {
+    incotermData, quotationData, action, user, createUser, db, masterName }: BulkImportQuotationParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -167,7 +207,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
             const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
             // Transform the sheet data based on the entity
-            const formData = mapExcelToEntity(sheetData, masterName);
+            const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
             const referenceData = {
                 roleData: roleData?.data || [],
                 continentData: continentData?.data || [],
@@ -190,7 +230,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 incotermData: incotermData?.data || []
             };
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
-            const enrichedData = finalData.map((item) => ({
+            const enrichedData = finalData.map((item: any) => ({
                 ...item,
                 addedBy: user?._id,
                 updatedBy: user?._id,
@@ -198,7 +238,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
             // Send the transformed data for bulk insert
             try {
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
-                const revisionData = enrichedData.map((item) => [
+                const revisionData = enrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
                     {
                         revNo: item.revNo,
                         sentToEstimation: item.sentToEstimation,
@@ -232,13 +272,13 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     throw new Error(revisionResponse.error.data.message);
                 }
 
-                const insertedRevisions = revisionResponse?.data?.data?.map(item => item._id).filter(Boolean);
+                const insertedRevisions = revisionResponse?.data?.data?.map((item: { _id: any; }) => item._id).filter(Boolean);
                 if (insertedRevisions.length !== revisionData.length) {
                     throw new Error("Mismatch in inserted ProposalRevision records.");
                 }
-     
+
                 // Step 2: Insert Proposal Entries
-                const proposalData = enrichedData.map((item, index) => [
+                const proposalData = enrichedData.map((item: { addedBy: any; updatedBy: any; }, index: number) => [
                     {
                         revisions: [insertedRevisions[index * 2]], // ProposalOffer revision ID
                         type: "ProposalOffer",
@@ -263,14 +303,14 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 if (proposalResponse.error) {
                     throw new Error(proposalResponse.error.data.message);
                 }
-                const insertedProposals = proposalResponse?.data?.data?.map(item => item._id).filter(Boolean);
+                const insertedProposals = proposalResponse?.data?.data?.map((item: { _id: any; }) => item._id).filter(Boolean);
 
                 if (insertedProposals.length !== proposalData.length) {
                     throw new Error("Mismatch in inserted Proposal records.");
                 }
 
                 // Step 3: Insert Quotation Entries
-                const quotationDataImport = enrichedData.map((item, index) => ({
+                const quotationDataImport = enrichedData.map((item: { country: any; year: any; option: any; revNo: any; quoteNo: any; quoteStatus: any; salesEngineer: any; salesSupportEngineer1: any; salesSupportEngineer2: any; salesSupportEngineer3: any; rcvdDateFromCustomer: any; sellingTeam: any; responsibleTeam: any; forecastMonth: string | number; status: any; handleBy: any; addedBy: any; updatedBy: any; }, index: number) => ({
                     country: item.country,
                     year: item.year,
                     option: item.option,
@@ -283,7 +323,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     rcvdDateFromCustomer: item.rcvdDateFromCustomer,
                     sellingTeam: item.sellingTeam,
                     responsibleTeam: item.responsibleTeam,
-                    forecastMonth: monthMap[item.forecastMonth] ?? null,
+                    forecastMonth: monthMap[item?.forecastMonth as keyof typeof monthMap] ?? null,
                     status: item.status,
                     handleBy: item.handleBy,
                     addedBy: item.addedBy,
@@ -291,16 +331,16 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 }));
 
                 const existingSet = new Set(
-                    quotationData?.data?.map(record => `${record.year}-${record.quoteNo}-${record.option}`)
+                    quotationData?.data?.map((record: { year: any; quoteNo: any; option: any; }) => `${record.year}-${record.quoteNo}-${record.option}`)
                 );
 
                 // Filter out duplicates from dataToImport before inserting
-                const filteredDataToImport = quotationDataImport.filter(item =>
+                const filteredDataToImport = quotationDataImport.filter((item: { year: any; quoteNo: any; option: any; }) =>
                     !existingSet.has(`${item.year}-${item.quoteNo}-${item.option}`)
                 );
 
                 const uniqueSet = new Set();
-                const uniqueDataToImport = filteredDataToImport?.filter(item => {
+                const uniqueDataToImport = filteredDataToImport?.filter((item: { year: any; quoteNo: any; option: any; }) => {
                     const key = `${item.year}-${item.quoteNo}-${item.option}`;
                     if (uniqueSet.has(key)) {
                         return false; // Duplicate found, exclude it
@@ -325,7 +365,8 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
 
 
             } catch (err) {
-                toast.error(`Error during import: ${err.message}`);
+                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                toast.error(`Error during import: ${errorMessage}`);
             }
         };
         reader.readAsBinaryString(file);
@@ -333,7 +374,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
     input.click();
 };
 
-const fieldMappingConfig = {
+const fieldMappingConfig: { [key: string]: any } = {
     User: {
         role: { source: "roleData", key: "name", value: "_id" },
     },
@@ -353,7 +394,7 @@ const fieldMappingConfig = {
             source: "teamMemberData",
             key: "user.shortName", // Accessing shortName from the User table via TeamMember
             value: "_id",
-            transform: (name, teamMemberData) => {
+            transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
                     return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
@@ -365,7 +406,7 @@ const fieldMappingConfig = {
             source: "teamMemberData",
             key: "user.shortName", // Accessing shortName from the User table via TeamMember
             value: "_id",
-            transform: (name, teamMemberData) => {
+            transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
                     return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
@@ -377,7 +418,7 @@ const fieldMappingConfig = {
             source: "teamMemberData",
             key: "user.shortName", // Accessing shortName from the User table via TeamMember
             value: "_id",
-            transform: (name, teamMemberData) => {
+            transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
                     return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
@@ -389,7 +430,7 @@ const fieldMappingConfig = {
             source: "teamMemberData",
             key: "user.shortName", // Accessing shortName from the User table via TeamMember
             value: "_id",
-            transform: (name, teamMemberData) => {
+            transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
                     return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
@@ -415,7 +456,7 @@ const fieldMappingConfig = {
             source: "teamMemberData",
             key: "user.shortName", // Accessing shortName from the User table via TeamMember
             value: "_id",
-            transform: (name, teamMemberData) => {
+            transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
                     return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
@@ -428,17 +469,18 @@ const fieldMappingConfig = {
 };
 
 
-const mapFieldsToIds = (data, entityType, referenceData) => {
+const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; }) => {
 
-    const mappings = fieldMappingConfig[entityType];
+    const mappings = fieldMappingConfig[entityType as keyof typeof fieldMappingConfig];
 
     return data.map((item) => {
         const transformedItem = { ...item };
         if (mappings) {
-            Object.entries(mappings).forEach(([field, { source, key, value, transform }]) => {
-        
+            Object.entries(mappings).forEach(([field, mapping]) => {
+                const { source, key, value, transform } = mapping as { source: string, key: string, value: string, transform?: Function };
+
                 const referenceArray = referenceData[source]?.data || referenceData[source];
-              
+
                 if (!Array.isArray(referenceArray)) {
                     console.error(`Invalid reference data for source: ${source}`, referenceData[source]);
                     transformedItem[field] = undefined; // Default to empty if reference data is invalid
@@ -447,7 +489,7 @@ const mapFieldsToIds = (data, entityType, referenceData) => {
 
                 if (transform) {
                     // Apply transform function if defined
-          
+
                     transformedItem[field] = transform(item[field], referenceArray);
                 } else {
                     // Default mapping lookup
@@ -477,7 +519,7 @@ export const validate = {
         if (value.length > 100) return "Must be less than 100 characters";
         return undefined;
     },
-    textSmall:(value: string) => {
+    textSmall: (value: string) => {
         if (value.length < 2) return "Must be at least 2 characters";
         if (value.length > 50) return "Must be less than 50 characters";
         return undefined;
@@ -494,22 +536,22 @@ export const validate = {
         const phoneRegex = /^\d{10}$/;
         return phoneRegex.test(value) ? undefined : "Invalid phone number";
     },
-    email:(value: string) => {
+    email: (value: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(value)) return "Invalid email address";
         if (value.length < 5) return "Email must be at least 5 characters";
         if (value.length > 100) return "Email must be less than 100 characters";
         return undefined;
     },
-    desription:(value: string) => {
+    desription: (value: string) => {
         if (value && value.length > 500) return "Description must be less than 500 characters";
         return undefined;
     },
-    specification:(value: Record<string, string>) => {
+    specification: (value: Record<string, string>) => {
         if (Object.keys(value).length === 0) return "At least one specification is required";
         return undefined;
     },
-    mixString:(value: string) => {
+    mixString: (value: string) => {
         if (!/^[A-Z0-9-]+$/.test(value)) {
             return "Must contain only uppercase letters, numbers, and hyphens";
         }
@@ -521,14 +563,14 @@ export const validate = {
         }
         return undefined;
     },
-    notFutureDate:(value: string) => {
+    notFutureDate: (value: string) => {
         const purchaseDate = new Date(value);
         if (purchaseDate > new Date()) {
             return "Dateate cannot be in the future";
         }
         return undefined;
     },
-    locationSelected:(value: string) => {
+    locationSelected: (value: string) => {
         if (!value) return "Location must be selected";
         return undefined;
     }
@@ -689,15 +731,15 @@ const entityFieldMappings = {
     // Add mappings for other entities
 };
 
-const mapExcelToEntity = (excelData, entityType) => {
+const mapExcelToEntity = (excelData: any[], entityType: keyof typeof entityFieldMappings) => {
 
     const mappings = entityFieldMappings[entityType];
     return excelData.map((row) =>
-        Object.keys(row).reduce((acc, key) => {
-            const mappedKey = mappings[key];
+        Object.keys(row).reduce((acc: Record<string, any>, key) => {
+            const mappedKey = (mappings as Record<string, string>)[key];
             if (mappedKey) acc[mappedKey] = row[key];
             return acc;
-        }, {})
+        }, {} as Record<string, any>)
     );
 };
 

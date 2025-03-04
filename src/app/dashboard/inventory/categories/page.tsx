@@ -22,11 +22,11 @@ interface CategoryFormData {
 }
 
 const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Record<string, "string" | "number" | "boolean">; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
-    const [specs, setSpecs] = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
+    const [specs, setSpecs]:any = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
     const [newSpecName, setNewSpecName] = useState('');
     const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
     const [unitMeasurement,setUnitMeasurement] = useState<string>('');  
-    const { data: unitMeasurementData = [], isLoading:unitMeasurementLoading } = useGetMasterQuery({
+    const { data: unitMeasurementData = [], isLoading:unitMeasurementLoading }:any = useGetMasterQuery({
         db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
         filter: { isActive: true }
     });
@@ -42,8 +42,8 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                     {Object.entries(specs).map(([key, value], index) => (
                         <div key={index} className="flex items-center gap-2 p-2 border rounded">
                             <span className="flex-1 font-medium">{key}</span>
-                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find(unit=>unit._id === value.unit)?.name)}</Badge>
-                            <Badge variant="primary">{String(value.type)}</Badge>
+                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find((unit: { _id: any; })=>unit._id === (value as { unit: string }).unit)?.name)}</Badge>
+                            <Badge variant="default">{String((value as { type: string }).type)}</Badge>
                             <Button
                                 type="button"
                                 variant="destructive"
@@ -78,7 +78,7 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                             <SelectValue placeholder="unit" />
                         </SelectTrigger>
                         <SelectContent>
-                            {unitMeasurementData && unitMeasurementData?.data?.map(unitData=>{
+                            {unitMeasurementData && unitMeasurementData?.data?.map((unitData: { _id: string; name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; })=>{
                                 return <SelectItem value={unitData._id}>{unitData.name}</SelectItem>
                             })}
                         </SelectContent>
@@ -208,7 +208,7 @@ const ProductCategoriesPage = () => {
                     <div className="flex flex-wrap gap-1 max-w-[300px]">
                         {Object.entries(specs).map(([key, value], index) => (
                             <Badge key={index} variant="outline">
-                                {key}: {String(value?.type || "")}
+                                {key}: {String((value as { type: string }).type || "")}
                             </Badge>
                         ))}
                     </div>
@@ -227,9 +227,9 @@ const ProductCategoriesPage = () => {
     ];
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }) => {
+    const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }): Promise<void> => {
         try {
-            const response = await createMaster({
+            await createMaster({
                 db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
@@ -238,7 +238,6 @@ const ProductCategoriesPage = () => {
                     isActive: formData.isActive ?? true
                 }
             });
-            return response;
         } catch (error) {
             console.error('Error saving category:', error);
         }
@@ -302,7 +301,7 @@ const ProductCategoriesPage = () => {
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} />
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
             <DynamicDialog<CategoryFormData>
                 isOpen={isDialogOpen}

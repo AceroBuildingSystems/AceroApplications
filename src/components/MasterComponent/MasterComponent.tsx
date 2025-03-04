@@ -2,15 +2,12 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from '../ui/button';
-import { Plus, Import, Download, Upload, ChevronsUpDown, Check } from 'lucide-react';
+import { ChevronsUpDown, Check } from 'lucide-react';
 
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
-import { SelectGroup, SelectItem, SelectLabel } from '@radix-ui/react-select';
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { useEffect } from 'react';
 import { ObjectId } from 'mongoose';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
@@ -34,12 +31,6 @@ interface ButtonConfig {
     action: () => void; // Function to handle button click
     icon?: React.ElementType; // Icon for the button
     className?: string; // Optional CSS class for styling
-}
-
-// Interface for Data Table configuration
-interface DataTableConfig {
-    columns: ColumnConfig[]; // Column names for the table
-    data: Record<string, string | number | object | Date | ObjectId>[]; // Array of rows where each row is an object with column data
 }
 
 interface MasterComponentProps {
@@ -87,7 +78,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const filterData = (searchValues: any, filterValues: any) => {
 
 
-        const filtered = config?.dataTable?.data?.filter((item) => {
+        const filtered = config?.dataTable?.data?.filter((item: { [x: string]: string; }) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
@@ -133,7 +124,23 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
     const [open, setOpen] = React.useState(false)
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
-   
+
+   interface FieldObject {
+       options: any;
+    key:string;
+       addNew: string;
+       label: string;
+       name: string;
+       type: string;
+       section: string;
+       subSection?: string;
+       data: { value: any; label: string }[];
+       placeholder?: string;
+       format: string;
+       required?: boolean;
+       readOnly?: boolean;
+       CustomComponent?: React.FC<{ accessData: any }>;
+     }
 
     return (
         <>
@@ -144,7 +151,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                     <div className='flex flex-row items-center justify-between'>
                         <div className="flex flex-row items-center gap-2">
                             {/* Render search fields */}
-                            <div className='flex items-center gap-1'>{config.searchFields?.map((field, index) => (
+                            <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
                                 <div key={index}>
 
                                     <Input
@@ -159,7 +166,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
 
                             <div className='flex items-center gap-1'>
-                                {config.filterFields?.map((field, index) => (
+                                {config.filterFields?.map((field: FieldObject, index: number) => (
                                     <div key={index}>
                                         <Popover open={open} onOpenChange={setOpen}>
                                             <PopoverTrigger asChild>
@@ -178,7 +185,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                                     <CommandInput placeholder="Search role" />
 
                                                     <CommandList>
-                                                        <CommandEmpty>No {field.key} found.</CommandEmpty>
+                                                        <CommandEmpty>No {field?.key} found.</CommandEmpty>
                                                         <CommandGroup>
                                                             {/* Add "All" option */}
                                                             <CommandItem
@@ -198,13 +205,13 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                                                 All
                                                             </CommandItem>
 
-                                                            {field?.options?.map((option, i) => {
+                                                            {field?.options?.map((option: string, i: number) => {
 
                                                                 return (
                                                                     <CommandItem
                                                                         key={i}
                                                                         value={option}
-                                                                        onSelect={(value) => {
+                                                                        onSelect={(value: string) => {
 
                                                                             handleFilterChange(value?.toProperCase(), field.label);
                                                                             setOpen(false)
@@ -233,7 +240,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                         <div className='flex gap-1'>
                             {/* Button Section */}
-                            {config.buttons?.map((button, index) => (
+                            {config.buttons?.map((button: ButtonConfig & { dropdownOptions?: { label: string; value: any; action: (value: any) => void; }[] }, index: number) => (
                                 <div key={index} className="relative">
                                     {/* Button */}
                                     <Button

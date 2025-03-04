@@ -1,5 +1,11 @@
-import { Condition } from './types';
 
+interface Condition {
+  field: string;
+  operator: string;
+  value: any;
+  or?: boolean;
+  and?: boolean;
+}
 const operatorMap: { [key: string]: string } = {
   is: '$eq',
   equals: '$eq',

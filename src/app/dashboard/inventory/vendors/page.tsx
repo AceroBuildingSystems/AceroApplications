@@ -262,9 +262,9 @@ const VendorsPage = () => {
     ];
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: VendorFormData; action: string }) => {
+    const handleSave = async ({ formData, action }: { formData: VendorFormData; action: string }): Promise<void> => {
         try {
-            const response = await createMaster({
+            await createMaster({
                 db: MONGO_MODELS.VENDOR_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
@@ -273,7 +273,6 @@ const VendorsPage = () => {
                     isActive: formData.isActive ?? true
                 }
             }).unwrap();
-            return response;
         } catch (error) {
             console.error('Error saving vendor:', error);
         }
@@ -347,7 +346,7 @@ const VendorsPage = () => {
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} />
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
             
             <DynamicDialog<VendorFormData>
                 isOpen={isDialogOpen}

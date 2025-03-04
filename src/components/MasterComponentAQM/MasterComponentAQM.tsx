@@ -2,27 +2,23 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from '../ui/button';
-import { Plus, Import, Download, Upload, ChevronsUpDown, Check, Filter, FilterX } from 'lucide-react';
-import { use } from 'chai';
+import { Check, Filter, FilterX } from 'lucide-react';
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
-import { SelectGroup, SelectItem, SelectLabel } from '@radix-ui/react-select';
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 import { useEffect } from 'react';
 import { ObjectId } from 'mongoose';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { cn } from '@/lib/utils';
-import jsPDF from 'jspdf';
-import * as XLSX from "xlsx";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
 
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
+    name: string;
+    filterBy: string;
     key: string
     label: string; // The label for the field
     type: 'text' | 'email' | 'select'; // Type of the field (input or select)
@@ -124,19 +120,16 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
 
-        const filtered = config?.dataTable?.data?.filter((item) => {
+        const filtered = config?.dataTable?.data?.filter((item: { [x: string]: string; }) => {
             // Check if item matches search criteria
             const matchesSearch = searchFields.some((field) => {
-                // Make sure the field exists in the item and is not null/undefined
-                // console.log(item)
-                // console.log(field)
-                const value = item[field];
+              
+                const value:any = item[field];
                 const searchQuery = searchValues['name'] || '';
                 console.log(searchQuery, value);
-                // console.log(value);
-                // Check if the field value matches the search query
+              
                 if (value) {
-                    const fieldValue = typeof value === 'object' && value !== null ? value?.name : value;
+                    const fieldValue = typeof value === 'object' && value !== null && 'name' in value ? value.name : value;
                     return fieldValue.toString().toLowerCase().includes(searchQuery.toString().toLowerCase());
                 }
                 else {
@@ -153,9 +146,9 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                 if (filterValue === null) return true;
 
                 // Use filterBy to determine comparison
-                if (field.filterBy === "id") {
+                if (field?.filterBy === "id") {
 
-                    return item[key]?.name === filterValue; // Compare ID for quoteStatus
+                    return typeof item[key] === "object" && item[key] !== null && "name" in (item[key] as { name: string }) && (item[key] as { name: string }).name === filterValue;
                 } else {
                     return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
                 }
@@ -208,7 +201,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                                     <div className="flex items-center gap-2 flex-wrap">
                                         {/* Render Filter Buttons */}
-                                        {config?.filterFields?.map((filter, index) => (
+                                        {config?.filterFields?.map((filter: FieldConfig, index: React.Key | null | undefined) => (
                                             <React.Fragment key={index}>
                                                 <Button
                                                     variant={activeFilters.some((f) => f.key === filter.key) ? "default" : "outline"}
@@ -247,12 +240,12 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                                             <CommandList>
                                                                 <CommandEmpty>No {field.label} found.</CommandEmpty>
                                                                 <CommandGroup>
-                                                                    {field.options?.map((option) => (
+                                                                    {field.options?.map((option:any) => (
                                                                         field.filterBy === 'id' ?
                                                                             <CommandItem
-                                                                                key={option.id}
+                                                                                key={option?.id}
                                                                                 onSelect={() => {
-                                                                                    handleFilterChange(option.name, field.label);
+                                                                                    handleFilterChange(option?.name, field.label);
                                                                                     toggleFilterOpen(field.key, false); // Close Popover
                                                                                 }}
                                                                             >
@@ -308,13 +301,13 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                             {/* Search Text Bar & Filters (Now filters start from here) */}
                             <div className="flex items-center gap-1  flex-grow">
                                 {/* Search Fields */}
-                                {config.searchFields?.map((field, index) => (
-                                    <div key={index} className="flex-1  max-w-[200px]">
+                                {config.searchFields?.map((field: FieldConfig, index: number) => (
+                                    <div key={index} className="flex-1 max-w-[200px]">
                                         <Input
                                             type={field.type}
                                             placeholder={field.placeholder}
                                             value={searchValues[field.label] || ''}
-                                            onChange={(e) => handleSearchChange(e, field.label)}
+                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearchChange(e, field.label)}
                                             className="w-full"
                                         />
                                     </div>
@@ -326,7 +319,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                         {/* Button Section */}
                         <div className="flex gap-1">
-                            {config.buttons?.map((button, index) => (
+                            {config.buttons?.map((button: ButtonConfig & { dropdownOptions?: { label: string; value: string }[] }, index: number) => (
                                 <div key={index} className="relative">
                                     <Button
                                         effect="expandIcon"

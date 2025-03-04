@@ -1,11 +1,17 @@
 // authOptions.ts
-import NextAuth, { AuthOptions } from "next-auth";
+import NextAuth, { AuthOptions, Session } from "next-auth";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { dbConnect } from "@/lib/mongoose";
 import { Access, User } from "@/models";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+
+declare module "next-auth" {
+  interface Session {
+    menuItems?: any;
+  }
+}
 
 export const authOptions: AuthOptions = {
   providers: [
@@ -43,16 +49,20 @@ export const authOptions: AuthOptions = {
     },
     async session({ session }) {
       await dbConnect();
+      if (!session.user) {
+        console.error("Session user is undefined");
+        return session;
+      }
       const user = await User.findOne({ email: session.user.email });
       if (!user) {
         console.error("User not found");
         return session;
       }
       session.user = user;
-      const accessIdsUnfiltered = user.access.map((data: { accessId: any }) => data.accessId);
+      const accessIdsUnfiltered = Array.isArray(user.access) ? user.access.map((data: { accessId: any }) => data.accessId) : [];
       const accessIds = accessIdsUnfiltered.filter((id: any) => id);
       const accessMap = new Map(
-        user.access
+        (Array.isArray(user.access) ? user.access : [])
           .filter((data: { permissions: any }) => data.permissions.view)
           .map((data: { accessId: any; permissions: any }) => [
             data.accessId?._id?.toString(),

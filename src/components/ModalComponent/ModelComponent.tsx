@@ -68,7 +68,7 @@ function DynamicDialog<T extends BaseFormData>({
   width,
   isSubmitting = false,
 }: DynamicDialogProps<T>) {
-  const { user } = useUserAuthorised();
+  const { user }:any = useUserAuthorised();
   const [formData, setFormData] = useState<Partial<T>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -94,8 +94,7 @@ function DynamicDialog<T extends BaseFormData>({
     type?: string,
     data?: any[],
     field?: Field,
-    revNo, customFunction = () => { }
-  ) => {
+    customFunction = (dateValue: any) => { }  ) => {
     let value: any = "";
 
     ////////// Needs refactoring cant hardcode
@@ -124,7 +123,7 @@ function DynamicDialog<T extends BaseFormData>({
         ...prev,
         [fieldName]: formattedValue,
       };
-
+console.log(updatedFormData);
       // Call field's onChange handler if provided
       if (field?.onChange) {
         field.onChange(formattedValue);
@@ -284,11 +283,11 @@ function DynamicDialog<T extends BaseFormData>({
                               
                                 <DatePicker
                                   currentDate={formData[field.name]|| undefined}
-                                  handleChange={(selectedDate, setDate) => {
+                                  handleChange={(selectedDate: { toISOString: () => any; }, setDate: any) => {
                                     handleChange(
                                       { target: { value: selectedDate?.toISOString() || "" } },
                                       field.name,
-                                      field?.format, field?.type, field?.data, field, '',
+                                      field?.format, field?.type, field?.data, field,
                                       setDate
                                     )
                       

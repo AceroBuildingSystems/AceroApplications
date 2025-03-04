@@ -10,8 +10,8 @@ import {
 } from "./types";
 import { QueryResult } from "./types";
 import { Model, Document } from "mongoose";
-import bcrypt from "bcrypt";
 import { dbConnect } from "@/lib/mongoose";
+import bcrypt from 'bcrypt';
 
 interface MultiQuery {
   action: "find" | "create" | "update" | "delete";
@@ -121,7 +121,7 @@ export class MongooseAdapter implements DatabaseAdapter {
     if (options.populate && options.populate.length > 0) {
       // If populate options are explicitly given, use them
       options.populate.forEach((p) => {
-        query = query.populate(p);
+        query = query.populate(typeof p === 'string' ? { path: p } : p);
       });
     } else {
       // Auto-populate all ref fields
@@ -328,7 +328,7 @@ export class MongooseAdapter implements DatabaseAdapter {
         if(Array.isArray(data)){
           if(itemMatcher){
             data.forEach(d=>{
-              const matchIndex = array.findIndex(doc=>doc[itemMatcher] === d[itemMatcher])
+              const matchIndex = array.findIndex((doc: { [x: string]: any; })=>doc[itemMatcher] === d[itemMatcher])
               if(matchIndex !== -1){
                 array[matchIndex][itemMatcher] = d
               }else{

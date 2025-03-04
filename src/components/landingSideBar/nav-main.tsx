@@ -55,7 +55,7 @@ const CreateSideBarItems = ({item}:any)=>{
     </CollapsibleTrigger>
     <CollapsibleContent>
       <SidebarMenuSub>
-        {item.items?.map((subItem) => (
+        {item.items?.map((subItem: { title: any; }) => (
           <CreateSideBarItems key={subItem.title} item={subItem} />
         ))}
       </SidebarMenuSub>

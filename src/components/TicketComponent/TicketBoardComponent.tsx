@@ -82,7 +82,8 @@ const DroppableColumn = ({ id, children }) => {
   return (
     <div 
       ref={setNodeRef}
-      className={`space-y-3 min-h-[500px] p-2 rounded-md transition-colors ${isOver ? 'bg-gray-100' : ''}`}
+      className={`space-y-3 min-h-[500px] p-2 rounded-md transition-all duration-200 
+                  ${isOver ? 'bg-blue-50 ring-2 ring-blue-300' : ''}`}
     >
       {children}
     </div>
@@ -226,8 +227,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       }).unwrap();
       
       console.log("Update ticket response:", response);
-      console.log({response})
-      if (response && response.status === 'Success') {
+      
+      // Check for both SUCCESS and Success (case insensitive)
+      if (response && (response.status === 'SUCCESS' || response.status === 'Success')) {
         toast.success(`Ticket status updated to ${newStatus}`);
         return true;
       } else {
@@ -335,11 +337,12 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       return;
     }
     
-    // Update state optimistically
-    const newColumns = { ...columns };
+    // Create a deep copy of columns for state updates to avoid reference issues
+    const originalColumns = JSON.parse(JSON.stringify(columns));
+    const newColumns = JSON.parse(JSON.stringify(columns));
     
     // Remove from source column
-    newColumns[sourceColumnId].tickets.splice(ticketIndex, 1);
+    newColumns[sourceColumnId].tickets = newColumns[sourceColumnId].tickets.filter(t => t._id !== ticketId);
     
     // Update ticket status
     const updatedTicket = { ...ticket, status: newStatus };
@@ -347,16 +350,23 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // Add to destination column
     newColumns[destinationColumnId].tickets.push(updatedTicket);
     
-    // Update state
+    // Update state optimistically
     setColumns(newColumns);
     
     // Update in backend
-    const success = await updateTicketStatus(ticket._id, newStatus);
-    
-    if (!success) {
-      console.log("Status update failed, reverting state");
+    try {
+      const success = await updateTicketStatus(ticket._id, newStatus);
+      
+      if (!success) {
+        console.log("Status update failed, reverting state");
+        // Revert state on error with a deep copy to ensure re-render
+        setColumns(originalColumns);
+      }
+    } catch (error) {
+      console.error("Error updating ticket status:", error);
+      toast.error("Failed to update ticket status");
       // Revert state on error
-      setColumns({ ...columns });
+      setColumns(originalColumns);
     }
   };
 

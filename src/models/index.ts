@@ -40,6 +40,12 @@ import Warehouse from "./master/Warehouse.model"
 import Inventory from "./master/Inventory.model"
 import UnitMeasurement from "./master/UnitMeasurement"
 import Option from "./aqm/OptionsModel.model"
+import Ticket from "./ticket/Ticket.model";
+import TicketCategory from "./ticket/TicketCategory.model";
+import TicketComment from "./ticket/TicketComment.model";
+import TicketTask from "./ticket/TicketTask.model";
+import TicketHistory from "./ticket/TicketHistory.model";
+import UserSkill from "./ticket/UserSkill.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -48,5 +54,12 @@ export {
     PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
     ProposalRevisions, Proposal, Quotation,Option,
     // Asset and Inventory exports
-    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement,
+    // Tickets
+    Ticket,
+    TicketCategory,
+    TicketComment,
+    TicketTask,
+    TicketHistory,
+    UserSkill,
 }

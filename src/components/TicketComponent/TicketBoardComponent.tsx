@@ -107,6 +107,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [selectedAssignee, setSelectedAssignee] = useState('');
   const [ticketToAssign, setTicketToAssign] = useState<Ticket | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Set up sensors for drag and drop with activation constraints to help differentiate from clicks
   const sensors = useSensors(
@@ -278,12 +279,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     
-    // Reset active drag ticket
-    setActiveDragId(null);
-    setActiveTicket(null);
-    
     if (!active || !over) {
-      console.log("Missing active or over in drag event");
+      setActiveDragId(null);
+      setActiveTicket(null);
       return;
     }
     
@@ -291,11 +289,10 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     const ticketId = active.id as string;
     const overId = over.id as string;
     
-    console.log("Drag ended:", { ticketId, overId });
-    
-    // Make sure we only process drops on columns, not on other tickets
+    // Make sure we only process drops on columns
     if (!columns[overId]) {
-      console.log("Not a valid column ID:", overId);
+      setActiveDragId(null);
+      setActiveTicket(null);
       return;
     }
     
@@ -304,15 +301,17 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // Find source column and ticket
     const source = findColumnOfTicket(ticketId);
     if (!source) {
-      console.error("Could not find source ticket:", ticketId);
+      setActiveDragId(null);
+      setActiveTicket(null);
       return;
     }
     
     const { columnId: sourceColumnId, ticketIndex } = source;
     
-    // If dropped in the same column, do nothing
+    // If dropped in the same column, just clean up
     if (sourceColumnId === destinationColumnId) {
-      console.log("Dropped in same column, no action needed");
+      setActiveDragId(null);
+      setActiveTicket(null);
       return;
     }
     
@@ -320,24 +319,30 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     const ticket = columns[sourceColumnId].tickets[ticketIndex];
     const newStatus = columns[destinationColumnId].status;
     
-    console.log("Moving ticket:", { ticket, fromStatus: ticket.status, toStatus: newStatus });
-    
     // Special case for assigning a ticket
     if (destinationColumnId === 'assigned' && (!ticket.assignee || sourceColumnId === 'new')) {
-      console.log("Opening assignment dialog for ticket:", ticket.title);
+      // Don't reset drag states yet - keep the visual appearance stable
       setTicketToAssign(ticket);
       setPendingStatusChange(newStatus);
       setIsAssignDialogOpen(true);
+      // Now we can reset
+      setActiveDragId(null);
+      setActiveTicket(null);
       return;
     }
     
     // Validate move - prevent moving unassigned tickets to progress or resolved
     if (!ticket.assignee && (destinationColumnId === 'inProgress' || destinationColumnId === 'resolved')) {
       toast.error('Cannot move ticket to this status without an assignee');
+      setActiveDragId(null);
+      setActiveTicket(null);
       return;
     }
     
-    // Create a deep copy of columns for state updates to avoid reference issues
+    // Enter transition state - keep the drag overlay visible
+    setIsTransitioning(true);
+    
+    // Create deep copies of the state
     const originalColumns = JSON.parse(JSON.stringify(columns));
     const newColumns = JSON.parse(JSON.stringify(columns));
     
@@ -350,23 +355,32 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // Add to destination column
     newColumns[destinationColumnId].tickets.push(updatedTicket);
     
-    // Update state optimistically
-    updateColumnsState(newColumns);
-    
-    // Update in backend
+    // Update backend first, keeping visual state stable
     try {
       const success = await updateTicketStatus(ticket._id, newStatus);
       
-      if (!success) {
-        console.log("Status update failed, reverting state");
-        // Revert state on error with a deep copy to ensure re-render
-        updateColumnsState(newColumns);
+      if (success) {
+        // After backend update succeeds, update the state with a slight delay
+        setTimeout(() => {
+          updateColumnsState(newColumns);
+          // Finally reset the drag state
+          setActiveDragId(null);
+          setActiveTicket(null);
+          setIsTransitioning(false);
+        }, 50); // Small delay for smoother transition
+      } else {
+        // If update fails, clean up without changing state
+        setActiveDragId(null);
+        setActiveTicket(null);
+        setIsTransitioning(false);
       }
     } catch (error) {
       console.error("Error updating ticket status:", error);
       toast.error("Failed to update ticket status");
-      // Revert state on error
-      updateColumnsState(newColumns);
+      // Clean up without changing state
+      setActiveDragId(null);
+      setActiveTicket(null);
+      setIsTransitioning(false);
     }
   };
 
@@ -431,7 +445,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
             duration: 300,
             easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
           }}>
-            {activeTicket ? (
+            {(activeTicket && (activeDragId || isTransitioning)) ? (
               <div className="w-[300px] shadow-lg">
                 <Card className="w-full border-2 border-blue-400">
                   <CardHeader className="pb-2">

@@ -72,20 +72,18 @@ const TicketDashboardPage = () => {
   return (
     <DashboardLoader loading={loading}>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 className="text-3xl font-bold">Ticket Dashboard</h1>
-          
+        <Tabs defaultValue="tickets" className="space-y-4">
+          <div className='flex w-full gap-2'>
+
+          <TabsList className='w-full'>
+            <TabsTrigger value="tickets">Tickets</TabsTrigger>
+            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          </TabsList>
           <Button onClick={() => router.push('/dashboard/ticket/create')}>
             <Plus className="mr-2 h-4 w-4" />
             Create Ticket
           </Button>
-        </div>
-        
-        <Tabs defaultValue="tickets" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="tickets">Tickets</TabsTrigger>
-            <TabsTrigger value="statistics">Statistics</TabsTrigger>
-          </TabsList>
+          </div>
           
           <TabsContent value="tickets" className="space-y-4">
             <Card>

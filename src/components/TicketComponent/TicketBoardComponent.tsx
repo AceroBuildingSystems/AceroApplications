@@ -1,7 +1,7 @@
 // src/components/TicketComponent/TicketBoardComponent.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   DndContext, 
   closestCenter,
@@ -108,6 +108,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [ticketToAssign, setTicketToAssign] = useState<Ticket | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [animatingTicketId, setAnimatingTicketId] = useState<string | null>(null);
+  const [animationComplete, setAnimationComplete] = useState(true);
+  const dropPositionRef = useRef({ x: 0, y: 0 });
   
   // Set up sensors for drag and drop with activation constraints to help differentiate from clicks
   const sensors = useSensors(
@@ -321,11 +324,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     
     // Special case for assigning a ticket
     if (destinationColumnId === 'assigned' && (!ticket.assignee || sourceColumnId === 'new')) {
-      // Don't reset drag states yet - keep the visual appearance stable
       setTicketToAssign(ticket);
       setPendingStatusChange(newStatus);
       setIsAssignDialogOpen(true);
-      // Now we can reset
       setActiveDragId(null);
       setActiveTicket(null);
       return;
@@ -339,8 +340,15 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       return;
     }
     
-    // Enter transition state - keep the drag overlay visible
-    setIsTransitioning(true);
+    // Store current position of the dragged element
+    dropPositionRef.current = {
+      x: event.active.rect.current.translated?.left || 0,
+      y: event.active.rect.current.translated?.top || 0
+    };
+    
+    // Start animation and prevent immediate state updates
+    setAnimatingTicketId(ticketId);
+    setAnimationComplete(false);
     
     // Create deep copies of the state
     const originalColumns = JSON.parse(JSON.stringify(columns));
@@ -354,36 +362,42 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     
     // Add to destination column
     newColumns[destinationColumnId].tickets.push(updatedTicket);
-    
-    // Update backend first, keeping visual state stable
+  
+    // Update backend first, but keep visual consistency
     try {
       const success = await updateTicketStatus(ticket._id, newStatus);
       
       if (success) {
-        // After backend update succeeds, update the state with a slight delay
+        // After backend update succeeds, update the state
+        // But wait until animation is ready to complete
         setTimeout(() => {
           updateColumnsState(newColumns);
-          // Finally reset the drag state
-          setActiveDragId(null);
-          setActiveTicket(null);
-          setIsTransitioning(false);
-        }, 50); // Small delay for smoother transition
+          
+          // After state update, complete animation with a delay
+          setTimeout(() => {
+            setAnimationComplete(true);
+            setActiveDragId(null);
+            setActiveTicket(null);
+            setAnimatingTicketId(null);
+          }, 50);
+        }, 300); // Longer delay for animation
       } else {
-        // If update fails, clean up without changing state
+        // If update fails, clean up
+        setAnimationComplete(true);
         setActiveDragId(null);
         setActiveTicket(null);
-        setIsTransitioning(false);
+        setAnimatingTicketId(null);
       }
     } catch (error) {
       console.error("Error updating ticket status:", error);
       toast.error("Failed to update ticket status");
-      // Clean up without changing state
+      // Clean up
+      setAnimationComplete(true);
       setActiveDragId(null);
       setActiveTicket(null);
-      setIsTransitioning(false);
+      setAnimatingTicketId(null);
     }
   };
-
   // Handle navigating to ticket details
   const handleTicketClick = (ticketId: string) => {
     if (activeDragId) return; // Don't navigate during drag operations
@@ -441,28 +455,41 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           ))}
           
           {/* Drag overlay to show what's being dragged */}
-          <DragOverlay className="dnd-overlay" dropAnimation={{
-            duration: 300,
-            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-          }}>
-            {(activeTicket && (activeDragId || isTransitioning)) ? (
-              <div className="w-[300px] shadow-lg">
-                <Card className="w-full border-2 border-blue-400">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="text-blue-600">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
-                        <CardDescription className="text-base font-medium">{activeTicket.title}</CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="pb-2">
-                    <p className="text-sm text-gray-700 mb-4 line-clamp-2">{activeTicket.description}</p>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : null}
-          </DragOverlay>
+          <DragOverlay 
+  className={`dnd-overlay ${!animationComplete ? 'fixed-position' : ''}`}
+  dropAnimation={animationComplete ? {
+    duration: 300,
+    easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+  } : null}
+  style={
+    !animationComplete && animatingTicketId ? {
+      position: 'fixed',
+      left: `${dropPositionRef.current.x}px`,
+      top: `${dropPositionRef.current.y}px`,
+      margin: 0,
+      transform: 'none',
+      zIndex: 9999,
+    } : undefined
+  }
+>
+  {(activeTicket && ((activeDragId && !animationComplete) || (!animationComplete && animatingTicketId))) ? (
+    <div className="w-[300px] shadow-lg animated-ticket">
+      <Card className="w-full border-2 border-blue-400">
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-blue-600">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
+              <CardDescription className="text-base font-medium">{activeTicket.title}</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pb-2">
+          <p className="text-sm text-gray-700 mb-4 line-clamp-2">{activeTicket.description}</p>
+        </CardContent>
+      </Card>
+    </div>
+  ) : null}
+</DragOverlay>
         </DndContext>
       </div>
       

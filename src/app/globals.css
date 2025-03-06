@@ -101,6 +101,19 @@ border: 3px solid transparent;
 .dnd-overlay {
   pointer-events: none !important;
   z-index: 9999 !important;
-  position: fixed;
-  transition: transform 300ms cubic-bezier(0.18, 0.67, 0.6, 1.22);
+}
+
+.fixed-position {
+  transition: none !important;
+  animation: none !important;
+}
+
+.animated-ticket {
+  pointer-events: none;
+}
+
+/* Force immediate renders for improved animation */
+[data-ticket-id] {
+  contain: layout;
+  will-change: transform;
 }

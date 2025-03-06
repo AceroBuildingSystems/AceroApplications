@@ -30,9 +30,10 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
   
     const style = {
       transform: CSS.Transform.toString(transform),
-      transition: transition || 'transform 250ms cubic-bezier(0.25, 1, 0.5, 1)', // Smoother transition
-      opacity: isDragging ? 0.5 : 1,
-      zIndex: isDragging ? 1000 : 1 // Ensure dragging item is above others
+      transition: transition || 'transform 250ms cubic-bezier(0.25, 1, 0.5, 1)',
+      // Critical fix: When dragging, make the original completely transparent
+      opacity: isDragging ? 0 : 1, // Changed from 0.5 to 0
+      zIndex: isDragging ? -1 : 1  // Use -1 to ensure it's below other elements
     };
   
     // Handle click without triggering drag

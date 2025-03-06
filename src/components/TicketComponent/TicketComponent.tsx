@@ -78,14 +78,14 @@ const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, onClick, clas
     : 0;
 
   return (
-    <Card className="w-full hover:shadow-md transition-shadow">
+    <Card className="w-full hover:shadow-md hover:cursor-pointer transition-shadow">
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col justify-between items-start">
           <div>
           <CardTitle className="text-blue-600">TKT-{ticket._id.toString().substr(-8)}</CardTitle>
             <CardDescription className="text-base font-medium">{ticket.title}</CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex w-full  gap-2">
             <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
             <Badge className={getPriorityColor(ticket.priority)}>{ticket.priority}</Badge>
           </div>
@@ -132,23 +132,33 @@ const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, onClick, clas
         )}
       </CardContent>
       <CardFooter className="pt-2 justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Created by:</span>
-          <Avatar className="h-6 w-6">
-            <AvatarFallback>{`${ticket.creator.firstName[0]}${ticket.creator.lastName[0]}`}</AvatarFallback>
-          </Avatar>
-          <span className="text-sm">{`${ticket.creator.firstName} ${ticket.creator.lastName}`}</span>
-        </div>
-        
-        {ticket.assignee && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Assigned to:</span>
+
+        <div className='flex flex-col gap-2'>
+          <div className="flex flex-col gap-2">
+            <span className="text-xs text-gray-500">Created by:</span>
+            <div className='flex items-center gap-2'>
             <Avatar className="h-6 w-6">
-              <AvatarFallback>{`${ticket.assignee.firstName[0]}${ticket.assignee.lastName[0]}`}</AvatarFallback>
+              <AvatarFallback>{`${ticket.creator.firstName[0]}${ticket.creator.lastName[0]}`}</AvatarFallback>
             </Avatar>
-            <span className="text-sm">{`${ticket.assignee.firstName} ${ticket.assignee.lastName}`}</span>
+            <span className="text-sm">{`${ticket.creator.firstName} ${ticket.creator.lastName}`}</span>
+            </div>
           </div>
-        )}
+          
+          {ticket.assignee && (
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2">
+              <span className="text-xs text-gray-500">Assigned to:</span>
+              <div className='flex items-center gap-2 w-full overflow-hidden'>
+
+              <Avatar className="h-6 w-6">
+                <AvatarFallback>{`${ticket.assignee.firstName[0]}${ticket.assignee.lastName[0]}`}</AvatarFallback>
+              </Avatar>
+              <span className="text-sm break-keep">{`${ticket.assignee.firstName} ${ticket.assignee.lastName}`}</span>
+              </div>
+                </div>
+            </div>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

@@ -16,7 +16,7 @@ import {
   useDroppable
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUpdateTicketMutation, useAssignTicketMutation } from '@/services/endpoints/ticketApi';
 import { SortableTicketItem } from './SortableTicketItem';
 import { toast } from 'react-toastify';
@@ -183,7 +183,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       }
     });
 
-    setColumns(initialColumns);
+    updateColumnsState(initialColumns);
   }, [tickets]);
 
   // Find which column a ticket is in
@@ -351,7 +351,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     newColumns[destinationColumnId].tickets.push(updatedTicket);
     
     // Update state optimistically
-    setColumns(newColumns);
+    updateColumnsState(newColumns);
     
     // Update in backend
     try {
@@ -360,13 +360,13 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       if (!success) {
         console.log("Status update failed, reverting state");
         // Revert state on error with a deep copy to ensure re-render
-        setColumns(originalColumns);
+        updateColumnsState(newColumns);
       }
     } catch (error) {
       console.error("Error updating ticket status:", error);
       toast.error("Failed to update ticket status");
       // Revert state on error
-      setColumns(originalColumns);
+      updateColumnsState(newColumns);
     }
   };
 
@@ -375,6 +375,14 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     if (activeDragId) return; // Don't navigate during drag operations
     router.push(`/dashboard/ticket/${ticketId}`);
   };
+
+  const updateColumnsState = (newColumns) => {
+    // Schedule state update for next frame to avoid flicker
+    requestAnimationFrame(() => {
+      setColumns(newColumns);
+    });
+  };
+  
 
   return (
     <>
@@ -419,10 +427,25 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           ))}
           
           {/* Drag overlay to show what's being dragged */}
-          <DragOverlay>
+          <DragOverlay className="dnd-overlay" dropAnimation={{
+            duration: 300,
+            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+          }}>
             {activeTicket ? (
-              <div className="w-[300px] opacity-80">
-                <TicketComponent ticket={activeTicket} />
+              <div className="w-[300px] shadow-lg">
+                <Card className="w-full border-2 border-blue-400">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-blue-600">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
+                        <CardDescription className="text-base font-medium">{activeTicket.title}</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <p className="text-sm text-gray-700 mb-4 line-clamp-2">{activeTicket.description}</p>
+                  </CardContent>
+                </Card>
               </div>
             ) : null}
           </DragOverlay>

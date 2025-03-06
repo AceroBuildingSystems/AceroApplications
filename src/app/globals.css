@@ -97,3 +97,8 @@ border: 3px solid transparent;
  background-clip: content-box;
   background-color: #d55959;
 }
+
+.dnd-overlay {
+  pointer-events: none !important;
+  z-index: 9999 !important;
+}

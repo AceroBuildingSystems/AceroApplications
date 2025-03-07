@@ -71,18 +71,20 @@ const TicketDashboardPage = () => {
   
   return (
     <DashboardLoader loading={loading}>
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-[83vw]">
         <Tabs defaultValue="tickets" className="space-y-4">
           <div className='flex w-full gap-2'>
 
-          <TabsList className='w-full'>
-            <TabsTrigger value="tickets">Tickets</TabsTrigger>
-            <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          <TabsList className='w-1/2'>
+            <TabsTrigger className='w-full' value="tickets">Tickets</TabsTrigger>
+            <TabsTrigger className='w-full' value="statistics">Statistics</TabsTrigger>
           </TabsList>
-          <Button onClick={() => router.push('/dashboard/ticket/create')}>
-            <Plus className="mr-2 h-4 w-4" />
+          <div className='w-full'>
+
+          <Button   onClick={() => router.push('/dashboard/ticket/create')}>
             Create Ticket
           </Button>
+          </div>
           </div>
           
           <TabsContent value="tickets" className="space-y-4">

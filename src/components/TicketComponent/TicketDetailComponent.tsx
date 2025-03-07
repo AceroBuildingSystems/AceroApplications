@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
-import { CalendarIcon, Clock, Edit, MessageSquare, Tag, Users } from 'lucide-react';
+import { CalendarIcon, Clock, Edit, MessageSquare, Tag, Users, ChevronDown, CheckSquare, Paperclip, FileText } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useGetTicketCommentsQuery } from '@/services/endpoints/ticketCommentApi';
 import { useGetTicketTasksQuery } from '@/services/endpoints/ticketTaskApi';
@@ -16,15 +16,26 @@ import { useGetTicketHistoryQuery } from '@/services/endpoints/ticketHistoryApi'
 import TicketCommentComponent from './TicketCommentComponent';
 import TicketTaskComponent from './TicketTaskComponent';
 import TicketHistoryComponent from './TicketHistoryComponent';
-
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { useAssignTicketMutation } from '@/services/endpoints/ticketApi';
+import { 
+  useAssignTicketMutation, 
+  useChangeTicketStatusMutation, 
+  useAutoAssignTicketMutation 
+} from '@/services/endpoints/ticketApi';
+import TicketStatusChangeComponent from './TicketStatusChangeComponent';
+import TicketAutoAssignComponent from './TicketAutoAssignComponent';
+import TicketAttachmentComponent from './TicketAttachmentComponent';
+import TicketChatSystem from './TicketChatSystem';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-toastify';
-import { useAutoAssignTicketMutation } from '@/services/endpoints/ticketApi';
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface TicketDetailComponentProps {
   ticket: any;
@@ -81,49 +92,49 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
     ticketId: ticket._id 
   });
 
+  // State for dialogs
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
-const [selectedAssignee, setSelectedAssignee] = useState('');
-const [assignTicket, { isLoading: isAssigning }] = useAssignTicketMutation();
-const [autoAssignTicket] = useAutoAssignTicketMutation();
-
-const { data: departmentUsersData = {}, isLoading: usersLoading } = useGetMasterQuery({
-  db: 'USER_MASTER',
-  filter: { 
-    department: ticket.department._id,
-    isActive: true
-  }
-}, { skip: !ticket?.department?._id });
-const handleAutoAssign = async () => {
-  try {
-    await autoAssignTicket({
-      ticketId: ticket._id,
-      departmentId: ticket.department._id,
-      categoryId: ticket.category._id,
-      updatedBy: userId
-    }).unwrap();
-    
-    toast.success('Ticket auto-assigned successfully');
-  } catch (error) {
-    toast.error('Failed to auto-assign ticket');
-  }
-};
-// Add this function to handle assignment:
-const handleAssignTicket = async () => {
-  if (!selectedAssignee) return;
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isAutoAssignDialogOpen, setIsAutoAssignDialogOpen] = useState(false);
+  const [selectedAssignee, setSelectedAssignee] = useState('');
   
-  try {
-    await assignTicket({
-      ticketId: ticket._id,
-      assigneeId: selectedAssignee,
-      updatedBy: userId
-    }).unwrap();
+  // RTK mutations
+  const [assignTicket, { isLoading: isAssigning }] = useAssignTicketMutation();
+  const [changeStatus, { isLoading: isChangingStatus }] = useChangeTicketStatusMutation();
+  const [autoAssignTicket, { isLoading: isAutoAssigning }] = useAutoAssignTicketMutation();
+
+  // Fetch department users for assignment
+  const { data: departmentUsersData = {}, isLoading: usersLoading } = useGetMasterQuery({
+    db: 'USER_MASTER',
+    filter: { 
+      department: ticket.department._id,
+      isActive: true
+    }
+  }, { skip: !ticket?.department?._id });
+
+  // Handle ticket assignment
+  const handleAssignTicket = async () => {
+    if (!selectedAssignee) return;
     
-    toast.success('Ticket assigned successfully');
-    setIsAssignDialogOpen(false);
-  } catch (error) {
-    toast.error('Failed to assign ticket');
-  }
-};
+    try {
+      await assignTicket({
+        ticketId: ticket._id,
+        assigneeId: selectedAssignee,
+        updatedBy: userId
+      }).unwrap();
+      
+      toast.success('Ticket assigned successfully');
+      setIsAssignDialogOpen(false);
+      setSelectedAssignee('');
+    } catch (error) {
+      toast.error('Failed to assign ticket');
+    }
+  };
+
+  // Handle showing auto-assignment dialog
+  const handleShowAutoAssign = () => {
+    setIsAutoAssignDialogOpen(true);
+  };
   
   // Calculate progress percentage
   const progressPercentage = ticket.totalEfforts > 0 
@@ -140,46 +151,59 @@ const handleAssignTicket = async () => {
           <div className="flex justify-between items-start">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <CardTitle className="text-blue-600">{ticket.ticketId}</CardTitle>
+                <CardTitle className="text-blue-600">{ticket.ticketId || `TKT-${ticket._id.toString().substr(-8)}`}</CardTitle>
                 <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
                 <Badge className={getPriorityColor(ticket.priority)}>{ticket.priority}</Badge>
               </div>
               <CardTitle className="text-xl">{ticket.title}</CardTitle>
             </div>
-            {canEdit && (
-              <Button variant="outline" size="sm" onClick={onEditClick}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Ticket
-              </Button>
-            )}
+            
+            <div className="flex gap-2">
+              {canEdit && ticket.status !== 'CLOSED' && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="flex items-center">
+                      Actions <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={onEditClick}>
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit Ticket
+                    </DropdownMenuItem>
+                                          <DropdownMenuItem onClick={() => setIsStatusDialogOpen(true)}>
+                      Change Status
+                    </DropdownMenuItem>
+                    {!ticket.assignee ? (
+                      <>
+                        <DropdownMenuItem onClick={() => setIsAssignDialogOpen(true)}>
+                          Assign Manually
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleShowAutoAssign}>
+                          Auto-Assign
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <DropdownMenuItem onClick={() => setIsAssignDialogOpen(true)}>
+                        Reassign Ticket
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              
+              {canEdit && (
+                <Button 
+                  variant="default" 
+                  onClick={onEditClick}
+                  className="flex items-center"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
           </div>
-
-                {canEdit && (
-        <div className="flex gap-2">
-          {ticket.status !== 'CLOSED' && (
-            <Button 
-              variant={ticket.assignee ? "outline" : "default"} 
-              onClick={() => setIsAssignDialogOpen(true)}
-            >
-              {ticket.assignee ? 'Reassign' : 'Assign Ticket'}
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={onEditClick}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Ticket
-          </Button>
-        </div>
-      )}
-
-      {canEdit && ticket.status !== 'CLOSED' && (
-        <Button 
-          variant="outline" 
-          onClick={handleAutoAssign}
-        >
-          Auto-Assign
-        </Button>
-      )}
-
         </CardHeader>
         <CardContent>
           <div className="space-y-6">
@@ -239,17 +263,30 @@ const handleAssignTicket = async () => {
                 </div>
               </div>
               
-              {ticket.assignee && (
-                <div>
-                  <h4 className="text-sm text-gray-500 mb-1">Assigned to</h4>
+              <div>
+                <h4 className="text-sm text-gray-500 mb-1">Assigned to</h4>
+                {ticket.assignee ? (
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarFallback>{`${ticket.assignee.firstName[0]}${ticket.assignee.lastName[0]}`}</AvatarFallback>
                     </Avatar>
                     <p>{`${ticket.assignee.firstName} ${ticket.assignee.lastName}`}</p>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <p className="text-gray-500">Unassigned</p>
+                    {canEdit && ticket.status !== 'CLOSED' && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setIsAssignDialogOpen(true)}
+                      >
+                        Assign
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Progress bar */}
@@ -272,7 +309,7 @@ const handleAssignTicket = async () => {
       </Card>
       
       <Tabs defaultValue="comments">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="comments" className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Comments
@@ -282,7 +319,8 @@ const handleAssignTicket = async () => {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="tasks">
+          <TabsTrigger value="tasks" className="flex items-center gap-2">
+            <CheckSquare className="h-4 w-4" />
             Tasks
             {tasksData?.data?.length > 0 && (
               <Badge variant="outline" className="ml-1">
@@ -290,18 +328,27 @@ const handleAssignTicket = async () => {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="history">
+          <TabsTrigger value="attachments" className="flex items-center gap-2">
+            <Paperclip className="h-4 w-4" />
+            Files
+          </TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
             History
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="comments">
-          <TicketCommentComponent 
-            ticketId={ticket._id} 
-            comments={commentsData?.data || []} 
+          <TicketChatSystem
+            ticketId={ticket._id}
+            messages={commentsData?.data || []}
             isLoading={commentsLoading}
             userId={userId}
-            currentUserName={`${ticket.creator.firstName} ${ticket.creator.lastName}`}
+            currentUser={{
+              _id: userId,
+              firstName: userRole === 'ADMIN' ? 'Admin' : ticket.creator.firstName,
+              lastName: userRole === 'ADMIN' ? 'User' : ticket.creator.lastName
+            }}
           />
         </TabsContent>
         
@@ -316,6 +363,16 @@ const handleAssignTicket = async () => {
           />
         </TabsContent>
         
+        <TabsContent value="attachments">
+          <TicketAttachmentComponent
+            ticketId={ticket._id}
+            attachments={[]} // This would normally come from an API call
+            isLoading={false}
+            userId={userId}
+            canEdit={canEdit && ticket.status !== 'CLOSED'}
+          />
+        </TabsContent>
+        
         <TabsContent value="history">
           <TicketHistoryComponent 
             history={historyData?.data || []} 
@@ -324,46 +381,65 @@ const handleAssignTicket = async () => {
         </TabsContent>
       </Tabs>
 
+      {/* Assign Ticket Dialog */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>{ticket.assignee ? 'Reassign Ticket' : 'Assign Ticket'}</DialogTitle>
-      <DialogDescription>
-        Select a user to assign this ticket to
-      </DialogDescription>
-    </DialogHeader>
-    
-    <div className="space-y-4 py-4">
-      <div className="space-y-2">
-        <Label>Assignee</Label>
-        <Select onValueChange={setSelectedAssignee} value={selectedAssignee}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select user" />
-          </SelectTrigger>
-          <SelectContent>
-            {departmentUsersData?.data?.map(user => (
-              <SelectItem key={user._id} value={user._id}>
-                {`${user.firstName} ${user.lastName}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    </div>
-    
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
-        Cancel
-      </Button>
-      <Button 
-        onClick={handleAssignTicket}
-        disabled={!selectedAssignee || isAssigning}
-      >
-        {isAssigning ? 'Assigning...' : 'Assign Ticket'}
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{ticket.assignee ? 'Reassign Ticket' : 'Assign Ticket'}</DialogTitle>
+            <DialogDescription>
+              Select a user to assign this ticket to
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Assignee</Label>
+              <Select onValueChange={setSelectedAssignee} value={selectedAssignee}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {departmentUsersData?.data?.map(user => (
+                    <SelectItem key={user._id} value={user._id}>
+                      {`${user.firstName} ${user.lastName}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignTicket}
+              disabled={!selectedAssignee || isAssigning}
+            >
+              {isAssigning ? 'Assigning...' : 'Assign Ticket'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Status Change Component */}
+      <TicketStatusChangeComponent
+        ticketId={ticket._id}
+        currentStatus={ticket.status}
+        userId={userId}
+        isOpen={isStatusDialogOpen}
+        onClose={() => setIsStatusDialogOpen(false)}
+        hasAssignee={!!ticket.assignee}
+      />
+      
+      {/* Auto Assign Component */}
+      <TicketAutoAssignComponent
+        ticket={ticket}
+        userId={userId}
+        isOpen={isAutoAssignDialogOpen}
+        onClose={() => setIsAutoAssignDialogOpen(false)}
+      />
     </div>
   );
 };

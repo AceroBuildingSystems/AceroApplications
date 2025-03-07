@@ -24,8 +24,18 @@ export const ticketCommentApi = baseApi.injectEndpoints({
       query: (commentData) => ({
         url: 'ticket-comment',
         method: 'POST',
-        body: { action: 'create', data: commentData },
+        body: commentData,
       }),
+      // Add logging to help debug
+      onQueryStarted: async (commentData, { dispatch, queryFulfilled }) => {
+        console.log('Creating comment with data:', JSON.stringify(commentData, null, 2));
+        try {
+          const { data } = await queryFulfilled;
+          console.log('Comment creation response:', data);
+        } catch (error) {
+          console.error('Comment creation failed:', error);
+        }
+      },
       invalidatesTags: ['TicketComment'],
     }),
 
@@ -33,7 +43,7 @@ export const ticketCommentApi = baseApi.injectEndpoints({
       query: (commentData) => ({
         url: 'ticket-comment',
         method: 'POST',
-        body: { action: 'update', data: commentData },
+        body: commentData,
       }),
       invalidatesTags: ['TicketComment'],
     }),

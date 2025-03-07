@@ -1,7 +1,7 @@
 // src/components/TicketComponent/TicketTaskComponent.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,8 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash } from 'lucide-react';
+import { Plus, Trash, Loader2, AlertCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useCreateTicketTaskMutation, useUpdateTicketTaskMutation, useChangeTaskStatusMutation } from '@/services/endpoints/ticketTaskApi';
 import { toast } from 'react-toastify';
 import DashboardLoader from '@/components/ui/DashboardLoader';
@@ -37,24 +38,33 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
-  const [taskEfforts, setTaskEfforts] = useState(1);
+  const [taskEfforts, setTaskEfforts] = useState('1');
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  
+  // Debug information
+  useEffect(() => {
+    console.log("TicketTaskComponent mounted with ticketId:", ticketId);
+    console.log("Current tasks:", tasks);
+  }, [ticketId, tasks]);
   
   const [createTask, { isLoading: isCreating }] = useCreateTicketTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTicketTaskMutation();
   const [changeStatus, { isLoading: isChangingStatus }] = useChangeTaskStatusMutation();
   
   const handleOpenDialog = (task = null) => {
+    setFormError(null);
+    
     if (task) {
       setSelectedTask(task);
       setTaskTitle(task.title);
       setTaskDescription(task.description || '');
-      setTaskEfforts(task.efforts || 1);
+      setTaskEfforts(task.efforts?.toString() || '1');
     } else {
       setSelectedTask(null);
       setTaskTitle('');
       setTaskDescription('');
-      setTaskEfforts(1);
+      setTaskEfforts('1');
     }
     setIsDialogOpen(true);
   };
@@ -62,55 +72,105 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedTask(null);
+    setFormError(null);
+  };
+  
+  const validateForm = () => {
+    if (!taskTitle.trim()) {
+      setFormError("Task title is required");
+      return false;
+    }
+    
+    if (!ticketId) {
+      setFormError("Ticket ID is missing");
+      console.error("Ticket ID is missing");
+      return false;
+    }
+    
+    return true;
   };
   
   const handleSubmitTask = async () => {
-    if (!taskTitle.trim()) return;
+    if (!validateForm()) return;
     
     try {
       if (selectedTask) {
-        // Update existing task code remains the same
-      } else {
-        // Fixed task creation
-        console.log("Creating task with data:", {
-          ticket: ticketId,
-          title: taskTitle,
-          description: taskDescription,
-          status: 'TODO',
-          efforts: taskEfforts,
-          addedBy: userId,
-          updatedBy: userId
-        });
+        // Update existing task
+        const updatePayload = {
+          action: 'update',
+          data: {
+            _id: selectedTask._id,
+            title: taskTitle,
+            description: taskDescription,
+            efforts: parseInt(taskEfforts),
+            updatedBy: userId
+          }
+        };
         
-        await createTask({
+        console.log("Updating task with:", JSON.stringify(updatePayload, null, 2));
+        
+        await updateTask(updatePayload).unwrap();
+        toast.success('Task updated successfully');
+      } else {
+        // Create new task with proper structure
+        const createPayload = {
           action: 'create',
           data: {
             ticket: ticketId,
             title: taskTitle,
             description: taskDescription,
+            efforts: parseInt(taskEfforts),
             status: 'TODO',
-            efforts: taskEfforts,
+            progress: 0,
             addedBy: userId,
             updatedBy: userId
           }
-        }).unwrap();
+        };
+        
+        console.log("Creating task with payload:", JSON.stringify(createPayload, null, 2));
+        
+        const response = await createTask(createPayload).unwrap();
+        console.log("Task creation response:", response);
         
         toast.success('Task created successfully');
       }
       
       handleCloseDialog();
     } catch (error) {
-      console.error("Task creation error:", error);
-      toast.error('Failed to create task');
+      console.error("Task operation error:", error);
+      
+      // Extract the error message for better user feedback
+      let errorMsg = "Failed to save task";
+      
+      if (error?.data?.message) {
+        if (typeof error.data.message === 'object') {
+          // Handle Mongoose validation errors
+          if (error.data.message.errors) {
+            const validationErrors = Object.values(error.data.message.errors)
+              .map(err => err.message)
+              .join(', ');
+            errorMsg = `Validation failed: ${validationErrors}`;
+          } else if (error.data.message.message) {
+            errorMsg = error.data.message.message;
+          } else {
+            errorMsg = JSON.stringify(error.data.message);
+          }
+        } else {
+          errorMsg = error.data.message;
+        }
+      }
+      
+      setFormError(errorMsg);
+      toast.error(errorMsg);
     }
   };
   
   const handleToggleTaskStatus = async (task: any) => {
     try {
       const newStatus = task.status === 'COMPLETED' ? 'IN_PROGRESS' : 'COMPLETED';
-      const progress = newStatus === 'COMPLETED' ? 100 : 0;
+      const progress = newStatus === 'COMPLETED' ? 100 : task.progress || 0;
       
-      await changeStatus({
+      const statusPayload = {
         action: 'changeStatus',
         data: {
           _id: task._id,
@@ -119,10 +179,15 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           updatedBy: userId,
           ticket: ticketId
         }
-      }).unwrap();
+      };
+      
+      console.log("Changing task status with:", JSON.stringify(statusPayload, null, 2));
+      
+      await changeStatus(statusPayload).unwrap();
       
       toast.success(`Task marked as ${newStatus}`);
     } catch (error) {
+      console.error("Status change error:", error);
       toast.error('Failed to update task status');
     }
   };
@@ -137,7 +202,10 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           updatedBy: userId
         }
       }).unwrap();
+      
+      toast.success(`Progress updated to ${progress}%`);
     } catch (error) {
+      console.error("Progress update error:", error);
       toast.error('Failed to update progress');
     }
   };
@@ -265,14 +333,28 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {formError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{formError}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
-              <Label htmlFor="title">Task Title</Label>
+              <Label htmlFor="title">
+                Task Title <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="title"
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
                 placeholder="What needs to be done?"
+                className={!taskTitle.trim() ? "border-red-300" : ""}
               />
+              {!taskTitle.trim() && (
+                <p className="text-sm text-red-500">Title is required</p>
+              )}
             </div>
             
             <div className="space-y-2">
@@ -289,20 +371,26 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
             <div className="space-y-2">
               <Label htmlFor="efforts">Effort Points (1-10)</Label>
               <Select
-                value={taskEfforts.toString()}
-                onValueChange={(value) => setTaskEfforts(parseInt(value))}
+                value={taskEfforts}
+                onValueChange={setTaskEfforts}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select effort" />
                 </SelectTrigger>
                 <SelectContent>
-                  {[1, 2, 3, 5, 8, 10].map((value) => (
-                    <SelectItem key={value} value={value.toString()}>
-                      {value} {value === 1 ? 'point' : 'points'}
+                  {['1', '2', '3', '5', '8', '10'].map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {value} {value === '1' ? 'point' : 'points'}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Debug information */}
+            <div className="text-xs text-gray-500 border-t pt-2">
+              <p>Ticket ID: {ticketId}</p>
+              <p>User ID: {userId}</p>
             </div>
           </div>
           
@@ -314,7 +402,14 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
               onClick={handleSubmitTask}
               disabled={!taskTitle.trim() || isCreating || isUpdating}
             >
-              {selectedTask ? 'Update Task' : 'Add Task'}
+              {isCreating || isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {selectedTask ? 'Updating...' : 'Creating...'}
+                </>
+              ) : (
+                selectedTask ? 'Update Task' : 'Add Task'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

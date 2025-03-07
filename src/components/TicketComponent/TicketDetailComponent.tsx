@@ -36,6 +36,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import EnhancedTicketChat from './EnhancedTicketChat';
 
 interface TicketDetailComponentProps {
   ticket: any;
@@ -339,18 +340,17 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
         </TabsList>
         
         <TabsContent value="comments">
-          <TicketChatSystem
+          <EnhancedTicketChat
             ticketId={ticket._id}
-            messages={commentsData?.data || []}
-            isLoading={commentsLoading}
             userId={userId}
             currentUser={{
               _id: userId,
-              firstName: userRole === 'ADMIN' ? 'Admin' : ticket.creator.firstName,
-              lastName: userRole === 'ADMIN' ? 'User' : ticket.creator.lastName
+              firstName: ticket.creator.firstName,
+              lastName: ticket.creator.lastName
             }}
+            isLoading={commentsLoading}
           />
-        </TabsContent>
+      </TabsContent>
         
         <TabsContent value="tasks">
           <TicketTaskComponent 

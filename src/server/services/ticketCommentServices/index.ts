@@ -1,101 +1,152 @@
 // src/server/services/ticketCommentServices/index.ts
 import { crudManager } from '@/server/managers/crudManager';
 import { catchAsync } from '@/server/shared/catchAsync';
-import { createTicketHistory } from '../ticketHistoryServices';
 import { ERROR, SUCCESS } from '@/shared/constants';
+import { createTicketHistory } from '../ticketHistoryServices';
+import { TicketComment } from '@/models';
 import mongoose from 'mongoose';
 
+// Get all comments (with optional filtering)
 export const getTicketComments = catchAsync(async (options) => {
   const result = await crudManager.mongooose.find('TICKET_COMMENT_MASTER', options);
   return result;
 });
 
+// Get all comments for a specific ticket
 export const getTicketCommentsByTicketId = catchAsync(async (ticketId) => {
+  // Add sort to ensure messages are in chronological order
   const result = await crudManager.mongooose.find('TICKET_COMMENT_MASTER', {
-    filter: { 
-      ticket: ticketId,
-      isActive: true
-    },
+    filter: { ticket: ticketId },
     sort: { createdAt: 1 }
   });
+  
   return result;
 });
 
+// Create a new comment/message
 export const createTicketComment = catchAsync(async (options) => {
-  // Debug logging
-  console.log("Comment create service called with:", JSON.stringify(options, null, 2));
+  console.log("Creating ticket comment with options:", JSON.stringify(options, null, 2));
   
-  // Ensure we have the expected data structure
-  if (!options || !options.data) {
-    console.error("Missing data object in comment creation");
-    return { status: ERROR, message: "Invalid request format" };
+  if (!options.data || !options.data.ticket || !options.data.user) {
+    return { status: ERROR, message: "Missing required fields" };
   }
   
-  // Validate ticket ID
-  if (!options.data.ticket) {
-    console.error("Missing ticket ID in comment creation");
-    return { status: ERROR, message: "Ticket ID is required" };
-  }
-
-  // Ensure ticket ID is a valid ObjectId
-  try {
-    if (typeof options.data.ticket === 'string') {
-      options.data.ticket = new mongoose.Types.ObjectId(options.data.ticket);
+  // Extract data for easier handling
+  const { ticket, user, content, attachments, replyTo, mentions } = options.data;
+  
+  // Set delivery timestamp
+  const deliveredAt = new Date();
+  
+  // Create the comment
+  const result = await crudManager.mongooose.create('TICKET_COMMENT_MASTER', {
+    data: {
+      ...options.data,
+      deliveredAt,
+      isRead: false,
+      readBy: [options.data.user] // Mark as read by sender
     }
-  } catch (err) {
-    console.error("Invalid ticket ID format:", options.data.ticket);
-    return { status: ERROR, message: "Invalid ticket ID format" };
-  }
+  });
   
-  // Validate user ID
-  if (!options.data.user) {
-    console.error("Missing user ID in comment creation");
-    return { status: ERROR, message: "User ID is required" };
-  }
-  
-  // Ensure the data has content
-  if (!options.data.content && (!options.data.attachments || options.data.attachments.length === 0)) {
-    console.error("Comment must have content or attachments");
-    return { status: ERROR, message: "Comment content is required" };
-  }
-  
-  try {
-    console.log("Creating comment with final data:", JSON.stringify(options, null, 2));
-    
-    // Create the comment
-    const result = await crudManager.mongooose.create('TICKET_COMMENT_MASTER', options);
-    console.log("Comment creation result:", JSON.stringify(result, null, 2));
-    
-    // Create ticket history entry for new comment
-    if (result.status === SUCCESS) {
-      await createTicketHistory({
-        data: {
-          ticket: options.data.ticket,
-          action: 'COMMENT',
-          user: options.data.user,
-          details: { 
-            commentId: result.data._id,
-            // Include information about mentions and replies if present
-            ...(options.data.mentions && { mentions: options.data.mentions }),
-            ...(options.data.replyTo && { replyTo: options.data.replyTo })
-          }
+  if (result.status === SUCCESS) {
+    // Create history entry
+    await createTicketHistory({
+      data: {
+        ticket,
+        action: 'COMMENT',
+        user,
+        details: { 
+          commentId: result.data._id,
+          hasAttachments: attachments && attachments.length > 0,
+          hasMentions: mentions && mentions.length > 0,
+          isReply: !!replyTo
         }
-      });
-    }
-    
-    return result;
-  } catch (error) {
-    console.error("Error in comment creation:", error);
-    return { status: ERROR, message: error.message || "Failed to create comment" };
+      }
+    });
   }
+  
+  return result;
 });
 
+// Update an existing comment
 export const updateTicketComment = catchAsync(async (options) => {
-  // Validate required fields
-  if (!options.filter || !options.filter._id) {
-    return { status: ERROR, message: "Comment ID is required for update" };
+  // Make sure we have filter and data
+  if (!options.filter || !options.data) {
+    return { status: ERROR, message: "Missing filter or update data" };
   }
   
   const result = await crudManager.mongooose.update('TICKET_COMMENT_MASTER', options);
+  return result;
+});
+
+// Mark comments as read
+export const markAsRead = catchAsync(async ({ commentIds, userId }) => {
+  if (!commentIds || !commentIds.length || !userId) {
+    return { status: ERROR, message: "Missing comment IDs or user ID" };
+  }
+  
+  const objectCommentIds = commentIds.map(id => 
+    mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null
+  ).filter(Boolean);
+  
+  const userObjectId = mongoose.Types.ObjectId.isValid(userId) 
+    ? new mongoose.Types.ObjectId(userId) 
+    : null;
+    
+  if (!userObjectId || objectCommentIds.length === 0) {
+    return { status: ERROR, message: "Invalid comment IDs or user ID" };
+  }
+  
+  // Update all messages at once
+  const result = await TicketComment.updateMany(
+    { 
+      _id: { $in: objectCommentIds },
+      readBy: { $ne: userObjectId }
+    },
+    { 
+      $set: { isRead: true, readAt: new Date() },
+      $addToSet: { readBy: userObjectId }
+    }
+  );
+  
+  return { 
+    status: SUCCESS, 
+    data: { 
+      modifiedCount: result.modifiedCount 
+    }
+  };
+});
+
+// Get unread message count
+export const getUnreadCount = catchAsync(async ({ ticketId, userId }) => {
+  if (!ticketId || !userId) {
+    return { status: ERROR, message: "Missing ticket ID or user ID" };
+  }
+  
+  const count = await TicketComment.countDocuments({
+    ticket: ticketId,
+    user: { $ne: userId },
+    readBy: { $ne: userId }
+  });
+  
+  return { 
+    status: SUCCESS, 
+    data: { unreadCount: count }
+  };
+});
+
+// Search messages
+export const searchMessages = catchAsync(async ({ ticketId, searchTerm }) => {
+  if (!ticketId || !searchTerm) {
+    return { status: ERROR, message: "Missing ticket ID or search term" };
+  }
+  
+  const result = await crudManager.mongooose.find('TICKET_COMMENT_MASTER', {
+    filter: { 
+      ticket: ticketId,
+      content: { $regex: searchTerm, $options: 'i' }
+    },
+    sort: { createdAt: -1 }
+  });
+  
   return result;
 });

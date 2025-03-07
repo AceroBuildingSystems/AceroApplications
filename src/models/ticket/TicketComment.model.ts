@@ -9,6 +9,12 @@ interface Attachment {
   uploadedAt: Date;
 }
 
+interface Reaction {
+  emoji: string;
+  userId: mongoose.Types.ObjectId;
+  createdAt: Date;
+}
+
 export interface TicketCommentDocument extends Document {
   ticket: mongoose.Types.ObjectId;
   user: mongoose.Types.ObjectId;
@@ -16,11 +22,22 @@ export interface TicketCommentDocument extends Document {
   attachments?: Attachment[];
   replyTo?: mongoose.Types.ObjectId;
   mentions?: mongoose.Types.ObjectId[];
+  reactions?: Reaction[];
+  isEdited: boolean;
+  editHistory?: Array<{
+    content: string;
+    editedAt: Date;
+  }>;
+  isRead: boolean;
+  readBy: mongoose.Types.ObjectId[];
+  deliveredAt: Date;
+  readAt: Date;
   isActive: boolean;
   addedBy: string;
   updatedBy: string;
   createdAt: Date;
   updatedAt: Date;
+  markAsRead: (userId: mongoose.Types.ObjectId) => Promise<TicketCommentDocument>;
 }
 
 const AttachmentSchema = new Schema({
@@ -31,11 +48,27 @@ const AttachmentSchema = new Schema({
   uploadedAt: { type: Date, default: Date.now }
 });
 
+const ReactionSchema = new Schema({
+  emoji: { type: String, required: true },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true
+  },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const EditHistorySchema = new Schema({
+  content: { type: String, required: true },
+  editedAt: { type: Date, default: Date.now }
+});
+
 const TicketCommentSchema: Schema<TicketCommentDocument> = new Schema({
   ticket: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Ticket",
-    required: true
+    required: true,
+    index: true // Add index for better query performance
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -52,15 +85,41 @@ const TicketCommentSchema: Schema<TicketCommentDocument> = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User"
   }],
+  reactions: [ReactionSchema],
+  isEdited: { type: Boolean, default: false },
+  editHistory: [EditHistorySchema],
+  isRead: { type: Boolean, default: false },
+  readBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User"
+  }],
+  deliveredAt: { type: Date },
+  readAt: { type: Date },
   isActive: { type: Boolean, default: true },
   addedBy: { type: String },
   updatedBy: { type: String }
-}, { timestamps: true });
+}, { 
+  timestamps: true,
+  // Add index for better performance when querying by date
+  indexes: [
+    { createdAt: -1 }
+  ]
+});
 
+// Pre-save hook to set deliveredAt time when a message is created
+TicketCommentSchema.pre('save', function(next) {
+  if (this.isNew) {
+    this.deliveredAt = new Date();
+  }
+  next();
+});
+
+// Auto-populate related fields
 TicketCommentSchema.pre<Query<any, TicketCommentDocument>>(/^find/, function (next) {
   this.populate([
     { path: "user" },
     { path: "mentions" },
+    { path: "reactions.userId" },
     {
       path: "replyTo",
       populate: {
@@ -70,6 +129,46 @@ TicketCommentSchema.pre<Query<any, TicketCommentDocument>>(/^find/, function (ne
   ]);
   next();
 });
+
+// Method to mark as read
+TicketCommentSchema.methods.markAsRead = function(userId: mongoose.Types.ObjectId) {
+  if (!this.readBy.includes(userId)) {
+    this.readBy.push(userId);
+  }
+  
+  this.isRead = true;
+  this.readAt = new Date();
+  return this.save();
+};
+
+// Static method to get unread messages for a user
+TicketCommentSchema.statics.getUnreadMessages = function(ticketId: string, userId: string) {
+  return this.find({
+    ticket: ticketId,
+    user: { $ne: userId },
+    readBy: { $ne: userId }
+  });
+};
+
+// Method to edit a message
+TicketCommentSchema.methods.editMessage = function(newContent: string) {
+  // Save current content to history
+  if (!this.editHistory) {
+    this.editHistory = [];
+  }
+  
+  this.editHistory.push({
+    content: this.content,
+    editedAt: new Date()
+  });
+  
+  // Update content
+  this.content = newContent;
+  this.isEdited = true;
+  this.updatedAt = new Date();
+  
+  return this.save();
+};
 
 const TicketComment: Model<TicketCommentDocument> = 
   mongoose.models.TicketComment || mongoose.model<TicketCommentDocument>("TicketComment", TicketCommentSchema);

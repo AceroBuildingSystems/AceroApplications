@@ -215,7 +215,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={buildingTypeConfig} loadingState={loading} rowClassMap={undefined} />
+      <MasterComponent config={buildingTypeConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

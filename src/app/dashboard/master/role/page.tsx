@@ -211,7 +211,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={departmentConfig} loadingState={loading} rowClassMap={undefined} />
+      <MasterComponent config={departmentConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

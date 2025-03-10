@@ -154,6 +154,7 @@ const QuotationSchema: Schema<quotation> = new Schema({
     lostTo: { type: String, default: '' },
     lostToOthers: { type: String, default: '' },
     reason: { type: String, default: '' },
+    lostDate: { type: Date, default: null },
     initialShipDate: { type: Date, default: null },
     finalShipDate: { type: Date, default: null },
     isActive: { type: Boolean, default: true },

@@ -74,6 +74,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
 
     useEffect(() => {
+        
         setFilteredData(config?.dataTable?.data)
     }, [config, loadingState])
 
@@ -123,11 +124,10 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
         const filtered = config?.dataTable?.data?.filter((item: { [x: string]: string; }) => {
             // Check if item matches search criteria
             const matchesSearch = searchFields.some((field) => {
-              
-                const value:any = item[field];
+
+                const value: any = item[field];
                 const searchQuery = searchValues['name'] || '';
-                console.log(searchQuery, value);
-              
+                
                 if (value) {
                     const fieldValue = typeof value === 'object' && value !== null && 'name' in value ? value.name : value;
                     return fieldValue.toString().toLowerCase().includes(searchQuery.toString().toLowerCase());
@@ -153,7 +153,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                     return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
                 }
             });
-           
+
             return matchesSearch && matchesFilter;
         });
 
@@ -197,9 +197,9 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                     </div>
                                 </PopoverTrigger>
                                 {/* Popover Content */}
-                                <PopoverContent className="fixed top-1/2 w-[600px] mt-2">
+                                <PopoverContent className="fixed top-1/2 w-[600px] mt-2 ">
 
-                                    <div className="flex items-center gap-2 flex-wrap">
+                                    <div className="flex items-center gap-2 flex-wrap ">
                                         {/* Render Filter Buttons */}
                                         {config?.filterFields?.map((filter: FieldConfig, index: React.Key | null | undefined) => (
                                             <React.Fragment key={index}>
@@ -221,9 +221,10 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                     </div>
                                     <Separator className="my-3" />
                                     {/* Render Filter Dropdowns inside Popover */}
-                                    <div className=" space-y-2">
+                                    <div className="px-0 space-y-2 max-h-80 overflow-y-auto overflow-x-hidden">
+
                                         {activeFilters.map((field, index) => (
-                                            <div key={index} className="flex w-[200px] flex-col">
+                                            <div key={index} className="flex w-[250px] flex-col">
                                                 <span className="text-sm font-medium">{field.label}</span>
 
                                                 {/* Dropdown */}
@@ -240,7 +241,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                                             <CommandList>
                                                                 <CommandEmpty>No {field.label} found.</CommandEmpty>
                                                                 <CommandGroup>
-                                                                    {field.options?.map((option:any) => (
+                                                                    {field.options?.map((option: any) => (
                                                                         field.filterBy === 'id' ?
                                                                             <CommandItem
                                                                                 key={option?.id}
@@ -364,8 +365,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                         <DataTable
                             data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data}
                             columns={config?.dataTable?.columns || []}
-                            rowClassMap={rowClassMap}
-                        />
+                            rowClassMap={rowClassMap} summary={false} summaryTotal={undefined} title={''} />
                     </div>
                 </div>
             </DashboardLoader>

@@ -57,7 +57,6 @@ const page = () => {
 
     const regionNames = regionData?.data?.filter((region: undefined) => region !== undefined)  // Remove undefined entries
   ?.map((region: { name: any; }) => region.name);             // Extract only the 'name' property
-
   const fieldsToAdd = [
     { fieldName: 'regionName', path: ['region', 'name'] }
   ];
@@ -253,7 +252,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={countryConfig} loadingState={loading} rowClassMap={undefined} />
+            <MasterComponent config={countryConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

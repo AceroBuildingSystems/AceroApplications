@@ -232,7 +232,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={regionConfig} loadingState={loading} rowClassMap={undefined} />
+      <MasterComponent config={regionConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

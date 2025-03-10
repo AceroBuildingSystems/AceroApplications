@@ -204,7 +204,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={currencyConfig} loadingState={loading} rowClassMap={undefined} />
+            <MasterComponent config={currencyConfig} loadingState={loading} rowClassMap={undefined} summary={false}/>
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import {useState} from 'react'
 import { Check, ChevronsUpDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -21,9 +22,10 @@ import {
 
 
 
-export function Combobox({ field, formData, handleChange, placeholder }: any) {
-    const [open, setOpen] = React.useState(false)
-    
+export function Combobox({ field, formData, handleChange, placeholder,selectedRegion, setSelectedRegion, selectedArea, setSelectedArea, setSelectedYear, setSelectedMonth }: any) {
+    const [open, setOpen] = useState(false)
+    const [selectedValue, setSelectedValue] = useState<string | null>(null);
+ 
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
@@ -31,11 +33,11 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={`w-full justify-between ${(field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+                    className={`w-full justify-between ${(field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name || selectedValue||
                         field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.shortName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
                 >
                     {field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.shortName ||
+                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.shortName || selectedValue||
                         placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -52,14 +54,21 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                                 key="all"
                                 value=""
                                 onSelect={() => {
+                                    setSelectedValue(null);
                                     handleChange(null, field.name, field?.format, field?.type,field?.data, field); // Set the value to null for "All"
+                                    if (field.name === "year") {
+                                        setSelectedYear(0); // Update region
+                                    }
+                                    if (field.name === "month") {
+                                        setSelectedMonth(0); // Update region
+                                    }
                                     setOpen(false);
                                 }}
                             >
                                 <Check
                                     className={cn(
                                         "mr-2 h-4 w-4",
-                                        formData[field.name] === null ? "opacity-100" : "opacity-0"
+                                        (formData[field.name] === null || selectedValue === null) ? "opacity-100" : "opacity-0"
                                     )}
                                 />
                                 All
@@ -71,14 +80,27 @@ export function Combobox({ field, formData, handleChange, placeholder }: any) {
                                     key={data._id}
                                     value={data.name}
                                     onSelect={(value) => {
+                                        setSelectedValue(value);
                                         handleChange(data._id, field.name, field?.format, field?.type,field?.data, field);
+                                        if (field.name === "region") {
+                                            setSelectedRegion(data._id); // Update region
+                                        }
+                                        if (field.name === "area") {
+                                            setSelectedArea(data._id); // Update region
+                                        }
+                                        if (field.name === "year") {
+                                            setSelectedYear(data._id); // Update region
+                                        }
+                                        if (field.name === "month") {
+                                            setSelectedMonth(data._id); // Update region
+                                        }
                                         setOpen(false);
                                     }}
                                 >
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            formData[field.name] === data._id ? "opacity-100" : "opacity-0"
+                                            (formData[field.name] === data._id || selectedValue ===data._id) ? "opacity-100" : "opacity-0"
                                         )}
                                     />
                                     {data.name || data.shortName}

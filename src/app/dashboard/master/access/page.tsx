@@ -640,7 +640,7 @@ const Access = () => {
           <div className="pt-4 oveflow-auto h-full">
             <MasterComponent
               config={accessConfig}
-              loadingState={accessDataLoading && !authenticated} rowClassMap={undefined}
+              loadingState={accessDataLoading && !authenticated} rowClassMap={undefined} summary={false}
             />
             <DynamicDialog
               isOpen={isDialogOpen}
@@ -655,7 +655,7 @@ const Access = () => {
         </TabsContent>
         <TabsContent value="User">
           <div className="pt-4 oveflow-auto h-full">
-            <MasterComponent config={userAccessConfig} loadingState={loading} rowClassMap={undefined} />
+            <MasterComponent config={userAccessConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
             <DynamicDialog
               isOpen={isDialogOpen}
               closeDialog={closeDialog}

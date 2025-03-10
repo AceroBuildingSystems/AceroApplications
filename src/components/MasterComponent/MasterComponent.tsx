@@ -37,12 +37,13 @@ interface MasterComponentProps {
     config: any;
     loadingState: boolean;
     rowClassMap:any;
+    summary: boolean;
 }
 
 
 
 
-const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,rowClassMap }) => {
+const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,rowClassMap,summary }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
@@ -77,7 +78,6 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
 
-
         const filtered = config?.dataTable?.data?.filter((item: { [x: string]: string; }) => {
             // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
@@ -90,6 +90,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
             });
 
             // Check if item matches filter criteria
+           
             const matchesFilter = Object.keys(filterValues).every((key) => {
 
                 const filterValue = filterValues[key];
@@ -283,10 +284,9 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                     </div>
 
-                    <div className='h-[90%]' >
+                    <div className="h-[85%]">
                         {<DataTable data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
-                        rowClassMap={rowClassMap}
-                         />}
+                        rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
                     </div>
                 </div>
 

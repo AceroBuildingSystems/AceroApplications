@@ -54,6 +54,7 @@ interface DynamicDialogProps<T extends BaseFormData> {
   height?: string;
   width?: string;
   isSubmitting?: boolean;
+  quoteStatusData?: any;
 }
 
 function DynamicDialog<T extends BaseFormData>({
@@ -67,8 +68,9 @@ function DynamicDialog<T extends BaseFormData>({
   height,
   width,
   isSubmitting = false,
+  quoteStatusData
 }: DynamicDialogProps<T>) {
-  const { user }:any = useUserAuthorised();
+  const { user }: any = useUserAuthorised();
   const [formData, setFormData] = useState<Partial<T>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -94,7 +96,7 @@ function DynamicDialog<T extends BaseFormData>({
     type?: string,
     data?: any[],
     field?: Field,
-    customFunction = (dateValue: any) => { }  ) => {
+    customFunction = (dateValue: any) => { }) => {
     let value: any = "";
 
     ////////// Needs refactoring cant hardcode
@@ -119,16 +121,15 @@ function DynamicDialog<T extends BaseFormData>({
         formattedValue = value ? new Date(value).toISOString() : null;
       }
 
-      const updatedFormData = {
+      const updatedFormData:any = {
         ...prev,
         [fieldName]: formattedValue,
       };
-console.log(updatedFormData);
       // Call field's onChange handler if provided
       if (field?.onChange) {
         field.onChange(formattedValue);
       }
-
+     
       // Clear error when field is changed
       if (errors[fieldName]) {
         setErrors(prev => {
@@ -138,6 +139,10 @@ console.log(updatedFormData);
         });
       }
       customFunction(updatedFormData[fieldName])
+      if (fieldName === 'quoteStatus' && quoteStatusData?.find((data:any) => data._id === formattedValue)?.name === 'L - Lost') {
+        updatedFormData['lostDate'] = new Date().toISOString();
+      }
+     
       return updatedFormData;
     });
   };
@@ -195,7 +200,7 @@ console.log(updatedFormData);
       if (action === "Add") {
         updatedData.addedBy = user._id;
       }
-
+     
       const response: any = await onSave({ formData: updatedData, action });
       if (!response || response?.error) {
         toast.error(response?.error.message || "Something Went Wrong!");
@@ -280,9 +285,9 @@ console.log(updatedFormData);
                           case "date":
                             return (
                               <div>
-                              
+
                                 <DatePicker
-                                  currentDate={formData[field.name]|| undefined}
+                                  currentDate={formData[field.name] || undefined}
                                   handleChange={(selectedDate: { toISOString: () => any; }, setDate: any) => {
                                     handleChange(
                                       { target: { value: selectedDate?.toISOString() || "" } },
@@ -290,10 +295,10 @@ console.log(updatedFormData);
                                       field?.format, field?.type, field?.data, field,
                                       setDate
                                     )
-                      
+
                                     return true
                                   }}
-                                
+
                                   placeholder={field.placeholder}
                                 />
                                 {errors[field.name] && (

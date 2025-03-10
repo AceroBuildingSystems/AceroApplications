@@ -2,7 +2,7 @@
 
 import React from 'react'
 import MasterComponentAQM from '@/components/MasterComponentAQM/MasterComponentAQM'
-import { ArrowUpDown,Plus, Download, Upload } from 'lucide-react';
+import { ArrowUpDown, Plus, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { transformDataForExcel, transformQuoteData } from '@/lib/utils';
@@ -35,14 +35,14 @@ const page = () => {
 
     const [revNo, setRevNo] = useState(0);
 
-    const { user, status, authenticated }:any = useUserAuthorised();
+    const { user, status, authenticated }: any = useUserAuthorised();
 
     const { data: quotationData = [], isLoading: quotationLoading }: any = useGetApplicationQuery({
         db: MONGO_MODELS.QUOTATION_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-
+    
     const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         filter: { isActive: true },
@@ -50,8 +50,8 @@ const page = () => {
     });
 
     const quotationDataNew = transformQuoteData(quotationData?.data, user, teamMemberData?.data);
-
-    const { data: countryData = [], isLoading: countryLoading }:any = useGetMasterQuery({
+  
+    const { data: countryData = [], isLoading: countryLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.COUNTRY_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
@@ -193,93 +193,91 @@ const page = () => {
 
 
     const quoteStatusNames = quoteStatusData?.data
-        ?.filter((status:any) => status !== undefined) // Remove undefined entries
-        ?.map((status:any) => ({ id: status._id, name: status.name })) || []; // Store id & name
+        ?.filter((status: any) => status !== undefined) // Remove undefined entries
+        ?.map((status: any) => ({ id: status._id, name: status.name })) || []; // Store id & name
 
-    const quoteStatus = quoteStatusData?.data?.filter((option:any) => option?.name === 'A - Active')[0]?._id;
+    const quoteStatus = quoteStatusData?.data?.filter((option: any) => option?.name === 'A - Active')[0]?._id;
 
-
-
-    const { data: teamData = [], isLoading: teamLoading }:any = useGetMasterQuery({
+    const { data: teamData = [], isLoading: teamLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: customerData = [], isLoading: customerLoading }:any = useGetMasterQuery({
+    const { data: customerData = [], isLoading: customerLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: customerContactData = [], isLoading: customerContactLoading }:any = useGetMasterQuery({
+    const { data: customerContactData = [], isLoading: customerContactLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: customerTypeData = [] }:any = useGetMasterQuery({
+    const { data: customerTypeData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: sectorData = [] }:any = useGetMasterQuery({
+    const { data: sectorData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.SECTOR_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: industryData = [] }:any = useGetMasterQuery({
+    const { data: industryData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.INDUSTRY_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: buildingData = [] }:any = useGetMasterQuery({
+    const { data: buildingData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.BUILDING_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: fullstateData = [], isLoading: stateLoading }:any = useGetMasterQuery({
+    const { data: fullstateData = [], isLoading: stateLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.STATE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading }:any = useGetMasterQuery({
+    const { data: approvalAuthorityData = [], isLoading: approvalAuthorityLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: locationData = [] }:any = useGetMasterQuery({
+    const { data: locationData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: projectTypeData = [] }:any = useGetMasterQuery({
+    const { data: projectTypeData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.PROJECT_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: paintTypeData = [] }:any = useGetMasterQuery({
+    const { data: paintTypeData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.PAINT_TYPE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: currencyData = [] }:any = useGetMasterQuery({
+    const { data: currencyData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.CURRENCY_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: incotermData = [] }:any = useGetMasterQuery({
+    const { data: incotermData = [] }: any = useGetMasterQuery({
         db: MONGO_MODELS.INCOTERM_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const formattedLocationData = locationData?.data?.map((option:any) => ({
+    const formattedLocationData = locationData?.data?.map((option: any) => ({
         label: option.name, // Display name
         value: option._id, // Unique ID as value
     }));
@@ -363,12 +361,12 @@ const page = () => {
         _id: i + 0,
         name: (i + 0).toString()
     }));
-    
-    const [createApplication]:any = useCreateApplicationMutation();
+
+    const [createApplication]: any = useCreateApplicationMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = approvalAuthorityLoading || quotationLoading || countryLoading || customerContactLoading || customerLoading || quoteStatusLoading || countryLoading || stateLoading || teamLoading||teamMemberLoading;
+    const loading = approvalAuthorityLoading || quotationLoading || countryLoading || customerContactLoading || customerLoading || quoteStatusLoading || countryLoading || stateLoading || teamLoading || teamMemberLoading;
 
 
     const onchangeData = async ({ id, fieldName, name, parentId, position, email, phone, location }: { id: string; fieldName: string; name: string; parentId?: string; position?: string; email?: string; phone?: string; location?: string }) => {
@@ -588,7 +586,7 @@ const page = () => {
     // Save function to send data to an API or database
     const saveData = async ({ formData, action, master = 'QUOTATION_MASTER' }: { formData: any; action: string; master?: keyof typeof MONGO_MODELS }): Promise<any> => {
 
-        const formattedData:{
+        const formattedData: {
             db: string;
             action: string;
             filter: { _id: any; };
@@ -599,9 +597,9 @@ const page = () => {
             filter: { "_id": formData?._id },
             data: formData,
         };
-
-        const response:any = await createApplication(formattedData);
-
+console.log('formattedData',formattedData);
+        const response: any = await createApplication(formattedData);
+console.log(response)
 
         if (response.data?.status === SUCCESS && action === 'Add') {
 
@@ -673,7 +671,7 @@ const page = () => {
         setAction('Add');
         openDialog("new quotation");
 
-    };
+    }
 
     const handleImport = () => {
         bulkImportQuotation({
@@ -698,7 +696,7 @@ const page = () => {
     };
 
     const handleExport = (type: string, quotationDataNew: any[]) => {
-      
+
         if (!quotationDataNew || quotationDataNew.length === 0) {
             toast.error("No data to export");
             return;
@@ -940,7 +938,7 @@ const page = () => {
         },
 
         buttons: [
-           
+
             { label: 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
                 label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
@@ -995,6 +993,7 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height={'auto'}
+                quoteStatusData={quoteStatusData?.data}
 
             />
         </>

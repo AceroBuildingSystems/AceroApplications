@@ -213,7 +213,7 @@ const page = () => {
   return (
     <>
 
-      <MasterComponent config={quoteStatusConfig} loadingState={loading} rowClassMap={undefined} />
+      <MasterComponent config={quoteStatusConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

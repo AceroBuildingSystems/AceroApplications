@@ -246,7 +246,7 @@ const page = () => {
     return (
         <>
 
-            <MasterComponent config={approvalAuthorityConfig} loadingState={loading} rowClassMap={undefined} />
+            <MasterComponent config={approvalAuthorityConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
             <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

@@ -277,7 +277,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   return (
     <>
 
-      <MasterComponent config={userConfig} loadingState={loading} rowClassMap={undefined} />
+      <MasterComponent config={userConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

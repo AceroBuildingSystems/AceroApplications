@@ -60,6 +60,7 @@ export interface quotation {
     lostTo: string,
     lostToOthers: string,
     reason: string,
+    lostDate: Date,
     initialShipDate: Date,
     finalShipDate: Date,
     isActive: Boolean,

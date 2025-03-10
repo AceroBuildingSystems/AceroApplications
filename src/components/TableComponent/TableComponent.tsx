@@ -36,18 +36,22 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import DashboardLoader from "../ui/DashboardLoader";
 
 interface DataTableProps<T extends { status: string }> {
   data: T[];
   columns: ColumnDef<T>[];
   rowClassMap: Record<string, string>; // Mapping of status to CSS class names
+  summary: boolean;
+  summaryTotal: any;
+  title: string;
 }
 
 
 
-export function DataTable<T extends { status: string }>({ data, columns, rowClassMap }: DataTableProps<T>) {
-  
-  const rowNo = ['10', '20', '30', '40', '50'];
+export function DataTable<T extends { status: string }>({ data, columns, rowClassMap, summary,summaryTotal, title }: DataTableProps<T>) {
+
+  const rowNo = ['10', '20', '30', '40', '50', '100'];
 
   const [pagination, setPagination] = useState({
     pageIndex: 0, //initial page index
@@ -67,6 +71,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
+console.log("data",summaryTotal)
   const table = useReactTable({
     data,
     columns,
@@ -88,18 +93,11 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-
   return (
+    <DashboardLoader loading={table?.getRow?.length===0}>
     <div className="w-full relative h-full flex flex-col gap-1">
       <div className="flex items-center justify-between py-1 gap-1">
-        {/* <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
-        /> */}
+       
         <div className="flex items-center gap-1">
           <span className="text-sm">Rows per page</span>
           <Select onValueChange={handlePageSizeChange} defaultValue={String(pagination.pageSize)}>
@@ -146,12 +144,13 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
       </div>
 
       <div className="h-full w-full pb-6">
-        <div className="h-auto max-h-[89%] overflow-y-auto rounded-md border cursor-pointer">
+        <div className="h-auto max-h-[68vh] overflow-y-auto rounded-md border cursor-pointer">
           <Table className="">
             <TableHeader className=" w-full">
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
+
                     return (
                       <TableHead key={header.id}>
                         {header.isPlaceholder
@@ -168,32 +167,95 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
             </TableHeader>
             <TableBody className=" rounded-md">
               {table?.getRowModel()?.rows?.length ? (
-                table?.getRowModel()?.rows?.map((row, index) => (
-                  <TableRow
-                    key={row.id}
-                    className={ rowClassMap && rowClassMap[row.original?.status]}
-                    data-state={row.getIsSelected() && "selected"}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+                <>
+                  {table.getRowModel().rows.map((row) => (
+
+                    <TableRow
+                      key={row.id}
+                      className={rowClassMap && rowClassMap[row.original?.status]}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => {
+                        const cellValue = cell.getValue();
+                        const isNumeric = typeof cellValue === 'number';
+
+                        let displayValue = flexRender(cell.column.columnDef.cell, cell.getContext());
+
+                        if (isNumeric) {
+                          // Round the numeric value and convert to string with formatting
+                          displayValue = Math.round(cellValue).toLocaleString(); // rounded and formatted
+                        }
+                        return (
+                          <TableCell key={cell.id} >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        );
+                      })}
+                    </TableRow>
+                  ))}
+
+                  {/* Summary Row (placed outside the map) */}
+                  {summary && title === 'Quotation Details' && <TableRow className="bg-gray-200 font-bold">
+                    <TableCell>Total</TableCell>
+                    <TableCell colSpan={3}></TableCell>
+                    <TableCell >{summaryTotal.totalQuotes}</TableCell>
+                    <TableCell >{summaryTotal.totalJobs}</TableCell>
+                    <TableCell >{Math.round(summaryTotal.avgQ22Total).toLocaleString()}</TableCell>
+                    <TableCell >{Math.round(summaryTotal.totalWeight).toLocaleString()}</TableCell>
+                  </TableRow>}
+                  {summary && title === 'Quote Status' && <TableRow className="bg-gray-200 font-bold">
+                    <TableCell>Total</TableCell>
+                    <TableCell colSpan={2}></TableCell>
+                    <TableCell >{summaryTotal.totalActive}</TableCell>
+                    <TableCell >{summaryTotal.totalBudgetary}</TableCell>
+                    <TableCell >{summaryTotal.totalCancel}</TableCell>
+                    <TableCell >{summaryTotal.totalDecline}</TableCell>
+                    <TableCell >{summaryTotal.totalHold}</TableCell>
+                    <TableCell >{summaryTotal.totalHotQuote}</TableCell>
+                    <TableCell >{summaryTotal.totalJob}</TableCell>
+                    <TableCell >{summaryTotal.totalJobShipped}</TableCell>
+                    <TableCell >{summaryTotal.totalLost}</TableCell>
+                    <TableCell >{summaryTotal.totalTotal}</TableCell>
+
+                  </TableRow>}
+                  {summary && title === 'Job Details' && <TableRow className="bg-gray-200 font-bold">
+                    <TableCell>Total</TableCell>
+                    <TableCell colSpan={5}></TableCell>
+                    <TableCell >{summaryTotal.totalQ22Value}</TableCell>
+                    <TableCell >{summaryTotal.totalWeight}</TableCell>
+                    <TableCell >{}</TableCell>
+                    <TableCell >{summaryTotal.totalEstPrice}</TableCell>
+
+                  </TableRow>}
+                  {summary && title === 'Job Lost Report' && <TableRow className="bg-gray-200 font-bold">
+                    <TableCell>Total</TableCell>
+                    <TableCell colSpan={3}></TableCell>
+                    <TableCell >{summaryTotal.totalWeight}</TableCell>
+                    <TableCell >{summaryTotal.totalQ22Value}</TableCell>
+                    <TableCell >{summaryTotal.totalEstPrice}</TableCell>
+                    <TableCell colSpan={5}>{}</TableCell>
+                  </TableRow>}
+                  {summary && title === '3 Month SF' && <TableRow className="bg-gray-200 font-bold">
+                    <TableCell>Total</TableCell>
+                    <TableCell colSpan={5}></TableCell>
+                    <TableCell >{summaryTotal.totalWeight}</TableCell>
+                    <TableCell>{}</TableCell>
+                  </TableRow>}
+                </>
+              )
+
+                : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      No results.
+                    </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
+                )}
+
+
             </TableBody>
           </Table>
         </div>
@@ -223,6 +285,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
         </div>
       </div>
     </div>
+    </DashboardLoader>
   )
 }
 

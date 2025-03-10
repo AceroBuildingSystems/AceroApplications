@@ -285,7 +285,7 @@ const { user, status, authenticated } = useUserAuthorised();
   return (
     <>
 
-      <MasterComponent config={customerContactConfig} loadingState={loading} rowClassMap={undefined} />
+      <MasterComponent config={customerContactConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
         closeDialog={closeDialog}

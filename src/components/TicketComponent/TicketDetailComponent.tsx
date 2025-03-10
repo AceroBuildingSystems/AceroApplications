@@ -26,6 +26,7 @@ import TicketStatusChangeComponent from './TicketStatusChangeComponent';
 import TicketAutoAssignComponent from './TicketAutoAssignComponent';
 import TicketAttachmentComponent from './TicketAttachmentComponent';
 import TicketChatSystem from './TicketChatSystem';
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -37,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import EnhancedTicketChat from './EnhancedTicketChat';
+import TicketChat from './TicketChat';
 
 interface TicketDetailComponentProps {
   ticket: any;
@@ -340,17 +342,18 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
         </TabsList>
         
         <TabsContent value="comments">
-          <EnhancedTicketChat
-            ticketId={ticket._id}
-            userId={userId}
-            currentUser={{
-              _id: userId,
-              firstName: ticket.creator.firstName,
-              lastName: ticket.creator.lastName
-            }}
-            isLoading={commentsLoading}
-          />
-      </TabsContent>
+  <TicketChat
+    ticketId={ticket._id}
+    userId={userId}
+    currentUser={{
+      _id: userId,
+      firstName: ticket.creator.firstName,
+      lastName: ticket.creator.lastName,
+      ...(ticket.creator.avatar && { avatar: ticket.creator.avatar })
+    }}
+    isLoading={commentsLoading}
+  />
+</TabsContent>
         
         <TabsContent value="tasks">
           <TicketTaskComponent 

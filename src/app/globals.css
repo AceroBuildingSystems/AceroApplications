@@ -126,3 +126,16 @@ border: 3px solid transparent;
 .animate-highlight {
   animation: highlight 1s ease-in-out;
 }
+
+@keyframes highlight {
+  0% { background-color: rgba(96, 165, 250, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.animate-highlight {
+  animation: highlight 1s ease-in-out;
+}
+
+.fixed-position {
+  transition: none !important;
+}

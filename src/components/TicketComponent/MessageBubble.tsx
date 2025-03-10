@@ -1,34 +1,36 @@
 // src/components/TicketComponent/MessageBubble.tsx
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   CornerUpRight, Check, CheckCircle, Clock, Edit, 
-  Trash, MessageSquare, Download, Reply, MoreVertical, Pencil
+  Trash, Download, Reply, MoreVertical, Pencil, Smile, AlertCircle
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { ChatMessage } from '@/types/next';
-import MessageReactions from './MessageReactions';
+import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
-import { Textarea } from '@/components/ui/textarea';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from "@/components/ui/popover";
+import { toast } from 'react-toastify';
+
+// Common emojis to use for reactions
+const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
 
 interface MessageBubbleProps {
-  message: ChatMessage;
+  message: any;
   currentUserId: string;
-  onReply: (message: ChatMessage) => void;
+  onReply: (message: any) => void;
   onReaction: (messageId: string, emoji: string) => void;
   onEdit: (messageId: string, newContent: string) => void;
   formatMessageContent: (content: string) => React.ReactNode;
@@ -47,12 +49,29 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   formatFileSize
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState(message.content);
+  const [editedContent, setEditedContent] = useState(message.content || '');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const isCurrentUser = message.user._id === currentUserId;
+  const isPending = message.isPending;
+  const hasError = message.error;
+  
+  // Focus textarea when editing starts
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus();
+      textareaRef.current.setSelectionRange(editedContent.length, editedContent.length);
+    }
+  }, [isEditing, editedContent]);
   
   // Handle edit submission
   const handleSubmitEdit = () => {
+    if (editedContent.trim() === '') {
+      toast.error('Message cannot be empty');
+      return;
+    }
+    
     if (editedContent.trim() !== message.content) {
       onEdit(message._id, editedContent);
     }
@@ -61,13 +80,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   
   // Cancel edit
   const handleCancelEdit = () => {
-    setEditedContent(message.content);
+    setEditedContent(message.content || '');
     setIsEditing(false);
   };
   
   // Check if the message is less than 5 minutes old (for edit capability)
   const canEdit = () => {
     if (!isCurrentUser) return false;
+    if (isPending || hasError) return false;
     
     const messageTime = new Date(message.createdAt).getTime();
     const now = Date.now();
@@ -75,31 +95,75 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     
     return (now - messageTime) < fiveMinutesInMs;
   };
-
-  // Get message delivery status
-  const getDeliveryStatus = () => {
-    if (!isCurrentUser) return null;
+  
+  // Check if the current user has reacted with this emoji
+  const hasUserReacted = (emoji: string) => {
+    if (!message.reactions) return false;
+    return message.reactions.some((r: any) => r.emoji === emoji && r.userId === currentUserId);
+  };
+  
+  // Count reactions by emoji
+  const countReactions = (emoji: string) => {
+    if (!message.reactions) return 0;
+    return message.reactions.filter((r: any) => r.emoji === emoji).length;
+  };
+  
+  // Get unique reaction emojis
+  const getUniqueReactionEmojis = () => {
+    if (!message.reactions || message.reactions.length === 0) return [];
+    const emojis = message.reactions.map((r: any) => r.emoji);
+    return [...new Set(emojis)];
+  };
+  
+  // Handle key press in edit mode
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmitEdit();
+    }
     
-    if (message.readBy && message.readBy.length > 1) {
+    if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+  
+  // Render status indicators for the message
+  const renderMessageStatus = () => {
+    if (isPending) {
       return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <CheckCircle className="h-3 w-3 text-blue-300" />
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Read by {message.readBy.length - 1} users</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <span className="ml-1 flex items-center text-xs">
+          <Clock className="h-3 w-3 text-gray-400 mr-1" />
+          <span className="text-gray-400">Sending...</span>
+        </span>
       );
     }
     
-    if (message.deliveredAt) {
-      return <Check className="h-3 w-3 text-blue-200" />;
+    if (hasError) {
+      return (
+        <span className="ml-1 flex items-center text-xs">
+          <AlertCircle className="h-3 w-3 text-red-500 mr-1" />
+          <span className="text-red-500">Failed</span>
+        </span>
+      );
     }
     
-    return <Clock className="h-3 w-3 text-blue-200" />;
+    if (isCurrentUser) {
+      if (message.readBy && message.readBy.length > 1) {
+        return (
+          <span className="ml-1">
+            <CheckCircle className="h-3 w-3 text-green-500" />
+          </span>
+        );
+      } else if (message.deliveredAt) {
+        return (
+          <span className="ml-1">
+            <Check className="h-3 w-3 text-blue-200" />
+          </span>
+        );
+      }
+    }
+    
+    return null;
   };
   
   return (
@@ -112,7 +176,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <AvatarImage src={message.user.avatar} />
         ) : (
           <AvatarFallback>
-            {`${message.user.firstName?.[0] || ''}${message.user.lastName?.[0] || ''}`}
+            {message.user.firstName && message.user.lastName 
+              ? `${message.user.firstName[0]}${message.user.lastName[0]}`
+              : '??'}
           </AvatarFallback>
         )}
       </Avatar>
@@ -123,6 +189,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
       )}>
         <div className={cn(
           "rounded-lg px-4 py-2 relative",
+          isPending ? "opacity-70" : "",
+          hasError ? "border border-red-300" : "",
           isCurrentUser 
             ? "bg-blue-500 text-white" 
             : "bg-gray-100 text-gray-800"
@@ -132,7 +200,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               "font-medium text-xs",
               isCurrentUser ? "text-blue-100" : "text-gray-600"
             )}>
-              {isCurrentUser ? 'You' : `${message.user.firstName} ${message.user.lastName}`}
+              {isCurrentUser ? 'You' : `${message.user.firstName || ''} ${message.user.lastName || ''}`}
             </span>
             <div className="flex items-center gap-1">
               <span className={cn(
@@ -148,11 +216,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               </span>
               
               {/* Message status indicators */}
-              {isCurrentUser && (
-                <span className="ml-1">
-                  {getDeliveryStatus()}
-                </span>
-              )}
+              {renderMessageStatus()}
               
               {/* Message options dropdown */}
               <DropdownMenu>
@@ -177,11 +241,34 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     Reply
                   </DropdownMenuItem>
                   
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem onSelect={(e) => {
+                    e.preventDefault();
+                    setShowEmojiPicker(true);
+                  }}>
+                    <Smile className="h-4 w-4 mr-2" />
+                    Add Reaction
+                  </DropdownMenuItem>
+                  
                   {canEdit() && (
-                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                      <Pencil className="h-4 w-4 mr-2" />
-                      Edit
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  
+                  {hasError && isCurrentUser && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-red-500">
+                        <Reply className="h-4 w-4 mr-2" />
+                        Retry
+                      </DropdownMenuItem>
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -200,13 +287,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 isCurrentUser ? "text-blue-100" : "text-gray-700"
               )}>
                 <CornerUpRight className="h-3 w-3" />
-                Replying to {message.replyTo?.user?.firstName || "User"}
+                Replying to {message.replyToUser?.firstName || "User"}
               </span>
               <span className={cn(
                 "italic line-clamp-1",
                 isCurrentUser ? "text-blue-100" : "text-gray-600"
               )}>
-                {message.replyTo?.content || "Original message"}
+                {message.replyToContent || "Original message"}
               </span>
             </div>
           )}
@@ -216,10 +303,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               <Textarea
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
+                onKeyDown={handleKeyPress}
                 className={cn(
                   "min-h-[60px] text-sm p-2 resize-none border-0",
-                  isCurrentUser ? "bg-blue-600 text-white" : "bg-white text-gray-800"
+                  isCurrentUser ? "bg-blue-600 text-white placeholder-blue-200" : "bg-white text-gray-800"
                 )}
+                ref={textareaRef}
               />
               <div className="flex justify-end gap-2 mt-2">
                 <Button 
@@ -244,26 +333,62 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               "whitespace-pre-line break-words",
               isCurrentUser ? "text-white" : "text-gray-800"
             )}>
-              {formatMessageContent(message.content)}
+              {formatMessageContent(message.content || '')}
             </div>
           )}
         </div>
         
-        {/* Reactions */}
-        {message.reactions && message.reactions.length > 0 && (
-          <MessageReactions
-            reactions={message.reactions}
-            messageId={message._id}
-            userId={currentUserId}
-            onAddReaction={(emoji) => onReaction(message._id, emoji)}
-            position={isCurrentUser ? 'right' : 'left'}
-          />
+        {/* Message Reactions */}
+        {getUniqueReactionEmojis().length > 0 && (
+          <div className={cn(
+            "flex flex-wrap gap-1 mt-1",
+            isCurrentUser ? "justify-end" : "justify-start"
+          )}>
+            {getUniqueReactionEmojis().map(emoji => (
+              <button
+                key={emoji}
+                className={cn(
+                  "inline-flex items-center rounded-full px-2 py-1 text-xs",
+                  hasUserReacted(emoji)
+                    ? "bg-blue-100 hover:bg-blue-200 text-blue-800"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                )}
+                onClick={() => onReaction(message._id, emoji)}
+              >
+                <span className="mr-1">{emoji}</span>
+                <span>{countReactions(emoji)}</span>
+              </button>
+            ))}
+          </div>
         )}
+        
+        {/* Emoji Picker */}
+        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+          <PopoverTrigger asChild>
+            <div className="hidden">Trigger</div>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2" align={isCurrentUser ? 'end' : 'start'} side="top">
+            <div className="flex flex-wrap gap-2 max-w-[200px]">
+              {commonEmojis.map(emoji => (
+                <button
+                  key={emoji}
+                  className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer"
+                  onClick={() => {
+                    onReaction(message._id, emoji);
+                    setShowEmojiPicker(false);
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
         
         {/* Display attachments */}
         {message.attachments && message.attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
-            {message.attachments.map((attachment, index) => (
+            {message.attachments.map((attachment: any, index: number) => (
               <div key={index} className={cn(
                 "rounded-lg overflow-hidden",
                 isCurrentUser ? "ml-auto" : ""
@@ -310,31 +435,38 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         
         {/* Message actions */}
-        <div className={cn(
-          "flex mt-1 text-xs text-gray-500 gap-2",
-          isCurrentUser ? "justify-end" : ""
-        )}>
-          <button 
-            className="hover:text-gray-700"
-            onClick={() => onReply(message)}
-          >
-            Reply
-          </button>
-          
-          {!message.reactions || message.reactions.length === 0 ? (
-            <MessageReactions
-              reactions={[]}
-              messageId={message._id}
-              userId={currentUserId}
-              onAddReaction={(emoji) => onReaction(message._id, emoji)}
-              position={isCurrentUser ? 'right' : 'left'}
-            />
-          ) : null}
-        </div>
+        {!isEditing && !isPending && !hasError && (
+          <div className={cn(
+            "flex mt-1 text-xs text-gray-500 gap-2",
+            isCurrentUser ? "justify-end" : ""
+          )}>
+            <button 
+              className="hover:text-gray-700"
+              onClick={() => onReply(message)}
+            >
+              Reply
+            </button>
+            
+            <button 
+              className="hover:text-gray-700"
+              onClick={() => setShowEmojiPicker(true)}
+            >
+              React
+            </button>
+            
+            {canEdit() && (
+              <button 
+                className="hover:text-gray-700"
+                onClick={() => setIsEditing(true)}
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-// Memoize component to prevent unnecessary re-renders
 export default memo(MessageBubble);

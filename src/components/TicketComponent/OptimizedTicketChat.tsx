@@ -1,6 +1,4 @@
-// src/components/TicketComponent/EnhancedTicketChat.tsx
-"use client";
-
+// src/components/TicketComponent/OptimizedTicketChat.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -15,7 +13,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Paperclip, Send, File, Image, X, AtSign, Reply, CornerUpRight, 
   PlusCircle, UserPlus, Smile, Loader2, MessageSquare, Download, Video,
-  Search, CheckCircle, Clock, AlertCircle, Loader
+  Search, CheckCircle, Clock, AlertCircle, User, Wifi, WifiOff
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -24,10 +22,8 @@ import { useGetTicketCommentsQuery, useMarkAsReadMutation, useUploadFileMutation
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import DashboardLoader from '@/components/ui/DashboardLoader';
 import debounce from 'lodash/debounce';
-import { ChatMessage } from '@/types/next';
-import { toast } from 'react-toastify';
 import MessageBubble from './MessageBubble';
-import ConnectionStatus from './ConnectionStatus';
+import { toast } from 'react-toastify';
 
 interface User {
   _id: string;
@@ -37,39 +33,39 @@ interface User {
   department?: any;
 }
 
-interface EnhancedTicketChatProps {
+interface OptimizedTicketChatProps {
   ticketId: string;
   userId: string;
   currentUser: User;
   isLoading?: boolean;
 }
 
-const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
+const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   ticketId,
   userId,
   currentUser,
   isLoading: propLoading = false
 }) => {
-  // State
+  // Local states
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [mentionQuery, setMentionQuery] = useState('');
   const [showMentionsPopover, setShowMentionsPopover] = useState(false);
   const [mentionStartIndex, setMentionStartIndex] = useState(-1);
-  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
+  const [replyingTo, setReplyingTo] = useState<any | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'participants'>('chat');
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<ChatMessage[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [viewingOlderMessages, setViewingOlderMessages] = useState(false);
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const lastViewedMessageIdRef = useRef<string | null>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
   
   // RTK Queries
   const { data: commentsData = {}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
@@ -92,10 +88,10 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   const { 
     isConnected, 
     isConnecting,
-    connectionError,
     messages: socketMessages,
     typingUsers,
     onlineUsers,
+    messageReactions,
     updateMessages,
     sendMessage,
     editMessage,
@@ -119,54 +115,34 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    if (messagesEndRef.current) {
+    if (!viewingOlderMessages && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [socketMessages]);
-  
-  // Mark visible messages as read when tab gains focus
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && socketMessages.length > 0) {
-        const unreadMessageIds = socketMessages
-          .filter(msg => msg.user._id !== userId && !msg.readBy?.includes(userId))
-          .map(msg => msg._id);
-        
-        if (unreadMessageIds.length > 0) {
-          markMessagesAsRead(unreadMessageIds);
-        }
-      }
-    };
     
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    // Also mark messages as read on mount
-    handleVisibilityChange();
+    // Check for new messages that we haven't seen before
+    const newMessageIds = socketMessages
+      .filter(msg => msg.user._id !== userId && !msg.readBy?.includes(userId) && msg._id !== lastMessageIdRef.current)
+      .map(msg => msg._id);
     
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [socketMessages, userId, markMessagesAsRead]);
+    if (newMessageIds.length > 0 && markMessagesAsRead) {
+      markMessagesAsRead(newMessageIds);
+      lastMessageIdRef.current = socketMessages[socketMessages.length - 1]?._id || null;
+    }
+  }, [socketMessages, userId, markMessagesAsRead, viewingOlderMessages]);
   
-  // Check if there are new unread messages and mark them as read
+  // Handle connection status changes 
   useEffect(() => {
-    if (socketMessages.length > 0) {
-      const lastMessage = socketMessages[socketMessages.length - 1];
+    if (isConnected) {
+      // When we connect, mark unread messages as read
+      const unreadMessageIds = socketMessages
+        .filter(msg => msg.user._id !== userId && !msg.readBy?.includes(userId))
+        .map(msg => msg._id);
       
-      // Only process if this is a new message we haven't seen yet
-      if (lastMessage._id !== lastViewedMessageIdRef.current) {
-        lastViewedMessageIdRef.current = lastMessage._id;
-        
-        // Mark new messages from others as read
-        const unreadMessageIds = socketMessages
-          .filter(msg => msg.user._id !== userId && !msg.readBy?.includes(userId))
-          .map(msg => msg._id);
-        
-        if (unreadMessageIds.length > 0) {
-          markMessagesAsRead(unreadMessageIds);
-        }
+      if (unreadMessageIds.length > 0 && markMessagesAsRead) {
+        markMessagesAsRead(unreadMessageIds);
       }
     }
-  }, [socketMessages, userId, markMessagesAsRead]);
+  }, [isConnected, socketMessages, userId, markMessagesAsRead]);
   
   // Handle typing debounced
   const debouncedTyping = useRef(
@@ -272,7 +248,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   );
   
   // Handle reply to a message
-  const handleReply = (message: ChatMessage) => {
+  const handleReply = (message: any) => {
     setReplyingTo(message);
     if (textareaRef.current) {
       textareaRef.current.focus();
@@ -335,11 +311,9 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   
   // Handle message submission via Socket.io
   const handleSubmit = async () => {
-    if ((!message.trim() && selectedFiles.length === 0) || isSubmitting || isUploading) return;
+    if ((!message.trim() && selectedFiles.length === 0) || isUploading) return;
     
     try {
-      setIsSubmitting(true);
-      
       // Upload files first if any
       const uploadedFiles = await handleFileUpload();
       
@@ -347,42 +321,26 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
       const mentionedUserIds = extractMentions(message);
       
       // Send message via Socket.io
-      const success = sendMessage(message, uploadedFiles, replyingTo?._id, mentionedUserIds);
-      
-      if (!success) {
-        toast.warning('Connection issue - message may be delayed');
-      }
+      const tempId = sendMessage(message, uploadedFiles, replyingTo?._id, mentionedUserIds);
       
       // Clear state
       setMessage('');
       setSelectedFiles([]);
       setReplyingTo(null);
       
-      // Scroll to bottom
+      // Refresh comments periodically to ensure data is in sync
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+        refetchComments();
+      }, 2000);
     } catch (error) {
       console.error("Message submission error:", error);
       toast.error("Failed to send message");
-    } finally {
-      setIsSubmitting(false);
     }
   };
   
-  // Handle message edit
-  const handleEditMessage = useCallback((messageId: string, newContent: string) => {
-    editMessage(messageId, newContent);
-  }, [editMessage]);
-  
-  // Handle message reaction
-  const handleReaction = useCallback((messageId: string, emoji: string) => {
-    addReaction(messageId, emoji);
-  }, [addReaction]);
-  
   // Group messages by date
   const groupMessagesByDate = () => {
-    const groups: { [key: string]: ChatMessage[] } = {};
+    const groups: { [key: string]: any[] } = {};
     
     socketMessages.forEach(message => {
       const date = new Date(message.createdAt).toISOString().split('T')[0];
@@ -452,15 +410,15 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   
   // Get icon based on file type
   const getFileIcon = (fileType: string) => {
-    if (fileType?.startsWith('image/')) {
+    if (fileType.startsWith('image/')) {
       return <Image className="h-4 w-4" />;
-    } else if (fileType?.startsWith('video/')) {
+    } else if (fileType.startsWith('video/')) {
       return <Video className="h-4 w-4" />;
-    } else if (fileType?.includes('pdf')) {
+    } else if (fileType.includes('pdf')) {
       return <File className="h-4 w-4 text-red-500" />;
-    } else if (fileType?.includes('word') || fileType?.includes('document')) {
+    } else if (fileType.includes('word') || fileType.includes('document')) {
       return <File className="h-4 w-4 text-blue-500" />;
-    } else if (fileType?.includes('excel') || fileType?.includes('spreadsheet')) {
+    } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
       return <File className="h-4 w-4 text-green-500" />;
     } else {
       return <File className="h-4 w-4" />;
@@ -484,15 +442,6 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   
   const isLoading = propLoading || commentsLoading || teamMembersLoading;
   
-  // Handle keyboard shortcuts for sending messages
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Send message on Ctrl+Enter or Cmd+Enter
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
-  
   return (
     <Card className="overflow-hidden flex flex-col">
       <CardHeader className="pb-0">
@@ -500,13 +449,24 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
           <CardTitle className="text-xl flex items-center">
             <MessageSquare className="mr-2 h-5 w-5" />
             Ticket Chat
-            <ConnectionStatus
-              isConnected={isConnected}
-              isConnecting={isConnecting}
-              connectionError={connectionError}
-              onReconnect={reconnect}
-              className="ml-2"
-            />
+            {isConnecting && (
+              <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 animate-pulse">
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                Connecting...
+              </Badge>
+            )}
+            {!isConnecting && !isConnected && (
+              <Badge variant="outline" className="ml-2 bg-red-50 text-red-700">
+                <WifiOff className="h-3 w-3 mr-1" />
+                Offline
+              </Badge>
+            )}
+            {isConnected && (
+              <Badge variant="outline" className="ml-2 bg-green-50 text-green-700">
+                <Wifi className="h-3 w-3 mr-1" />
+                Connected
+              </Badge>
+            )}
           </CardTitle>
           
           <div className="flex items-center gap-2">
@@ -557,7 +517,13 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
             {/* Chat Tab */}
             <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 data-[state=active]:flex-1">
               {/* Message area */}
-              <ScrollArea className="flex-1 p-4">
+              <ScrollArea 
+                className="flex-1 p-4"
+                onScroll={(e) => {
+                  const target = e.currentTarget;
+                  setViewingOlderMessages(target.scrollTop < target.scrollHeight - target.clientHeight - 100);
+                }}
+              >
                 {socketMessages.length === 0 ? (
                   <div className="text-center py-20 text-gray-500">
                     <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
@@ -574,14 +540,14 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                           </Badge>
                         </div>
                         
-                        {group.messages.map(message => (
+                        {group.messages.map((message: any) => (
                           <div key={message._id} className="mb-4" id={`message-${message._id}`}>
                             <MessageBubble
                               message={message}
                               currentUserId={userId}
                               onReply={handleReply}
-                              onReaction={handleReaction}
-                              onEdit={handleEditMessage}
+                              onReaction={(messageId, emoji) => addReaction(messageId, emoji)}
+                              onEdit={(messageId, newContent) => editMessage(messageId, newContent)}
                               formatMessageContent={formatMessageContent}
                               getFileIcon={getFileIcon}
                               formatFileSize={formatFileSize}
@@ -592,9 +558,11 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                     ))}
                     
                     {typingIndicator.length > 0 && (
-                      <div className="text-sm text-gray-500 my-2 italic flex items-center">
-                        <Loader className="h-3 w-3 mr-2 animate-spin" />
+                      <div className="text-sm text-gray-500 my-2 italic">
                         {typingIndicator.join(', ')} {typingIndicator.length === 1 ? 'is' : 'are'} typing...
+                        <span className="inline-block animate-bounce">.</span>
+                        <span className="inline-block animate-bounce delay-75">.</span>
+                        <span className="inline-block animate-bounce delay-150">.</span>
                       </div>
                     )}
                     
@@ -605,6 +573,23 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
               
               {/* Message input area */}
               <div className="p-4 border-t">
+                {!isConnected && !isConnecting && (
+                  <div className="flex items-center justify-between gap-4 px-3 py-2 mb-3 bg-yellow-50 text-yellow-800 rounded-md">
+                    <div className="flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      <span className="text-sm font-medium">You're currently offline. Messages will be sent when you reconnect.</span>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={reconnect}
+                      className="whitespace-nowrap"
+                    >
+                      Try to Reconnect
+                    </Button>
+                  </div>
+                )}
+                
                 {replyingTo && (
                   <div className="flex flex-col text-sm bg-gray-50 p-3 mb-2 rounded-md border-l-4 border-blue-400">
                     <div className="flex justify-between items-center mb-1">
@@ -624,10 +609,9 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                 
                 <div className="relative">
                   <Textarea
-                    placeholder="Type a message... (Ctrl+Enter to send)"
+                    placeholder="Type a message..."
                     value={message}
                     onChange={handleMessageInput}
-                    onKeyDown={handleKeyDown}
                     className="resize-none pr-24"
                     rows={3}
                     ref={textareaRef}
@@ -668,11 +652,11 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                     
                     <Button 
                       onClick={handleSubmit}
-                      disabled={(!message.trim() && selectedFiles.length === 0) || isSubmitting || isUploading}
+                      disabled={(!message.trim() && selectedFiles.length === 0) || isUploading}
                       size="sm" 
                       className="h-8"
                     >
-                      {isSubmitting ? (
+                      {isUploading ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Send className="h-4 w-4" />
@@ -753,17 +737,6 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                     ))}
                   </div>
                 )}
-                
-                {!isConnected && !isConnecting && (
-                  <div className="mt-2 flex items-center gap-2 bg-yellow-50 text-yellow-800 p-2 rounded-md">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm">Not connected to chat server. Messages will be sent when reconnected.</span>
-                    <Button variant="outline" size="sm" onClick={reconnect} className="ml-auto text-xs">
-                      <RefreshCw className="h-3 w-3 mr-1" />
-                      Reconnect
-                    </Button>
-                  </div>
-                )}
               </div>
             </TabsContent>
             
@@ -792,7 +765,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                         </Button>
                       </div>
                       
-                      {file.fileType?.startsWith('image/') && (
+                      {file.fileType.startsWith('image/') && (
                         <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
                           <img src={file.url} alt={file.fileName} className="max-h-full object-contain" />
                         </div>
@@ -829,7 +802,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
               
               {participants.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  <UserPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                  <User className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p>No participants yet.</p>
                 </div>
               ) : (
@@ -857,6 +830,11 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                           <div className="font-medium">{`${user.firstName} ${user.lastName}`}</div>
                           <div className="flex items-center text-xs text-gray-500">
                             <span className="capitalize">{user.status}</span>
+                            {user.status !== 'online' && user.lastActive && (
+                              <span className="ml-1">
+                                • Last seen {formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -988,9 +966,16 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                       className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                       onClick={() => {
                         setSearchDialogOpen(false);
-                        // Scroll to this message
                         setTimeout(() => {
                           document.getElementById(`message-${message._id}`)?.scrollIntoView({ behavior: 'smooth' });
+                          // Highlight the message temporarily
+                          const messageEl = document.getElementById(`message-${message._id}`);
+                          if (messageEl) {
+                            messageEl.classList.add('bg-yellow-50', 'transition-colors');
+                            setTimeout(() => {
+                              messageEl.classList.remove('bg-yellow-50', 'transition-colors');
+                            }, 2000);
+                          }
                         }, 100);
                       }}
                     >
@@ -1016,4 +1001,4 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   );
 };
 
-export default EnhancedTicketChat;
+export default OptimizedTicketChat;

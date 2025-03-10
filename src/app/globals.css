@@ -117,3 +117,12 @@ border: 3px solid transparent;
   contain: layout;
   will-change: transform;
 }
+
+@keyframes highlight {
+  0% { background-color: rgba(96, 165, 250, 0.2); }
+  100% { background-color: transparent; }
+}
+
+.animate-highlight {
+  animation: highlight 1s ease-in-out;
+}

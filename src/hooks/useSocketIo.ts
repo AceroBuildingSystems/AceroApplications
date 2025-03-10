@@ -10,9 +10,11 @@ interface UseSocketIoProps {
 
 export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true);
+  const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState<Error | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [joinedUsers, setJoinedUsers] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
+  const [leftUsers, setLeftUsers] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
   const [onlineUsers, setOnlineUsers] = useState<Record<string, string>>({});
   const socketServiceRef = useRef(getSocketService());
@@ -34,7 +36,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     // Join the ticket room
     socketService.joinTicketRoom(ticketId, userId, roomId);
     
-    // Event listeners
+    // Set up event listeners
     const handleConnected = () => {
       setIsConnected(true);
       setIsConnecting(false);
@@ -52,9 +54,31 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
       setIsConnecting(true);
     };
     
+    const handleReconnectFailed = () => {
+      setIsConnecting(false);
+      setConnectionError(new Error('Failed to reconnect after multiple attempts'));
+    };
+    
+    const handleConnectError = (error: Error) => {
+      setConnectionError(error);
+    };
+    
     const handleError = (error: Error) => {
       setConnectionError(error);
-      setIsConnecting(false);
+    };
+    
+    const handleUserJoined = (data: {userId: string, username: string, timestamp: Date}) => {
+      console.log('User joined:', data);
+      if (data.userId !== userId) {
+        setJoinedUsers(prev => [...prev, data]);
+      }
+    };
+    
+    const handleUserLeft = (data: {userId: string, username: string, timestamp: Date}) => {
+      console.log('User left:', data);
+      if (data.userId !== userId) {
+        setLeftUsers(prev => [...prev, data]);
+      }
     };
     
     const handleMessagesUpdated = (updatedMessages: ChatMessage[]) => {
@@ -66,19 +90,23 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
       setTypingUsers(typingStatus);
     };
     
-    const handleUserStatusUpdated = (statusMap: Record<string, string>) => {
-      setOnlineUsers(statusMap);
+    const handleUserStatusUpdated = (statusObj: Record<string, string>) => {
+      setOnlineUsers(statusObj);
     };
     
-    const handleReactionsUpdated = (reactionsData: Record<string, any>) => {
-      setMessageReactions(reactionsData);
+    const handleReactionsUpdated = (reactions: Record<string, MessageReaction>) => {
+      setMessageReactions(reactions);
     };
     
-    // Register all event listeners
+    // Register event listeners
     socketService.on('connected', handleConnected);
     socketService.on('disconnected', handleDisconnected);
     socketService.on('reconnecting', handleReconnecting);
+    socketService.on('reconnect_failed', handleReconnectFailed);
+    socketService.on('connect_error', handleConnectError);
     socketService.on('error', handleError);
+    socketService.on('user-joined', handleUserJoined);
+    socketService.on('user-left', handleUserLeft);
     socketService.on('messages-updated', handleMessagesUpdated);
     socketService.on('typing-updated', handleTypingUpdated);
     socketService.on('user-status-updated', handleUserStatusUpdated);
@@ -91,16 +119,20 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     
     // Cleanup function
     return () => {
-      socketService.removeListener('connected', handleConnected);
-      socketService.removeListener('disconnected', handleDisconnected);
-      socketService.removeListener('reconnecting', handleReconnecting);
-      socketService.removeListener('error', handleError);
-      socketService.removeListener('messages-updated', handleMessagesUpdated);
-      socketService.removeListener('typing-updated', handleTypingUpdated);
-      socketService.removeListener('user-status-updated', handleUserStatusUpdated);
-      socketService.removeListener('reactions-updated', handleReactionsUpdated);
+      socketService.off('connected', handleConnected);
+      socketService.off('disconnected', handleDisconnected);
+      socketService.off('reconnecting', handleReconnecting);
+      socketService.off('reconnect_failed', handleReconnectFailed);
+      socketService.off('connect_error', handleConnectError);
+      socketService.off('error', handleError);
+      socketService.off('user-joined', handleUserJoined);
+      socketService.off('user-left', handleUserLeft);
+      socketService.off('messages-updated', handleMessagesUpdated);
+      socketService.off('typing-updated', handleTypingUpdated);
+      socketService.off('user-status-updated', handleUserStatusUpdated);
+      socketService.off('reactions-updated', handleReactionsUpdated);
       
-      // Leave the ticket room
+      // Leave the room when component unmounts
       socketService.leaveTicketRoom();
     };
   }, [ticketId, userId, roomId]);
@@ -112,7 +144,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   }, []);
   
   const sendMessage = useCallback((content: string, attachments: any[] = [], replyTo?: string, mentions: string[] = []) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     return socketService.sendMessage(content, attachments, replyTo, mentions);
   }, []);
   
@@ -162,6 +194,8 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     isConnected,
     isConnecting,
     connectionError,
+    joinedUsers,
+    leftUsers,
     messages,
     typingUsers,
     onlineUsers,

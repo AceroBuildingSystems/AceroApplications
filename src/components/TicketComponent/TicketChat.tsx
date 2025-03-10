@@ -79,6 +79,8 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const [replyingTo, setReplyingTo] = useState<any | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [userJoinNotifications, setUserJoinNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
+  const [userLeaveNotifications, setUserLeaveNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'participants'>('chat');
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -113,6 +115,8 @@ const TicketChat: React.FC<TicketChatProps> = ({
     isConnected, 
     isConnecting,
     connectionError,
+    joinedUsers,
+    leftUsers,
     messages,
     typingUsers,
     onlineUsers,
@@ -131,6 +135,16 @@ const TicketChat: React.FC<TicketChatProps> = ({
     userId,
     roomId
   });
+
+  // Update join/leave notifications when users join/leave
+  useEffect(() => {
+    setUserJoinNotifications(joinedUsers);
+  }, [joinedUsers]);
+
+  // Update join/leave notifications when users join/leave
+  useEffect(() => {
+    setUserLeaveNotifications(leftUsers);
+  }, [leftUsers]);
 
   // Handle user joined event
   useEffect(() => {
@@ -618,6 +632,27 @@ const TicketChat: React.FC<TicketChatProps> = ({
                             />
                           </div>
                         ))}
+                      </div>
+                    ))}
+                    
+                    {/* User join notifications */}
+                    {userJoinNotifications.map((notification, index) => (
+                      <div key={`join-${index}`} className="flex justify-center my-2">
+                        <div className="bg-blue-50 text-blue-700 text-xs rounded-full px-3 py-1 flex items-center">
+                          <LogIn className="h-3 w-3 mr-1" />
+                          <span>
+                            {notification.username || 'Someone'} joined the chat
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* User leave notifications */}
+                    {userLeaveNotifications.map((notification, index) => (
+                      <div key={`leave-${index}`} className="flex justify-center my-2">
+                        <div className="bg-gray-50 text-gray-700 text-xs rounded-full px-3 py-1 flex items-center">
+                          <span>{notification.username || 'Someone'} left the chat</span>
+                        </div>
                       </div>
                     ))}
                     

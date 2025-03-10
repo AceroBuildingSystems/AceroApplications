@@ -21,6 +21,7 @@ const io = new Server(server, {
 
 // Keep track of user connections and rooms
 const userConnections = new Map();
+const userSockets = new Map(); // Map userId to socketId
 const typingUsers = new Map();
 const userStatus = new Map();
 const ticketRooms = new Map();
@@ -38,6 +39,7 @@ io.on('connection', (socket) => {
       userConnections.set(userId, new Set());
     }
     userConnections.get(userId).add(socket.id);
+    userSockets.set(userId, socket.id);
     
     // Set user as online
     userStatus.set(userId, 'online');
@@ -48,18 +50,28 @@ io.on('connection', (socket) => {
 
   // Handle joining a room
   socket.on('join', (data) => {
-    const { ticketId, userId } = data;
+    const { ticketId, userId: joinUserId } = data;
     const roomId = `ticket-${ticketId}`;
     
     // Create room if it doesn't exist
     if (!ticketRooms.has(roomId)) {
       ticketRooms.set(roomId, new Set());
     }
+    const roomMembers = ticketRooms.get(roomId);
     
     // Add user to room members
-    if (userId) {
-      console.log(`Adding user ${userId} to room ${roomId}`);
-      ticketRooms.get(roomId).add(userId);
+    if (joinUserId) {
+      console.log(`Adding user ${joinUserId} to room ${roomId}`);
+      ticketRooms.get(roomId).add(joinUserId);
+    }
+    
+    // Notify everyone in the room that a new user joined
+    if (joinUserId) {
+      socket.to(roomId).emit('user-joined', {
+        userId: joinUserId,
+        username: joinUserId,
+        timestamp: new Date()
+      });
     }
     
     // Join the socket to the room
@@ -74,19 +86,30 @@ io.on('connection', (socket) => {
     // Send any queued messages for this room
     if (messageQueue.has(roomId)) {
       const queuedMessages = messageQueue.get(roomId) || [];
+      console.log(`Found ${queuedMessages.length} queued messages for room ${roomId}`);
       for (const msg of queuedMessages) {
-        console.log(`Sending queued message to user ${userId} in room ${roomId}`);
+        console.log(`Sending queued message to user ${joinUserId} in room ${roomId}`);
         socket.emit('message', msg);
       }
     }
     
     // Notify other users in the room that this user is online
-    if (userId) {
+    console.log(`Notifying other users that ${joinUserId} is online in room ${roomId}`);
+    if (joinUserId) {
       socket.to(roomId).emit('user-status', { 
-        userId, 
-        status: userStatus.get(userId) || 'online' 
+        userId: joinUserId, 
+        status: userStatus.get(joinUserId) || 'online' 
       });
     }
+    
+    // Send list of online users in this room
+    const onlineUsers = {};
+    roomMembers.forEach(memberId => {
+      onlineUsers[memberId] = userStatus.get(memberId) || 'offline';
+    });
+    
+    console.log(`Sending online users to ${joinUserId}: ${JSON.stringify(onlineUsers)}`);
+    socket.emit('online-users-update', onlineUsers);
     
     // Notify the client that join was successful
     socket.emit('joined', { ticketId, success: true });
@@ -99,6 +122,7 @@ io.on('connection', (socket) => {
     socket.leave(roomId);
     console.log(`Socket ${socket.id} left room ${roomId}`);
     
+    // Notify others that user left
     // Remove user from room members but keep the room
     if (userId && ticketRooms.has(roomId)) {
       ticketRooms.get(roomId).delete(userId);
@@ -111,34 +135,42 @@ io.on('connection', (socket) => {
       if (roomTyping) {
         roomTyping.delete(userId);
       }
+      
+      // Notify others that user left
+      socket.to(roomId).emit('user-left', {
+        userId,
+        username: userId,
+        timestamp: new Date()
+      });
     }
   });
 
   // Handle new chat messages
   socket.on('message', (data) => {
     try {
-      const { ticketId, userId, content, attachments, replyTo, mentions, tempId } = data;
+      const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
       
-      console.log(`Received message from user ${userId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
+      console.log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
+      console.log(`Room members: ${JSON.stringify(Array.from(ticketRooms.get(`ticket-${ticketId}`) || []))}`);
       
       // Create a message object
       const message = {
         _id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         ticket: ticketId,
-        user: { _id: userId },
+        user: { _id: messageUserId },
         content,
         attachments: attachments || [],
         replyTo,
         mentions: mentions || [],
         createdAt: new Date().toISOString(),
         deliveredAt: new Date(),
-        readBy: [userId]
+        readBy: [messageUserId]
       };
       
       const roomId = `ticket-${ticketId}`;
       
       // Always broadcast to the room
-      console.log(`Broadcasting message to room ${roomId}`);
+      console.log(`Broadcasting message to all users in room ${roomId}`);
       io.to(roomId).emit('message', message);
       
       // Send acknowledgment to sender
@@ -157,6 +189,7 @@ io.on('connection', (socket) => {
       }
       console.log(`Adding message to queue for room ${roomId}`);
       
+      // Store message in queue for users who join later
       // Limit queue size to prevent memory issues
       const queue = messageQueue.get(roomId);
       queue.push(message);
@@ -165,12 +198,12 @@ io.on('connection', (socket) => {
       }
       
       // Also emit typing stopped event
-      io.to(roomId).emit('typing', { userId, isTyping: false });
+      io.to(roomId).emit('typing', { userId: messageUserId, isTyping: false });
       
       // Reset typing status for this user
       const roomTyping = typingUsers.get(roomId);
       if (roomTyping) {
-        roomTyping.set(userId, false);
+        roomTyping.set(messageUserId, false);
       }
     } catch (error) {
       console.error('Error handling message:', error);
@@ -180,17 +213,17 @@ io.on('connection', (socket) => {
 
   // Handle typing events
   socket.on('typing', (data) => {
-    const { ticketId, userId, isTyping } = data;
+    const { ticketId, userId: typingUserId, isTyping } = data;
     
     // Update typing status for this user in this room
     const roomId = `ticket-${ticketId}`;
     const roomTyping = typingUsers.get(roomId);
     if (roomTyping) {
-      roomTyping.set(userId, isTyping);
+      roomTyping.set(typingUserId, isTyping);
     }
     
     // Broadcast typing status to room (except sender)
-    socket.to(roomId).emit('typing', { userId, isTyping });
+    socket.to(roomId).emit('typing', { userId: typingUserId, isTyping });
   });
 
   // Handle disconnections
@@ -198,13 +231,14 @@ io.on('connection', (socket) => {
     console.log(`Socket disconnected: ${socket.id}`);
     
     if (userId) {
+      userSockets.delete(userId);
       // Remove socket from user's connections
-      const userSockets = userConnections.get(userId);
-      if (userSockets) {
-        userSockets.delete(socket.id);
+      const userSocketIds = userConnections.get(userId);
+      if (userSocketIds) {
+        userSocketIds.delete(socket.id);
         
         // If user has no more connections, mark as offline
-        if (userSockets.size === 0) {
+        if (userSocketIds.size === 0) {
           userStatus.set(userId, 'offline');
           
           // Broadcast user offline status after a short delay

@@ -19,6 +19,9 @@ const io = new Server(server, {
   }
 });
 
+// Debug flag
+const DEBUG = true;
+
 // Keep track of user connections and rooms
 const userConnections = new Map();
 const userSockets = new Map(); // Map userId to socketId
@@ -27,9 +30,16 @@ const userStatus = new Map();
 const ticketRooms = new Map();
 const messageQueue = new Map();
 
+// Helper function for logging
+function log(...args) {
+  if (DEBUG) {
+    console.log(...args);
+  }
+}
+
 // Socket.IO event handlers
 io.on('connection', (socket) => {
-  console.log(`Socket connected: ${socket.id}`);
+  log(`Socket connected: ${socket.id}`);
   
   // Store user data on connection
   const { userId } = socket.handshake.auth;
@@ -61,8 +71,8 @@ io.on('connection', (socket) => {
     
     // Add user to room members
     if (joinUserId) {
-      console.log(`Adding user ${joinUserId} to room ${roomId}`);
-      ticketRooms.get(roomId).add(joinUserId);
+      log(`Adding user ${joinUserId} to room ${roomId}`);
+      roomMembers.add(joinUserId);
     }
     
     // Notify everyone in the room that a new user joined
@@ -76,7 +86,7 @@ io.on('connection', (socket) => {
     
     // Join the socket to the room
     socket.join(roomId);
-    console.log(`Socket ${socket.id} joined room ${roomId}`);
+    log(`Socket ${socket.id} joined room ${roomId}`);
     
     // Initialize typing status for this room if not exists
     if (!typingUsers.has(roomId)) {
@@ -86,15 +96,15 @@ io.on('connection', (socket) => {
     // Send any queued messages for this room
     if (messageQueue.has(roomId)) {
       const queuedMessages = messageQueue.get(roomId) || [];
-      console.log(`Found ${queuedMessages.length} queued messages for room ${roomId}`);
+      log(`Found ${queuedMessages.length} queued messages for room ${roomId}`);
       for (const msg of queuedMessages) {
-        console.log(`Sending queued message to user ${joinUserId} in room ${roomId}`);
+        log(`Sending queued message to user ${joinUserId} in room ${roomId}`);
         socket.emit('message', msg);
       }
     }
     
     // Notify other users in the room that this user is online
-    console.log(`Notifying other users that ${joinUserId} is online in room ${roomId}`);
+    log(`Notifying other users that ${joinUserId} is online in room ${roomId}`);
     if (joinUserId) {
       socket.to(roomId).emit('user-status', { 
         userId: joinUserId, 
@@ -108,7 +118,7 @@ io.on('connection', (socket) => {
       onlineUsers[memberId] = userStatus.get(memberId) || 'offline';
     });
     
-    console.log(`Sending online users to ${joinUserId}: ${JSON.stringify(onlineUsers)}`);
+    log(`Sending online users to ${joinUserId}: ${JSON.stringify(onlineUsers)}`);
     socket.emit('online-users-update', onlineUsers);
     
     // Notify the client that join was successful
@@ -120,13 +130,13 @@ io.on('connection', (socket) => {
     const roomId = `ticket-${ticketId}`;
     
     socket.leave(roomId);
-    console.log(`Socket ${socket.id} left room ${roomId}`);
+    log(`Socket ${socket.id} left room ${roomId}`);
     
     // Notify others that user left
     // Remove user from room members but keep the room
     if (userId && ticketRooms.has(roomId)) {
       ticketRooms.get(roomId).delete(userId);
-      console.log(`Removed user ${userId} from room ${roomId}`);
+      log(`Removed user ${userId} from room ${roomId}`);
     }
     
     // Remove user from typing status for this room
@@ -150,8 +160,7 @@ io.on('connection', (socket) => {
     try {
       const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
       
-      console.log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
-      console.log(`Room members: ${JSON.stringify(Array.from(ticketRooms.get(`ticket-${ticketId}`) || []))}`);
+      log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
       
       // Create a message object
       const message = {
@@ -169,8 +178,16 @@ io.on('connection', (socket) => {
       
       const roomId = `ticket-${ticketId}`;
       
+      // Get room members
+      const roomMembers = Array.from(ticketRooms.get(roomId) || []);
+      log(`Room members: ${JSON.stringify(roomMembers)}`);
+      
+      // Get connected sockets in this room
+      const roomSockets = io.sockets.adapter.rooms.get(roomId);
+      log(`Room has ${roomSockets?.size || 0} connected sockets`);
+      
       // Always broadcast to the room
-      console.log(`Broadcasting message to all users in room ${roomId}`);
+      log(`Broadcasting message to all users in room ${roomId}`);
       io.to(roomId).emit('message', message);
       
       // Send acknowledgment to sender
@@ -187,7 +204,7 @@ io.on('connection', (socket) => {
       if (!messageQueue.has(roomId)) {
         messageQueue.set(roomId, []);
       }
-      console.log(`Adding message to queue for room ${roomId}`);
+      log(`Adding message to queue for room ${roomId}`);
       
       // Store message in queue for users who join later
       // Limit queue size to prevent memory issues
@@ -228,7 +245,7 @@ io.on('connection', (socket) => {
 
   // Handle disconnections
   socket.on('disconnect', () => {
-    console.log(`Socket disconnected: ${socket.id}`);
+    log(`Socket disconnected: ${socket.id}`);
     
     if (userId) {
       userSockets.delete(userId);
@@ -276,8 +293,37 @@ app.post('/api/ping', (req, res) => {
   res.json({ timestamp: Date.now() });
 });
 
+// Debug endpoint to get room info
+app.get('/api/debug/rooms', (req, res) => {
+  const rooms = {};
+  
+  ticketRooms.forEach((members, roomId) => {
+    rooms[roomId] = {
+      members: Array.from(members),
+      socketCount: io.sockets.adapter.rooms.get(roomId)?.size || 0,
+      messageCount: messageQueue.get(roomId)?.length || 0
+    };
+  });
+  
+  res.json({
+    rooms,
+    userCount: userConnections.size,
+    socketCount: io.sockets.sockets.size
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Socket.IO server running on port ${PORT}`);
+  
+  // Print server info
+  console.log(`
+Server Information:
+- Socket.IO server running on port ${PORT}
+- CORS enabled for all origins
+- Debug mode: ${DEBUG ? 'ON' : 'OFF'}
+- Transports: websocket, polling
+- Message queue enabled for offline message persistence
+`);
 });

@@ -99,6 +99,7 @@ export class SocketService extends EventEmitter {
     try {
       console.log("Initializing socket connection...");
       
+      // Connect to the standalone socket server
       // Create socket with proper options
       this.socket = io(this.serverUrl, {
         withCredentials: false,
@@ -170,7 +171,7 @@ export class SocketService extends EventEmitter {
     this.currentRoomId = roomId || `ticket-${ticketId}`;
     
     if (this.socket?.connected) {
-      console.log(`Joining room for ticket ${ticketId} with user ${userId}`);
+      console.log(`Joining room for ticket ${ticketId} with user ${userId}, roomId: ${this.currentRoomId}`);
       this.socket.emit('join', { ticketId, userId });
       this.emit('joining', { ticketId });
     } else {
@@ -246,7 +247,7 @@ export class SocketService extends EventEmitter {
     
     // If socket is connected, send to server
     if (this.socket && this.socket.connected) {
-      console.log(`Sending message to ticket ${this.currentTicketId}: ${content.substring(0, 30)}...`);
+      console.log(`Sending message to ticket ${this.currentTicketId} from user ${this.currentUserId}: ${content.substring(0, 30)}...`);
       this.socket.emit('message', {
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
@@ -579,7 +580,7 @@ export class SocketService extends EventEmitter {
    */
   private handleMessage(message: ChatMessage): void {
     console.log(`Received message: ${message._id}`);
-    // Replace any pending message with real message
+    console.log(`Message from user: ${message.user._id}, current user: ${this.currentUserId}`);
     this.resolvePendingMessage(message);
     
     // Add message to cache

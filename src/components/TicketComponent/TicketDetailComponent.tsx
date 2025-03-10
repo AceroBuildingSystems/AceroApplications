@@ -345,6 +345,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   <TicketChat
     ticketId={ticket._id}
     userId={userId}
+    roomId={ticket.roomId || `ticket-${ticket._id}`}
     currentUser={{
       _id: userId,
       firstName: ticket.creator.firstName,

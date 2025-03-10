@@ -1,5 +1,5 @@
 // src/hooks/useSocketIo.ts
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import getSocketService, { ChatMessage, MessageReaction } from '@/lib/socketService';
 
 interface UseSocketIoProps {
@@ -15,6 +15,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
   const [onlineUsers, setOnlineUsers] = useState<Record<string, string>>({});
+  const socketServiceRef = useRef(getSocketService());
   const [messageReactions, setMessageReactions] = useState<Record<string, any>>({});
   
   // Initialize socket service
@@ -22,6 +23,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     const socketService = getSocketService();
     
     // Set initial states
+    console.log("Socket connection status:", socketService.isConnected());
     setIsConnected(socketService.isConnected());
     setIsConnecting(!socketService.isConnected());
     setMessages(socketService.getMessages());
@@ -37,6 +39,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
       setIsConnected(true);
       setIsConnecting(false);
       setConnectionError(null);
+      console.log("Socket connected event received");
     };
     
     const handleDisconnected = () => {
@@ -45,6 +48,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     };
     
     const handleReconnecting = () => {
+      console.log("Socket reconnecting...");
       setIsConnecting(true);
     };
     
@@ -54,6 +58,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     };
     
     const handleMessagesUpdated = (updatedMessages: ChatMessage[]) => {
+      console.log(`Received ${updatedMessages.length} messages`);
       setMessages(updatedMessages);
     };
     
@@ -79,6 +84,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     socketService.on('user-status-updated', handleUserStatusUpdated);
     socketService.on('reactions-updated', handleReactionsUpdated);
     
+    socketServiceRef.current = socketService;
     // Update connection state
     setIsConnected(socketService.isConnected());
     setIsConnecting(!socketService.isConnected());
@@ -101,7 +107,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   
   // Callback functions to interact with the socket
   const updateMessages = useCallback((newMessages: ChatMessage[]) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.updateMessages(newMessages);
   }, []);
   
@@ -111,27 +117,27 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   }, []);
   
   const editMessage = useCallback((messageId: string, newContent: string) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.editMessage(messageId, newContent);
   }, []);
   
   const addReaction = useCallback((messageId: string, emoji: string) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.addReaction(messageId, emoji);
   }, []);
   
   const removeReaction = useCallback((messageId: string, emoji: string) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.removeReaction(messageId, emoji);
   }, []);
   
   const markMessagesAsRead = useCallback((messageIds: string[]) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.markMessagesAsRead(messageIds);
   }, []);
   
   const sendTyping = useCallback((isTyping: boolean) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.sendTyping(isTyping);
   }, []);
   
@@ -141,12 +147,13 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   }, []);
   
   const notifyFileUpload = useCallback((fileInfo: any) => {
-    const socketService = getSocketService();
+    const socketService = socketServiceRef.current;
     socketService.notifyFileUpload(fileInfo);
   }, []);
   
   const reconnect = useCallback(() => {
-    const socketService = getSocketService();
+    console.log("Manually reconnecting socket...");
+    const socketService = socketServiceRef.current;
     socketService.reconnect();
     setIsConnecting(true);
   }, []);

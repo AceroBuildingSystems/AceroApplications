@@ -1,31 +1,25 @@
 // src/app/api/socket/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Server as SocketIOServer } from 'socket.io';
-import { Server as HTTPServer } from 'http';
 import { dbConnect } from '@/lib/mongoose';
-import { TicketComment } from '@/models';
+import { TicketComment, Ticket } from '@/models';
 import { createTicketHistory } from '@/server/services/ticketHistoryServices';
-import { MessageReaction } from '@/types/next';
 
 // Global variable to track the Socket.io server instance
 let io: SocketIOServer;
 
-// Keep track of user connections
+// Keep track of user connections and rooms
 const userConnections = new Map<string, Set<string>>();
 const typingUsers = new Map<string, Map<string, boolean>>();
 const userStatus = new Map<string, string>();
 const ticketRooms = new Map<string, Set<string>>(); // Track rooms and their members
+const messageQueue = new Map<string, any[]>(); // Queue for storing messages when no users are in room
 
-// Add a message queue for storing messages when no users are in room
-const messageQueue = new Map<string, any[]>();
-
-export async function GET(req: NextRequest, res: NextResponse) {
+export async function GET(req: NextRequest) {
   try {
     await dbConnect();
     
-    // For App Router, we need to handle socket.io differently
-    // Just return success for now, socket.io will be initialized by the client
-
+    // Return success response
     return NextResponse.json({
       status: 'success',
       message: 'Socket.io server is running'
@@ -46,27 +40,32 @@ export async function POST() {
   });
 }
 
-function getSocketIO(server: any) {
+function getSocketIO(server: any): SocketIOServer {
   // If the Socket.io server hasn't been initialized, set it up
   if (!io) {
     // Initialize ticket rooms from database
+    console.log('Setting up Socket.io server...');
+    
     const initializeTicketRooms = async () => {
       try {
         await dbConnect();
-        // Get all active tickets from database
-        const tickets = await TicketComment.distinct('ticket');
+        // Get all tickets from database
+        const tickets = await Ticket.find({}).select('_id roomId');
+        
         // Create rooms for all tickets
-        tickets.forEach(ticketId => {
-          ticketRooms.set(`ticket-${ticketId}`, new Set());
+        tickets.forEach(ticket => {
+          const roomId = ticket.roomId || `ticket-${ticket._id}`;
+          ticketRooms.set(roomId, new Set());
         });
+        
+        console.log(`Initialized ${ticketRooms.size} ticket rooms`);
       } catch (error) {
         console.error('Error initializing ticket rooms:', error);
       }
     };
-    console.log('Setting up Socket.io server...');
 
     io = new SocketIOServer(server, {
-      path: '/api/socketio',
+      path: '/api/socket',
       addTrailingSlash: false,
       cors: {
         origin: '*',
@@ -84,6 +83,7 @@ function getSocketIO(server: any) {
     });
     
     // Initialize rooms
+    // (don't await here to avoid blocking)
     initializeTicketRooms();
 
     // Set up event handlers
@@ -106,64 +106,93 @@ function getSocketIO(server: any) {
         io.emit('user-status', { userId, status: 'online' });
       }
 
-      // Create or join a ticket room
-      const joinOrCreateRoom = (ticketId: string) => {
+      // Handle joining a room
+      socket.on('join', async (data) => {
+        const { ticketId, userId: joinUserId } = data;
         const roomId = `ticket-${ticketId}`;
+        
         // Create room if it doesn't exist
         if (!ticketRooms.has(roomId)) {
           ticketRooms.set(roomId, new Set());
         }
-        // Add user to room members
-        if (userId) ticketRooms.get(roomId)?.add(userId);
-      };
-
-      // Handle joining a ticket room
-      socket.on('join', (ticketId: string) => {
-        joinOrCreateRoom(ticketId);
-        socket.join(`ticket-${ticketId}`);
-        console.log(`Socket ${socket.id} joined ticket-${ticketId}`);
         
-        // Notify other users in the room that this user joined
-        socket.to(`ticket-${ticketId}`).emit('user-joined', { userId, username: socket.handshake.auth.username });
-
+        // Add user to room members
+        if (joinUserId) {
+          console.log(`Adding user ${joinUserId} to room ${roomId}`);
+          ticketRooms.get(roomId)?.add(joinUserId);
+        }
+        
+        // Join the socket to the room
+        socket.join(roomId);
+        console.log(`Socket ${socket.id} joined room ${roomId}`);
+        
+        // Initialize typing status for this room if not exists
+        if (!typingUsers.has(roomId)) {
+          typingUsers.set(roomId, new Map());
+        }
+        
         // Send any queued messages for this room
-        const roomId = `ticket-${ticketId}`;
         if (messageQueue.has(roomId)) {
           const queuedMessages = messageQueue.get(roomId) || [];
           for (const msg of queuedMessages) {
+            console.log(`Sending queued message to user ${joinUserId} in room ${roomId}`);
             socket.emit('message', msg);
           }
-          // Clear the queue after sending
-          messageQueue.delete(roomId);
         }
         
-        // Initialize typing status for this ticket if not exists
-        if (!typingUsers.has(`ticket-${ticketId}`)) {
-          typingUsers.set(`ticket-${ticketId}`, new Map());
+        // Fetch recent messages from database
+        try {
+          const messages = await TicketComment.find({ ticket: ticketId })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .populate([
+              { path: 'user' },
+              { path: 'mentions' },
+              { 
+                path: 'replyTo',
+                populate: {
+                  path: 'user'
+                }
+              }
+            ]);
+          
+          console.log(`Sending ${messages.length} messages to user ${joinUserId} in room ${roomId}`);
+          // Send messages to the client
+          socket.emit('messages', messages);
+        } catch (error) {
+          console.error('Error fetching messages:', error);
         }
         
         // Notify other users in the room that this user is online
-        if (userId) {
-          socket.to(`ticket-${ticketId}`).emit('user-status', { 
-            userId, 
-            status: userStatus.get(userId) || 'online' 
+        if (joinUserId) {
+          socket.to(roomId).emit('user-status', { 
+            userId: joinUserId, 
+            status: userStatus.get(joinUserId) || 'online' 
           });
         }
+        
+        // Notify the client that join was successful
+        socket.emit('joined', { ticketId, success: true });
       });
 
-      // Handle leaving a chat room
+      // Handle leaving a room
       socket.on('leave', (ticketId: string) => {
-        socket.leave(`ticket-${ticketId}`);
-        console.log(`Socket ${socket.id} left ticket-${ticketId}`);
+        const roomId = `ticket-${ticketId}`;
+        
+        socket.leave(roomId);
+        console.log(`Socket ${socket.id} left room ${roomId}`);
         
         // Remove user from room members but keep the room
-        if (userId) ticketRooms.get(`ticket-${ticketId}`)?.delete(userId);
+        if (userId && ticketRooms.has(roomId)) {
+          ticketRooms.get(roomId)?.delete(userId);
+          console.log(`Removed user ${userId} from room ${roomId}`);
+        }
         
-        // Remove user from typing status for this ticket
+        // Remove user from typing status for this room
         if (userId) {
-          const ticketTyping = typingUsers.get(`ticket-${ticketId}`);
-          if (ticketTyping) {
-            ticketTyping.delete(userId);
+          const roomTyping = typingUsers.get(roomId);
+          if (roomTyping) {
+            roomTyping.delete(userId);
           }
         }
       });
@@ -171,28 +200,28 @@ function getSocketIO(server: any) {
       // Handle new chat messages
       socket.on('message', async (data) => {
         try {
-          const { ticketId, userId, content, attachments, replyTo, mentions } = data;
+          const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
+          
+          console.log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
           
           // Create a new message document
           const newMessage = new TicketComment({
             ticket: ticketId,
-            user: userId,
+            user: messageUserId,
             content,
             attachments: attachments || [],
             replyTo,
             mentions: mentions || [],
-            addedBy: userId,
-            updatedBy: userId,
+            addedBy: messageUserId,
+            updatedBy: messageUserId,
             isActive: true,
             deliveredAt: new Date(),
-            readBy: [userId] // Mark as read by sender
+            readBy: [messageUserId] // Mark as read by sender
           });
           
           // Save to database
+          console.log(`Saving message to database for ticket ${ticketId}`);
           const savedMessage = await newMessage.save();
-          
-          // Ensure room exists for this ticket
-          joinOrCreateRoom(ticketId);
           
           // Populate user information before broadcasting
           await savedMessage.populate([
@@ -207,59 +236,83 @@ function getSocketIO(server: any) {
           ]);
           
           // Create history entry
+          console.log(`Creating history entry for ticket ${ticketId}`);
           await createTicketHistory({
             data: {
               ticket: ticketId,
               action: 'COMMENT',
-              user: userId,
+              user: messageUserId,
               details: { messageId: savedMessage._id }
             }
           });
           
-          // Always broadcast to the room
           const roomId = `ticket-${ticketId}`;
+          
+          // Always broadcast to the room
+          console.log(`Broadcasting message to room ${roomId}`);
           io.to(roomId).emit('message', savedMessage);
           
+          // Send acknowledgment to sender
+          if (tempId) {
+            socket.emit('message-ack', {
+              messageId: savedMessage._id.toString(),
+              tempId,
+              status: 'delivered',
+              timestamp: savedMessage.createdAt
+            });
+          }
+          
           // Store in message queue for users who join later
-          if (!messageQueue.has(roomId)) messageQueue.set(roomId, []);
+          if (!messageQueue.has(roomId)) {
+            messageQueue.set(roomId, []);
+          }
+          console.log(`Adding message to queue for room ${roomId}`);
+          
           // Limit queue size to prevent memory issues
-          messageQueue.get(roomId)?.push(savedMessage);
+          const queue = messageQueue.get(roomId)!;
+          queue.push(savedMessage);
+          if (queue.length > 50) {
+            queue.shift(); // Remove oldest message if queue is too large
+          }
           
           // Also emit typing stopped event
-          io.to(`ticket-${ticketId}`).emit('typing', { userId, isTyping: false });
+          io.to(roomId).emit('typing', { userId: messageUserId, isTyping: false });
           
           // Reset typing status for this user
-          const ticketTyping = typingUsers.get(`ticket-${ticketId}`);
-          if (ticketTyping) {
-            ticketTyping.set(userId, false);
+          const roomTyping = typingUsers.get(roomId);
+          if (roomTyping) {
+            roomTyping.set(messageUserId, false);
           }
         } catch (error) {
           console.error('Error handling message:', error);
+          console.error(error);
           socket.emit('error', { message: 'Failed to save message' });
         }
       });
 
       // Handle typing events
       socket.on('typing', (data) => {
-        const { ticketId, userId, isTyping } = data;
+        const { ticketId, userId: typingUserId, isTyping } = data;
         
-        // Update typing status for this user in this ticket
-        const ticketTyping = typingUsers.get(`ticket-${ticketId}`);
-        if (ticketTyping) {
-          ticketTyping.set(userId, isTyping);
+        // Update typing status for this user in this room
+        const roomId = `ticket-${ticketId}`;
+        const roomTyping = typingUsers.get(roomId);
+        if (roomTyping) {
+          roomTyping.set(typingUserId, isTyping);
         }
         
         // Broadcast typing status to room (except sender)
-        socket.to(`ticket-${ticketId}`).emit('typing', { userId, isTyping });
+        socket.to(roomId).emit('typing', { userId: typingUserId, isTyping });
       });
 
       // Handle message reactions
-      socket.on('reaction', async (data) => {
+      socket.on('message-reaction', async (data) => {
         try {
-          const { messageId, userId, emoji } = data;
+          const { messageId, userId: reactionUserId, emoji, action, ticketId } = data;
           
           // Get the message from database
           const message = await TicketComment.findById(messageId);
+          
           if (!message) {
             return socket.emit('error', { message: 'Message not found' });
           }
@@ -269,23 +322,29 @@ function getSocketIO(server: any) {
             message.reactions = [];
           }
           
-          // Check if user already reacted with this emoji
-          const existingReactionIndex = message.reactions.findIndex(
-            reaction => reaction.emoji === emoji && reaction.userId.toString() === userId
-          );
-          
-          if (existingReactionIndex > -1) {
-            // User already reacted with this emoji, so remove it (toggle)
-            message.reactions.splice(existingReactionIndex, 1);
+          if (action === 'remove') {
+            // Remove reaction
+            message.reactions = message.reactions.filter(
+              reaction => !(reaction.emoji === emoji && reaction.userId.toString() === reactionUserId)
+            );
           } else {
-            // Add new reaction
-            message.reactions.push({
+            // Check if user already reacted with this emoji
+            const existingReactionIndex = message.reactions.findIndex(
+              reaction => reaction.emoji === emoji && reaction.userId.toString() === reactionUserId
+            );
+            
+            if (existingReactionIndex > -1) {
+              // User already reacted with this emoji, so remove it (toggle)
+              message.reactions.splice(existingReactionIndex, 1);
+            } else {
+              // Add new reaction
               // @ts-ignore - Type mismatch is expected but works at runtime
-              emoji,
- 
-              userId,
-              createdAt: new Date()
-            } as MessageReaction);
+              message.reactions.push({
+                emoji,
+                userId: reactionUserId,
+                createdAt: new Date()
+              });
+            }
           }
           
           // Save to database
@@ -293,7 +352,7 @@ function getSocketIO(server: any) {
           
           // Populate and broadcast updated reactions
           await message.populate('reactions.userId');
-          io.to(`ticket-${message.ticket}`).emit('message-reaction', {
+          io.to(`ticket-${ticketId}`).emit('message-reaction-update', {
             messageId,
             reactions: message.reactions
           });
@@ -304,39 +363,27 @@ function getSocketIO(server: any) {
       });
 
       // Handle message read status
-      socket.on('mark-read', async (data) => {
+      socket.on('read-receipt', async (data) => {
         try {
-          const { messageIds, userId } = data;
+          const { messageIds, userId: readUserId, ticketId } = data;
           
           if (!messageIds || !messageIds.length) return;
           
           // Update multiple messages at once
           const result = await TicketComment.updateMany(
-            { _id: { $in: messageIds }, readBy: { $ne: userId } },
+            { _id: { $in: messageIds }, readBy: { $ne: readUserId } },
             { 
               $set: { isRead: true, readAt: new Date() },
-              $addToSet: { readBy: userId }
+              $addToSet: { readBy: readUserId }
             }
           );
           
-          // Get updated messages to broadcast
-          const updatedMessages = await TicketComment.find({ _id: { $in: messageIds } })
-            .select('_id readBy isRead readAt');
-          
-          // Find which tickets these messages belong to
-          const messages = await TicketComment.find({ _id: { $in: messageIds } })
-            .select('ticket');
-          
-          // Broadcast to relevant ticket rooms
-          const ticketIds = [...new Set(messages.map(msg => msg.ticket.toString()))];
-          
-          for (const ticketId of ticketIds) {
-            io.to(`ticket-${ticketId}`).emit('messages-read', {
-              userId,
-              messageIds,
-              timestamp: new Date()
-            });
-          }
+          // Broadcast to relevant room
+          io.to(`ticket-${ticketId}`).emit('read-receipt-update', {
+            messageIds,
+            userId: readUserId,
+            timestamp: new Date()
+          });
         } catch (error) {
           console.error('Error marking messages as read:', error);
           socket.emit('error', { message: 'Failed to mark messages as read' });
@@ -344,14 +391,19 @@ function getSocketIO(server: any) {
       });
 
       // Handle user status updates
-      socket.on('status-update', (data) => {
-        const { userId, status } = data;
+      socket.on('user-status', (data) => {
+        const { userId: statusUserId, status, ticketId } = data;
         
-        if (userId) {
-          userStatus.set(userId, status);
+        if (statusUserId) {
+          userStatus.set(statusUserId, status);
           
           // Broadcast to all connected clients
-          io.emit('user-status', { userId, status });
+          io.emit('user-status', { userId: statusUserId, status });
+          
+          // Also broadcast to specific room if provided
+          if (ticketId) {
+            io.to(`ticket-${ticketId}`).emit('user-status', { userId: statusUserId, status });
+          }
         }
       });
 
@@ -391,11 +443,11 @@ function getSocketIO(server: any) {
             }
           }
           
-          // Remove user from typing status in all tickets
-          for (const [ticketRoom, typingMap] of typingUsers.entries()) {
+          // Remove user from typing status in all rooms
+          for (const [roomId, typingMap] of typingUsers.entries()) {
             if (typingMap.has(userId)) {
               typingMap.delete(userId);
-              io.to(ticketRoom).emit('typing', { userId, isTyping: false });
+              io.to(roomId).emit('typing', { userId, isTyping: false });
             }
           }
         }
@@ -405,3 +457,5 @@ function getSocketIO(server: any) {
   
   return io;
 }
+
+export { getSocketIO };

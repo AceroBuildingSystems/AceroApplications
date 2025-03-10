@@ -34,10 +34,32 @@ interface User {
   department?: any;
 }
 
+interface ChatMessage {
+  _id: string;
+  ticket: string;
+  user: User;
+  content: string;
+  attachments?: Array<any>;
+  replyTo?: string;
+  replyToUser?: User;
+  replyToContent?: string;
+  mentions?: string[];
+  reactions?: Array<any>;
+  isEdited?: boolean;
+  readBy?: string[];
+  deliveredAt?: Date;
+  readAt?: Date;
+  createdAt: string;
+  isPending?: boolean;
+  isRead?: boolean;
+  error?: boolean;
+}
+
 interface TicketChatProps {
   ticketId: string;
   userId: string;
   currentUser: User;
+  roomId?: string;
   isLoading?: boolean;
 }
 
@@ -45,6 +67,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   ticketId,
   userId,
   currentUser,
+  roomId,
   isLoading: propLoading = false
 }) => {
   // Local states
@@ -105,7 +128,8 @@ const TicketChat: React.FC<TicketChatProps> = ({
     reconnect
   } = useSocketIo({ 
     ticketId, 
-    userId 
+    userId,
+    roomId
   });
 
   // Handle user joined event
@@ -120,7 +144,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Initialize socket messages with data from API
   useEffect(() => {
     if (commentsData?.data?.length > 0 && updateMessages) {
-      updateMessages(commentsData.data);
+      updateMessages(commentsData.data); // Server already sorts messages
     }
   }, [commentsData?.data, updateMessages]);
   
@@ -345,9 +369,11 @@ const TicketChat: React.FC<TicketChatProps> = ({
   
   // Group messages by date
   const groupMessagesByDate = () => {
-    const groups: { [key: string]: any[] } = {};
+    const groups: { [key: string]: ChatMessage[] } = {};
     
-    [...messages].forEach(message => {
+    if (!messages || !messages.length) return [];
+    
+    messages.forEach(message => {
       const date = new Date(message.createdAt).toISOString().split('T')[0];
       if (!groups[date]) {
         groups[date] = [];
@@ -355,9 +381,9 @@ const TicketChat: React.FC<TicketChatProps> = ({
       groups[date].push(message);
     });
     
-    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([date, messages]) => ({
+    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([date, messages]) => ({
       date,
-      messages
+      messages: messages || []
     }));
   };
   
@@ -395,7 +421,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Extract all file attachments for the files tab
   const allFiles = messages
     .filter(msg => msg.attachments && msg.attachments.length > 0)
-    .flatMap(msg => msg.attachments.map(att => ({
+    .flatMap(msg => (msg.attachments || []).map(att => ({
       ...att,
       uploadedBy: msg.user,
       messageId: msg._id,
@@ -407,10 +433,10 @@ const TicketChat: React.FC<TicketChatProps> = ({
     messages.map(msg => msg.user._id)
   )).map(userId => {
     const user = messages.find(msg => msg.user._id === userId)?.user;
-    return {
+    return user ? {
       ...user,
       status: onlineUsers[userId] || 'offline'
-    };
+    } : null;
   }).filter(Boolean);
   
   // Get icon based on file type
@@ -562,7 +588,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                   setViewingOlderMessages(target.scrollTop < target.scrollHeight - target.clientHeight - 100);
                 }}
               >
-                {messages.length === 0 ? (
+                {!messages || messages.length === 0 ? (
                   <div className="text-center py-20 text-gray-500">
                     <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                     <p className="text-lg font-medium">No messages yet</p>
@@ -578,7 +604,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                           </Badge>
                         </div>
                         
-                        {group.messages.map((message: any) => (
+                        {group.messages.map((message: ChatMessage) => (
                           <div key={message._id} className="mb-4" id={`message-${message._id}`}>
                             <MessageBubble
                               message={message}
@@ -858,7 +884,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {participants.map((user) => (
+                  {participants.map((user: any) => (
                     <div key={user._id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
                       <div className="flex items-center gap-3">
                         <div className="relative">
@@ -866,7 +892,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                             {user.avatar ? (
                               <AvatarImage src={user.avatar} />
                             ) : (
-                              <AvatarFallback>{`${user.firstName[0]}${user.lastName[0]}`}</AvatarFallback>
+                              <AvatarFallback>{`${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`}</AvatarFallback>
                             )}
                           </Avatar>
                           <div className={cn(
@@ -878,14 +904,9 @@ const TicketChat: React.FC<TicketChatProps> = ({
                           )} />
                         </div>
                         <div>
-                          <div className="font-medium">{`${user.firstName} ${user.lastName}`}</div>
+                          <div className="font-medium">{`${user.firstName || ''} ${user.lastName || ''}`}</div>
                           <div className="flex items-center text-xs text-gray-500">
                             <span className="capitalize">{user.status}</span>
-                            {user.status !== 'online' && user.lastActive && (
-                              <span className="ml-1">
-                                • Last seen {formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -921,7 +942,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {teamMembers
-                .filter(user => !participants.some(p => p._id === user._id)) // Only show users not already in the conversation
+                .filter(user => !participants.some((p: any) => p._id === user._id)) // Only show users not already in the conversation
                 .map(user => (
                   <div 
                     key={user._id} 

@@ -40,7 +40,7 @@ export default async function handler(
       
       const httpServer: HTTPServer = res.socket.server as any;
       io = new SocketIOServer(httpServer, {
-        path: '/api/socketio',
+        path: '/api/socket',
         addTrailingSlash: false,
         cors: {
           origin: process.env.NODE_ENV === 'production' 
@@ -56,10 +56,7 @@ export default async function handler(
         pingInterval: 25000,
         // Additional connection options for reliability
         connectTimeout: 30000,
-        // Automatically reconnect
-        reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
+        // Server-side doesn't need reconnection options
       });
 
       // Track online users separately for better performance

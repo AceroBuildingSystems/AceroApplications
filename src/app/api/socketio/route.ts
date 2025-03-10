@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   try {
     await dbConnect();
     
-    // Socket.io will be initialized by the client
+    // Return success response
     return NextResponse.json({
       status: 'success',
       message: 'Socket.io server is running'
@@ -45,6 +45,8 @@ function getSocketIO(server: any): SocketIOServer {
   // If the Socket.io server hasn't been initialized, set it up
   if (!io) {
     // Initialize ticket rooms from database
+    console.log('Setting up Socket.io server...');
+    
     const initializeTicketRooms = async () => {
       try {
         await dbConnect();
@@ -62,8 +64,6 @@ function getSocketIO(server: any): SocketIOServer {
         console.error('Error initializing ticket rooms:', error);
       }
     };
-    
-    console.log('Setting up Socket.io server...');
 
     io = new SocketIOServer(server, {
       path: '/api/socketio',
@@ -84,6 +84,7 @@ function getSocketIO(server: any): SocketIOServer {
     });
     
     // Initialize rooms
+    // (don't await here to avoid blocking)
     initializeTicketRooms();
 
     // Set up event handlers
@@ -117,6 +118,7 @@ function getSocketIO(server: any): SocketIOServer {
         
         // Add user to room members
         if (userId) {
+          console.log(`Adding user ${userId} to room ${roomId}`);
           ticketRooms.get(roomId)?.add(userId);
         }
         
@@ -133,6 +135,7 @@ function getSocketIO(server: any): SocketIOServer {
         if (messageQueue.has(roomId)) {
           const queuedMessages = messageQueue.get(roomId) || [];
           for (const msg of queuedMessages) {
+            console.log(`Sending queued message to user ${userId} in room ${roomId}`);
             socket.emit('message', msg);
           }
         }
@@ -140,7 +143,7 @@ function getSocketIO(server: any): SocketIOServer {
         // Fetch recent messages from database
         try {
           const messages = await TicketComment.find({ ticket: ticketId })
-            .sort({ createdAt: 1 })
+            .sort({ createdAt: -1 })
             .limit(50)
             .populate([
               { path: 'user' },
@@ -153,6 +156,7 @@ function getSocketIO(server: any): SocketIOServer {
               }
             ]);
           
+          console.log(`Sending ${messages.length} messages to user ${userId} in room ${roomId}`);
           // Send messages to the client
           socket.emit('messages', messages);
         } catch (error) {
@@ -181,6 +185,7 @@ function getSocketIO(server: any): SocketIOServer {
         // Remove user from room members but keep the room
         if (userId && ticketRooms.has(roomId)) {
           ticketRooms.get(roomId)?.delete(userId);
+          console.log(`Removed user ${userId} from room ${roomId}`);
         }
         
         // Remove user from typing status for this room
@@ -196,6 +201,8 @@ function getSocketIO(server: any): SocketIOServer {
       socket.on('message', async (data) => {
         try {
           const { roomId, ticketId, userId, content, attachments, replyTo, mentions, tempId } = data;
+          
+          console.log(`Received message from user ${userId} in room ${roomId}: ${content.substring(0, 30)}...`);
           
           // Create a new message document
           const newMessage = new TicketComment({
@@ -213,6 +220,7 @@ function getSocketIO(server: any): SocketIOServer {
           });
           
           // Save to database
+          console.log(`Saving message to database for ticket ${ticketId}`);
           const savedMessage = await newMessage.save();
           
           // Populate user information before broadcasting
@@ -228,6 +236,7 @@ function getSocketIO(server: any): SocketIOServer {
           ]);
           
           // Create history entry
+          console.log(`Creating history entry for ticket ${ticketId}`);
           await createTicketHistory({
             data: {
               ticket: ticketId,
@@ -238,6 +247,7 @@ function getSocketIO(server: any): SocketIOServer {
           });
           
           // Always broadcast to the room
+          console.log(`Broadcasting message to room ${roomId}`);
           io.to(roomId).emit('message', savedMessage);
           
           // Send acknowledgment to sender
@@ -254,6 +264,7 @@ function getSocketIO(server: any): SocketIOServer {
           if (!messageQueue.has(roomId)) {
             messageQueue.set(roomId, []);
           }
+          console.log(`Adding message to queue for room ${roomId}`);
           
           // Limit queue size to prevent memory issues
           const queue = messageQueue.get(roomId)!;
@@ -272,6 +283,7 @@ function getSocketIO(server: any): SocketIOServer {
           }
         } catch (error) {
           console.error('Error handling message:', error);
+          console.error(error);
           socket.emit('error', { message: 'Failed to save message' });
         }
       });

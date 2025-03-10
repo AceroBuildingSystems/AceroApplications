@@ -80,7 +80,7 @@ export class SocketService extends EventEmitter {
   
   private constructor(options: SocketServiceOptions = {}) {
     super();
-    this.serverUrl = options.serverUrl || `/api/socketio/`;
+    this.serverUrl = options.serverUrl || 'http://localhost:3001';
     this.autoConnect = options.autoConnect !== undefined ? options.autoConnect : true;
     this.reconnectionAttempts = options.reconnectionAttempts || 5;
     this.reconnectionDelay = options.reconnectionDelay || 3000;
@@ -97,14 +97,16 @@ export class SocketService extends EventEmitter {
     if (this.isInitialized) return;
     
     try {
+      console.log("Initializing socket connection...");
+      
       // Create socket with proper options
-      this.socket = io({
-        path: '/api/socketio',
+      this.socket = io(this.serverUrl, {
+        withCredentials: false,
+        autoConnect: true,
         reconnection: true,
         reconnectionAttempts: this.reconnectionAttempts,
         reconnectionDelay: this.reconnectionDelay,
-        timeout: 20000,
-        autoConnect: true
+        timeout: 20000
       });
       
       this.setupEventListeners();
@@ -131,6 +133,7 @@ export class SocketService extends EventEmitter {
     
     // Message events
     this.socket.on('message', this.handleMessage.bind(this));
+    this.socket.on('messages', this.handleMessages.bind(this));
     this.socket.on('message-ack', this.handleMessageAck.bind(this));
     this.socket.on('typing', this.handleTyping.bind(this));
     this.socket.on('message-reaction', this.handleMessageReaction.bind(this));
@@ -158,7 +161,7 @@ export class SocketService extends EventEmitter {
    * Connect to a ticket room
    */
   public joinTicketRoom(ticketId: string, userId: string, roomId?: string): void {
-    if (!this.socket || !this.socket.connected) {
+    if (!this.socket) {
       this.init();
     }
     
@@ -167,28 +170,25 @@ export class SocketService extends EventEmitter {
     this.currentRoomId = roomId || `ticket-${ticketId}`;
     
     if (this.socket?.connected) {
-      // Join the room using roomId
-      this.socket.emit('join-room', { 
-        roomId: this.currentRoomId,
-        ticketId,
-        userId
-      });
-      this.emit('joining', { ticketId, roomId: this.currentRoomId });
+      console.log(`Joining room for ticket ${ticketId} with user ${userId}`);
+      this.socket.emit('join', { ticketId, userId });
+      this.emit('joining', { ticketId });
     } else {
+      console.log("Socket not connected, will join when connected");
       // Queue join for when connection is established
       this.once('connected', () => {
-        this.socket?.emit('join-room', { 
-          roomId: this.currentRoomId,
-          ticketId,
-          userId
+        console.log(`Now connected, joining room for ticket ${ticketId}`);
+        this.socket?.emit('join', { 
+          ticketId: this.currentTicketId, 
+          userId: this.currentUserId 
         });
-        this.emit('joining', { ticketId, roomId: this.currentRoomId });
+        this.emit('joining', { ticketId });
       });
     }
     
     // Set auth data for reconnection
     if (this.socket) {
-      this.socket.auth = { userId, roomId: this.currentRoomId };
+      this.socket.auth = { userId };
     }
   }
   
@@ -196,11 +196,8 @@ export class SocketService extends EventEmitter {
    * Leave the current ticket room
    */
   public leaveTicketRoom(): void {
-    if (this.socket && this.currentRoomId) {
-      this.socket.emit('leave-room', { 
-        roomId: this.currentRoomId,
-        userId: this.currentUserId
-      });
+    if (this.socket && this.currentTicketId) {
+      this.socket.emit('leave', this.currentTicketId);
       this.currentTicketId = null;
       this.currentRoomId = null;
     }
@@ -218,8 +215,8 @@ export class SocketService extends EventEmitter {
     // Generate a temporary ID for the message
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     
-    if (!this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
-      console.error('Cannot send message: Missing ticketId/userId/roomId');
+    if (!this.currentTicketId || !this.currentUserId) {
+      console.error('Cannot send message: Missing ticketId/userId');
       return tempId;
     }
     
@@ -249,8 +246,8 @@ export class SocketService extends EventEmitter {
     
     // If socket is connected, send to server
     if (this.socket && this.socket.connected) {
+      console.log(`Sending message to ticket ${this.currentTicketId}: ${content.substring(0, 30)}...`);
       this.socket.emit('message', {
-        roomId: this.currentRoomId,
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
         content,
@@ -259,6 +256,9 @@ export class SocketService extends EventEmitter {
         mentions,
         tempId
       });
+    } else {
+      console.warn("Socket not connected, message will be sent when reconnected");
+      // Will be sent when reconnected in resendPendingMessages
     }
     
     return tempId;
@@ -268,15 +268,14 @@ export class SocketService extends EventEmitter {
    * Edit a message
    */
   public editMessage(messageId: string, newContent: string): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
-      console.error('Cannot edit message: Socket not connected or missing ticketId/userId/roomId');
+    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
+      console.error('Cannot edit message: Socket not connected or missing ticketId/userId');
       return;
     }
     
     // Send edit request
     this.socket.emit('edit-message', {
       messageId,
-      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       userId: this.currentUserId,
       content: newContent
@@ -293,8 +292,8 @@ export class SocketService extends EventEmitter {
    * Add a reaction to a message
    */
   public addReaction(messageId: string, emoji: string): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
-      console.error('Cannot add reaction: Socket not connected or missing ticketId/userId/roomId');
+    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
+      console.error('Cannot add reaction: Socket not connected or missing ticketId/userId');
       return;
     }
     
@@ -308,7 +307,6 @@ export class SocketService extends EventEmitter {
     // Send reaction
     this.socket.emit('message-reaction', {
       messageId,
-      roomId: this.currentRoomId,
       ticketId: this.currentTicketId, 
       userId: this.currentUserId,
       emoji,
@@ -320,8 +318,8 @@ export class SocketService extends EventEmitter {
    * Remove a reaction from a message
    */
   public removeReaction(messageId: string, emoji: string): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
-      console.error('Cannot remove reaction: Socket not connected or missing ticketId/userId/roomId');
+    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
+      console.error('Cannot remove reaction: Socket not connected or missing ticketId/userId');
       return;
     }
     
@@ -331,7 +329,6 @@ export class SocketService extends EventEmitter {
     // Send reaction removal
     this.socket.emit('message-reaction', {
       messageId,
-      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       userId: this.currentUserId,
       emoji,
@@ -343,16 +340,15 @@ export class SocketService extends EventEmitter {
    * Mark messages as read
    */
   public markMessagesAsRead(messageIds: string[]): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId || messageIds.length === 0) {
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || messageIds.length === 0) {
       return;
     }
     
     // Send read receipt
     this.socket.emit('read-receipt', {
       messageIds,
-      roomId: this.currentRoomId,
-      userId: this.currentUserId,
-      ticketId: this.currentTicketId
+      ticketId: this.currentTicketId,
+      userId: this.currentUserId
     });
     
     // Optimistically update cache
@@ -371,12 +367,11 @@ export class SocketService extends EventEmitter {
    * Send typing status
    */
   public sendTyping(isTyping: boolean): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
+    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
       return;
     }
     
     this.socket.emit('typing', {
-      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       userId: this.currentUserId,
       isTyping
@@ -394,7 +389,6 @@ export class SocketService extends EventEmitter {
     this.socket.emit('user-status', {
       userId: this.currentUserId,
       status,
-      roomId: this.currentRoomId,
       ticketId: this.currentTicketId
     });
   }
@@ -403,12 +397,11 @@ export class SocketService extends EventEmitter {
    * Notify about file upload
    */
   public notifyFileUpload(fileInfo: any): void {
-    if (!this.socket || !this.currentTicketId || !this.currentRoomId) {
+    if (!this.socket || !this.currentTicketId) {
       return;
     }
     
     this.socket.emit('file-upload', {
-      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       fileInfo
     });
@@ -420,6 +413,7 @@ export class SocketService extends EventEmitter {
   public updateMessages(messages: ChatMessage[]): void {
     if (!this.currentTicketId) return;
     
+    console.log(`Updating messages cache with ${messages.length} messages`);
     // Replace entire cache for this ticket
     this.messagesCache.set(this.currentTicketId, messages);
     this.emit('messages-updated', messages);
@@ -477,6 +471,7 @@ export class SocketService extends EventEmitter {
    * Force reconnection
    */
   public reconnect(): void {
+    console.log("Manually reconnecting socket...");
     if (this.socket) {
       this.socket.connect();
     } else {
@@ -514,7 +509,7 @@ export class SocketService extends EventEmitter {
     
     this.pingInterval = setInterval(() => {
       if (this.socket?.connected) {
-        fetch('/api/socketio/', { method: 'POST' })
+        fetch('/api/ping', { method: 'POST' })
           .catch(err => console.error('Ping error:', err));
       }
     }, 30000); // 30 seconds
@@ -529,9 +524,9 @@ export class SocketService extends EventEmitter {
     this.emit('connected', { roomId: this.currentRoomId });
     
     // Rejoin room if needed
-    if (this.currentRoomId && this.currentTicketId && this.currentUserId) {
-      this.socket?.emit('join-room', { 
-        roomId: this.currentRoomId,
+    if (this.currentTicketId && this.currentUserId) {
+      console.log(`Rejoining room for ticket ${this.currentTicketId}`);
+      this.socket?.emit('join', { 
         ticketId: this.currentTicketId, 
         userId: this.currentUserId 
       });
@@ -583,6 +578,7 @@ export class SocketService extends EventEmitter {
    * Handle incoming message
    */
   private handleMessage(message: ChatMessage): void {
+    console.log(`Received message: ${message._id}`);
     // Replace any pending message with real message
     this.resolvePendingMessage(message);
     
@@ -596,9 +592,22 @@ export class SocketService extends EventEmitter {
   }
   
   /**
+   * Handle incoming messages (bulk)
+   */
+  private handleMessages(messages: ChatMessage[]): void {
+    console.log(`Received ${messages.length} messages in bulk`);
+    // Update the cache with all messages
+    if (this.currentTicketId) {
+      this.messagesCache.set(this.currentTicketId, messages);
+      this.emit('messages-updated', messages);
+    }
+  }
+  
+  /**
    * Handle message acknowledgement
    */
   private handleMessageAck(ack: { messageId: string, tempId?: string, status: string, timestamp: string }): void {
+    console.log(`Message ack received for ${ack.tempId || ack.messageId}`);
     // If this is a response to a pending message, update it
     if (ack.tempId && this.pendingMessages.has(ack.tempId)) {
       const pendingMessage = this.pendingMessages.get(ack.tempId);
@@ -751,9 +760,10 @@ export class SocketService extends EventEmitter {
   /**
    * Handle joined room event
    */
-  private handleJoinedRoom(data: { roomId: string, success: boolean }): void {
+  private handleJoinedRoom(data: { ticketId: string, success: boolean }): void {
+    console.log(`Joined room for ticket ${data.ticketId}, success: ${data.success}`);
     if (data.success) {
-      this.emit('joined', { roomId: data.roomId });
+      this.emit('joined', { ticketId: data.ticketId });
     }
   }
   
@@ -890,12 +900,13 @@ export class SocketService extends EventEmitter {
    * Resend any pending messages after reconnection
    */
   private resendPendingMessages(): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) return;
+    if (!this.socket || !this.currentTicketId || !this.currentUserId) return;
+    
+    console.log(`Resending ${this.pendingMessages.size} pending messages`);
     
     // Resend all pending messages
     this.pendingMessages.forEach((message, tempId) => {
       this.socket?.emit('message', {
-        roomId: this.currentRoomId,
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
         content: message.content,
@@ -910,7 +921,6 @@ export class SocketService extends EventEmitter {
     this.pendingReactions.forEach((data, key) => {
       this.socket?.emit('message-reaction', {
         messageId: data.messageId,
-        roomId: this.currentRoomId,
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
         emoji: data.emoji,

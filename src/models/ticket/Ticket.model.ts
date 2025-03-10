@@ -18,6 +18,7 @@ export interface TicketDocument extends Document {
   updatedBy: string;
   efforts: number;
   totalEfforts: number;
+  roomId: string;
 }
 
 const TicketSchema: Schema<TicketDocument> = new Schema({
@@ -51,6 +52,8 @@ const TicketSchema: Schema<TicketDocument> = new Schema({
   updatedBy: { type: String },
   efforts: { type: Number, default: 0 },
   totalEfforts: { type: Number, default: 0 }
+,
+  roomId: { type: String, default: () => `room-${new mongoose.Types.ObjectId().toString()}` }
 }, { timestamps: true });
 
 TicketSchema.pre<Query<any, TicketDocument>>(/^find/, function (next) {

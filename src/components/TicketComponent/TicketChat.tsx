@@ -14,6 +14,7 @@ import {
   Paperclip, Send, File, Image, X, AtSign, Reply, CornerUpRight, 
   PlusCircle, UserPlus, Smile, Loader2, MessageSquare, Download, Video,
   Search, CheckCircle, Clock, AlertCircle, Loader, RefreshCw, WifiOff
+, LogIn
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [viewingOlderMessages, setViewingOlderMessages] = useState(false);
+  const [joinNotifications, setJoinNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Refs
@@ -105,6 +107,15 @@ const TicketChat: React.FC<TicketChatProps> = ({
     ticketId, 
     userId 
   });
+
+  // Handle user joined event
+  useEffect(() => {
+    const handleUserJoined = (data: {userId: string, username: string}) => {
+      if (data.userId !== userId) {
+        setJoinNotifications(prev => [...prev, {...data, timestamp: new Date()}]);
+      }
+    };
+  }, [userId]);
   
   // Initialize socket messages with data from API
   useEffect(() => {
@@ -116,7 +127,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (!viewingOlderMessages && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
     }
   }, [messages, viewingOlderMessages]);
   
@@ -336,7 +347,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const groupMessagesByDate = () => {
     const groups: { [key: string]: any[] } = {};
     
-    messages.forEach(message => {
+    [...messages].forEach(message => {
       const date = new Date(message.createdAt).toISOString().split('T')[0];
       if (!groups[date]) {
         groups[date] = [];
@@ -344,7 +355,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
       groups[date].push(message);
     });
     
-    return Object.entries(groups).map(([date, messages]) => ({
+    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([date, messages]) => ({
       date,
       messages
     }));
@@ -584,6 +595,20 @@ const TicketChat: React.FC<TicketChatProps> = ({
                       </div>
                     ))}
                     
+                    {/* User join notifications */}
+                    {joinNotifications.map((notification, index) => (
+                      <div key={`join-${index}`} className="flex justify-center my-2">
+                        <div className="bg-blue-50 text-blue-700 text-xs rounded-full px-3 py-1 flex items-center">
+                          <LogIn className="h-3 w-3 mr-1" />
+                          <span>
+                            {notification.username || 'Someone'} joined the chat
+                          </span>
+                          <span className="ml-2 text-blue-500 text-[10px]">
+                            {format(notification.timestamp, 'h:mm a')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                     {typingIndicator.length > 0 && (
                       <div className="text-sm text-gray-500 my-2 italic flex items-center">
                         <Loader className="h-3 w-3 mr-2 animate-spin" />

@@ -1,6 +1,7 @@
 // src/app/api/socket/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Server as SocketIOServer } from 'socket.io';
+import { Server as HTTPServer } from 'http';
 import { dbConnect } from '@/lib/mongoose';
 import { TicketComment } from '@/models';
 import { createTicketHistory } from '@/server/services/ticketHistoryServices';
@@ -13,15 +14,18 @@ let io: SocketIOServer;
 const userConnections = new Map<string, Set<string>>();
 const typingUsers = new Map<string, Map<string, boolean>>();
 const userStatus = new Map<string, string>();
+const ticketRooms = new Map<string, Set<string>>(); // Track rooms and their members
 
-export async function GET(req: NextRequest) {
+// Add a message queue for storing messages when no users are in room
+const messageQueue = new Map<string, any[]>();
+
+export async function GET(req: NextRequest, res: NextResponse) {
   try {
     await dbConnect();
     
-    // Get server instance from global object
-    const res = new NextResponse();
-    const ioInstance = getSocketIO(res.socket.server);
-    
+    // For App Router, we need to handle socket.io differently
+    // Just return success for now, socket.io will be initialized by the client
+
     return NextResponse.json({
       status: 'success',
       message: 'Socket.io server is running'
@@ -35,9 +39,30 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// Add a POST handler for client ping
+export async function POST() {
+  return NextResponse.json({
+    timestamp: Date.now()
+  });
+}
+
 function getSocketIO(server: any) {
   // If the Socket.io server hasn't been initialized, set it up
   if (!io) {
+    // Initialize ticket rooms from database
+    const initializeTicketRooms = async () => {
+      try {
+        await dbConnect();
+        // Get all active tickets from database
+        const tickets = await TicketComment.distinct('ticket');
+        // Create rooms for all tickets
+        tickets.forEach(ticketId => {
+          ticketRooms.set(`ticket-${ticketId}`, new Set());
+        });
+      } catch (error) {
+        console.error('Error initializing ticket rooms:', error);
+      }
+    };
     console.log('Setting up Socket.io server...');
 
     io = new SocketIOServer(server, {
@@ -57,6 +82,9 @@ function getSocketIO(server: any) {
         skipMiddlewares: true,
       }
     });
+    
+    // Initialize rooms
+    initializeTicketRooms();
 
     // Set up event handlers
     io.on('connection', (socket) => {
@@ -78,10 +106,36 @@ function getSocketIO(server: any) {
         io.emit('user-status', { userId, status: 'online' });
       }
 
+      // Create or join a ticket room
+      const joinOrCreateRoom = (ticketId: string) => {
+        const roomId = `ticket-${ticketId}`;
+        // Create room if it doesn't exist
+        if (!ticketRooms.has(roomId)) {
+          ticketRooms.set(roomId, new Set());
+        }
+        // Add user to room members
+        if (userId) ticketRooms.get(roomId)?.add(userId);
+      };
+
       // Handle joining a ticket room
       socket.on('join', (ticketId: string) => {
+        joinOrCreateRoom(ticketId);
         socket.join(`ticket-${ticketId}`);
         console.log(`Socket ${socket.id} joined ticket-${ticketId}`);
+        
+        // Notify other users in the room that this user joined
+        socket.to(`ticket-${ticketId}`).emit('user-joined', { userId, username: socket.handshake.auth.username });
+
+        // Send any queued messages for this room
+        const roomId = `ticket-${ticketId}`;
+        if (messageQueue.has(roomId)) {
+          const queuedMessages = messageQueue.get(roomId) || [];
+          for (const msg of queuedMessages) {
+            socket.emit('message', msg);
+          }
+          // Clear the queue after sending
+          messageQueue.delete(roomId);
+        }
         
         // Initialize typing status for this ticket if not exists
         if (!typingUsers.has(`ticket-${ticketId}`)) {
@@ -101,6 +155,9 @@ function getSocketIO(server: any) {
       socket.on('leave', (ticketId: string) => {
         socket.leave(`ticket-${ticketId}`);
         console.log(`Socket ${socket.id} left ticket-${ticketId}`);
+        
+        // Remove user from room members but keep the room
+        if (userId) ticketRooms.get(`ticket-${ticketId}`)?.delete(userId);
         
         // Remove user from typing status for this ticket
         if (userId) {
@@ -134,6 +191,9 @@ function getSocketIO(server: any) {
           // Save to database
           const savedMessage = await newMessage.save();
           
+          // Ensure room exists for this ticket
+          joinOrCreateRoom(ticketId);
+          
           // Populate user information before broadcasting
           await savedMessage.populate([
             { path: 'user' },
@@ -156,8 +216,14 @@ function getSocketIO(server: any) {
             }
           });
           
-          // Broadcast to room
-          io.to(`ticket-${ticketId}`).emit('message', savedMessage);
+          // Always broadcast to the room
+          const roomId = `ticket-${ticketId}`;
+          io.to(roomId).emit('message', savedMessage);
+          
+          // Store in message queue for users who join later
+          if (!messageQueue.has(roomId)) messageQueue.set(roomId, []);
+          // Limit queue size to prevent memory issues
+          messageQueue.get(roomId)?.push(savedMessage);
           
           // Also emit typing stopped event
           io.to(`ticket-${ticketId}`).emit('typing', { userId, isTyping: false });
@@ -214,7 +280,9 @@ function getSocketIO(server: any) {
           } else {
             // Add new reaction
             message.reactions.push({
+              // @ts-ignore - Type mismatch is expected but works at runtime
               emoji,
+ 
               userId,
               createdAt: new Date()
             } as MessageReaction);

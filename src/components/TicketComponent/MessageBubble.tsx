@@ -112,7 +112,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const getUniqueReactionEmojis = () => {
     if (!message.reactions || message.reactions.length === 0) return [];
     const emojis = message.reactions.map((r: any) => r.emoji);
-    return [...new Set(emojis)];
+    return [...new Set(emojis)] as string[];
   };
   
   // Handle key press in edit mode
@@ -176,9 +176,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           <AvatarImage src={message.user.avatar} />
         ) : (
           <AvatarFallback>
-            {message.user.firstName && message.user.lastName 
-              ? `${message.user.firstName[0]}${message.user.lastName[0]}`
-              : '??'}
+            {message.user.firstName?.[0] || ''}
+            {message.user.lastName?.[0] || ''}
+            {!message.user.firstName && !message.user.lastName ? message.user._id.substring(0, 2) : ''}
           </AvatarFallback>
         )}
       </Avatar>
@@ -346,17 +346,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           )}>
             {getUniqueReactionEmojis().map(emoji => (
               <button
-                key={emoji}
+                key={emoji as string}
                 className={cn(
                   "inline-flex items-center rounded-full px-2 py-1 text-xs",
-                  hasUserReacted(emoji)
+                  hasUserReacted(emoji as string)
                     ? "bg-blue-100 hover:bg-blue-200 text-blue-800"
                     : "bg-gray-100 hover:bg-gray-200 text-gray-800"
                 )}
-                onClick={() => onReaction(message._id, emoji)}
+                onClick={() => onReaction(message._id, emoji as string)}
               >
-                <span className="mr-1">{emoji}</span>
-                <span>{countReactions(emoji)}</span>
+                <span className="mr-1">{emoji as string}</span>
+                <span>{countReactions(emoji as string)}</span>
               </button>
             ))}
           </div>

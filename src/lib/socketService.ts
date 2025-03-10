@@ -1,6 +1,5 @@
 // src/lib/socketService.ts
 import { io, Socket } from 'socket.io-client';
-import { toast } from 'react-toastify';
 import { EventEmitter } from 'events';
 
 export interface SocketUser {
@@ -37,6 +36,7 @@ export interface ChatMessage {
   readAt?: Date;
   createdAt: string;
   isPending?: boolean;
+  isRead?: boolean;
   error?: boolean;
 }
 
@@ -59,7 +59,7 @@ interface SocketServiceOptions {
 
 export class SocketService extends EventEmitter {
   private static instance: SocketService;
-  private socket: Socket | null = null;
+  public socket: Socket | null = null;
   private serverUrl: string;
   private autoConnect: boolean;
   private reconnectionAttempts: number;
@@ -67,6 +67,7 @@ export class SocketService extends EventEmitter {
   private connectionAttempts: number = 0;
   private currentTicketId: string | null = null;
   private currentUserId: string | null = null;
+  private currentRoomId: string | null = null;
   private pingInterval: NodeJS.Timeout | null = null;
   private isInitialized: boolean = false;
   
@@ -79,13 +80,10 @@ export class SocketService extends EventEmitter {
   
   private constructor(options: SocketServiceOptions = {}) {
     super();
-    this.serverUrl = options.serverUrl || `/api/socketio`;
+    this.serverUrl = options.serverUrl || `/api/socketio/`;
     this.autoConnect = options.autoConnect !== undefined ? options.autoConnect : true;
     this.reconnectionAttempts = options.reconnectionAttempts || 5;
     this.reconnectionDelay = options.reconnectionDelay || 3000;
-    
-    // Setup periodic sync to ensure messages get saved
-    this.setupPeriodicSync();
     
     if (this.autoConnect) {
       this.init();
@@ -93,74 +91,34 @@ export class SocketService extends EventEmitter {
   }
   
   /**
-   * Setup periodic sync to ensure pending messages get saved
-   */
-  private setupPeriodicSync(): void {
-    // Every 30 seconds, check for pending messages and try to save them
-    setInterval(() => {
-      this.syncPendingMessages();
-    }, 30000);
-  }
-  
-  /**
-   * Sync pending messages with the server
-   */
-  private syncPendingMessages(): void {
-    if (this.pendingMessages.size === 0) return;
-    
-    // If connected, try to resend pending messages
-    if (this.socket?.connected) {
-      this.resendPendingMessages();
-    } else {
-      // Otherwise, try to save via REST API
-      this.pendingMessages.forEach(message => {
-        if (!message.error) {
-          this.savePendingMessageToDatabase(message);
-        }
-      });
-    }
-  }
-  
-  /**
-   * Get the singleton instance of SocketService
-   */
-  public static getInstance(options?: SocketServiceOptions): SocketService {
-    if (!SocketService.instance) {
-      SocketService.instance = new SocketService(options);
-    }
-    return SocketService.instance;
-  }
-  
-  /**
    * Initialize the socket connection
    */
   public init(): void {
-    if (this.isInitialized || this.socket) return;
-    
-    console.log('Initializing socket connection...');
-    this.isInitialized = true;
+    if (this.isInitialized) return;
     
     try {
+      // Create socket with proper options
       this.socket = io({
-        path: this.serverUrl,
+        path: '/api/socketio',
         reconnection: true,
         reconnectionAttempts: this.reconnectionAttempts,
         reconnectionDelay: this.reconnectionDelay,
-        transports: ['websocket', 'polling'],
-        autoConnect: true,
+        timeout: 20000,
+        autoConnect: true
       });
       
       this.setupEventListeners();
       this.startPingInterval();
+      this.isInitialized = true;
+      
     } catch (error) {
       console.error('Socket initialization error:', error);
-      this.isInitialized = false;
-      this.emit('error', { message: 'Failed to initialize socket connection' });
+      this.emit('error', error);
     }
   }
   
   /**
-   * Set up event listeners for socket events
+   * Setup event listeners
    */
   private setupEventListeners(): void {
     if (!this.socket) return;
@@ -199,28 +157,38 @@ export class SocketService extends EventEmitter {
   /**
    * Connect to a ticket room
    */
-  public joinTicketRoom(ticketId: string, userId: string): void {
+  public joinTicketRoom(ticketId: string, userId: string, roomId?: string): void {
     if (!this.socket || !this.socket.connected) {
       this.init();
     }
     
     this.currentTicketId = ticketId;
     this.currentUserId = userId;
+    this.currentRoomId = roomId || `ticket-${ticketId}`;
     
     if (this.socket?.connected) {
-      this.socket.emit('join', { ticketId, userId });
-      this.emit('joining', { ticketId });
+      // Join the room using roomId
+      this.socket.emit('join-room', { 
+        roomId: this.currentRoomId,
+        ticketId,
+        userId
+      });
+      this.emit('joining', { ticketId, roomId: this.currentRoomId });
     } else {
       // Queue join for when connection is established
       this.once('connected', () => {
-        this.socket?.emit('join', { ticketId, userId });
-        this.emit('joining', { ticketId });
+        this.socket?.emit('join-room', { 
+          roomId: this.currentRoomId,
+          ticketId,
+          userId
+        });
+        this.emit('joining', { ticketId, roomId: this.currentRoomId });
       });
     }
     
     // Set auth data for reconnection
     if (this.socket) {
-      this.socket.auth = { userId };
+      this.socket.auth = { userId, roomId: this.currentRoomId };
     }
   }
   
@@ -228,9 +196,13 @@ export class SocketService extends EventEmitter {
    * Leave the current ticket room
    */
   public leaveTicketRoom(): void {
-    if (this.socket && this.currentTicketId) {
-      this.socket.emit('leave', this.currentTicketId);
+    if (this.socket && this.currentRoomId) {
+      this.socket.emit('leave-room', { 
+        roomId: this.currentRoomId,
+        userId: this.currentUserId
+      });
       this.currentTicketId = null;
+      this.currentRoomId = null;
     }
   }
   
@@ -246,8 +218,8 @@ export class SocketService extends EventEmitter {
     // Generate a temporary ID for the message
     const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     
-    if (!this.currentTicketId || !this.currentUserId) {
-      console.error('Cannot send message: Missing ticketId/userId');
+    if (!this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
+      console.error('Cannot send message: Missing ticketId/userId/roomId');
       return tempId;
     }
     
@@ -278,6 +250,7 @@ export class SocketService extends EventEmitter {
     // If socket is connected, send to server
     if (this.socket && this.socket.connected) {
       this.socket.emit('message', {
+        roomId: this.currentRoomId,
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
         content,
@@ -286,84 +259,24 @@ export class SocketService extends EventEmitter {
         mentions,
         tempId
       });
-    } else {
-      // If socket is not connected, fall back to REST API
-      this.savePendingMessageToDatabase(pendingMessage);
     }
     
     return tempId;
   }
   
   /**
-   * Save pending message to database via REST API
-   * This serves as a fallback when socket is not connected
-   */
-  private async savePendingMessageToDatabase(message: ChatMessage): Promise<void> {
-    try {
-      // Create the payload structure required by the API
-      const payload = {
-        action: 'create',
-        data: {
-          ticket: message.ticket,
-          user: message.user._id,
-          content: message.content,
-          attachments: message.attachments || [],
-          replyTo: message.replyTo,
-          mentions: message.mentions || [],
-          addedBy: message.user._id,
-          updatedBy: message.user._id
-        }
-      };
-      
-      // Make the API call
-      const response = await fetch('/api/ticket-comment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.status === 'SUCCESS' || data.status === 'Success') {
-        // If successful, update the pending message with real ID
-        const actualMessage = data.data;
-        this.handleMessageAck({
-          messageId: actualMessage._id,
-          tempId: message._id,
-          status: 'delivered',
-          timestamp: actualMessage.createdAt
-        });
-      }
-    } catch (error) {
-      console.error('Failed to save message via API:', error);
-      
-      // Mark message as having an error
-      const pendingMessage = this.pendingMessages.get(message._id);
-      if (pendingMessage) {
-        pendingMessage.error = true;
-        this.updateMessageInCache(message._id, pendingMessage);
-      }
-    }
-  }
-  
-  /**
    * Edit a message
    */
   public editMessage(messageId: string, newContent: string): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
-      console.error('Cannot edit message: Socket not connected or missing ticketId/userId');
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
+      console.error('Cannot edit message: Socket not connected or missing ticketId/userId/roomId');
       return;
     }
     
     // Send edit request
     this.socket.emit('edit-message', {
       messageId,
+      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       userId: this.currentUserId,
       content: newContent
@@ -380,8 +293,8 @@ export class SocketService extends EventEmitter {
    * Add a reaction to a message
    */
   public addReaction(messageId: string, emoji: string): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
-      console.error('Cannot add reaction: Socket not connected or missing ticketId/userId');
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
+      console.error('Cannot add reaction: Socket not connected or missing ticketId/userId/roomId');
       return;
     }
     
@@ -395,6 +308,7 @@ export class SocketService extends EventEmitter {
     // Send reaction
     this.socket.emit('message-reaction', {
       messageId,
+      roomId: this.currentRoomId,
       ticketId: this.currentTicketId, 
       userId: this.currentUserId,
       emoji,
@@ -406,8 +320,8 @@ export class SocketService extends EventEmitter {
    * Remove a reaction from a message
    */
   public removeReaction(messageId: string, emoji: string): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
-      console.error('Cannot remove reaction: Socket not connected or missing ticketId/userId');
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
+      console.error('Cannot remove reaction: Socket not connected or missing ticketId/userId/roomId');
       return;
     }
     
@@ -417,6 +331,7 @@ export class SocketService extends EventEmitter {
     // Send reaction removal
     this.socket.emit('message-reaction', {
       messageId,
+      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       userId: this.currentUserId,
       emoji,
@@ -428,22 +343,27 @@ export class SocketService extends EventEmitter {
    * Mark messages as read
    */
   public markMessagesAsRead(messageIds: string[]): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId || messageIds.length === 0) {
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId || messageIds.length === 0) {
       return;
     }
     
     // Send read receipt
     this.socket.emit('read-receipt', {
       messageIds,
+      roomId: this.currentRoomId,
       userId: this.currentUserId,
       ticketId: this.currentTicketId
     });
     
     // Optimistically update cache
     messageIds.forEach(id => {
-      this.updateMessageInCache(id, {
-        readBy: [...(this.getMessageFromCache(id)?.readBy || []), this.currentUserId]
-      });
+      const message = this.getMessageFromCache(id);
+      const readBy = message?.readBy || [];
+      if (message && !readBy.includes(this.currentUserId!)) {
+        this.updateMessageInCache(id, {
+          readBy: [...readBy, this.currentUserId!]
+        });
+      }
     });
   }
   
@@ -451,11 +371,12 @@ export class SocketService extends EventEmitter {
    * Send typing status
    */
   public sendTyping(isTyping: boolean): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId) {
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) {
       return;
     }
     
     this.socket.emit('typing', {
+      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       userId: this.currentUserId,
       isTyping
@@ -473,6 +394,7 @@ export class SocketService extends EventEmitter {
     this.socket.emit('user-status', {
       userId: this.currentUserId,
       status,
+      roomId: this.currentRoomId,
       ticketId: this.currentTicketId
     });
   }
@@ -481,11 +403,12 @@ export class SocketService extends EventEmitter {
    * Notify about file upload
    */
   public notifyFileUpload(fileInfo: any): void {
-    if (!this.socket || !this.currentTicketId) {
+    if (!this.socket || !this.currentTicketId || !this.currentRoomId) {
       return;
     }
     
     this.socket.emit('file-upload', {
+      roomId: this.currentRoomId,
       ticketId: this.currentTicketId,
       fileInfo
     });
@@ -577,6 +500,7 @@ export class SocketService extends EventEmitter {
     this.isInitialized = false;
     this.currentTicketId = null;
     this.currentUserId = null;
+    this.currentRoomId = null;
     this.removeAllListeners();
   }
   
@@ -590,7 +514,7 @@ export class SocketService extends EventEmitter {
     
     this.pingInterval = setInterval(() => {
       if (this.socket?.connected) {
-        fetch('/api/socket', { method: 'POST' })
+        fetch('/api/socketio/', { method: 'POST' })
           .catch(err => console.error('Ping error:', err));
       }
     }, 30000); // 30 seconds
@@ -602,85 +526,19 @@ export class SocketService extends EventEmitter {
   private handleConnect(): void {
     console.log('Socket connected');
     this.connectionAttempts = 0;
-    this.emit('connected');
+    this.emit('connected', { roomId: this.currentRoomId });
     
     // Rejoin room if needed
-    if (this.currentTicketId && this.currentUserId) {
-      this.socket?.emit('join', { 
+    if (this.currentRoomId && this.currentTicketId && this.currentUserId) {
+      this.socket?.emit('join-room', { 
+        roomId: this.currentRoomId,
         ticketId: this.currentTicketId, 
         userId: this.currentUserId 
       });
     }
     
-    // Fetch messages from server to ensure we have the latest
-    this.fetchMessagesFromServer();
-    
     // Resend any pending messages
     this.resendPendingMessages();
-  }
-  
-  /**
-   * Fetch messages from server using REST API
-   * This ensures we have the latest messages even after connection issues
-   */
-  private async fetchMessagesFromServer(): Promise<void> {
-    if (!this.currentTicketId) return;
-    
-    try {
-      const response = await fetch(`/api/ticket-comment?ticketId=${this.currentTicketId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.status === 'SUCCESS' || data.status === 'Success') {
-        const serverMessages = data.data || [];
-        
-        // Merge with our current messages
-        this.mergeWithServerMessages(serverMessages);
-      }
-    } catch (error) {
-      console.error('Failed to fetch messages via API:', error);
-    }
-  }
-  
-  /**
-   * Merge server messages with current cached messages
-   */
-  private mergeWithServerMessages(serverMessages: ChatMessage[]): void {
-    if (!this.currentTicketId || !serverMessages.length) return;
-    
-    const currentMessages = this.messagesCache.get(this.currentTicketId) || [];
-    const pendingMessages = Array.from(this.pendingMessages.values());
-    
-    // Identify messages that are in the cache but not on the server (still pending)
-    const pendingMessageIds = pendingMessages.map(msg => msg._id);
-    
-    // Create a map of server message IDs for quick lookup
-    const serverMessageIds = new Set(serverMessages.map(msg => msg._id));
-    
-    // Create a new merged array
-    const mergedMessages = [
-      ...serverMessages,
-      // Add any pending messages that aren't yet on the server
-      ...pendingMessages.filter(msg => !serverMessageIds.has(msg._id))
-    ];
-    
-    // Sort by created date
-    mergedMessages.sort((a, b) => 
-      new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
-    
-    // Update the cache
-    this.messagesCache.set(this.currentTicketId, mergedMessages);
-    this.emit('messages-updated', mergedMessages);
   }
   
   /**
@@ -893,9 +751,9 @@ export class SocketService extends EventEmitter {
   /**
    * Handle joined room event
    */
-  private handleJoinedRoom(data: { ticketId: string, success: boolean }): void {
+  private handleJoinedRoom(data: { roomId: string, success: boolean }): void {
     if (data.success) {
-      this.emit('joined', data.ticketId);
+      this.emit('joined', { roomId: data.roomId });
     }
   }
   
@@ -905,7 +763,9 @@ export class SocketService extends EventEmitter {
   private addMessageToCache(message: ChatMessage): void {
     if (!this.currentTicketId) return;
     
-    const messages = this.messagesCache.get(this.currentTicketId) || [];
+    // Create a new array from the existing messages to avoid non-extensible array issues
+    const currentMessages = this.messagesCache.get(this.currentTicketId) || [];
+    const messages = [...currentMessages];
     
     // Find if message already exists to avoid duplicates
     const existingIndex = messages.findIndex(m => m._id === message._id);
@@ -917,7 +777,7 @@ export class SocketService extends EventEmitter {
       // Add new message
       messages.push(message);
       
-      // Sort messages by creation date
+      // Sort messages by creation date - oldest first (newest at bottom)
       messages.sort((a, b) => 
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
@@ -1030,11 +890,12 @@ export class SocketService extends EventEmitter {
    * Resend any pending messages after reconnection
    */
   private resendPendingMessages(): void {
-    if (!this.socket || !this.currentTicketId || !this.currentUserId) return;
+    if (!this.socket || !this.currentTicketId || !this.currentUserId || !this.currentRoomId) return;
     
     // Resend all pending messages
     this.pendingMessages.forEach((message, tempId) => {
       this.socket?.emit('message', {
+        roomId: this.currentRoomId,
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
         content: message.content,
@@ -1049,6 +910,7 @@ export class SocketService extends EventEmitter {
     this.pendingReactions.forEach((data, key) => {
       this.socket?.emit('message-reaction', {
         messageId: data.messageId,
+        roomId: this.currentRoomId,
         ticketId: this.currentTicketId,
         userId: this.currentUserId,
         emoji: data.emoji,
@@ -1056,6 +918,19 @@ export class SocketService extends EventEmitter {
       });
     });
   }
+  
+  /**
+   * Get the singleton instance
+   */
+  public static getInstance(options: SocketServiceOptions = {}): SocketService {
+    if (!SocketService.instance) {
+      SocketService.instance = new SocketService(options);
+    }
+    return SocketService.instance;
+  }
 }
 
-export default SocketService.getInstance;
+// Factory function to get or create a SocketService instance
+export default function getSocketService(options: SocketServiceOptions = {}): SocketService {
+  return SocketService.getInstance(options);
+}

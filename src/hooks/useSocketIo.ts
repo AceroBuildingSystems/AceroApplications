@@ -1,66 +1,68 @@
 // src/hooks/useSocketIo.ts
-import { useEffect, useState, useCallback, useRef } from 'react';
-import getSocketService, { ChatMessage, SocketService } from '@/lib/socketService';
+import { useState, useEffect, useCallback } from 'react';
+import getSocketService, { ChatMessage, MessageReaction } from '@/lib/socketService';
 
 interface UseSocketIoProps {
   ticketId: string;
   userId: string;
+  roomId?: string;
 }
 
-export const useSocketIo = ({ ticketId, userId }: UseSocketIoProps) => {
+export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(true);
-  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [connectionError, setConnectionError] = useState<Error | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
   const [onlineUsers, setOnlineUsers] = useState<Record<string, string>>({});
   const [messageReactions, setMessageReactions] = useState<Record<string, any>>({});
   
-  // Preserve the socket service instance
-  const socketService = useRef<SocketService | null>(null);
-  
-  // Initialize the socket service
+  // Initialize socket service
   useEffect(() => {
-    if (!ticketId || !userId) return;
+    const socketService = getSocketService();
     
-    // Get or create the socket service instance
-    socketService.current = getSocketService();
+    // Set initial states
+    setIsConnected(socketService.isConnected());
+    setIsConnecting(!socketService.isConnected());
+    setMessages(socketService.getMessages());
+    setTypingUsers(socketService.getTypingUsers());
+    setOnlineUsers(socketService.getOnlineUsers());
+    setMessageReactions(socketService.getMessageReactions());
     
-    // Set up event listeners
-    const handleConnect = () => {
+    // Join the ticket room
+    socketService.joinTicketRoom(ticketId, userId, roomId);
+    
+    // Event listeners
+    const handleConnected = () => {
       setIsConnected(true);
       setIsConnecting(false);
       setConnectionError(null);
     };
     
-    const handleDisconnect = (reason: string) => {
+    const handleDisconnected = () => {
       setIsConnected(false);
-      setConnectionError(`Disconnected: ${reason}`);
-    };
-    
-    const handleError = (error: any) => {
-      setConnectionError(error?.message || 'Connection error');
+      setIsConnecting(false);
     };
     
     const handleReconnecting = () => {
       setIsConnecting(true);
     };
     
-    const handleReconnectFailed = () => {
+    const handleError = (error: Error) => {
+      setConnectionError(error);
       setIsConnecting(false);
-      setConnectionError('Failed to reconnect after multiple attempts');
     };
     
     const handleMessagesUpdated = (updatedMessages: ChatMessage[]) => {
       setMessages(updatedMessages);
     };
     
-    const handleTypingUpdated = (typingData: Record<string, boolean>) => {
-      setTypingUsers(typingData);
+    const handleTypingUpdated = (typingStatus: Record<string, boolean>) => {
+      setTypingUsers(typingStatus);
     };
     
-    const handleUserStatusUpdated = (statusData: Record<string, string>) => {
-      setOnlineUsers(statusData);
+    const handleUserStatusUpdated = (statusMap: Record<string, string>) => {
+      setOnlineUsers(statusMap);
     };
     
     const handleReactionsUpdated = (reactionsData: Record<string, any>) => {
@@ -68,117 +70,85 @@ export const useSocketIo = ({ ticketId, userId }: UseSocketIoProps) => {
     };
     
     // Register all event listeners
-    const service = socketService.current;
-    service.on('connected', handleConnect);
-    service.on('disconnected', handleDisconnect);
-    service.on('connect_error', handleError);
-    service.on('error', handleError);
-    service.on('reconnecting', handleReconnecting);
-    service.on('reconnect_failed', handleReconnectFailed);
-    service.on('messages-updated', handleMessagesUpdated);
-    service.on('typing-updated', handleTypingUpdated);
-    service.on('user-status-updated', handleUserStatusUpdated);
-    service.on('reactions-updated', handleReactionsUpdated);
+    socketService.on('connected', handleConnected);
+    socketService.on('disconnected', handleDisconnected);
+    socketService.on('reconnecting', handleReconnecting);
+    socketService.on('error', handleError);
+    socketService.on('messages-updated', handleMessagesUpdated);
+    socketService.on('typing-updated', handleTypingUpdated);
+    socketService.on('user-status-updated', handleUserStatusUpdated);
+    socketService.on('reactions-updated', handleReactionsUpdated);
     
     // Update connection state
-    setIsConnected(service.isConnected());
-    setIsConnecting(!service.isConnected());
+    setIsConnected(socketService.isConnected());
+    setIsConnecting(!socketService.isConnected());
     
-    // Join the ticket room
-    service.joinTicketRoom(ticketId, userId);
-    
-    // Set initial state from service
-    setMessages(service.getMessages());
-    setTypingUsers(service.getTypingUsers());
-    setOnlineUsers(service.getOnlineUsers());
-    setMessageReactions(service.getMessageReactions());
-    
-    // Clean up event listeners when unmounting
+    // Cleanup function
     return () => {
-      if (service) {
-        service.removeListener('connected', handleConnect);
-        service.removeListener('disconnected', handleDisconnect);
-        service.removeListener('connect_error', handleError);
-        service.removeListener('error', handleError);
-        service.removeListener('reconnecting', handleReconnecting);
-        service.removeListener('reconnect_failed', handleReconnectFailed);
-        service.removeListener('messages-updated', handleMessagesUpdated);
-        service.removeListener('typing-updated', handleTypingUpdated);
-        service.removeListener('user-status-updated', handleUserStatusUpdated);
-        service.removeListener('reactions-updated', handleReactionsUpdated);
-        
-        // Leave the ticket room
-        service.leaveTicketRoom();
-      }
+      socketService.removeListener('connected', handleConnected);
+      socketService.removeListener('disconnected', handleDisconnected);
+      socketService.removeListener('reconnecting', handleReconnecting);
+      socketService.removeListener('error', handleError);
+      socketService.removeListener('messages-updated', handleMessagesUpdated);
+      socketService.removeListener('typing-updated', handleTypingUpdated);
+      socketService.removeListener('user-status-updated', handleUserStatusUpdated);
+      socketService.removeListener('reactions-updated', handleReactionsUpdated);
+      
+      // Leave the ticket room
+      socketService.leaveTicketRoom();
     };
-  }, [ticketId, userId]);
+  }, [ticketId, userId, roomId]);
   
-  // Update messages from external source (e.g., RTK Query)
+  // Callback functions to interact with the socket
   const updateMessages = useCallback((newMessages: ChatMessage[]) => {
-    if (socketService.current) {
-      socketService.current.updateMessages(newMessages);
-    }
+    const socketService = getSocketService();
+    socketService.updateMessages(newMessages);
   }, []);
   
-  // Send a new message
-  const sendMessage = useCallback((
-    content: string, 
-    attachments: any[] = [], 
-    replyTo?: string, 
-    mentions: string[] = []
-  ): string => {
-    if (!socketService.current) return '';
-    return socketService.current.sendMessage(content, attachments, replyTo, mentions);
+  const sendMessage = useCallback((content: string, attachments: any[] = [], replyTo?: string, mentions: string[] = []) => {
+    const socketService = getSocketService();
+    return socketService.sendMessage(content, attachments, replyTo, mentions);
   }, []);
   
-  // Edit a message
   const editMessage = useCallback((messageId: string, newContent: string) => {
-    if (socketService.current) {
-      socketService.current.editMessage(messageId, newContent);
-    }
+    const socketService = getSocketService();
+    socketService.editMessage(messageId, newContent);
   }, []);
   
-  // Add reaction to message
   const addReaction = useCallback((messageId: string, emoji: string) => {
-    if (socketService.current) {
-      socketService.current.addReaction(messageId, emoji);
-    }
+    const socketService = getSocketService();
+    socketService.addReaction(messageId, emoji);
   }, []);
   
-  // Mark messages as read
+  const removeReaction = useCallback((messageId: string, emoji: string) => {
+    const socketService = getSocketService();
+    socketService.removeReaction(messageId, emoji);
+  }, []);
+  
   const markMessagesAsRead = useCallback((messageIds: string[]) => {
-    if (socketService.current && messageIds.length > 0) {
-      socketService.current.markMessagesAsRead(messageIds);
-    }
+    const socketService = getSocketService();
+    socketService.markMessagesAsRead(messageIds);
   }, []);
   
-  // Send typing status
   const sendTyping = useCallback((isTyping: boolean) => {
-    if (socketService.current) {
-      socketService.current.sendTyping(isTyping);
-    }
+    const socketService = getSocketService();
+    socketService.sendTyping(isTyping);
   }, []);
   
-  // Update user status
   const updateStatus = useCallback((status: string) => {
-    if (socketService.current) {
-      socketService.current.updateStatus(status);
-    }
+    const socketService = getSocketService();
+    socketService.updateStatus(status);
   }, []);
   
-  // Notify about file upload
   const notifyFileUpload = useCallback((fileInfo: any) => {
-    if (socketService.current) {
-      socketService.current.notifyFileUpload(fileInfo);
-    }
+    const socketService = getSocketService();
+    socketService.notifyFileUpload(fileInfo);
   }, []);
   
-  // Force reconnection
   const reconnect = useCallback(() => {
-    if (socketService.current) {
-      socketService.current.reconnect();
-      setIsConnecting(true);
-    }
+    const socketService = getSocketService();
+    socketService.reconnect();
+    setIsConnecting(true);
   }, []);
   
   return {
@@ -193,6 +163,7 @@ export const useSocketIo = ({ ticketId, userId }: UseSocketIoProps) => {
     sendMessage,
     editMessage,
     addReaction,
+    removeReaction,
     markMessagesAsRead,
     sendTyping,
     updateStatus,

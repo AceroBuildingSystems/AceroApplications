@@ -7,11 +7,11 @@ import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { NextApiResponseServerIO } from '@/types/next';
+import mime from 'mime-types';
 
 // Define the file storage location and naming convention
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Create uploads directory if it doesn't exist
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
@@ -19,11 +19,12 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    // Create a unique filename with the original extension
+    // Preserve the original extension
     const uniqueId = randomUUID();
-    const extension = path.extname(file.originalname);
+    const extension = path.extname(file.originalname) || 
+                     `.${mime.extension(file.mimetype) || 'bin'}`;
     cb(null, `${uniqueId}${extension}`);
-  },
+  }
 });
 
 // Define file size limit (10MB)
@@ -32,29 +33,27 @@ const fileSize = 10 * 1024 * 1024;
 // Configure multer with storage settings and file size limit
 const upload = multer({
   storage,
-  limits: { fileSize },
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    // Allow common file types
+    // Accept a wider range of file types
     const allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+      'video/mp4', 'video/webm', 'video/ogg',
+      'audio/mpeg', 'audio/ogg', 'audio/wav',
       'application/pdf',
-      'application/msword',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'application/zip',
-      'application/x-zip-compressed',
+      'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/plain', 'application/json',
+      'application/zip', 'application/x-zip-compressed'
     ];
     
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
+      console.log(`Rejected file with type: ${file.mimetype}`);
       cb(new Error(`File type ${file.mimetype} is not allowed`));
     }
-  },
+  }
 });
 
 // Create a custom error handler for multer
@@ -111,12 +110,22 @@ handler.post(async (req: NextApiRequest & { file: any }, res: NextApiResponseSer
       });
     }
     
-    // Return success response with file data
-    return res.status(200).json({
-      status: 'success',
-      message: 'File uploaded successfully',
-      data: fileData,
-    });
+    const fileExt = path.extname(file.originalname);
+const contentType = mime.lookup(file.originalname) || file.mimetype;
+
+// Return success response with file data
+return res.status(200).json({
+  status: 'success',
+  message: 'File uploaded successfully',
+  data: {
+    fileName: file.originalname,
+    fileType: contentType, // Use correct MIME type
+    fileSize: file.size,
+    url: `/uploads/${file.filename}`,
+    downloadUrl: `/api/file-download/${file.filename}`,
+    uploadedAt: new Date(),
+  },
+});
   } catch (error) {
     console.error('Upload handler error:', error);
     return res.status(500).json({

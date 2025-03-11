@@ -886,15 +886,47 @@ console.log('File upload response:', response);
                   {allFiles.map((file, idx) => (
                     <div key={idx} className="border rounded-md p-3 hover:bg-gray-50 transition-colors flex flex-col">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center overflow-hidden">
-                          {getFileIcon(file.fileType)}
-                          <span className="text-sm font-medium ml-1 truncate max-w-[150px]">{file.fileName}</span>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" asChild>
-                          <a href={`/api/file-download?filename=${encodeURIComponent(file.storedFileName || file.fileName)}&originalName=${encodeURIComponent(file.originalName || file.fileName)}`} target="_blank" rel="noopener noreferrer">
-                            <Download className="h-3 w-3" />
-                          </a>
-                        </Button>
+                      {file.fileType?.startsWith('image/') ? (
+                            <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
+                              <img 
+                                src={file.url} 
+                                alt={file.fileName} 
+                                className="max-h-full object-contain" 
+                              />
+                            </div>
+                          ) : file.fileType?.startsWith('video/') ? (
+                            <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
+                              <video 
+                                controls 
+                                src={file.url} 
+                                className="max-h-full object-contain"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                            </div>
+                          ) : (
+                            <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
+                              <div className="flex flex-col items-center">
+                                {getFileIcon(file.fileType)}
+                                <span className="text-xs mt-2 max-w-[150px] truncate">{file.fileName}</span>
+                              </div>
+                            </div>
+                          )}
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            asChild
+                          >
+                            <a 
+                              href={file.url} 
+                              download={file.fileName} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <Download className="h-3 w-3" />
+                            </a>
+                          </Button>
                       </div>
                       
                       {file.fileType?.startsWith('image/') && (

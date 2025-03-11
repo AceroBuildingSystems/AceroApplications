@@ -10,6 +10,26 @@ const nextConfig: NextConfig = {
   env: {
     API_BASE_URL: process.env.API_BASE_URL,
     ENVIRONMENT: process.env.ENVIRONMENT
+  },
+  images: {
+    domains: ['localhost'],
+  },
+  async headers() {
+    return [
+      {
+        source: '/uploads/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+    ]
   }
 };
 

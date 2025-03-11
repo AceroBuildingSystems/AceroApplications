@@ -143,7 +143,7 @@ function getSocketIO(server: any): SocketIOServer {
         // Fetch recent messages from database
         try {
           const messages = await TicketComment.find({ ticket: ticketId })
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: 1 }) // Changed from -1 to 1 to get oldest first
             .limit(50)
             .populate([
               { path: 'user' },
@@ -264,7 +264,7 @@ function getSocketIO(server: any): SocketIOServer {
           if (!messageQueue.has(roomId)) {
             messageQueue.set(roomId, []);
           }
-          console.log(`Adding message to queue for room ${roomId}`);
+          console.log(`Adding message to queue for room ${roomId} for persistence`);
           
           // Limit queue size to prevent memory issues
           const queue = messageQueue.get(roomId)!;

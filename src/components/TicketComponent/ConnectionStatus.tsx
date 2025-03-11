@@ -21,7 +21,7 @@ import {
 interface ConnectionStatusProps {
   isConnected: boolean;
   isConnecting: boolean;
-  connectionError: string | null;
+  connectionError: Error | string | null;
   onReconnect: () => void;
   className?: string;
 }
@@ -85,11 +85,19 @@ const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
     return (
       <div className={cn("flex items-center gap-1", className)}>
         <Badge 
-          variant="outline" 
-          className="bg-red-50 text-red-700 gap-1 cursor-default"
-        >
+variant="outline" className="bg-red-50 text-red-700 gap-1 cursor-default">
           <WifiOff className="h-3 w-3" />
           <span className="hidden sm:inline">Disconnected</span>
+        </Badge>
+        <Badge 
+          variant="outline" 
+          className="bg-red-50 text-red-700 gap-1 cursor-default ml-1 text-xs"
+          title={typeof connectionError === 'string' 
+            ? connectionError 
+            : connectionError.message}
+        >
+          <AlertCircle className="h-3 w-3" />
+          <span className="hidden sm:inline truncate max-w-[100px]">Error</span>
         </Badge>
         <Button 
           variant="ghost" 

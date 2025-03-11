@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { useSocketIo } from '@/hooks/useSocketIo';
 import { useGetTicketCommentsQuery, useUploadFileMutation } from '@/services/endpoints/ticketCommentApi';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
+import { uploadFile } from '@/lib/fileUploader';
 import DashboardLoader from '@/components/ui/DashboardLoader';
 import debounce from 'lodash/debounce';
 import MessageBubble from './MessageBubble';
@@ -99,7 +100,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
     ticketId 
   });
   
-  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
+  const [uploadFileMutation, { isLoading: isUploading }] = useUploadFileMutation();
   
   // Fetch all team members for mentions and invites
   const { data: teamMembersData = {}, isLoading: teamMembersLoading } = useGetMasterQuery({
@@ -165,7 +166,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (!viewingOlderMessages && messagesEndRef.current) {
-      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 200);
     }
   }, [messages, viewingOlderMessages]);
   
@@ -205,20 +206,35 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Handle file upload
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) return [];
-    
+
     const uploadedFiles = [];
-    
+
     for (const file of selectedFiles) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('ticketId', ticketId);
-      formData.append('userId', userId);
-      
       try {
-        const response = await uploadFile(formData).unwrap();
+        // Use our direct file uploader function from lib/fileUploader
+        // Create a FormData object manually
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('ticketId', ticketId);
+        formData.append('userId', userId);
         
-        if (response.status === 'success') {
+        console.log('Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
+        console.log('FormData created with:', 
+          'file:', formData.get('file'),
+          'ticketId:', formData.get('ticketId'),
+          'userId:', formData.get('userId')
+        );
+        const response = await uploadFileMutation(formData).unwrap();
+
+        
+console.log('File upload response:', response);
+
+        // Check if response is valid and has expected structure
+        if (response && response.status === 'success' && response.data) {
+          // Add the uploaded file info to our array
           uploadedFiles.push(response.data);
+          
+          // Notify other users about the file upload
           notifyFileUpload(response.data);
         }
       } catch (error) {
@@ -226,7 +242,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
         toast.error(`Failed to upload ${file.name}`);
       }
     }
-    
+
     return uploadedFiles;
   };
   
@@ -370,9 +386,12 @@ const TicketChat: React.FC<TicketChatProps> = ({
       setReplyingTo(null);
       
       // Refresh comments periodically to ensure data is in sync
-      setTimeout(() => {
-        refetchComments();
-      }, 2000);
+      if (commentsData) {
+        setTimeout(() => {
+          // Wrap in try/catch to prevent errors if component unmounts
+          try { refetchComments(); } catch (e) { console.log('Refetch skipped'); }
+        }, 2000);
+      }
     } catch (error) {
       console.error("Message submission error:", error);
       toast.error("Failed to send message");
@@ -395,6 +414,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
       groups[date].push(message);
     });
     
+    // Sort by date in ascending order (oldest first)
     return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([date, messages]) => ({
       date,
       messages: messages || []
@@ -596,7 +616,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 data-[state=active]:flex-1">
               {/* Message area */}
               <ScrollArea 
-                className="flex-1 p-4"
+                className="flex-1 p-4 relative"
                 onScroll={(e) => {
                   const target = e.currentTarget;
                   setViewingOlderMessages(target.scrollTop < target.scrollHeight - target.clientHeight - 100);
@@ -609,23 +629,23 @@ const TicketChat: React.FC<TicketChatProps> = ({
                     <p className="text-sm">Start the conversation by sending a message.</p>
                   </div>
                 ) : (
-                  <div>
+                  <div className="flex flex-col">
                     {messageGroups.map(group => (
                       <div key={group.date}>
                         <div className="flex justify-center my-4">
-                          <Badge variant="outline" className="bg-gray-50">
+                          <Badge variant="outline" className="bg-gray-50 px-3 py-1">
                             {format(new Date(group.date), 'EEEE, MMMM d, yyyy')}
                           </Badge>
                         </div>
                         
-                        {group.messages.map((message: ChatMessage) => (
-                          <div key={message._id} className="mb-4" id={`message-${message._id}`}>
+                        {group.messages.map((message: ChatMessage, index: number) => (
+                          <div key={`${message._id || 'temp'}-${index}`} className="mb-4" id={`message-${message._id}`}>
                             <MessageBubble
                               message={message}
                               currentUserId={userId}
                               onReply={handleReply}
-                              onReaction={(messageId, emoji) => addReaction(messageId, emoji)}
-                              onEdit={(messageId, newContent) => editMessage(messageId, newContent)}
+                              onReaction={addReaction}
+                              onEdit={editMessage}
                               formatMessageContent={formatMessageContent}
                               getFileIcon={getFileIcon}
                               formatFileSize={formatFileSize}
@@ -866,12 +886,12 @@ const TicketChat: React.FC<TicketChatProps> = ({
                   {allFiles.map((file, idx) => (
                     <div key={idx} className="border rounded-md p-3 hover:bg-gray-50 transition-colors flex flex-col">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center">
+                        <div className="flex items-center overflow-hidden">
                           {getFileIcon(file.fileType)}
                           <span className="text-sm font-medium ml-1 truncate max-w-[150px]">{file.fileName}</span>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
-                          <a href={file.url} download target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" asChild>
+                          <a href={`/api/file-download?filename=${encodeURIComponent(file.storedFileName || file.fileName)}&originalName=${encodeURIComponent(file.originalName || file.fileName)}`} target="_blank" rel="noopener noreferrer">
                             <Download className="h-3 w-3" />
                           </a>
                         </Button>
@@ -890,7 +910,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                         <span className="flex items-center gap-1">
                           <Avatar className="h-4 w-4">
                             <AvatarFallback className="text-[8px]">
-                              {`${file.uploadedBy.firstName[0]}${file.uploadedBy.lastName[0]}`}
+                              {file.uploadedBy?.firstName ? `${file.uploadedBy.firstName[0]}${file.uploadedBy.lastName[0]}` : 'U'}
                             </AvatarFallback>
                           </Avatar>
                           {format(new Date(file.uploadedAt), 'MMM d')}

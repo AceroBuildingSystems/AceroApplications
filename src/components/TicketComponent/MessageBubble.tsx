@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { 
   CornerUpRight, Check, CheckCircle, Clock, Edit, 
   Trash, Download, Reply, MoreVertical, Pencil, Smile, AlertCircle
+, FileText, Image as ImageIcon, Video
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,8 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { toast } from 'react-toastify';
+import PlaceholderImage from '@/components/ui/PlaceholderImage';
+import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
 
 // Common emojis to use for reactions
 const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
@@ -51,6 +54,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content || '');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [previewFile, setPreviewFile] = useState<any>(null);
+  const [showFilePreview, setShowFilePreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   const isCurrentUser = message.user._id === currentUserId;
@@ -165,6 +170,56 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     
     return null;
   };
+
+  // Get appropriate icon based on file type
+  const getAppropriateIcon = (fileType: string) => {
+    if (!fileType) return <FileText className="h-4 w-4" />;
+    
+    if (fileType.startsWith('image/')) {
+      return <ImageIcon className="h-4 w-4" />;
+    } else if (fileType.startsWith('video/')) {
+      return <Video className="h-4 w-4" />;
+    } else if (fileType.includes('pdf')) {
+      return <FileText className="h-4 w-4 text-red-500" />;
+    } else {
+      return <FileText className="h-4 w-4" />;
+    }
+  };
+  
+  // Get file URL with fallback
+  const getFileUrl = (attachment: any) => {
+    // If we have a direct URL, use it
+    if (attachment.url) {
+      return attachment.url;
+    }
+    
+    // If we have a stored filename, construct the URL
+    if (attachment.storedFileName) {
+      return `/uploads/${attachment.storedFileName}`;
+    }
+    
+    // Fallback to the original filename
+    return `/uploads/${attachment.fileName || ''}`;
+  };
+  
+  // Get download URL with proper parameters
+  const getDownloadUrl = (attachment: any) => {
+    const filename = attachment.storedFileName || attachment.fileName;
+    const originalName = attachment.originalName || attachment.fileName;
+    
+    if (!filename) return '';
+    
+    // Use our dedicated download API to ensure proper content disposition
+    return `/api/download?file=${encodeURIComponent(filename)}&originalName=${encodeURIComponent(originalName)}`;
+    
+  };
+
+  // Handle file preview
+  const handleFilePreview = (attachment: any) => {
+    setPreviewFile(attachment);
+    setShowFilePreview(true);
+  };
+
   
   return (
     <div className={cn(
@@ -293,7 +348,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                 "italic line-clamp-1",
                 isCurrentUser ? "text-blue-100" : "text-gray-600"
               )}>
-                {message.replyToContent || "Original message"}
+                {message.replyTo?.content || message.replyToContent || "Original message"}
               </span>
             </div>
           )}
@@ -392,17 +447,30 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               <div key={index} className={cn(
                 "rounded-lg overflow-hidden",
                 isCurrentUser ? "ml-auto" : ""
-              )}>
+              )} style={{ maxWidth: '250px' }} onClick={() => handleFilePreview(attachment)}>
                 {attachment.fileType?.startsWith('image/') ? (
-                  <div className="relative group">
-                    <img 
-                      src={attachment.url} 
-                      alt={attachment.fileName}
-                      className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <Button size="icon" variant="secondary" asChild>
-                        <a href={attachment.url} download target="_blank" rel="noopener noreferrer">
+                  <div className="relative group max-w-[200px] max-h-[200px]">
+                    {/* Use an error boundary approach with state */}
+                    {(() => {
+                      const [hasError, setHasError] = React.useState(false);
+                      
+                      if (hasError) {
+                        return <PlaceholderImage fileName={attachment.fileName} />;
+                      }
+                      
+                      return (
+                        <img 
+                          src={getFileUrl(attachment)} 
+                          alt={attachment.fileName || 'Image attachment'}
+                          className="max-w-[200px] max-h-[200px] rounded-lg object-contain"
+                          style={{ cursor: 'pointer' }}
+                          onError={() => setHasError(true)}
+                        />
+                      );
+                    })()}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-lg">
+                      <Button size="icon" variant="secondary" className="bg-white bg-opacity-80" asChild>
+                        <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>
@@ -412,8 +480,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                   <div className={cn(
                     "flex items-center gap-2 p-2 rounded-lg",
                     isCurrentUser ? "bg-blue-100" : "bg-gray-200"
+, "cursor-pointer"
                   )}>
-                    {getFileIcon(attachment.fileType)}
+                    {getAppropriateIcon(attachment.fileType)}
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium truncate max-w-[150px]">
                         {attachment.fileName}
@@ -423,7 +492,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                       </div>
                     </div>
                     <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                      <a href={attachment.url} download target="_blank" rel="noopener noreferrer">
+                      <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                         <Download className="h-3 w-3" />
                       </a>
                     </Button>
@@ -464,6 +533,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
           </div>
         )}
+
+        {/* File Preview Dialog */}
+        <FilePreviewDialog 
+          isOpen={showFilePreview} 
+          onClose={() => setShowFilePreview(false)} 
+          file={previewFile} 
+          formatFileSize={formatFileSize}
+        />
       </div>
     </div>
   );

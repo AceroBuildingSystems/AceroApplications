@@ -77,12 +77,25 @@ export const ticketCommentApi = baseApi.injectEndpoints({
     }),
 
     uploadFile: builder.mutation<any, FormData>({
-      query: (formData) => ({
-        url: 'file-upload',
-        method: 'POST',
-        body: formData,
-        formData: true,
-      }),
+      query: (formData) => {
+        // Extract ticketId and userId from formData
+        const ticketId = formData.get('ticketId');
+        const userId = formData.get('userId');
+        const file = formData.get('file');
+        
+        // Use our new upload endpoint with URL parameters
+        return {
+          url: `upload?ticketId=${ticketId}&userId=${userId}`,
+          method: 'POST',
+          body: file,
+          // Set the correct headers for the file
+          prepareHeaders: (headers: Headers) => {
+            headers.set('Content-Type', (file as File).type || 'application/octet-stream');
+            headers.set('Content-Disposition', `attachment; filename="${(file as File).name}"`);
+            return headers;
+          }
+        };
+      }
     }),
   }),
   overrideExisting: false,

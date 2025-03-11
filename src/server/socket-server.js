@@ -6,11 +6,17 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
 require('dotenv').config({path:path.resolve(__dirname, '../../.env')});
+const fs = require('fs');
+const multer = require('multer');
 const { MongoClient } = require('mongodb');
 
 // Create Express app
 const app = express();
 app.use(cors());
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 // Create HTTP server
 const server = http.createServer(app);
@@ -20,7 +26,10 @@ const io = new Server(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST']
-  }
+  },
+  pingTimeout: 60000, // Increased from default to 60 seconds
+  pingInterval: 25000,
+  connectTimeout: 60000 // 60 seconds connection timeout
 });
 
 // Debug flag
@@ -30,6 +39,32 @@ const DEBUG = true;
 const MONGODB_URI = process.env.NODE_ENV === 'production' 
   ? process.env.NEXT_PUBLIC_PROD_MONGODB_URI 
   : process.env.NEXT_PUBLIC_DEV_MONGODB_URI;
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../../public/uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  // Accept all file types for now
+  cb(null, true);
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
 
 // Keep track of user connections and rooms
 const userConnections = new Map();
@@ -46,41 +81,104 @@ function log(...args) {
   }
 }
 
+// Define schemas for models we need
+function defineModels() {
+  // Only define if they don't already exist
+  if (!mongoose.models.TicketComment) {
+    console.log('Defining TicketComment model');
+    
+    // Define User schema if it doesn't exist
+    if (!mongoose.models.User) {
+      const UserSchema = new mongoose.Schema({
+        firstName: String,
+        lastName: String,
+        email: String,
+        avatar: String
+      });
+      mongoose.model('User', UserSchema);
+    }
+    
+    // Define Ticket schema if it doesn't exist
+    if (!mongoose.models.Ticket) {
+      const TicketSchema = new mongoose.Schema({
+        title: String,
+        description: String
+      });
+      mongoose.model('Ticket', TicketSchema);
+    }
+    
+    // Define TicketComment schema
+    const AttachmentSchema = new mongoose.Schema({
+      fileName: { type: String, required: true },
+      fileType: { type: String, required: true },
+      fileSize: { type: Number, required: true },
+      url: { type: String, required: true },
+      uploadedAt: { type: Date, default: Date.now }
+    });
+    
+    const ReactionSchema = new mongoose.Schema({
+      emoji: { type: String, required: true },
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+      },
+      createdAt: { type: Date, default: Date.now }
+    });
+    
+    const TicketCommentSchema = new mongoose.Schema({
+      ticket: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Ticket",
+        required: true,
+        index: true
+      },
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+      },
+      content: { type: String, required: true, default: ' ' },
+      attachments: [AttachmentSchema],
+      replyTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "TicketComment"
+      },
+      mentions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }],
+      reactions: [ReactionSchema],
+      isEdited: { type: Boolean, default: false },
+      isRead: { type: Boolean, default: false },
+      readBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+      }],
+      deliveredAt: { type: Date },
+      readAt: { type: Date },
+      isActive: { type: Boolean, default: true },
+      addedBy: { type: String },
+      updatedBy: { type: String }
+    }, { 
+      timestamps: true
+    });
+    
+    mongoose.model('TicketComment', TicketCommentSchema);
+  }
+}
+
 // Connect to MongoDB
 async function connectToMongoDB() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
-
-    // Define TicketComment schema if it doesn't exist
-    console.log('Ensuring TicketComment model is available');
-      // Create the schema
-    const ticketCommentSchema = new mongoose.Schema({
-      ticket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket', required: true, index: true },
-      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-      content: { type: String, required: true, default: '' },
-      attachments: { type: Array, default: [] },
-      replyTo: { type: mongoose.Schema.Types.ObjectId, ref: 'TicketComment', default: null },
-      mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
-      readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
-      isActive: { type: Boolean, default: true },
-      addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-      updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
-    }, { 
-      timestamps: true,
-      collection: 'ticketcomments',
-      toJSON: { virtuals: true },
-      toObject: { virtuals: true }
-    });
-
-    global.TicketCommentModel = mongoose.models.TicketComment || mongoose.model('TicketComment', ticketCommentSchema);
-    // Import models
-//  - don't try to import them directly
-    // Models will be loaded automatically when needed
-    console.log('Ready to use MongoDB models');
+    
+    // Define our models
+    defineModels();
     
     console.log('Models loaded successfully');
-    } catch (error) {
+  } catch (error) {
     console.error('MongoDB connection error:', error);
   }
 }
@@ -97,7 +195,7 @@ async function saveMessageToDB(message) {
     let TicketComment;
     try {
       // Try to get the model if it exists
-      TicketComment = global.TicketCommentModel || mongoose.model('TicketComment');
+      TicketComment = mongoose.model('TicketComment');
     } catch (error) {
       // Model doesn't exist, create a schema for it
       console.error('TicketComment model not found, using generic document');
@@ -117,7 +215,7 @@ async function saveMessageToDB(message) {
     const ticketComment = new TicketComment({
       ticket: ticketId,
       user: senderId,
-      content: message.content,
+      content: message.content || ' ', // Ensure content is never empty
       attachments: message.attachments || [],
       replyTo: message.replyTo ? new mongoose.Types.ObjectId(message.replyTo) : undefined,
       mentions: message.mentions?.map(id => new mongoose.Types.ObjectId(id)) || [],
@@ -151,7 +249,7 @@ async function loadMessagesFromDB(ticketId) {
     let TicketComment;
     try {
       // Try to get the model if it exists
-      TicketComment = global.TicketCommentModel || mongoose.model('TicketComment');
+      TicketComment = mongoose.model('TicketComment');
     } catch (error) {
       // Model doesn't exist, return empty array
       console.error('TicketComment model not found, cannot load messages');
@@ -164,18 +262,8 @@ async function loadMessagesFromDB(ticketId) {
     
     // Find messages for this ticket
     const messages = await TicketComment.find({ ticket: objectId })
-      .sort({ createdAt: -1 })
-      .limit(50)
-      .populate([
-        { path: 'user' },
-        { path: 'mentions' },
-        { 
-          path: 'replyTo',
-          populate: {
-            path: 'user'
-          }
-        }
-      ]);
+      .sort({ createdAt: 1 }) // Changed to oldest first
+      .limit(50);
     
     log(`Loaded ${messages.length} messages from database for ticket ${ticketId}`);
     
@@ -184,21 +272,15 @@ async function loadMessagesFromDB(ticketId) {
       _id: msg._id.toString(),
       ticket: msg.ticket.toString(),
       user: {
-        _id: msg.user._id.toString(),
-        firstName: msg.user.firstName,
-        lastName: msg.user.lastName,
-        avatar: msg.user.avatar
+        _id: msg.user.toString(),
+        firstName: 'User', // Default values since we can't populate
+        lastName: msg.user.toString().substring(0, 5),
+        avatar: null
       },
       content: msg.content,
       attachments: msg.attachments || [],
-      replyTo: msg.replyTo?._id.toString(),
-      replyToUser: msg.replyTo?.user,
-      replyToContent: msg.replyTo?.content,
-      mentions: msg.mentions?.map(user => ({
-        _id: user._id.toString(),
-        firstName: user.firstName,
-        lastName: user.lastName
-      })) || [],
+      replyTo: msg.replyTo?.toString(),
+      mentions: msg.mentions?.map(id => id.toString()) || [],
       reactions: msg.reactions?.map(reaction => ({
         emoji: reaction.emoji,
         userId: reaction.userId.toString(),
@@ -286,7 +368,7 @@ io.on('connection', (socket) => {
       const queuedMessages = messageQueue.get(roomId) || [];
       log(`Found ${queuedMessages.length} queued messages for room ${roomId}`);
       for (const msg of queuedMessages) {
-        log(`Sending queued message to user ${joinUserId} in room ${roomId}`);
+        log(`Sending persisted queued message to user ${joinUserId} in room ${roomId}`);
         socket.emit('message', msg);
       }
     }
@@ -355,7 +437,7 @@ io.on('connection', (socket) => {
         _id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         ticket: ticketId,
         user: { _id: messageUserId },
-        content,
+        content: content || ' ', // Ensure content is never empty
         attachments: attachments || [],
         replyTo,
         mentions: mentions || [],
@@ -399,7 +481,7 @@ io.on('connection', (socket) => {
       if (!messageQueue.has(roomId)) {
         messageQueue.set(roomId, []);
       }
-      log(`Adding message to queue for room ${roomId}`);
+      log(`Adding message to persistence queue for room ${roomId}`);
       
       // Store message in queue for users who join later
       // Limit queue size to prevent memory issues
@@ -486,6 +568,42 @@ app.get('/api/ping', (req, res) => {
 
 app.post('/api/ping', (req, res) => {
   res.json({ timestamp: Date.now() });
+});
+
+// File upload endpoint
+app.post('/api/file-upload', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ status: 'error', message: 'No file uploaded' });
+    }
+
+    const { ticketId, userId } = req.body;
+    
+    if (!ticketId || !userId) {
+      return res.status(400).json({ status: 'error', message: 'Missing ticketId or userId' });
+    }
+    
+    // Create file info
+    const fileInfo = {
+      fileName: req.file.originalname,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
+      url: `/uploads/${req.file.filename}`,
+      uploadedAt: new Date()
+    };
+    
+    // Return success response
+    res.json({
+      status: 'success',
+      message: 'File uploaded successfully',
+      data: fileInfo
+    });
+    
+    log(`File uploaded: ${fileInfo.fileName} for ticket ${ticketId} by user ${userId}`);
+  } catch (error) {
+    console.error('File upload error:', error);
+    res.status(500).json({ status: 'error', message: 'File upload failed', error: error.message });
+  }
 });
 
 // Debug endpoint to get room info

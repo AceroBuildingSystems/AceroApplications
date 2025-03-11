@@ -107,7 +107,7 @@ export class SocketService extends EventEmitter {
         reconnection: true,
         reconnectionAttempts: this.reconnectionAttempts,
         reconnectionDelay: this.reconnectionDelay,
-        timeout: 20000
+        timeout: 60000 // Increased from 20000 to 60000 (60 seconds)
       });
       
       this.setupEventListeners();
@@ -510,7 +510,7 @@ export class SocketService extends EventEmitter {
     
     this.pingInterval = setInterval(() => {
       if (this.socket?.connected) {
-        fetch('/api/ping', { method: 'POST' })
+        fetch('/api/ping', { method: 'POST', cache: 'no-store' })
           .catch(err => console.error('Ping error:', err));
       }
     }, 30000); // 30 seconds
@@ -545,7 +545,7 @@ export class SocketService extends EventEmitter {
     this.emit('disconnected', reason);
     
     // If disconnected due to transport error, try to reconnect
-    if (reason === 'transport error' || reason === 'ping timeout') {
+    if (reason === 'transport error' || reason === 'ping timeout' || reason === 'timeout') {
       if (this.connectionAttempts < this.reconnectionAttempts) {
         this.connectionAttempts++;
         this.emit('reconnecting', this.connectionAttempts);

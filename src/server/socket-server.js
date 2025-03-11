@@ -3,6 +3,10 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const mongoose = require('mongoose');
+const path = require('path');
+require('dotenv').config({path:path.resolve(__dirname, '../../.env')});
+const { MongoClient } = require('mongodb');
 
 // Create Express app
 const app = express();
@@ -22,6 +26,11 @@ const io = new Server(server, {
 // Debug flag
 const DEBUG = true;
 
+// MongoDB connection from .env
+const MONGODB_URI = process.env.NODE_ENV === 'production' 
+  ? process.env.NEXT_PUBLIC_PROD_MONGODB_URI 
+  : process.env.NEXT_PUBLIC_DEV_MONGODB_URI;
+
 // Keep track of user connections and rooms
 const userConnections = new Map();
 const userSockets = new Map(); // Map userId to socketId
@@ -34,6 +43,176 @@ const messageQueue = new Map();
 function log(...args) {
   if (DEBUG) {
     console.log(...args);
+  }
+}
+
+// Connect to MongoDB
+async function connectToMongoDB() {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('Connected to MongoDB');
+
+    // Define TicketComment schema if it doesn't exist
+    console.log('Ensuring TicketComment model is available');
+      // Create the schema
+    const ticketCommentSchema = new mongoose.Schema({
+      ticket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket', required: true, index: true },
+      user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+      content: { type: String, required: true, default: '' },
+      attachments: { type: Array, default: [] },
+      replyTo: { type: mongoose.Schema.Types.ObjectId, ref: 'TicketComment', default: null },
+      mentions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+      readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+      isActive: { type: Boolean, default: true },
+      addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+      updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    }, { 
+      timestamps: true,
+      collection: 'ticketcomments',
+      toJSON: { virtuals: true },
+      toObject: { virtuals: true }
+    });
+
+    global.TicketCommentModel = mongoose.models.TicketComment || mongoose.model('TicketComment', ticketCommentSchema);
+    // Import models
+//  - don't try to import them directly
+    // Models will be loaded automatically when needed
+    console.log('Ready to use MongoDB models');
+    
+    console.log('Models loaded successfully');
+    } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+}
+
+// Helper function to save message to database
+async function saveMessageToDB(message) {
+  try {
+    if (!mongoose.connection.readyState) {
+      log('MongoDB not connected, cannot save message');
+      return null;
+    }
+    
+    // Get the TicketComment model
+    let TicketComment;
+    try {
+      // Try to get the model if it exists
+      TicketComment = global.TicketCommentModel || mongoose.model('TicketComment');
+    } catch (error) {
+      // Model doesn't exist, create a schema for it
+      console.error('TicketComment model not found, using generic document');
+      return null;
+    }
+    
+    // Convert string IDs to ObjectIds
+    const ticketId = mongoose.Types.ObjectId.isValid(message.ticket) 
+      ? new mongoose.Types.ObjectId(message.ticket) 
+      : message.ticket;
+      
+    const senderId = mongoose.Types.ObjectId.isValid(message.user._id) 
+      ? new mongoose.Types.ObjectId(message.user._id) 
+      : message.user._id;
+    
+    // Create a new comment document
+    const ticketComment = new TicketComment({
+      ticket: ticketId,
+      user: senderId,
+      content: message.content,
+      attachments: message.attachments || [],
+      replyTo: message.replyTo ? new mongoose.Types.ObjectId(message.replyTo) : undefined,
+      mentions: message.mentions?.map(id => new mongoose.Types.ObjectId(id)) || [],
+      addedBy: senderId,
+      updatedBy: senderId,
+      isActive: true,
+      deliveredAt: new Date(),
+      readBy: [senderId] // Mark as read by sender
+    });
+    
+    // Save to database
+    const savedMessage = await ticketComment.save();
+    log(`Message saved to database with ID: ${savedMessage._id}`);
+    
+    return savedMessage;
+  } catch (error) {
+    console.error('Error saving message to database:', error);
+    return null;
+  }
+}
+
+// Helper function to load messages from database
+async function loadMessagesFromDB(ticketId) {
+  try {
+    if (!mongoose.connection.readyState) {
+      log('MongoDB not connected, cannot load messages');
+      return [];
+    }
+    
+    // Get the TicketComment model
+    let TicketComment;
+    try {
+      // Try to get the model if it exists
+      TicketComment = global.TicketCommentModel || mongoose.model('TicketComment');
+    } catch (error) {
+      // Model doesn't exist, return empty array
+      console.error('TicketComment model not found, cannot load messages');
+      return [];
+    }
+    
+    const objectId = mongoose.Types.ObjectId.isValid(ticketId) 
+      ? new mongoose.Types.ObjectId(ticketId) 
+      : ticketId;
+    
+    // Find messages for this ticket
+    const messages = await TicketComment.find({ ticket: objectId })
+      .sort({ createdAt: -1 })
+      .limit(50)
+      .populate([
+        { path: 'user' },
+        { path: 'mentions' },
+        { 
+          path: 'replyTo',
+          populate: {
+            path: 'user'
+          }
+        }
+      ]);
+    
+    log(`Loaded ${messages.length} messages from database for ticket ${ticketId}`);
+    
+    // Convert to the format expected by the client
+    return messages.map(msg => ({
+      _id: msg._id.toString(),
+      ticket: msg.ticket.toString(),
+      user: {
+        _id: msg.user._id.toString(),
+        firstName: msg.user.firstName,
+        lastName: msg.user.lastName,
+        avatar: msg.user.avatar
+      },
+      content: msg.content,
+      attachments: msg.attachments || [],
+      replyTo: msg.replyTo?._id.toString(),
+      replyToUser: msg.replyTo?.user,
+      replyToContent: msg.replyTo?.content,
+      mentions: msg.mentions?.map(user => ({
+        _id: user._id.toString(),
+        firstName: user.firstName,
+        lastName: user.lastName
+      })) || [],
+      reactions: msg.reactions?.map(reaction => ({
+        emoji: reaction.emoji,
+        userId: reaction.userId.toString(),
+        createdAt: reaction.createdAt
+      })) || [],
+      createdAt: msg.createdAt.toISOString(),
+      deliveredAt: msg.deliveredAt,
+      readBy: msg.readBy?.map(id => id.toString()) || [],
+      isRead: msg.isRead,
+      readAt: msg.readAt
+    }));
+  } catch (error) {
+    console.error('Error loading messages from database:', error);
+    return [];
   }
 }
 
@@ -59,7 +238,7 @@ io.on('connection', (socket) => {
   }
 
   // Handle joining a room
-  socket.on('join', (data) => {
+  socket.on('join', async (data) => {
     const { ticketId, userId: joinUserId } = data;
     const roomId = `ticket-${ticketId}`;
     
@@ -91,6 +270,15 @@ io.on('connection', (socket) => {
     // Initialize typing status for this room if not exists
     if (!typingUsers.has(roomId)) {
       typingUsers.set(roomId, new Map());
+    }
+    
+    // Load messages from database
+    const dbMessages = await loadMessagesFromDB(ticketId);
+    
+    // Send database messages to the client
+    if (dbMessages.length > 0) {
+      log(`Sending ${dbMessages.length} database messages to user ${joinUserId}`);
+      socket.emit('messages', dbMessages);
     }
     
     // Send any queued messages for this room
@@ -156,7 +344,7 @@ io.on('connection', (socket) => {
   });
 
   // Handle new chat messages
-  socket.on('message', (data) => {
+  socket.on('message', async (data) => {
     try {
       const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
       
@@ -175,6 +363,13 @@ io.on('connection', (socket) => {
         deliveredAt: new Date(),
         readBy: [messageUserId]
       };
+      
+      // Save message to database
+      const savedMessage = await saveMessageToDB(message);
+      if (savedMessage) {
+        // Update message ID with the database ID
+        message._id = savedMessage._id.toString();
+      }
       
       const roomId = `ticket-${ticketId}`;
       
@@ -308,22 +503,31 @@ app.get('/api/debug/rooms', (req, res) => {
   res.json({
     rooms,
     userCount: userConnections.size,
-    socketCount: io.sockets.sockets.size
+    socketCount: io.sockets.sockets.size,
+    mongodbConnected: mongoose.connection.readyState === 1
   });
 });
 
 // Start server
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Socket.IO server running on port ${PORT}`);
-  
-  // Print server info
-  console.log(`
+
+// Connect to MongoDB then start server
+connectToMongoDB().then(() => {
+  server.listen(PORT, () => {
+    console.log(`Socket.IO server running on port ${PORT}`);
+    
+    // Print server info
+    console.log(`
 Server Information:
 - Socket.IO server running on port ${PORT}
 - CORS enabled for all origins
 - Debug mode: ${DEBUG ? 'ON' : 'OFF'}
+- MongoDB connection: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'}
+- MongoDB URI: ${MONGODB_URI ? MONGODB_URI.substring(0, 20) + '...' : 'Not set'}
 - Transports: websocket, polling
 - Message queue enabled for offline message persistence
 `);
+  });
+}).catch(err => {
+  console.error('Failed to start server:', err);
 });

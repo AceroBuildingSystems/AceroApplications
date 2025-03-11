@@ -262,8 +262,7 @@ async function loadMessagesFromDB(ticketId) {
     
     // Find messages for this ticket
     const messages = await TicketComment.find({ ticket: objectId })
-      .sort({ createdAt: 1 }) // Changed to oldest first
-      .limit(50);
+      .sort({ createdAt: 1 })
     
     log(`Loaded ${messages.length} messages from database for ticket ${ticketId}`);
     

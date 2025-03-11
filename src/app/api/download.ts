@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import mime from 'mime-types';
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
     
     // Security check to prevent directory traversal
-    const sanitizedFilename = path.basename(filename);
+    const sanitizedFilename = path.basename(filename as string);
     const filePath = path.join(process.cwd(), 'public', 'uploads', sanitizedFilename);
     
     if (!fs.existsSync(filePath)) {
@@ -24,12 +24,16 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'File not found' });
     }
     
+    // Get file stats
+    const stats = fs.statSync(filePath);
+    
     // Determine MIME type from file extension
     const contentType = mime.lookup(filePath) || 'application/octet-stream';
     
     // Set headers
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(originalName || sanitizedFilename)}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(originalName as string || sanitizedFilename)}"`);
+    res.setHeader('Content-Length', stats.size);
     
     // Stream the file
     const fileStream = fs.createReadStream(filePath);

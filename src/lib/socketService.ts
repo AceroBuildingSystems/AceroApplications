@@ -790,7 +790,7 @@ export class SocketService extends EventEmitter {
       
       // Sort messages by creation date - oldest first (newest at bottom)
       messages.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
     }
     
@@ -817,16 +817,22 @@ export class SocketService extends EventEmitter {
   private updateMessageInCache(messageId: string, updates: Partial<ChatMessage>): void {
     if (!this.currentTicketId) return;
     
-    const messages = this.messagesCache.get(this.currentTicketId) || [];
+    // Create a new array by copying the cached messages
+    let messages = [...(this.messagesCache.get(this.currentTicketId) || [])];
     const messageIndex = messages.findIndex(m => m._id === messageId);
     
     if (messageIndex >= 0) {
-      messages[messageIndex] = { ...messages[messageIndex], ...updates };
+      const newMessage = { ...messages[messageIndex], ...updates };
+      console.log({messages, messageIndex, updates, newMessage});
+      
+      // Replace the element in the new array
+      messages[messageIndex] = newMessage;
+      
+      // Update the cache with the new array
       this.messagesCache.set(this.currentTicketId, messages);
       this.emit('messages-updated', messages);
     }
   }
-  
   /**
    * Get a message from the cache
    */

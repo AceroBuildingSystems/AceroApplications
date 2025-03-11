@@ -25,6 +25,15 @@ interface FilePreviewDialogProps {
   formatFileSize: (bytes: number) => string;
 }
 
+const debugFileInfo = (file) => {
+  console.log('File preview info:', {
+    name: file.fileName,
+    type: file.fileType,
+    size: file.fileSize,
+    url: file.url
+  });
+};
+
 const FilePreviewDialog: React.FC<FilePreviewDialogProps> = ({
   isOpen,
   onClose,
@@ -37,6 +46,7 @@ const FilePreviewDialog: React.FC<FilePreviewDialogProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       setPreviewError(false);
+      debugFileInfo(file); // Log debug info when opening the preview
     }
   }, [isOpen, file?.url]);
   
@@ -53,10 +63,8 @@ const FilePreviewDialog: React.FC<FilePreviewDialogProps> = ({
     
     if (!filename) return '#';
     
-    // Use our dedicated download API to ensure proper content disposition
     return `/api/download?filename=${encodeURIComponent(filename)}&originalName=${encodeURIComponent(originalName)}`;
   };
-  
   const getFileIcon = () => {
     if (isImage) return <ImageIcon className="h-6 w-6" />;
     if (isPdf) return <FileText className="h-6 w-6 text-red-500" />;
@@ -72,9 +80,7 @@ const FilePreviewDialog: React.FC<FilePreviewDialogProps> = ({
             {getFileIcon()}
             <DialogTitle className="text-lg">{file.fileName}</DialogTitle>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4" />
-          </Button>
+
         </DialogHeader>
         
         <DialogDescription className="text-sm text-gray-500">

@@ -206,46 +206,41 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Handle file upload
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) return [];
-
+    
     const uploadedFiles = [];
-
+    
     for (const file of selectedFiles) {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('ticketId', ticketId);
+      formData.append('userId', userId);
+      
       try {
-        // Use our direct file uploader function from lib/fileUploader
-        // Create a FormData object manually
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('ticketId', ticketId);
-        formData.append('userId', userId);
+        console.log(`Uploading file: ${file.name} (${file.type})`);
         
-        console.log('Uploading file:', file.name, 'size:', file.size, 'type:', file.type);
-        console.log('FormData created with:', 
-          'file:', formData.get('file'),
-          'ticketId:', formData.get('ticketId'),
-          'userId:', formData.get('userId')
-        );
-        const response = await uploadFileMutation(formData).unwrap();
-
+        const response = await fetch('/api/file-upload', {
+          method: 'POST',
+          body: formData,
+          // Don't set Content-Type - browser will set it automatically
+        });
         
-console.log('File upload response:', response);
-
-        // Check if response is valid and has expected structure
-        if (response && response.status === 'success' && response.data) {
-          // Add the uploaded file info to our array
-          uploadedFiles.push(response.data);
-          
-          // Notify other users about the file upload
-          notifyFileUpload(response.data);
+        const result = await response.json();
+        console.log('Upload response:', result);
+        
+        if (result.status === 'success') {
+          uploadedFiles.push(result.data);
+          notifyFileUpload?.(result.data);
+        } else {
+          throw new Error(result.message || 'Upload failed');
         }
       } catch (error) {
         console.error('File upload error:', error);
         toast.error(`Failed to upload ${file.name}`);
       }
     }
-
+    
     return uploadedFiles;
   };
-  
   // Handle message input for mentions
   const handleMessageInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -415,7 +410,7 @@ console.log('File upload response:', response);
     });
     
     // Sort by date in ascending order (oldest first)
-    return Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([date, messages]) => ({
+    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([date, messages]) => ({
       date,
       messages: messages || []
     }));

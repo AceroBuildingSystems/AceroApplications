@@ -140,6 +140,7 @@ export class SocketService extends EventEmitter {
     this.socket.on('message-reaction', this.handleMessageReaction.bind(this));
     this.socket.on('message-reaction-update', this.handleMessageReactionUpdate.bind(this));
     this.socket.on('file-upload', this.handleFileUpload.bind(this));
+    this.socket.on('message-updated', this.handleMessageUpdate.bind(this));
     
     // Read receipts
     this.socket.on('read-receipt', this.handleReadReceipt.bind(this));
@@ -287,6 +288,16 @@ export class SocketService extends EventEmitter {
       content: newContent,
       isEdited: true
     });
+    
+    // Listen for message-updated event to confirm the edit was successful
+    const messageUpdatedHandler = (data: { messageId: string, content: string, isEdited: boolean }) => {
+      if (data.messageId === messageId) {
+        // The edit was confirmed by the server, we can remove this listener
+        this.socket?.off('message-updated', messageUpdatedHandler);
+        console.log(`Message edit confirmed by server for message ${messageId}`);
+      }
+    };
+    this.socket.on('message-updated', messageUpdatedHandler);
   }
   
   /**
@@ -576,6 +587,22 @@ export class SocketService extends EventEmitter {
   }
   
   /**
+   * Handle message update event
+   */
+  private handleMessageUpdate(data: { messageId: string, content: string, isEdited: boolean }): void {
+    const { messageId, content, isEdited } = data;
+    
+    // Update the message in cache
+    this.updateMessageInCache(messageId, {
+      content,
+      isEdited
+    });
+    
+    // Emit event for subscribers
+    this.emit('message-updated', data);
+  }
+  
+  /**
    * Handle incoming message
    */
   private handleMessage(message: ChatMessage): void {
@@ -790,7 +817,7 @@ export class SocketService extends EventEmitter {
       
       // Sort messages by creation date - oldest first (newest at bottom)
       messages.sort((a, b) => 
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
     }
     

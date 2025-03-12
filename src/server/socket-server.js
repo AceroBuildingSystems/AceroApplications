@@ -427,6 +427,71 @@ io.on('connection', (socket) => {
   // Handle new chat messages
   socket.on('message', async (data) => {
     try {
+      // ... existing code ...
+    } catch (error) {
+      console.error('Error handling message:', error);
+      socket.emit('error', { message: 'Failed to save message' });
+    }
+  });
+
+  // Handle message editing
+  socket.on('edit-message', async (data) => {
+    try {
+      const { messageId, ticketId, userId, content } = data;
+      
+      log(`Received edit request for message ${messageId} from user ${userId}`);
+      
+      if (!messageId || !ticketId || !userId || !content) {
+        return socket.emit('error', { message: 'Missing required fields for message edit' });
+      }
+      
+      // Get the TicketComment model
+      let TicketComment;
+      try {
+        TicketComment = mongoose.model('TicketComment');
+      } catch (error) {
+        console.error('TicketComment model not found, cannot edit message');
+        return socket.emit('error', { message: 'Database error' });
+      }
+      
+      // Find and update the message in the database
+      const objectId = mongoose.Types.ObjectId.isValid(messageId) 
+        ? new mongoose.Types.ObjectId(messageId) 
+        : null;
+        
+      if (!objectId) {
+        return socket.emit('error', { message: 'Invalid message ID' });
+      }
+      
+      // Update the message
+      console.log('Updating message:', objectId, content);
+      const updatedMessage = await TicketComment.findByIdAndUpdate(
+        objectId,
+        { 
+          content,
+          isEdited: true,
+          updatedAt: new Date()
+        },
+        { new: true }
+      );
+      
+      if (!updatedMessage) {
+        return socket.emit('error', { message: 'Message not found' });
+      }
+      
+      // Broadcast the updated message to all clients in the room
+      const roomId = `ticket-${ticketId}`;
+      io.to(roomId).emit('message-updated', { messageId, content, isEdited: true });
+      
+    } catch (error) {
+      console.error('Error editing message:', error);
+      socket.emit('error', { message: 'Failed to edit message' });
+    }
+  });
+
+  // Handle new chat messages (original handler)
+  socket.on('message', async (data) => {
+    try {
       const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
       
       log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);

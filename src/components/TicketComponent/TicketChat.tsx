@@ -396,7 +396,12 @@ const TicketChat: React.FC<TicketChatProps> = ({
   };
   
   // Group messages by date
-  const groupMessagesByDate = () => {
+  interface MessageGroup {
+    date: string;
+    messages: ChatMessage[];
+  }
+  
+  const groupMessagesByDate = (): MessageGroup[] => {
     const groups: { [key: string]: ChatMessage[] } = {};
     
     if (!messages || !messages.length) return [];
@@ -406,14 +411,24 @@ const TicketChat: React.FC<TicketChatProps> = ({
       if (!groups[date]) {
         groups[date] = [];
       }
-      groups[date].push(message);
+      // Add message to the group
+      const messagesForDate = groups[date];
+      messagesForDate.push(message);
+      // Sort messages within each date group by creation time (oldest first)
     });
     
     // Sort by date in ascending order (oldest first)
-    return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([date, messages]) => ({
+    const dateGroups = Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([date, messages]) => ({
       date,
       messages: messages || []
     }));
+    
+    // Sort messages within each date group
+    const sortedGroups = dateGroups.map((group: MessageGroup) => ({
+      date: group.date,
+      messages: [...group.messages].sort((a: ChatMessage, b: ChatMessage) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    }));
+    return sortedGroups;
   };
   
   const messageGroups = groupMessagesByDate();

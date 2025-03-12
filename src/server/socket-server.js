@@ -218,6 +218,7 @@ async function saveMessageToDB(message) {
       content: message.content || ' ', // Ensure content is never empty
       attachments: message.attachments || [],
       replyTo: message.replyTo ? new mongoose.Types.ObjectId(message.replyTo) : undefined,
+      replyToContent: message.replyToContent,
       mentions: message.mentions?.map(id => new mongoose.Types.ObjectId(id)) || [],
       addedBy: senderId,
       updatedBy: senderId,
@@ -262,6 +263,7 @@ async function loadMessagesFromDB(ticketId) {
     
     // Find messages for this ticket
     const messages = await TicketComment.find({ ticket: objectId })
+      .populate('replyTo', 'content user')
       .sort({ createdAt: 1 })
     
     log(`Loaded ${messages.length} messages from database for ticket ${ticketId}`);
@@ -278,6 +280,7 @@ async function loadMessagesFromDB(ticketId) {
       },
       content: msg.content,
       attachments: msg.attachments || [],
+      replyToContent: msg.replyTo?.content || msg.replyToContent,
       replyTo: msg.replyTo?.toString(),
       mentions: msg.mentions?.map(id => id.toString()) || [],
       reactions: msg.reactions?.map(reaction => ({

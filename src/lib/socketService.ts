@@ -209,7 +209,7 @@ export class SocketService extends EventEmitter {
    * Send a message
    */
   public sendMessage(
-    content: string, 
+    content: string,
     attachments: any[] = [], 
     replyTo?: string, 
     mentions: string[] = []
@@ -220,6 +220,19 @@ export class SocketService extends EventEmitter {
     if (!this.currentTicketId || !this.currentUserId) {
       console.error('Cannot send message: Missing ticketId/userId');
       return tempId;
+    }
+    
+    // If this is a reply, get the original message content
+    let replyToContent: string | undefined;
+    if (replyTo) {
+      const replyToMessage = this.getMessageFromCache(replyTo);
+      if (replyToMessage) {
+        replyToContent = replyToMessage.content;
+        console.log(`Found reply content: "${replyToContent}" for message ${replyTo}`);
+      } else {
+        console.log(`Could not find original message ${replyTo} for reply`);
+        replyToContent = undefined;
+      }
     }
     
     // Create a pending message object
@@ -233,6 +246,7 @@ export class SocketService extends EventEmitter {
       },
       content,
       attachments,
+      replyToContent,
       ...(replyTo && { replyTo }),
       mentions,
       createdAt: new Date().toISOString(),
@@ -254,6 +268,7 @@ export class SocketService extends EventEmitter {
         userId: this.currentUserId,
         content,
         attachments,
+        replyToContent,
         replyTo,
         mentions,
         tempId
@@ -945,6 +960,7 @@ export class SocketService extends EventEmitter {
         userId: this.currentUserId,
         content: message.content,
         attachments: message.attachments || [],
+        replyToContent: message.replyToContent,
         replyTo: message.replyTo,
         mentions: message.mentions || [],
         tempId

@@ -495,7 +495,7 @@ io.on('connection', (socket) => {
   // Handle new chat messages (original handler)
   socket.on('message', async (data) => {
     try {
-      const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
+      const { ticketId, userId: messageUserId, content, attachments, replyTo, replyToContent, mentions, tempId } = data;
       
       log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
       
@@ -507,6 +507,7 @@ io.on('connection', (socket) => {
         content: content || ' ', // Ensure content is never empty
         attachments: attachments || [],
         replyTo,
+        replyToContent,
         mentions: mentions || [],
         createdAt: new Date().toISOString(),
         deliveredAt: new Date(),

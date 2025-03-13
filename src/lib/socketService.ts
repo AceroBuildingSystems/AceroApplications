@@ -324,6 +324,8 @@ export class SocketService extends EventEmitter {
       return;
     }
     
+    console.log(`Adding reaction ${emoji} to message ${messageId} by user ${this.currentUserId}`);
+    
     // Store pending reaction
     const pendingKey = `${messageId}-${emoji}`;
     this.pendingReactions.set(pendingKey, { messageId, emoji });
@@ -349,6 +351,8 @@ export class SocketService extends EventEmitter {
       console.error('Cannot remove reaction: Socket not connected or missing ticketId/userId');
       return;
     }
+    
+    console.log(`Removing reaction ${emoji} from message ${messageId} by user ${this.currentUserId}`);
     
     // Optimistically update cache
     this.updateMessageReactionInCache(messageId, emoji, this.currentUserId, false);
@@ -684,11 +688,13 @@ export class SocketService extends EventEmitter {
   private handleMessageReaction(reaction: MessageReaction): void {
     this.reactionsCache.set(reaction.messageId, reaction);
     
-    // Update message in cache
+    console.log(`Received reaction update for message ${reaction.messageId} with ${reaction.reactions.length} reactions`);
+    
+    // Update message in cache with the new reactions
     const message = this.getMessageFromCache(reaction.messageId);
     if (message) {
       message.reactions = reaction.reactions;
-      this.updateMessageInCache(reaction.messageId, message);
+      this.updateMessageInCache(reaction.messageId, { reactions: reaction.reactions });
     }
     
     this.emit('reactions-updated', this.getMessageReactions());
@@ -700,11 +706,12 @@ export class SocketService extends EventEmitter {
   private handleMessageReactionUpdate(data: { messageId: string, reactions: any[] }): void {
     const { messageId, reactions } = data;
     
-    // Update message in cache
+    console.log(`Received reaction update for message ${messageId} with ${reactions.length} reactions`);
+    
+    // Update message in cache with the new reactions
     const message = this.getMessageFromCache(messageId);
     if (message) {
-      message.reactions = reactions;
-      this.updateMessageInCache(messageId, message);
+      this.updateMessageInCache(messageId, { reactions });
     }
     
     // Update reactions cache
@@ -895,33 +902,41 @@ export class SocketService extends EventEmitter {
     isAdding: boolean
   ): void {
     const message = this.getMessageFromCache(messageId);
+    console.log(`Updating reaction in cache: ${emoji} for message ${messageId}, isAdding: ${isAdding}`);
     
     if (message) {
-      if (!message.reactions) {
-        message.reactions = [];
-      }
+      // Create a new reactions array to avoid reference issues
+      const reactions = message.reactions ? [...message.reactions] : [];
       
       if (isAdding) {
         // Check if reaction already exists
-        const existingReaction = message.reactions.find(
+        const existingReactionIndex = reactions.findIndex(
           r => r.emoji === emoji && r.userId === userId
         );
         
-        if (!existingReaction) {
-          message.reactions.push({
+        if (existingReactionIndex === -1) {
+          // Add new reaction
+          reactions.push({
             emoji,
             userId,
             createdAt: new Date()
           });
+          console.log(`Added reaction ${emoji} to message ${messageId}`);
         }
       } else {
         // Remove reaction
-        message.reactions = message.reactions.filter(
+        const filteredReactions = reactions.filter(
           r => !(r.emoji === emoji && r.userId === userId)
         );
+        
+        console.log(`Removed reaction ${emoji} from message ${messageId}`);
+        // Update with filtered reactions
+        this.updateMessageInCache(messageId, { reactions: filteredReactions });
+        return;
       }
       
-      this.updateMessageInCache(messageId, { reactions: message.reactions });
+      // Update with new reactions
+      this.updateMessageInCache(messageId, { reactions });
     }
   }
   

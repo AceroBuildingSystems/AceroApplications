@@ -24,8 +24,9 @@ import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { uploadFile } from '@/lib/fileUploader';
 import DashboardLoader from '@/components/ui/DashboardLoader';
 import debounce from 'lodash/debounce';
-import MessageBubble from './MessageBubble';
+import ImprovedMessageBubble from './ImprovedMessageBubble';
 import { toast } from 'react-toastify';
+import ConnectionStatus from './ConnectionStatus';
 
 interface User {
   _id: string;
@@ -33,6 +34,14 @@ interface User {
   lastName: string;
   avatar?: string;
   department?: any;
+}
+
+interface FileAttachment {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  url: string;
+  storedFileName?: string;
 }
 
 interface ChatMessage {
@@ -293,7 +302,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   };
   
   // Filter team members for mention suggestions
-  const filteredTeamMembers = teamMembers.filter(user => 
+  const filteredTeamMembers = teamMembers.filter((user: User) => 
     `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase())
   );
   
@@ -337,7 +346,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
     matches.forEach(match => {
       const name = match.substring(1).trim();
       const user = teamMembers.find(
-        u => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
+        (u: User) => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
       );
       if (user) mentions.push(user._id);
     });
@@ -394,7 +403,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
       setIsSubmitting(false);
     }
   };
-  
+  console.log('messages', {messages});
   // Group messages by date
   interface MessageGroup {
     date: string;
@@ -513,14 +522,14 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const typingIndicator = Object.entries(typingUsers)
     .filter(([id, isTyping]) => isTyping && id !== userId)
     .map(([id]) => {
-      const user = teamMembers.find(user => user._id === id);
+      const user = teamMembers.find((user: User) => user._id === id);
       return user ? `${user.firstName} ${user.lastName}` : 'Someone';
     });
   
   const isLoading = propLoading || commentsLoading || teamMembersLoading;
   
   // Handle keyboard shortcuts for sending messages
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
     // Send message on Ctrl+Enter or Cmd+Enter
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -529,43 +538,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   };
   
   // Render connection status
-  const renderConnectionStatus = () => {
-    if (isConnected) {
-      return (
-        <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 flex items-center gap-1">
-          <CheckCircle className="h-3 w-3" />
-          <span className="hidden sm:inline">Connected</span>
-        </Badge>
-      );
-    }
-    
-    if (isConnecting) {
-      return (
-        <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 flex items-center gap-1 animate-pulse">
-          <Loader className="h-3 w-3 animate-spin" />
-          <span className="hidden sm:inline">Connecting...</span>
-        </Badge>
-      );
-    }
-    
-    return (
-      <div className="flex items-center gap-1 ml-2">
-        <Badge variant="outline" className="bg-red-50 text-red-700 flex items-center gap-1">
-          <WifiOff className="h-3 w-3" />
-          <span className="hidden sm:inline">Offline</span>
-        </Badge>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={reconnect} 
-          className="h-6 p-0 px-2"
-        >
-          <RefreshCw className="h-3 w-3 mr-1" />
-          <span className="text-xs">Reconnect</span>
-        </Button>
-      </div>
-    );
-  };
+  console.log({selectedFiles})
   
   return (
     <Card className="overflow-hidden flex flex-col">
@@ -574,7 +547,11 @@ const TicketChat: React.FC<TicketChatProps> = ({
           <CardTitle className="text-xl flex items-center">
             <MessageSquare className="mr-2 h-5 w-5" />
             Ticket Chat
-            {renderConnectionStatus()}
+            <ConnectionStatus 
+              isConnected={isConnected}
+              isConnecting={isConnecting}
+              onReconnect={reconnect}
+            />
           </CardTitle>
           
           <div className="flex items-center gap-2">
@@ -650,7 +627,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                         
                         {group.messages.map((message: ChatMessage, index: number) => (
                           <div key={`${message._id || 'temp'}-${index}`} className="mb-4" id={`message-${message._id}`}>
-                            <MessageBubble
+                            <ImprovedMessageBubble
                               message={message}
                               currentUserId={userId}
                               onReply={handleReply}
@@ -929,7 +906,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                             asChild
                           >
                             <a 
-                              href={file.url} 
+                              href={`/api/download?file=${encodeURIComponent(file.storedFileName || file.url.split('/').pop() || '')}&originalName=${encodeURIComponent(file.fileName)}`}
                               download={file.fileName} 
                               target="_blank" 
                               rel="noopener noreferrer"
@@ -1040,7 +1017,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {teamMembers
                 .filter(user => !participants.some((p: any) => p._id === user._id)) // Only show users not already in the conversation
-                .map(user => (
+                .map((user: User) => (
                   <div 
                     key={user._id} 
                     className={cn(

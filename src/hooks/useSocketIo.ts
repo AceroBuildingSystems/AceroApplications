@@ -96,6 +96,7 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
     
     const handleReactionsUpdated = (reactions: Record<string, MessageReaction>) => {
       setMessageReactions(reactions);
+    console.log('Reactions updated:', reactions);
     };
     
     // Register event listeners
@@ -156,11 +157,17 @@ export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
   const addReaction = useCallback((messageId: string, emoji: string) => {
     const socketService = socketServiceRef.current;
     socketService.addReaction(messageId, emoji);
+    
+    // Log for debugging
+    console.log(`Adding reaction ${emoji} to message ${messageId}`);
   }, []);
   
   const removeReaction = useCallback((messageId: string, emoji: string) => {
     const socketService = socketServiceRef.current;
     socketService.removeReaction(messageId, emoji);
+    
+    // Log for debugging
+    console.log(`Removing reaction ${emoji} from message ${messageId}`);
   }, []);
   
   const markMessagesAsRead = useCallback((messageIds: string[]) => {

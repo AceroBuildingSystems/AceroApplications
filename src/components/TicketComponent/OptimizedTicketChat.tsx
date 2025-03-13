@@ -6,24 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Command, CommandInput, CommandItem, CommandList, CommandGroup } from '@/components/ui/command';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Paperclip, Send, File, Image, X, AtSign, Reply, CornerUpRight, 
   PlusCircle, UserPlus, Smile, Loader2, MessageSquare, Download, Video,
-  Search, CheckCircle, Clock, AlertCircle, User, Wifi, WifiOff
+  Search, CheckCircle, Clock, AlertCircle, Loader, RefreshCw, WifiOff, LogIn
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useSocketIo } from '@/hooks/useSocketIo';
-import { useGetTicketCommentsQuery, useMarkAsReadMutation, useUploadFileMutation } from '@/services/endpoints/ticketCommentApi';
+import { useGetTicketCommentsQuery, useUploadFileMutation } from '@/services/endpoints/ticketCommentApi';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import DashboardLoader from '@/components/ui/DashboardLoader';
 import debounce from 'lodash/debounce';
-import MessageBubble from './MessageBubble';
+import ImprovedMessageBubble from './ImprovedMessageBubble';
 import { toast } from 'react-toastify';
+import ConnectionStatus from './ConnectionStatus';
 
 interface User {
   _id: string;
@@ -33,17 +34,40 @@ interface User {
   department?: any;
 }
 
-interface OptimizedTicketChatProps {
+interface ChatMessage {
+  _id: string;
+  ticket: string;
+  user: User;
+  content: string;
+  attachments?: Array<any>;
+  replyTo?: string;
+  replyToUser?: User;
+  replyToContent?: string;
+  mentions?: string[];
+  reactions?: Array<any>;
+  isEdited?: boolean;
+  readBy?: string[];
+  deliveredAt?: Date;
+  readAt?: Date;
+  createdAt: string;
+  isPending?: boolean;
+  isRead?: boolean;
+  error?: boolean;
+}
+
+interface TicketChatProps {
   ticketId: string;
   userId: string;
   currentUser: User;
+  roomId?: string;
   isLoading?: boolean;
 }
 
-const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
+const OptimizedTicketChat: React.FC<TicketChatProps> = ({
   ticketId,
   userId,
   currentUser,
+  roomId,
   isLoading: propLoading = false
 }) => {
   // Local states
@@ -55,28 +79,30 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   const [replyingTo, setReplyingTo] = useState<any | null>(null);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [userJoinNotifications, setUserJoinNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
+  const [userLeaveNotifications, setUserLeaveNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'participants'>('chat');
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [viewingOlderMessages, setViewingOlderMessages] = useState(false);
+  const [joinNotifications, setJoinNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const lastMessageIdRef = useRef<string | null>(null);
   
-  // RTK Queries
-  const { data: commentsData = {}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
+  // RTK Queries & Mutations
+  const { data: commentsData = { data: [] }, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
     ticketId 
   });
   
-  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
-  const [markAsRead] = useMarkAsReadMutation();
+  const [uploadFileMutation, { isLoading: isUploading }] = useUploadFileMutation();
   
   // Fetch all team members for mentions and invites
-  const { data: teamMembersData = {}, isLoading: teamMembersLoading } = useGetMasterQuery({
+  const { data: teamMembersData = { data: [] }, isLoading: teamMembersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
     sort: { firstName: 1 }
@@ -88,7 +114,10 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   const { 
     isConnected, 
     isConnecting,
-    messages: socketMessages,
+    connectionError,
+    joinedUsers,
+    leftUsers,
+    messages,
     typingUsers,
     onlineUsers,
     messageReactions,
@@ -103,48 +132,58 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
     reconnect
   } = useSocketIo({ 
     ticketId, 
-    userId 
+    userId,
+    roomId
   });
+
+  // Update join/leave notifications when users join/leave
+  useEffect(() => {
+    setUserJoinNotifications(joinedUsers);
+  }, [joinedUsers]);
+
+  // Update join/leave notifications when users join/leave
+  useEffect(() => {
+    setUserLeaveNotifications(leftUsers);
+  }, [leftUsers]);
+
+  // Handle user joined event
+  useEffect(() => {
+    const handleUserJoined = (data: {userId: string, username: string}) => {
+      if (data.userId !== userId) {
+        setJoinNotifications(prev => [...prev, {...data, timestamp: new Date()}]);
+      }
+    };
+  }, [userId]);
   
   // Initialize socket messages with data from API
   useEffect(() => {
     if (commentsData?.data?.length > 0 && updateMessages) {
-      updateMessages(commentsData.data);
+      updateMessages(commentsData.data); // Server already sorts messages
     }
   }, [commentsData?.data, updateMessages]);
   
   // Scroll to bottom when new messages arrive
   useEffect(() => {
     if (!viewingOlderMessages && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 200);
     }
-    
-    // Check for new messages that we haven't seen before
-    const newMessageIds = socketMessages
-      .filter(msg => msg.user._id !== userId && !msg.readBy?.includes(userId) && msg._id !== lastMessageIdRef.current)
+  }, [messages, viewingOlderMessages]);
+  
+  // Check for unread messages and mark them as read
+  useEffect(() => {
+    const unreadMessageIds = messages
+      .filter(msg => 
+        msg.user._id !== userId && 
+        (!msg.readBy || !msg.readBy.includes(userId))
+      )
       .map(msg => msg._id);
     
-    if (newMessageIds.length > 0 && markMessagesAsRead) {
-      markMessagesAsRead(newMessageIds);
-      lastMessageIdRef.current = socketMessages[socketMessages.length - 1]?._id || null;
+    if (unreadMessageIds.length > 0 && document.visibilityState === 'visible') {
+      markMessagesAsRead(unreadMessageIds);
     }
-  }, [socketMessages, userId, markMessagesAsRead, viewingOlderMessages]);
+  }, [messages, userId, markMessagesAsRead]);
   
-  // Handle connection status changes 
-  useEffect(() => {
-    if (isConnected) {
-      // When we connect, mark unread messages as read
-      const unreadMessageIds = socketMessages
-        .filter(msg => msg.user._id !== userId && !msg.readBy?.includes(userId))
-        .map(msg => msg._id);
-      
-      if (unreadMessageIds.length > 0 && markMessagesAsRead) {
-        markMessagesAsRead(unreadMessageIds);
-      }
-    }
-  }, [isConnected, socketMessages, userId, markMessagesAsRead]);
-  
-  // Handle typing debounced
+  // Handle typing status with debounce
   const debouncedTyping = useRef(
     debounce((isTyping: boolean) => {
       sendTyping(isTyping);
@@ -176,11 +215,22 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
       formData.append('userId', userId);
       
       try {
-        const response = await uploadFile(formData).unwrap();
+        console.log(`Uploading file: ${file.name} (${file.type})`);
         
-        if (response.status === 'success') {
-          uploadedFiles.push(response.data);
-          notifyFileUpload(response.data);
+        const response = await fetch('/api/file-upload', {
+          method: 'POST',
+          body: formData,
+          // Don't set Content-Type - browser will set it automatically
+        });
+        
+        const result = await response.json();
+        console.log('Upload response:', result);
+        
+        if (result.status === 'success') {
+          uploadedFiles.push(result.data);
+          notifyFileUpload?.(result.data);
+        } else {
+          throw new Error(result.message || 'Upload failed');
         }
       } catch (error) {
         console.error('File upload error:', error);
@@ -243,7 +293,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   };
   
   // Filter team members for mention suggestions
-  const filteredTeamMembers = teamMembers.filter(user => 
+  const filteredTeamMembers = teamMembers.filter((user: User) => 
     `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase())
   );
   
@@ -287,7 +337,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
     matches.forEach(match => {
       const name = match.substring(1).trim();
       const user = teamMembers.find(
-        u => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
+        (u: User) => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
       );
       if (user) mentions.push(user._id);
     });
@@ -302,18 +352,20 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
       return;
     }
     
-    const results = socketMessages.filter(msg => 
+    const results = messages.filter(msg => 
       msg.content.toLowerCase().includes(term.toLowerCase())
     );
     
     setSearchResults(results);
   };
   
-  // Handle message submission via Socket.io
+  // Handle message submission
   const handleSubmit = async () => {
-    if ((!message.trim() && selectedFiles.length === 0) || isUploading) return;
+    if ((!message.trim() && selectedFiles.length === 0) || isSubmitting || isUploading) return;
     
     try {
+      setIsSubmitting(true);
+      
       // Upload files first if any
       const uploadedFiles = await handleFileUpload();
       
@@ -329,31 +381,54 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
       setReplyingTo(null);
       
       // Refresh comments periodically to ensure data is in sync
-      setTimeout(() => {
-        refetchComments();
-      }, 2000);
+      if (commentsData) {
+        setTimeout(() => {
+          // Wrap in try/catch to prevent errors if component unmounts
+          try { refetchComments(); } catch (e) { console.log('Refetch skipped'); }
+        }, 2000);
+      }
     } catch (error) {
       console.error("Message submission error:", error);
       toast.error("Failed to send message");
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
   // Group messages by date
-  const groupMessagesByDate = () => {
-    const groups: { [key: string]: any[] } = {};
+  interface MessageGroup {
+    date: string;
+    messages: ChatMessage[];
+  }
+  
+  const groupMessagesByDate = (): MessageGroup[] => {
+    const groups: { [key: string]: ChatMessage[] } = {};
     
-    socketMessages.forEach(message => {
+    if (!messages || !messages.length) return [];
+    
+    messages.forEach(message => {
       const date = new Date(message.createdAt).toISOString().split('T')[0];
       if (!groups[date]) {
         groups[date] = [];
       }
-      groups[date].push(message);
+      // Add message to the group
+      const messagesForDate = groups[date];
+      messagesForDate.push(message);
+      // Sort messages within each date group by creation time (oldest first)
     });
     
-    return Object.entries(groups).map(([date, messages]) => ({
+    // Sort by date in ascending order (oldest first)
+    const dateGroups = Object.entries(groups).sort((a, b) => a[0].localeCompare(b[0])).map(([date, messages]) => ({
       date,
-      messages
+      messages: messages || []
     }));
+    
+    // Sort messages within each date group
+    const sortedGroups = dateGroups.map((group: MessageGroup) => ({
+      date: group.date,
+      messages: [...group.messages].sort((a: ChatMessage, b: ChatMessage) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    }));
+    return sortedGroups;
   };
   
   const messageGroups = groupMessagesByDate();
@@ -388,9 +463,9 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   };
   
   // Extract all file attachments for the files tab
-  const allFiles = socketMessages
+  const allFiles = messages
     .filter(msg => msg.attachments && msg.attachments.length > 0)
-    .flatMap(msg => msg.attachments.map(att => ({
+    .flatMap(msg => (msg.attachments || []).map(att => ({
       ...att,
       uploadedBy: msg.user,
       messageId: msg._id,
@@ -399,17 +474,19 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   
   // Extract all participants
   const participants = Array.from(new Set(
-    socketMessages.map(msg => msg.user._id)
+    messages.map(msg => msg.user._id)
   )).map(userId => {
-    const user = socketMessages.find(msg => msg.user._id === userId)?.user;
-    return {
+    const user = messages.find(msg => msg.user._id === userId)?.user;
+    return user ? {
       ...user,
       status: onlineUsers[userId] || 'offline'
-    };
+    } : null;
   }).filter(Boolean);
   
   // Get icon based on file type
   const getFileIcon = (fileType: string) => {
+    if (!fileType) return <File className="h-4 w-4" />;
+    
     if (fileType.startsWith('image/')) {
       return <Image className="h-4 w-4" />;
     } else if (fileType.startsWith('video/')) {
@@ -436,11 +513,20 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
   const typingIndicator = Object.entries(typingUsers)
     .filter(([id, isTyping]) => isTyping && id !== userId)
     .map(([id]) => {
-      const user = teamMembers.find(user => user._id === id);
+      const user = teamMembers.find((user: User) => user._id === id);
       return user ? `${user.firstName} ${user.lastName}` : 'Someone';
     });
   
   const isLoading = propLoading || commentsLoading || teamMembersLoading;
+  
+  // Handle keyboard shortcuts for sending messages
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>): void => {
+    // Send message on Ctrl+Enter or Cmd+Enter
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
   
   return (
     <Card className="overflow-hidden flex flex-col">
@@ -449,24 +535,11 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
           <CardTitle className="text-xl flex items-center">
             <MessageSquare className="mr-2 h-5 w-5" />
             Ticket Chat
-            {isConnecting && (
-              <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 animate-pulse">
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                Connecting...
-              </Badge>
-            )}
-            {!isConnecting && !isConnected && (
-              <Badge variant="outline" className="ml-2 bg-red-50 text-red-700">
-                <WifiOff className="h-3 w-3 mr-1" />
-                Offline
-              </Badge>
-            )}
-            {isConnected && (
-              <Badge variant="outline" className="ml-2 bg-green-50 text-green-700">
-                <Wifi className="h-3 w-3 mr-1" />
-                Connected
-              </Badge>
-            )}
+            <ConnectionStatus 
+              isConnected={isConnected}
+              isConnecting={isConnecting}
+              onReconnect={reconnect}
+            />
           </CardTitle>
           
           <div className="flex items-center gap-2">
@@ -477,7 +550,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
               className="mr-2"
             >
               <Search className="h-4 w-4 mr-1" />
-              Search
+              <span className="hidden sm:inline">Search</span>
             </Button>
             
             <Button 
@@ -487,7 +560,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
               className="mr-2"
             >
               <UserPlus className="h-4 w-4 mr-1" />
-              Invite
+              <span className="hidden sm:inline">Invite</span>
             </Button>
             
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)}>
@@ -518,36 +591,36 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
             <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 data-[state=active]:flex-1">
               {/* Message area */}
               <ScrollArea 
-                className="flex-1 p-4"
+                className="flex-1 p-4 relative"
                 onScroll={(e) => {
                   const target = e.currentTarget;
                   setViewingOlderMessages(target.scrollTop < target.scrollHeight - target.clientHeight - 100);
                 }}
               >
-                {socketMessages.length === 0 ? (
+                {!messages || messages.length === 0 ? (
                   <div className="text-center py-20 text-gray-500">
                     <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                     <p className="text-lg font-medium">No messages yet</p>
                     <p className="text-sm">Start the conversation by sending a message.</p>
                   </div>
                 ) : (
-                  <div>
+                  <div className="flex flex-col">
                     {messageGroups.map(group => (
                       <div key={group.date}>
                         <div className="flex justify-center my-4">
-                          <Badge variant="outline" className="bg-gray-50">
+                          <Badge variant="outline" className="bg-gray-50 px-3 py-1">
                             {format(new Date(group.date), 'EEEE, MMMM d, yyyy')}
                           </Badge>
                         </div>
                         
-                        {group.messages.map((message: any) => (
-                          <div key={message._id} className="mb-4" id={`message-${message._id}`}>
-                            <MessageBubble
+                        {group.messages.map((message: ChatMessage, index: number) => (
+                          <div key={`${message._id || 'temp'}-${index}`} className="mb-4" id={`message-${message._id}`}>
+                            <ImprovedMessageBubble
                               message={message}
                               currentUserId={userId}
                               onReply={handleReply}
-                              onReaction={(messageId, emoji) => addReaction(messageId, emoji)}
-                              onEdit={(messageId, newContent) => editMessage(messageId, newContent)}
+                              onReaction={addReaction}
+                              onEdit={editMessage}
                               formatMessageContent={formatMessageContent}
                               getFileIcon={getFileIcon}
                               formatFileSize={formatFileSize}
@@ -557,12 +630,45 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                       </div>
                     ))}
                     
+                    {/* User join notifications */}
+                    {userJoinNotifications.map((notification, index) => (
+                      <div key={`join-${index}`} className="flex justify-center my-2">
+                        <div className="bg-blue-50 text-blue-700 text-xs rounded-full px-3 py-1 flex items-center">
+                          <LogIn className="h-3 w-3 mr-1" />
+                          <span>
+                            {notification.username || 'Someone'} joined the chat
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* User leave notifications */}
+                    {userLeaveNotifications.map((notification, index) => (
+                      <div key={`leave-${index}`} className="flex justify-center my-2">
+                        <div className="bg-gray-50 text-gray-700 text-xs rounded-full px-3 py-1 flex items-center">
+                          <span>{notification.username || 'Someone'} left the chat</span>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* User join notifications */}
+                    {joinNotifications.map((notification, index) => (
+                      <div key={`join-${index}`} className="flex justify-center my-2">
+                        <div className="bg-blue-50 text-blue-700 text-xs rounded-full px-3 py-1 flex items-center">
+                          <LogIn className="h-3 w-3 mr-1" />
+                          <span>
+                            {notification.username || 'Someone'} joined the chat
+                          </span>
+                          <span className="ml-2 text-blue-500 text-[10px]">
+                            {format(notification.timestamp, 'h:mm a')}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                     {typingIndicator.length > 0 && (
-                      <div className="text-sm text-gray-500 my-2 italic">
+                      <div className="text-sm text-gray-500 my-2 italic flex items-center">
+                        <Loader className="h-3 w-3 mr-2 animate-spin" />
                         {typingIndicator.join(', ')} {typingIndicator.length === 1 ? 'is' : 'are'} typing...
-                        <span className="inline-block animate-bounce">.</span>
-                        <span className="inline-block animate-bounce delay-75">.</span>
-                        <span className="inline-block animate-bounce delay-150">.</span>
                       </div>
                     )}
                     
@@ -609,9 +715,10 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                 
                 <div className="relative">
                   <Textarea
-                    placeholder="Type a message..."
+                    placeholder="Type a message... (Ctrl+Enter to send)"
                     value={message}
                     onChange={handleMessageInput}
+                    onKeyDown={handleKeyDown}
                     className="resize-none pr-24"
                     rows={3}
                     ref={textareaRef}
@@ -652,11 +759,11 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                     
                     <Button 
                       onClick={handleSubmit}
-                      disabled={(!message.trim() && selectedFiles.length === 0) || isUploading}
+                      disabled={(!message.trim() && selectedFiles.length === 0) || isSubmitting || isUploading}
                       size="sm" 
                       className="h-8"
                     >
-                      {isUploading ? (
+                      {isSubmitting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <Send className="h-4 w-4" />
@@ -670,7 +777,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                         <CommandInput placeholder="Search team members..." />
                         <CommandList>
                           {filteredTeamMembers.length > 0 ? (
-                            filteredTeamMembers.map(user => (
+                            filteredTeamMembers.map((user: User) => (
                               <CommandItem
                                 key={user._id}
                                 onSelect={() => insertMention(user)}
@@ -754,18 +861,50 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                   {allFiles.map((file, idx) => (
                     <div key={idx} className="border rounded-md p-3 hover:bg-gray-50 transition-colors flex flex-col">
                       <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center">
-                          {getFileIcon(file.fileType)}
-                          <span className="text-sm font-medium ml-1 truncate max-w-[150px]">{file.fileName}</span>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" asChild>
-                          <a href={file.url} download target="_blank" rel="noopener noreferrer">
-                            <Download className="h-3 w-3" />
-                          </a>
-                        </Button>
+                      {file.fileType?.startsWith('image/') ? (
+                            <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
+                              <img 
+                                src={file.url} 
+                                alt={file.fileName} 
+                                className="max-h-full object-contain" 
+                              />
+                            </div>
+                          ) : file.fileType?.startsWith('video/') ? (
+                            <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
+                              <video 
+                                controls 
+                                src={file.url} 
+                                className="max-h-full object-contain"
+                              >
+                                Your browser does not support the video tag.
+                              </video>
+                            </div>
+                          ) : (
+                            <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
+                              <div className="flex flex-col items-center">
+                                {getFileIcon(file.fileType)}
+                                <span className="text-xs mt-2 max-w-[150px] truncate">{file.fileName}</span>
+                              </div>
+                            </div>
+                          )}
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            asChild
+                          >
+                            <a 
+                              href={file.url} 
+                              download={file.fileName} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                            >
+                              <Download className="h-3 w-3" />
+                            </a>
+                          </Button>
                       </div>
                       
-                      {file.fileType.startsWith('image/') && (
+                      {file.fileType?.startsWith('image/') && (
                         <div className="h-32 overflow-hidden rounded-md mb-2 bg-gray-50 flex items-center justify-center">
                           <img src={file.url} alt={file.fileName} className="max-h-full object-contain" />
                         </div>
@@ -778,7 +917,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                         <span className="flex items-center gap-1">
                           <Avatar className="h-4 w-4">
                             <AvatarFallback className="text-[8px]">
-                              {`${file.uploadedBy.firstName[0]}${file.uploadedBy.lastName[0]}`}
+                              {file.uploadedBy?.firstName ? `${file.uploadedBy.firstName[0]}${file.uploadedBy.lastName[0]}` : 'U'}
                             </AvatarFallback>
                           </Avatar>
                           {format(new Date(file.uploadedAt), 'MMM d')}
@@ -802,12 +941,12 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
               
               {participants.length === 0 ? (
                 <div className="text-center py-12 text-gray-500">
-                  <User className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                  <UserPlus className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                   <p>No participants yet.</p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {participants.map((user) => (
+                  {participants.map((user: any) => (
                     <div key={user._id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
                       <div className="flex items-center gap-3">
                         <div className="relative">
@@ -815,7 +954,7 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                             {user.avatar ? (
                               <AvatarImage src={user.avatar} />
                             ) : (
-                              <AvatarFallback>{`${user.firstName[0]}${user.lastName[0]}`}</AvatarFallback>
+                              <AvatarFallback>{`${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`}</AvatarFallback>
                             )}
                           </Avatar>
                           <div className={cn(
@@ -827,14 +966,9 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
                           )} />
                         </div>
                         <div>
-                          <div className="font-medium">{`${user.firstName} ${user.lastName}`}</div>
+                          <div className="font-medium">{`${user.firstName || ''} ${user.lastName || ''}`}</div>
                           <div className="flex items-center text-xs text-gray-500">
                             <span className="capitalize">{user.status}</span>
-                            {user.status !== 'online' && user.lastActive && (
-                              <span className="ml-1">
-                                • Last seen {formatDistanceToNow(new Date(user.lastActive), { addSuffix: true })}
-                              </span>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -870,8 +1004,8 @@ const OptimizedTicketChat: React.FC<OptimizedTicketChatProps> = ({
             
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {teamMembers
-                .filter(user => !participants.some(p => p._id === user._id)) // Only show users not already in the conversation
-                .map(user => (
+                .filter((user: User) => !participants.some((p: any) => p._id === user._id)) // Only show users not already in the conversation
+                .map((user: User) => (
                   <div 
                     key={user._id} 
                     className={cn(

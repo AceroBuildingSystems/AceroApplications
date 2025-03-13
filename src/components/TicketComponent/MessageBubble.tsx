@@ -26,6 +26,7 @@ import {
 import { toast } from 'react-toastify';
 import PlaceholderImage from '@/components/ui/PlaceholderImage';
 import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
+import MessageReactions from './MessageReactions';
 
 // Common emojis to use for reactions
 const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
@@ -394,35 +395,34 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
         
         {/* Message Reactions */}
-        {getUniqueReactionEmojis().length > 0 && (
-          <div className={cn(
-            "flex flex-wrap gap-1 mt-1",
-            isCurrentUser ? "justify-end" : "justify-start"
-          )}>
-            {getUniqueReactionEmojis().map(emoji => (
-              <button
-                key={emoji as string}
-                className={cn(
-                  "inline-flex items-center rounded-full px-2 py-1 text-xs",
-                  hasUserReacted(emoji as string)
-                    ? "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-                )}
-                onClick={() => onReaction(message._id, emoji as string)}
-              >
-                <span className="mr-1">{emoji as string}</span>
-                <span>{countReactions(emoji as string)}</span>
-              </button>
-            ))}
-          </div>
+        {message.reactions && message.reactions.length > 0 && (
+          <MessageReactions
+            reactions={message.reactions}
+            messageId={message._id}
+            userId={currentUserId}
+            onAddReaction={(emoji) => onReaction(message._id, emoji)}
+            position={isCurrentUser ? 'right' : 'left'}
+          />
         )}
         
         {/* Emoji Picker */}
         <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
           <PopoverTrigger asChild>
-            <div className="hidden">Trigger</div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="hidden"
+            >
+              Trigger
+            </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2" align={isCurrentUser ? 'end' : 'start'} side="top">
+          <PopoverContent 
+            className="w-auto p-2" 
+            align={isCurrentUser ? 'end' : 'start'} 
+            side="bottom"
+            sideOffset={5}
+            forceMount
+          >
             <div className="flex flex-wrap gap-2 max-w-[200px]">
               {commonEmojis.map(emoji => (
                 <button
@@ -516,12 +516,12 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               Reply
             </button>
             
-            <button 
+            {/* <button 
               className="hover:text-gray-700"
               onClick={() => setShowEmojiPicker(true)}
             >
               React
-            </button>
+            </button> */}
             
             {canEdit() && (
               <button 

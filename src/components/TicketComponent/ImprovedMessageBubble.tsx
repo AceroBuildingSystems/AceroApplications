@@ -1,12 +1,12 @@
 // src/components/TicketComponent/ImprovedMessageBubble.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, memo, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
   CornerUpRight, Check, CheckCircle, Clock, Edit, 
-  Trash, MessageSquare, Download, Reply, MoreVertical, Pencil,
-  Smile, AlertCircle
+  Trash, Download, Reply, MoreVertical, Pencil, Smile, AlertCircle
+, FileText, Image as ImageIcon, Video
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -17,13 +17,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger
-} from '@/components/ui/popover';
+} from "@/components/ui/popover";
 import { toast } from 'react-toastify';
+import PlaceholderImage from '@/components/ui/PlaceholderImage';
+import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
+import MessageReactions from './MessageReactions';
 
 // Common emojis to use for reactions
 const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
@@ -52,11 +55,14 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(message.content || '');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [previewFile, setPreviewFile] = useState<any>(null);
+  const [showFilePreview, setShowFilePreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
   
   const isCurrentUser = message.user._id === currentUserId;
   const isPending = message.isPending;
+  const hasError = message.error;
   
   // Focus textarea when editing starts
   useEffect(() => {
@@ -88,33 +94,13 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
   // Check if the message is less than 5 minutes old (for edit capability)
   const canEdit = () => {
     if (!isCurrentUser) return false;
-    if (isPending) return false;
+    if (isPending || hasError) return false;
     
     const messageTime = new Date(message.createdAt).getTime();
     const now = Date.now();
     const fiveMinutesInMs = 5 * 60 * 1000;
     
     return (now - messageTime) < fiveMinutesInMs;
-  };
-  
-  // Format reactions for display
-  const formatReactions = () => {
-    if (!message.reactions || message.reactions.length === 0) return [];
-    
-    // Group reactions by emoji
-    const grouped = message.reactions.reduce((acc, reaction) => {
-      const { emoji, userId } = reaction;
-      if (!acc[emoji]) acc[emoji] = [];
-      acc[emoji].push(userId);
-      return acc;
-    }, {});
-    
-    return Object.entries(grouped).map(([emoji, userIds]) => ({
-      emoji,
-      count: userIds.length,
-      users: userIds,
-      reacted: userIds.includes(currentUserId)
-    }));
   };
   
   // Handle key press in edit mode
@@ -129,14 +115,6 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
     }
   };
   
-  // Highlight new messages with animation
-  useEffect(() => {
-    if (message.isNew) {
-      setIsAnimating(true);
-      setTimeout(() => setIsAnimating(false), 1000);
-    }
-  }, [message.isNew]);
-  
   // Render status indicators for the message
   const renderMessageStatus = () => {
     if (isPending) {
@@ -148,11 +126,11 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
       );
     }
     
-    if (message.error) {
+    if (hasError) {
       return (
         <span className="ml-1 flex items-center text-xs">
           <AlertCircle className="h-3 w-3 text-red-500 mr-1" />
-          <span className="text-red-500">Failed to send</span>
+          <span className="text-red-500">Failed</span>
         </span>
       );
     }
@@ -170,34 +148,93 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
             <Check className="h-3 w-3 text-blue-200" />
           </span>
         );
-      } else {
-        return (
-          <span className="ml-1">
-            <Clock className="h-3 w-3 text-blue-200" />
-          </span>
-        );
       }
     }
     
     return null;
   };
+
+  // Get appropriate icon based on file type
+  const getAppropriateIcon = (fileType: string) => {
+    if (!fileType) return <FileText className="h-4 w-4" />;
+    
+    if (fileType.startsWith('image/')) {
+      return <ImageIcon className="h-4 w-4" />;
+    } else if (fileType.startsWith('video/')) {
+      return <Video className="h-4 w-4" />;
+    } else if (fileType.includes('pdf')) {
+      return <FileText className="h-4 w-4 text-red-500" />;
+    } else {
+      return <FileText className="h-4 w-4" />;
+    }
+  };
   
-  const groupedReactions = formatReactions();
+  // Get file URL with fallback
+  const getFileUrl = (attachment: any) => {
+    // If we have a direct URL, use it
+    if (attachment.url) {
+      return attachment.url;
+    }
+    
+    // If we have a stored filename, construct the URL
+    if (attachment.storedFileName) {
+      return `/uploads/${attachment.storedFileName}`;
+    }
+    
+    // Fallback to the original filename
+    return `/uploads/${attachment.fileName || ''}`;
+  };
+  
+  // Get download URL with proper parameters
+  const getDownloadUrl = (attachment: any) => {
+    const filename = attachment.storedFileName || attachment.fileName;
+    const originalName = attachment.fileName;
+    
+    if (!filename) return '';
+    
+    // Use our dedicated download API to ensure proper content disposition
+    if (attachment.storedFileName) {
+      return `/api/download?file=${encodeURIComponent(attachment.storedFileName)}&originalName=${encodeURIComponent(originalName)}`;
+    } else if (attachment.url) {
+      // Extract the filename from the URL if it's a direct URL
+      const urlFilename = attachment.url.split('/').pop();
+      return `/api/download?file=${encodeURIComponent(urlFilename || '')}&originalName=${encodeURIComponent(originalName)}`;
+    }
+    
+    return `/api/download?file=${encodeURIComponent(filename)}&originalName=${encodeURIComponent(originalName)}`;
+    
+  };
+
+  // Handle file preview
+  const handleFilePreview = (attachment: any) => {
+    setPreviewFile(attachment);
+    setShowFilePreview(true);
+  };
+
+  // Handle reaction
+  const handleReaction = (emoji: string) => {
+    onReaction(message._id, emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // console.log({message})
   
   return (
-    <div className={cn(
-      "flex gap-3",
-      isCurrentUser ? "flex-row-reverse" : "",
-      isAnimating ? "animate-highlight" : ""
-    )}>
+    <div 
+      className={cn(
+        "flex gap-3",
+        isCurrentUser ? "flex-row-reverse" : ""
+      )}
+      ref={messageRef}
+    >
       <Avatar className="h-8 w-8 flex-shrink-0">
         {message.user.avatar ? (
           <AvatarImage src={message.user.avatar} />
         ) : (
           <AvatarFallback>
-            {message.user.firstName && message.user.lastName 
-              ? `${message.user.firstName[0]}${message.user.lastName[0]}`
-              : '??'}
+            {message.user.firstName?.[0] || ''}
+            {message.user.lastName?.[0] || ''}
+            {!message.user.firstName && !message.user.lastName ? message.user._id.substring(0, 2) : ''}
           </AvatarFallback>
         )}
       </Avatar>
@@ -209,6 +246,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
         <div className={cn(
           "rounded-lg px-4 py-2 relative",
           isPending ? "opacity-70" : "",
+          hasError ? "border border-red-300" : "",
           isCurrentUser 
             ? "bg-blue-500 text-white" 
             : "bg-gray-100 text-gray-800"
@@ -278,6 +316,16 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                       </DropdownMenuItem>
                     </>
                   )}
+                  
+                  {hasError && isCurrentUser && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-red-500">
+                        <Reply className="h-4 w-4 mr-2" />
+                        Retry
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -301,7 +349,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                 "italic line-clamp-1",
                 isCurrentUser ? "text-blue-100" : "text-gray-600"
               )}>
-                {message.replyToContent || "Original message"}
+                {message.replyTo?.content || message.replyToContent || "Original message"}
               </span>
             </div>
           )}
@@ -347,44 +395,40 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
         </div>
         
         {/* Message Reactions */}
-        {groupedReactions.length > 0 && (
-          <div className={cn(
-            "flex flex-wrap gap-1 mt-1",
-            isCurrentUser ? "justify-end" : "justify-start"
-          )}>
-            {groupedReactions.map(({ emoji, count, reacted }) => (
-              <button
-                key={emoji}
-                className={cn(
-                  "inline-flex items-center rounded-full px-2 py-1 text-xs",
-                  reacted
-                    ? "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-                )}
-                onClick={() => onReaction(message._id, emoji)}
-              >
-                <span className="mr-1">{emoji}</span>
-                <span>{count}</span>
-              </button>
-            ))}
-          </div>
+        {message.reactions && message.reactions.length > 0 && (
+          <MessageReactions
+            reactions={message.reactions}
+            messageId={message._id}
+            userId={currentUserId}
+            onAddReaction={handleReaction}
+            position={isCurrentUser ? 'right' : 'left'}
+          />
         )}
         
         {/* Emoji Picker */}
         <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
           <PopoverTrigger asChild>
-            <div className="hidden">Trigger</div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="hidden"
+            >
+              Trigger
+            </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-2" align={isCurrentUser ? 'end' : 'start'} side="top">
+          <PopoverContent 
+            className="w-auto p-2" 
+            align={isCurrentUser ? 'end' : 'start'} 
+            side="bottom"
+            sideOffset={5}
+            forceMount
+          >
             <div className="flex flex-wrap gap-2 max-w-[200px]">
               {commonEmojis.map(emoji => (
                 <button
                   key={emoji}
                   className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer"
-                  onClick={() => {
-                    onReaction(message._id, emoji);
-                    setShowEmojiPicker(false);
-                  }}
+                  onClick={() => handleReaction(emoji)}
                 >
                   {emoji}
                 </button>
@@ -400,17 +444,29 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
               <div key={index} className={cn(
                 "rounded-lg overflow-hidden",
                 isCurrentUser ? "ml-auto" : ""
-              )}>
+              )} style={{ maxWidth: '250px' }} onClick={() => handleFilePreview(attachment)}>
                 {attachment.fileType?.startsWith('image/') ? (
-                  <div className="relative group">
-                    <img 
-                      src={attachment.url} 
-                      alt={attachment.fileName}
-                      className="max-w-[200px] max-h-[200px] rounded-lg object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <Button size="icon" variant="secondary" asChild>
-                        <a href={attachment.url} download target="_blank" rel="noopener noreferrer">
+                  <div className="relative group max-w-[200px] max-h-[200px]">
+                    {(() => {
+                      const [hasError, setHasError] = React.useState(false);
+                      
+                      if (hasError) {
+                        return <PlaceholderImage fileName={attachment.fileName} />;
+                      }
+                      
+                      return (
+                        <img 
+                          src={getFileUrl(attachment)} 
+                          alt={attachment.fileName || 'Image attachment'}
+                          className="max-w-[200px] max-h-[200px] rounded-lg object-contain"
+                          style={{ cursor: 'pointer' }}
+                          onError={() => setHasError(true)}
+                        />
+                      );
+                    })()}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-lg">
+                      <Button size="icon" variant="secondary" className="bg-white bg-opacity-80" asChild>
+                        <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                           <Download className="h-4 w-4" />
                         </a>
                       </Button>
@@ -420,8 +476,9 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                   <div className={cn(
                     "flex items-center gap-2 p-2 rounded-lg",
                     isCurrentUser ? "bg-blue-100" : "bg-gray-200"
+, "cursor-pointer"
                   )}>
-                    {getFileIcon(attachment.fileType)}
+                    {getAppropriateIcon(attachment.fileType)}
                     <div className="flex-1 min-w-0">
                       <div className="text-xs font-medium truncate max-w-[150px]">
                         {attachment.fileName}
@@ -431,7 +488,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                       </div>
                     </div>
                     <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                      <a href={attachment.url} download target="_blank" rel="noopener noreferrer">
+                      <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                         <Download className="h-3 w-3" />
                       </a>
                     </Button>
@@ -443,7 +500,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
         )}
         
         {/* Message actions */}
-        {!isEditing && (
+        {!isEditing && !isPending && !hasError && (
           <div className={cn(
             "flex mt-1 text-xs text-gray-500 gap-2",
             isCurrentUser ? "justify-end" : ""
@@ -472,22 +529,17 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
             )}
           </div>
         )}
+
+        {/* File Preview Dialog */}
+        <FilePreviewDialog 
+          isOpen={showFilePreview} 
+          onClose={() => setShowFilePreview(false)} 
+          file={previewFile} 
+          formatFileSize={formatFileSize}
+        />
       </div>
     </div>
   );
 };
 
-// Add animation styles to your global CSS
-// This won't actually add it here, you need to add this to your CSS
-/* 
-@keyframes highlight {
-  0% { background-color: rgba(96, 165, 250, 0.2); }
-  100% { background-color: transparent; }
-}
-
-.animate-highlight {
-  animation: highlight 1s ease-in-out;
-}
-*/
-
-export default ImprovedMessageBubble;
+export default memo(ImprovedMessageBubble);

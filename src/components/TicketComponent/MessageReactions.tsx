@@ -1,15 +1,13 @@
 // src/components/TicketComponent/MessageReactions.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Smile, Plus } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
 
 interface Reaction {
   emoji: string;
   userId: string;
-  createdAt?: Date;
+  createdAt: Date;
 }
 
 interface MessageReactionsProps {
@@ -17,104 +15,111 @@ interface MessageReactionsProps {
   messageId: string;
   userId: string;
   onAddReaction: (emoji: string) => void;
-  position?: 'left' | 'right';
+  position: string;
 }
 
-// Common emojis that can be used for reactions
-const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
+const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '👏', '🎉', '🔥', '✅', '❌'];
 
-const MessageReactions: React.FC<MessageReactionsProps> = ({ 
-  reactions = [], 
-  messageId, 
+const MessageReactions: React.FC<MessageReactionsProps> = ({
+  reactions,
+  messageId,
   userId,
   onAddReaction,
-  position = 'left'
+  position
 }) => {
-  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const isCurrentUser = position === 'right';
   
   // Group reactions by emoji
   const groupedReactions = reactions.reduce((acc, reaction) => {
-    const { emoji } = reaction;
-    
-    if (!acc[emoji]) {
-      acc[emoji] = [];
+    if (!acc[reaction.emoji]) {
+      acc[reaction.emoji] = [];
     }
-    
-    acc[emoji].push(reaction.userId);
-    
+    acc[reaction.emoji].push(reaction);
     return acc;
-  }, {} as Record<string, string[]>);
+  }, {} as Record<string, Reaction[]>);
   
-  // Check if current user has reacted with emoji
-  const hasUserReacted = (emoji: string) => {
-    return groupedReactions[emoji]?.includes(userId) || false;
-  };
-  
-  // Handle reaction click (toggle)
+  // Handle clicking on a reaction
   const handleReactionClick = (emoji: string) => {
     onAddReaction(emoji);
   };
   
-  // Format reaction count with user information
-  const formatReactionTooltip = (emoji: string, userIds: string[]) => {
-    if (userIds.length === 1) {
-      return `1 reaction`;
-    }
-    return `${userIds.length} reactions`;
+  // Handle adding a new reaction
+  const handleAddReaction = (emoji: string) => {
+    onAddReaction(emoji);
+    setShowEmojiPicker(false);
   };
   
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  if (reactions.length === 0 && !showEmojiPicker) {
+    return null;
+  }
+  
   return (
-    <div className={cn(
-      "flex flex-wrap gap-1 mt-1",
-      position === 'right' ? "justify-end" : "justify-start"
-    )}>
-      {/* Display existing reactions */}
-      {Object.entries(groupedReactions).map(([emoji, userIds]) => (
-        <TooltipProvider key={emoji}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                className={cn(
-                  "inline-flex items-center rounded-full px-2 py-1 text-xs",
-                  hasUserReacted(emoji)
-                    ? "bg-blue-100 hover:bg-blue-200 text-blue-800"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-                )}
-                onClick={() => handleReactionClick(emoji)}
-              >
-                <span className="mr-1">{emoji}</span>
-                <span>{userIds.length}</span>
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{formatReactionTooltip(emoji, userIds)}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      ))}
-      
-      {/* Add Reaction Button */}
-      <Popover open={isEmojiPickerOpen} onOpenChange={setIsEmojiPickerOpen}>
-        <PopoverTrigger asChild>
-          <button
-            className="inline-flex items-center rounded-full px-1.5 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600"
+    <div className={`flex flex-wrap gap-1 mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+      {Object.entries(groupedReactions).map(([emoji, users]) => {
+        const hasReacted = users.some(r => r.userId === userId);
+        
+        return (
+          <Button
+            key={emoji}
+            variant="ghost"
+            size="sm"
+            className={`
+              h-6 px-1.5 py-0 rounded-full text-xs flex items-center gap-1
+              ${hasReacted ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' : 'hover:bg-gray-100'}
+            `}
+            onClick={() => handleReactionClick(emoji)}
           >
-            <Plus className="h-3 w-3" />
-          </button>
+            <span>{emoji}</span>
+            <span className="text-xs">{users.length}</span>
+          </Button>
+        );
+      })}
+      
+      <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-6 w-6 p-0 rounded-full hover:bg-gray-100"
+            ref={triggerRef}
+          >
+            <Plus className="h-3.5 w-3.5 text-gray-500" />
+          </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-2" align={position === 'right' ? 'end' : 'start'}>
+        <PopoverContent 
+          className="w-auto p-2" 
+          align={isCurrentUser ? 'end' : 'start'} 
+          side="bottom"
+          sideOffset={5}
+          forceMount
+        >
           <div className="flex flex-wrap gap-2 max-w-[200px]">
             {commonEmojis.map(emoji => (
-              <button
+              <Button
                 key={emoji}
-                className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer"
-                onClick={() => {
-                  handleReactionClick(emoji);
-                  setIsEmojiPickerOpen(false);
-                }}
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => handleAddReaction(emoji)}
               >
                 {emoji}
-              </button>
+              </Button>
             ))}
           </div>
         </PopoverContent>

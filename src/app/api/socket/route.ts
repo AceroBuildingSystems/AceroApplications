@@ -242,7 +242,7 @@ function getSocketIO(server: any): SocketIOServer {
               ticket: ticketId,
               action: 'COMMENT',
               user: messageUserId,
-              details: { messageId: savedMessage._id }
+              details: { messageId: savedMessage._id ? savedMessage._id.toString() : '' }
             }
           });
           
@@ -255,7 +255,7 @@ function getSocketIO(server: any): SocketIOServer {
           // Send acknowledgment to sender
           if (tempId) {
             socket.emit('message-ack', {
-              messageId: savedMessage._id.toString(),
+              messageId: savedMessage._id ? savedMessage._id.toString() : '',
               tempId,
               status: 'delivered',
               timestamp: savedMessage.createdAt
@@ -309,12 +309,14 @@ function getSocketIO(server: any): SocketIOServer {
       socket.on('message-reaction', async (data) => {
         try {
           const { messageId, userId: reactionUserId, emoji, action, ticketId } = data;
+          console.log(`Handling reaction: ${emoji} from user ${reactionUserId} for message ${messageId}, action: ${action}`);
           
           // Get the message from database
           const message = await TicketComment.findById(messageId);
           
-          if (!message) {
-            return socket.emit('error', { message: 'Message not found' });
+          if (!message || !message._id) {
+            console.error(`Message not found: ${messageId}`);
+            return socket.emit('error', { message: 'Message not found or invalid' });
           }
           
           // Initialize reactions array if not exists
@@ -350,12 +352,26 @@ function getSocketIO(server: any): SocketIOServer {
           // Save to database
           await message.save();
           
-          // Populate and broadcast updated reactions
-          await message.populate('reactions.userId');
-          io.to(`ticket-${ticketId}`).emit('message-reaction-update', {
-            messageId,
-            reactions: message.reactions
-          });
+          // Broadcast updated reactions to all clients in the room
+          try {
+            // Get the updated message with populated reactions
+            const updatedMessage = await TicketComment.findById(messageId).populate('reactions.userId');
+            
+            if (!updatedMessage) {
+              throw new Error('Failed to retrieve updated message');
+            }
+
+            console.log(`Broadcasting reaction update for message ${messageId} with ${updatedMessage.reactions?.length || 0} reactions`);
+            
+            // Broadcast to all clients in the room
+            io.to(`ticket-${ticketId}`).emit('message-reaction-update', {
+              messageId,
+              reactions: updatedMessage.reactions || []
+            });
+          } catch (populateError) {
+            console.error('Error populating reaction user data:', populateError);
+            socket.emit('error', { message: 'Failed to broadcast reaction update' });
+          }
         } catch (error) {
           console.error('Error handling reaction:', error);
           socket.emit('error', { message: 'Failed to save reaction' });

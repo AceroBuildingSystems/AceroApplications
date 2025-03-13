@@ -302,6 +302,18 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                   <DropdownMenuItem onSelect={(e) => {
                     e.preventDefault();
                     setShowEmojiPicker(true);
+                    // Position the emoji picker near the message
+                    setTimeout(() => {
+                      if (messageRef.current) {
+                        const rect = messageRef.current.getBoundingClientRect();
+                        const popover = document.querySelector('[data-radix-popper-content-wrapper]');
+                        if (popover instanceof HTMLElement) {
+                          popover.style.position = 'absolute';
+                          popover.style.top = `${rect.bottom + 5}px`;
+                          popover.style.left = isCurrentUser ? `${rect.right - 200}px` : `${rect.left}px`;
+                        }
+                      }
+                    }, 0);
                   }}>
                     <Smile className="h-4 w-4 mr-2" />
                     Add Reaction
@@ -408,20 +420,17 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Emoji Picker */}
         <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
           <PopoverTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="hidden"
-            >
-              Trigger
-            </Button>
+            <div className="hidden">Trigger</div>
           </PopoverTrigger>
           <PopoverContent 
             className="w-auto p-2" 
             align={isCurrentUser ? 'end' : 'start'} 
-            side="bottom"
-            sideOffset={5}
+            side="top"
+            sideOffset={0}
+            alignOffset={0}
             forceMount
+            avoidCollisions={false}
+            sticky="always"
           >
             <div className="flex flex-wrap gap-2 max-w-[200px]">
               {commonEmojis.map(emoji => (
@@ -440,7 +449,18 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Display attachments */}
         {message.attachments && message.attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
-            {message.attachments.map((attachment: any, index: number) => (
+            {message.attachments.map((attachment: any, index: number) => {
+              // Skip rendering duplicate images
+              if (index > 0 && 
+                  attachment.fileType?.startsWith('image/') && 
+                  message.attachments.some((a: any, i: number) => 
+                    i < index && 
+                    a.fileName === attachment.fileName && 
+                    a.fileSize === attachment.fileSize)) {
+                return null;
+              }
+              
+              return (
               <div key={index} className={cn(
                 "rounded-lg overflow-hidden",
                 isCurrentUser ? "ml-auto" : ""
@@ -495,7 +515,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                   </div>
                 )}
               </div>
-            ))}
+            )})}
           </div>
         )}
         

@@ -215,30 +215,31 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Handle file upload
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) return [];
-    
+
     const uploadedFiles = [];
-    
+
     for (const file of selectedFiles) {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('ticketId', ticketId);
       formData.append('userId', userId);
-      
+
       try {
         console.log(`Uploading file: ${file.name} (${file.type})`);
-        
+
         const response = await fetch('/api/file-upload', {
           method: 'POST',
           body: formData,
           // Don't set Content-Type - browser will set it automatically
         });
-        
+
         const result = await response.json();
         console.log('Upload response:', result);
-        
+
         if (result.status === 'success') {
           uploadedFiles.push(result.data);
-          notifyFileUpload?.(result.data);
+          // Don't notify here - we'll notify after the message is sent
+          // notifyFileUpload?.(result.data);
         } else {
           throw new Error(result.message || 'Upload failed');
         }
@@ -371,24 +372,24 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Handle message submission
   const handleSubmit = async () => {
     if ((!message.trim() && selectedFiles.length === 0) || isSubmitting || isUploading) return;
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // Upload files first if any
       const uploadedFiles = await handleFileUpload();
-      
+
       // Extract mentions
       const mentionedUserIds = extractMentions(message);
-      
+
       // Send message via Socket.io
       const tempId = sendMessage(message, uploadedFiles, replyingTo?._id, mentionedUserIds);
-      
+
       // Clear state
       setMessage('');
       setSelectedFiles([]);
       setReplyingTo(null);
-      
+
       // Refresh comments periodically to ensure data is in sync
       if (commentsData) {
         setTimeout(() => {
@@ -474,12 +475,29 @@ const TicketChat: React.FC<TicketChatProps> = ({
   // Extract all file attachments for the files tab
   const allFiles = messages
     .filter(msg => msg.attachments && msg.attachments.length > 0)
-    .flatMap(msg => (msg.attachments || []).map(att => ({
+    .flatMap(msg => (msg.attachments || []))
+    // Remove duplicate files based on fileName and fileSize
+    .filter((file, index, self) => 
+      index === self.findIndex(f => 
+        f.fileName === file.fileName && 
+        f.fileSize === file.fileSize
+      )
+    )
+    .map(att => ({
       ...att,
-      uploadedBy: msg.user,
-      messageId: msg._id,
-      uploadedAt: msg.createdAt
-    })));
+      uploadedBy: messages.find(m => m.attachments?.some(a => 
+        a.fileName === att.fileName && 
+        a.fileSize === att.fileSize
+      ))?.user,
+      messageId: messages.find(m => m.attachments?.some(a => 
+        a.fileName === att.fileName && 
+        a.fileSize === att.fileSize
+      ))?._id,
+      uploadedAt: messages.find(m => m.attachments?.some(a => 
+        a.fileName === att.fileName && 
+        a.fileSize === att.fileSize
+      ))?.createdAt
+    }));
   
   // Extract all participants
   const participants = Array.from(new Set(

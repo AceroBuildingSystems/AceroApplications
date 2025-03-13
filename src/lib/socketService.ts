@@ -627,6 +627,23 @@ export class SocketService extends EventEmitter {
   private handleMessage(message: ChatMessage): void {
     console.log(`Received message: ${message._id}`);
     console.log(`Message from user: ${message.user._id}, current user: ${this.currentUserId}`);
+    
+    // Check for duplicate attachments and remove them
+    if (message.attachments && message.attachments.length > 0) {
+      // Create a map to track unique attachments by fileName and fileSize
+      const uniqueAttachments = new Map();
+      
+      // Filter out duplicate attachments
+      message.attachments = message.attachments.filter(attachment => {
+        const key = `${attachment.fileName}-${attachment.fileSize}`;
+        if (uniqueAttachments.has(key)) {
+          return false; // Skip this duplicate
+        }
+        uniqueAttachments.set(key, true);
+        return true;
+      });
+    }
+    
     this.resolvePendingMessage(message);
     
     // Add message to cache
@@ -948,12 +965,23 @@ export class SocketService extends EventEmitter {
     
     // Check if this message resolves any pending messages
     this.pendingMessages.forEach((pendingMsg, tempId) => {
+      // Check if this is the same message based on content, user, and timestamp
       if (
         pendingMsg.content === message.content &&
         pendingMsg.user._id === message.user._id &&
         Math.abs(new Date(pendingMsg.createdAt).getTime() - new Date(message.createdAt).getTime()) < 30000
+ ||
+        // Also check if this is the same message based on attachments
+        (pendingMsg.attachments && message.attachments && 
+         pendingMsg.attachments.length > 0 && message.attachments.length > 0 &&
+         pendingMsg.attachments.some(a1 => 
+           message.attachments?.some(a2 => 
+             a1.fileName === a2.fileName && a1.fileSize === a2.fileSize
+           )
+         ))
       ) {
         // This is likely the same message
+        console.log(`Resolving pending message ${tempId} with server message ${message._id}`);
         this.removeMessageFromCache(tempId);
         this.pendingMessages.delete(tempId);
       }

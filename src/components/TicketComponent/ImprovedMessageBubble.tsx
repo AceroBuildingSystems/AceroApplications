@@ -214,10 +214,16 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
   // Handle reaction
   const handleReaction = (emoji: string) => {
     onReaction(message._id, emoji);
+    console.log(`Adding reaction ${emoji} to message ${message._id}`);
     setShowEmojiPicker(false);
   };
 
-  // console.log({message})
+  // Log message reactions for debugging
+  useEffect(() => {
+    if (message.reactions && message.reactions.length > 0) {
+      console.log(`Message ${message._id} has ${message.reactions.length} reactions:`, message.reactions);
+    }
+  }, [message._id, message.reactions]);
   
   return (
     <div 
@@ -409,7 +415,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
         {/* Message Reactions */}
         {message.reactions && message.reactions.length > 0 && (
           <MessageReactions
-            reactions={message.reactions}
+            reactions={message.reactions || []}
             messageId={message._id}
             userId={currentUserId}
             onAddReaction={handleReaction}
@@ -534,7 +540,21 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
             
             <button 
               className="hover:text-gray-700"
-              onClick={() => setShowEmojiPicker(true)}
+              onClick={() => {
+                setShowEmojiPicker(true);
+                // Position the emoji picker below the message
+                setTimeout(() => {
+                  if (messageRef.current) {
+                    const rect = messageRef.current.getBoundingClientRect();
+                    const popover = document.querySelector('[data-radix-popper-content-wrapper]');
+                    if (popover instanceof HTMLElement) {
+                      popover.style.position = 'absolute';
+                      popover.style.top = `${rect.bottom + 5}px`;
+                      popover.style.left = isCurrentUser ? `${rect.right - 200}px` : `${rect.left}px`;
+                    }
+                  }
+                }, 0);
+              }}
             >
               React
             </button>

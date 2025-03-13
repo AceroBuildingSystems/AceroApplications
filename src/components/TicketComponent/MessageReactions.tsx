@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { Smile, Plus } from 'lucide-react';
+import { Smile, Plus, AlertCircle } from 'lucide-react';
 
 interface Reaction {
   emoji: string;
@@ -28,27 +28,45 @@ const MessageReactions: React.FC<MessageReactionsProps> = ({
   position
 }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const isCurrentUser = position === 'right';
   
   // Group reactions by emoji
-  const groupedReactions = reactions.reduce((acc, reaction) => {
+  const groupedReactions = reactions?.reduce((acc, reaction) => {
     if (!acc[reaction.emoji]) {
       acc[reaction.emoji] = [];
     }
     acc[reaction.emoji].push(reaction);
     return acc;
-  }, {} as Record<string, Reaction[]>);
+  }, {} as Record<string, Reaction[]>) || {};
+  
+  // Log reactions for debugging
+  useEffect(() => {
+    console.log(`MessageReactions for message ${messageId}:`, reactions);
+  }, [reactions, messageId]);
   
   // Handle clicking on a reaction
   const handleReactionClick = (emoji: string) => {
-    onAddReaction(emoji);
+    try {
+      onAddReaction(emoji);
+      setError(null);
+    } catch (err) {
+      console.error('Error adding reaction:', err);
+      setError('Failed to add reaction');
+    }
   };
   
   // Handle adding a new reaction
   const handleAddReaction = (emoji: string) => {
-    onAddReaction(emoji);
-    setShowEmojiPicker(false);
+    try {
+      onAddReaction(emoji);
+      setShowEmojiPicker(false);
+      setError(null);
+    } catch (err) {
+      console.error('Error adding reaction:', err);
+      setError('Failed to add reaction');
+    }
   };
   
   // Close emoji picker when clicking outside
@@ -65,12 +83,19 @@ const MessageReactions: React.FC<MessageReactionsProps> = ({
     };
   }, []);
   
-  if (reactions.length === 0 && !showEmojiPicker) {
+  if ((!reactions || reactions.length === 0) && !showEmojiPicker) {
     return null;
   }
   
   return (
-    <div className={`flex flex-wrap gap-1 mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex flex-wrap gap-1 mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'} relative`}>
+      {error && (
+        <div className="absolute -top-8 left-0 right-0 bg-red-100 text-red-600 text-xs p-1 rounded flex items-center justify-center">
+          <AlertCircle className="h-3 w-3 mr-1" />
+          {error}
+        </div>
+      )}
+      
       {Object.entries(groupedReactions).map(([emoji, users]) => {
         const hasReacted = users.some(r => r.userId === userId);
         

@@ -332,7 +332,7 @@ export class SocketService extends EventEmitter {
     
     // Optimistically update cache
     this.updateMessageReactionInCache(messageId, emoji, this.currentUserId, true);
-    
+    console.log("Emitting....")
     // Send reaction
     this.socket.emit('message-reaction', {
       messageId,
@@ -703,6 +703,7 @@ export class SocketService extends EventEmitter {
    * Handle message reaction
    */
   private handleMessageReaction(reaction: MessageReaction): void {
+    console.log(`Received reaction update for message ${reaction.messageId} with ${reaction.reactions.length} reactions`);
     this.reactionsCache.set(reaction.messageId, reaction);
     
     console.log(`Received reaction update for message ${reaction.messageId} with ${reaction.reactions.length} reactions`);
@@ -723,12 +724,17 @@ export class SocketService extends EventEmitter {
   private handleMessageReactionUpdate(data: { messageId: string, reactions: any[] }): void {
     const { messageId, reactions } = data;
     
-    console.log(`Received reaction update for message ${messageId} with ${reactions.length} reactions`);
+    console.log(`Received reaction update for message ${messageId} with ${reactions?.length || 0} reactions`);
     
     // Update message in cache with the new reactions
     const message = this.getMessageFromCache(messageId);
     if (message) {
-      this.updateMessageInCache(messageId, { reactions });
+      // Make a deep copy of the reactions to ensure they're properly updated
+      const reactionsCopy = reactions ? JSON.parse(JSON.stringify(reactions)) : [];
+      this.updateMessageInCache(messageId, { reactions: reactionsCopy });
+      
+      // Log the updated message for debugging
+      console.log(`Updated message ${messageId} with reactions:`, reactionsCopy);
     }
     
     // Update reactions cache
@@ -736,6 +742,7 @@ export class SocketService extends EventEmitter {
       messageId,
       emoji: '',
       reactions
+: reactions || []
     });
     
     this.emit('reactions-updated', this.getMessageReactions());

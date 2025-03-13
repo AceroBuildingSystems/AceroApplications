@@ -148,6 +148,7 @@ function getSocketIO(server: any): SocketIOServer {
             .populate([
               { path: 'user' },
               { path: 'mentions' },
+              { path: 'reactions.userId' },
               { 
                 path: 'replyTo',
                 populate: {
@@ -309,10 +310,10 @@ function getSocketIO(server: any): SocketIOServer {
       socket.on('message-reaction', async (data) => {
         try {
           const { messageId, userId: reactionUserId, emoji, action, ticketId } = data;
-          console.log(`Handling reaction: ${emoji} from user ${reactionUserId} for message ${messageId}, action: ${action}`);
+          console.log(`[REACTION] Handling reaction: ${emoji} from user ${reactionUserId} for message ${messageId}, action: ${action}, ticketId: ${ticketId}`);
           
           // Get the message from database
-          const message = await TicketComment.findById(messageId);
+          let message = await TicketComment.findById(messageId);
           
           if (!message || !message._id) {
             console.error(`Message not found: ${messageId}`);
@@ -323,6 +324,7 @@ function getSocketIO(server: any): SocketIOServer {
           if (!message.reactions) {
             message.reactions = [];
           }
+          console.log(`[REACTION] Before update: Message has ${message.reactions.length} reactions`);
           
           if (action === 'remove') {
             // Remove reaction
@@ -342,32 +344,46 @@ function getSocketIO(server: any): SocketIOServer {
               // Add new reaction
               // @ts-ignore - Type mismatch is expected but works at runtime
               message.reactions.push({
-                emoji,
+                emoji: emoji,
                 userId: reactionUserId,
                 createdAt: new Date()
               });
             }
           }
           
+          console.log(`[REACTION] After update: Message has ${message.reactions.length} reactions`);
+          
           // Save to database
+          message.markModified('reactions'); // Explicitly mark the reactions array as modified
+          console.log(`[REACTION] Saving message with reactions to database:`, 
+            message.reactions.map(r => ({ emoji: r.emoji, userId: r.userId }))
+          );
           await message.save();
           
           // Broadcast updated reactions to all clients in the room
           try {
             // Get the updated message with populated reactions
-            const updatedMessage = await TicketComment.findById(messageId).populate('reactions.userId');
+            // and user info
+            const updatedMessage = await TicketComment.findById(messageId)
+              .populate('reactions.userId')
+              .populate('user');
+              
+            console.log(`[REACTION] Retrieved updated message from DB with ${updatedMessage?.reactions?.length || 0} reactions`);
             
             if (!updatedMessage) {
               throw new Error('Failed to retrieve updated message');
             }
 
-            console.log(`Broadcasting reaction update for message ${messageId} with ${updatedMessage.reactions?.length || 0} reactions`);
+            console.log(`[REACTION] Broadcasting reaction update for message ${messageId} with ${updatedMessage.reactions?.length || 0} reactions to room ticket-${ticketId}`);
             
             // Broadcast to all clients in the room
             io.to(`ticket-${ticketId}`).emit('message-reaction-update', {
               messageId,
               reactions: updatedMessage.reactions || []
             });
+            
+            // Also emit the full message to ensure all clients have the latest version
+            io.to(`ticket-${ticketId}`).emit('message', updatedMessage);
           } catch (populateError) {
             console.error('Error populating reaction user data:', populateError);
             socket.emit('error', { message: 'Failed to broadcast reaction update' });

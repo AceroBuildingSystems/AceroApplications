@@ -51,7 +51,7 @@ const AttachmentSchema = new Schema({
 const ReactionSchema = new Schema({
   emoji: { type: String, required: true },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
@@ -65,24 +65,24 @@ const EditHistorySchema = new Schema({
 
 const TicketCommentSchema: Schema<TicketCommentDocument> = new Schema({
   ticket: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "Ticket",
     required: true,
     index: true // Add index for better query performance
   },
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
   content: { type: String, required: true },
   attachments: [AttachmentSchema],
   replyTo: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "TicketComment"
   },
   mentions: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User"
   }],
   reactions: [ReactionSchema],
@@ -90,7 +90,7 @@ const TicketCommentSchema: Schema<TicketCommentDocument> = new Schema({
   editHistory: [EditHistorySchema],
   isRead: { type: Boolean, default: false },
   readBy: [{
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "User"
   }],
   deliveredAt: { type: Date },
@@ -117,13 +117,14 @@ TicketCommentSchema.pre('save', function(next) {
 // Auto-populate related fields
 TicketCommentSchema.pre<Query<any, TicketCommentDocument>>(/^find/, function (next) {
   this.populate([
-    { path: "user" },
-    { path: "mentions" },
-    { path: "reactions.userId" },
+    { path: "user", select: "_id firstName lastName avatar" },
+    { path: "mentions", select: "_id firstName lastName" },
+    { path: "reactions.userId", select: "_id firstName lastName" },
     {
       path: "replyTo",
       populate: {
-        path: "user"
+        path: "user",
+        select: "_id firstName lastName"
       }
     }
   ]);

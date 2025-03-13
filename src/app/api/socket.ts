@@ -309,6 +309,7 @@ export default async function handler(
         // Handle message reactions
         socket.on('message-reaction', async (data) => {
           try {
+            console.log('Message reaction:', data);
             const { messageId, userId, emoji, ticketId, action } = data;
             
             if (!messageId || !userId || !emoji || !ticketId) {

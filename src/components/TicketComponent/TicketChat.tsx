@@ -13,8 +13,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Paperclip, Send, File, Image, X, AtSign, Reply, CornerUpRight, 
   PlusCircle, UserPlus, Smile, Loader2, MessageSquare, Download, Video,
-  Search, CheckCircle, Clock, AlertCircle, Loader, RefreshCw, WifiOff
-, LogIn
+  Search, CheckCircle, Clock, AlertCircle, Loader, RefreshCw, WifiOff,
+  ChevronUp, LogIn
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -97,6 +97,9 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [viewingOlderMessages, setViewingOlderMessages] = useState(false);
   const [joinNotifications, setJoinNotifications] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Refs
@@ -106,7 +109,10 @@ const TicketChat: React.FC<TicketChatProps> = ({
   
   // RTK Queries & Mutations
   const { data: commentsData = {}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
-    ticketId 
+    ticketId,
+    // @ts-ignore - Add pagination parameters
+    page: page,
+    limit: 20
   });
   
   const [uploadFileMutation, { isLoading: isUploading }] = useUploadFileMutation();
@@ -118,6 +124,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
     sort: { firstName: 1 }
   });
 
+  // @ts-ignore - Handle potential undefined data
   const teamMembers = teamMembersData?.data || [];
   
   // Socket.io integration
@@ -167,10 +174,48 @@ const TicketChat: React.FC<TicketChatProps> = ({
   
   // Initialize socket messages with data from API
   useEffect(() => {
-    if (commentsData?.data?.length > 0 && updateMessages) {
-      updateMessages(commentsData.data); // Server already sorts messages
+    // @ts-ignore - Handle potential undefined data
+    if (commentsData?.data && updateMessages) {
+      // Only update if we have new data
+      // @ts-ignore - Handle potential undefined data
+      const newData = commentsData.data;
+      if (newData && newData.length > 0) {
+        if (page === 1) {
+          updateMessages(newData); // Replace messages for first page
+        } else {
+          // For subsequent pages, prepend older messages
+          // Get current messages
+          const currentMessages = messages || [];
+          
+          // Make sure we don't add duplicates
+          const newMessageIds = new Set(newData.map((msg: any) => msg._id));
+          const filteredCurrentMessages = currentMessages.filter((msg: any) => !newMessageIds.has(msg._id));
+          
+          // Update with combined messages
+          updateMessages([...newData, ...filteredCurrentMessages]);
+        }
+        
+        // Check if we have more messages to load
+        setHasMoreMessages(newData.length === 20);
+      }
     }
-  }, [commentsData?.data, updateMessages]);
+  }, [commentsData?.data, updateMessages, page]);
+  
+  // Load more messages
+  const loadMoreMessages = async () => {
+    if (isLoadingMore || !hasMoreMessages) return;
+    
+    setIsLoadingMore(true);
+    setPage(prev => prev + 1);
+    
+    try {
+      await refetchComments();
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
   
   // Scroll to bottom when new messages arrive
   useEffect(() => {
@@ -404,7 +449,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
       setIsSubmitting(false);
     }
   };
-  console.log('messages', {messages});
+  
   // Group messages by date
   interface MessageGroup {
     date: string;
@@ -555,12 +600,9 @@ const TicketChat: React.FC<TicketChatProps> = ({
     }
   };
   
-  // Render connection status
-  console.log({selectedFiles})
-  
   return (
     <Card className="overflow-hidden flex flex-col">
-      <CardHeader className="pb-0">
+      <CardHeader className="pb-0 flex-shrink-0">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl flex items-center">
             <MessageSquare className="mr-2 h-5 w-5" />
@@ -609,8 +651,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
           </div>
         </div>
       </CardHeader>
-      
-      <CardContent className="p-0 flex-1 flex flex-col">
+      <CardContent className="p-0 flex-1 flex flex-col max-h-[600px]">
         <DashboardLoader loading={isLoading}>
           <Tabs 
             value={activeTab} 
@@ -618,15 +659,36 @@ const TicketChat: React.FC<TicketChatProps> = ({
             className="flex-1 flex flex-col"
           >
             {/* Chat Tab */}
-            <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 data-[state=active]:flex-1">
+            <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 data-[state=active]:flex-1 max-h-[550px]">
               {/* Message area */}
-              <ScrollArea 
-                className="flex-1 p-4 relative"
-                onScroll={(e) => {
-                  const target = e.currentTarget;
-                  setViewingOlderMessages(target.scrollTop < target.scrollHeight - target.clientHeight - 100);
-                }}
-              >
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Load more button */}
+                {hasMoreMessages && (
+                  <div className="flex justify-center py-2 border-b flex-shrink-0">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={loadMoreMessages}
+                      disabled={isLoadingMore}
+                      className="flex items-center gap-1"
+                    >
+                      {isLoadingMore ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ChevronUp className="h-4 w-4" />
+                      )}
+                      {isLoadingMore ? 'Loading...' : 'Load older messages'}
+                    </Button>
+                  </div>
+                )}
+                
+                <ScrollArea 
+                  className="flex-1 p-4 overflow-y-scroll relative h-[400px] max-h-[400px]"
+                  onScroll={(e) => {
+                    const target = e.currentTarget;
+                    setViewingOlderMessages(target.scrollTop < target.scrollHeight - target.clientHeight - 100);
+                  }}
+                >
                 {!messages || messages.length === 0 ? (
                   <div className="text-center py-20 text-gray-500">
                     <MessageSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
@@ -705,10 +767,11 @@ const TicketChat: React.FC<TicketChatProps> = ({
                     <div ref={messagesEndRef} />
                   </div>
                 )}
-              </ScrollArea>
+                </ScrollArea>
+              </div>
               
-              {/* Message input area */}
-              <div className="p-4 border-t">
+              {/* Message input area - fixed height */}
+              <div className="p-4 border-t flex-shrink-0">
                 {!isConnected && !isConnecting && (
                   <div className="flex items-center justify-between gap-4 px-3 py-2 mb-3 bg-yellow-50 text-yellow-800 rounded-md">
                     <div className="flex items-center">
@@ -807,7 +870,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                         <CommandInput placeholder="Search team members..." />
                         <CommandList>
                           {filteredTeamMembers.length > 0 ? (
-                            filteredTeamMembers.map(user => (
+                            filteredTeamMembers.map((user: User) => (
                               <CommandItem
                                 key={user._id}
                                 onSelect={() => insertMention(user)}
@@ -878,7 +941,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             </TabsContent>
             
             {/* Files Tab */}
-            <TabsContent value="files" className="flex-1 m-0 p-4 data-[state=active]:flex-1 overflow-auto">
+            <TabsContent value="files" className="flex-1 m-0 p-4 data-[state=active]:flex-1 overflow-auto h-[500px]">
               <h3 className="text-lg font-medium mb-4">Files & Attachments</h3>
               
               {allFiles.length === 0 ? (
@@ -924,7 +987,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                             asChild
                           >
                             <a 
-                              href={`/api/download?file=${encodeURIComponent(file.storedFileName || file.url.split('/').pop() || '')}&originalName=${encodeURIComponent(file.fileName)}`}
+                              href={`/api/download?file=${encodeURIComponent((file as any).storedFileName || file.url.split('/').pop() || '')}&originalName=${encodeURIComponent(file.fileName)}`}
                               download={file.fileName} 
                               target="_blank" 
                               rel="noopener noreferrer"
@@ -950,7 +1013,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
                               {file.uploadedBy?.firstName ? `${file.uploadedBy.firstName[0]}${file.uploadedBy.lastName[0]}` : 'U'}
                             </AvatarFallback>
                           </Avatar>
-                          {format(new Date(file.uploadedAt), 'MMM d')}
+                          {file.uploadedAt && format(new Date(file.uploadedAt), 'MMM d')}
                         </span>
                       </div>
                     </div>
@@ -960,7 +1023,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             </TabsContent>
             
             {/* Participants Tab */}
-            <TabsContent value="participants" className="flex-1 m-0 p-4 data-[state=active]:flex-1 overflow-auto">
+            <TabsContent value="participants" className="flex-1 m-0 p-4 data-[state=active]:flex-1 overflow-auto h-[500px]">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium">Team Members</h3>
                 <Button variant="outline" size="sm" onClick={() => setInviteDialogOpen(true)}>
@@ -1034,7 +1097,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {teamMembers
-                .filter(user => !participants.some((p: any) => p._id === user._id)) // Only show users not already in the conversation
+                .filter((user: any) => !participants.some((p: any) => p._id === user._id)) // Only show users not already in the conversation
                 .map((user: User) => (
                   <div 
                     key={user._id} 

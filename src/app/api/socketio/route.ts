@@ -305,6 +305,7 @@ function getSocketIO(server: any): SocketIOServer {
       // Handle message reactions
       socket.on('message-reaction', async (data) => {
         try {
+          console.log('Received reaction:', data);
           const { messageId, userId, emoji, action, roomId } = data;
           
           // Get the message from database

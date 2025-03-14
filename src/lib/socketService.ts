@@ -724,13 +724,13 @@ export class SocketService extends EventEmitter {
   private handleMessageReactionUpdate(data: { messageId: string, reactions: any[] }): void {
     const { messageId, reactions } = data;
     
-    console.log(`Received reaction update for message ${messageId} with ${reactions?.length || 0} reactions`);
+    console.log(`Received reaction update for message ${messageId} with ${reactions?.length || 0} reactions:`, reactions);
     
     // Update message in cache with the new reactions
     const message = this.getMessageFromCache(messageId);
     if (message) {
       // Make a deep copy of the reactions to ensure they're properly updated
-      const reactionsCopy = reactions ? JSON.parse(JSON.stringify(reactions)) : [];
+      const reactionsCopy = reactions ? [...reactions] : [];
       this.updateMessageInCache(messageId, { reactions: reactionsCopy });
       
       // Log the updated message for debugging
@@ -741,8 +741,7 @@ export class SocketService extends EventEmitter {
     this.reactionsCache.set(messageId, {
       messageId,
       emoji: '',
-      reactions
-: reactions || []
+      reactions: reactions || []
     });
     
     this.emit('reactions-updated', this.getMessageReactions());

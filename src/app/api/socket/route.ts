@@ -342,10 +342,9 @@ function getSocketIO(server: any): SocketIOServer {
               message.reactions.splice(existingReactionIndex, 1);
             } else {
               // Add new reaction
-              // @ts-ignore - Type mismatch is expected but works at runtime
               message.reactions.push({
                 emoji: emoji,
-                userId: reactionUserId,
+                userId: new mongoose.Types.ObjectId(reactionUserId),
                 createdAt: new Date()
               });
             }

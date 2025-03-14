@@ -88,7 +88,7 @@ const MessageReactions: React.FC<MessageReactionsProps> = ({
   }
   
   return (
-    <div className={`flex flex-wrap gap-1 mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'} relative`}>
+    <div className={`flex flex-wrap gap-1 mt-1 ${isCurrentUser ? 'justify-end' : 'justify-start'} relative z-10`}>
       {error && (
         <div className="absolute -top-8 left-0 right-0 bg-red-100 text-red-600 text-xs p-1 rounded flex items-center justify-center">
           <AlertCircle className="h-3 w-3 mr-1" />

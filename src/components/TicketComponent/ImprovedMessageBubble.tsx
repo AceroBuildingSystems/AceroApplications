@@ -308,18 +308,6 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                   <DropdownMenuItem onSelect={(e) => {
                     e.preventDefault();
                     setShowEmojiPicker(true);
-                    // Position the emoji picker near the message
-                    setTimeout(() => {
-                      if (messageRef.current) {
-                        const rect = messageRef.current.getBoundingClientRect();
-                        const popover = document.querySelector('[data-radix-popper-content-wrapper]');
-                        if (popover instanceof HTMLElement) {
-                          popover.style.position = 'absolute';
-                          popover.style.top = `${rect.bottom + 5}px`;
-                          popover.style.left = isCurrentUser ? `${rect.right - 200}px` : `${rect.left}px`;
-                        }
-                      }
-                    }, 0);
                   }}>
                     <Smile className="h-4 w-4 mr-2" />
                     Add Reaction
@@ -431,13 +419,8 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
           <PopoverContent 
             className="w-auto p-2" 
             align={isCurrentUser ? 'end' : 'start'} 
-            side="top"
-            sideOffset={0}
-            alignOffset={0}
-            forceMount
-            avoidCollisions={false}
-            sticky="always"
-          >
+            side="bottom"
+            sideOffset={5}>
             <div className="flex flex-wrap gap-2 max-w-[200px]">
               {commonEmojis.map(emoji => (
                 <button
@@ -501,8 +484,8 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
                 ) : (
                   <div className={cn(
                     "flex items-center gap-2 p-2 rounded-lg",
-                    isCurrentUser ? "bg-blue-100" : "bg-gray-200"
-, "cursor-pointer"
+                    isCurrentUser ? "bg-blue-100" : "bg-gray-200",
+                    "cursor-pointer"
                   )}>
                     {getAppropriateIcon(attachment.fileType)}
                     <div className="flex-1 min-w-0">
@@ -538,26 +521,14 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
               Reply
             </button>
             
-            <button 
+            {/* <button 
               className="hover:text-gray-700"
               onClick={() => {
                 setShowEmojiPicker(true);
-                // Position the emoji picker below the message
-                setTimeout(() => {
-                  if (messageRef.current) {
-                    const rect = messageRef.current.getBoundingClientRect();
-                    const popover = document.querySelector('[data-radix-popper-content-wrapper]');
-                    if (popover instanceof HTMLElement) {
-                      popover.style.position = 'absolute';
-                      popover.style.top = `${rect.bottom + 5}px`;
-                      popover.style.left = isCurrentUser ? `${rect.right - 200}px` : `${rect.left}px`;
-                    }
-                  }
-                }, 0);
               }}
             >
               React
-            </button>
+            </button> */}
             
             {canEdit() && (
               <button 

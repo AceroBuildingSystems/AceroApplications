@@ -24,7 +24,7 @@ export const ticketTaskApi = baseApi.injectEndpoints({
       query: (taskData) => ({
         url: 'ticket-task',
         method: 'POST',
-        body: { action: 'create', data: taskData },
+        body: { action: 'create', data: taskData }
       }),
       invalidatesTags: ['TicketTask', 'Ticket'],
     }),
@@ -33,7 +33,7 @@ export const ticketTaskApi = baseApi.injectEndpoints({
       query: (taskData) => ({
         url: 'ticket-task',
         method: 'POST',
-        body: { action: 'update', data: taskData },
+        body: { action: 'update', data: taskData }
       }),
       invalidatesTags: ['TicketTask', 'Ticket'],
     }),
@@ -42,7 +42,7 @@ export const ticketTaskApi = baseApi.injectEndpoints({
       query: (statusData) => ({
         url: 'ticket-task',
         method: 'POST',
-        body: { action: 'changeStatus', data: statusData },
+        body: { action: 'changeStatus', data: statusData }
       }),
       invalidatesTags: ['TicketTask', 'Ticket'],
     }),

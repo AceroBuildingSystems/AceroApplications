@@ -55,11 +55,11 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const handleOpenDialog = (task = null) => {
     setFormError(null);
     
-    if (task) {
+    if (task && typeof task === 'object') {
       setSelectedTask(task);
-      setTaskTitle(task.title);
+      setTaskTitle(task.title || '');
       setTaskDescription(task.description || '');
-      setTaskEfforts(task.efforts?.toString() || '1');
+      setTaskEfforts((task.efforts || 1).toString());
     } else {
       setSelectedTask(null);
       setTaskTitle('');
@@ -97,14 +97,11 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       if (selectedTask) {
         // Update existing task
         const updatePayload = {
-          action: 'update',
-          data: {
-            _id: selectedTask._id,
-            title: taskTitle,
-            description: taskDescription,
-            efforts: parseInt(taskEfforts),
-            updatedBy: userId
-          }
+          _id: selectedTask._id,
+          title: taskTitle,
+          description: taskDescription,
+          efforts: parseInt(taskEfforts),
+          updatedBy: userId
         };
         
         console.log("Updating task with:", JSON.stringify(updatePayload, null, 2));
@@ -114,17 +111,14 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       } else {
         // Create new task with proper structure
         const createPayload = {
-          action: 'create',
-          data: {
-            ticket: ticketId,
-            title: taskTitle,
-            description: taskDescription,
-            efforts: parseInt(taskEfforts),
-            status: 'TODO',
-            progress: 0,
-            addedBy: userId,
-            updatedBy: userId
-          }
+          ticket: ticketId,
+          title: taskTitle,
+          description: taskDescription,
+          efforts: parseInt(taskEfforts),
+          status: 'TODO',
+          progress: 0,
+          addedBy: userId,
+          updatedBy: userId
         };
         
         console.log("Creating task with payload:", JSON.stringify(createPayload, null, 2));
@@ -142,22 +136,14 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       // Extract the error message for better user feedback
       let errorMsg = "Failed to save task";
       
-      if (error?.data?.message) {
-        if (typeof error.data.message === 'object') {
-          // Handle Mongoose validation errors
-          if (error.data.message.errors) {
-            const validationErrors = Object.values(error.data.message.errors)
-              .map(err => err.message)
-              .join(', ');
-            errorMsg = `Validation failed: ${validationErrors}`;
-          } else if (error.data.message.message) {
-            errorMsg = error.data.message.message;
-          } else {
-            errorMsg = JSON.stringify(error.data.message);
-          }
-        } else {
-          errorMsg = error.data.message;
-        }
+      // Safely extract error message
+       const errorObj = error as any;
+      if (errorObj?.data?.message) {
+        errorMsg = typeof errorObj.data.message === 'string' 
+          ? errorObj.data.message 
+          : JSON.stringify(errorObj.data.message);
+      } else if (errorObj?.message) {
+        errorMsg = errorObj.message;
       }
       
       setFormError(errorMsg);
@@ -171,14 +157,11 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       const progress = newStatus === 'COMPLETED' ? 100 : task.progress || 0;
       
       const statusPayload = {
-        action: 'changeStatus',
-        data: {
-          _id: task._id,
-          status: newStatus,
-          progress,
-          updatedBy: userId,
-          ticket: ticketId
-        }
+        _id: task._id,
+        status: newStatus,
+        progress,
+        updatedBy: userId,
+        ticket: ticketId
       };
       
       console.log("Changing task status with:", JSON.stringify(statusPayload, null, 2));
@@ -195,12 +178,9 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const handleChangeProgress = async (task: any, progress: number) => {
     try {
       await updateTask({
-        action: 'update',
-        data: {
-          _id: task._id,
-          progress,
-          updatedBy: userId
-        }
+        _id: task._id,
+        progress,
+        updatedBy: userId
       }).unwrap();
       
       toast.success(`Progress updated to ${progress}%`);

@@ -40,7 +40,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TicketDetailComponentProps {
   ticket: any;
@@ -98,193 +98,252 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
     <TooltipProvider>
       <div className="space-y-6">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
           {/* Back to tickets link */}
           <Button 
             variant="ghost" 
-            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-indigo-700"
+            className="mb-6 flex items-center gap-2 text-gray-600 hover:text-indigo-700 group transition-all"
             onClick={() => router.push('/dashboard/ticket')}
           >
-            <ArrowLeftCircle className="h-4 w-4" />
-            Back to All Tickets
+            <ArrowLeftCircle className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to All Tickets</span>
           </Button>
           
-          <Card className="border border-gray-200 shadow-sm overflow-hidden bg-white">
-            <CardHeader className="pb-4 border-b border-gray-100">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    {getStatusIcon()}
-                    <CardTitle className="text-blue-600 flex items-center">
-                      {ticket.ticketId || `TKT-${ticket._id.toString().substr(-8)}`}
-                      <div className="flex items-center ml-3 gap-2">
-                        <Badge className={getStatusColor(ticket.status)}>
-                          {ticket.status}
-                        </Badge>
-                        <Badge className={getPriorityColor(ticket.priority)}>
-                          {ticket.priority}
-                        </Badge>
-                      </div>
-                    </CardTitle>
-                  </div>
-                  <CardTitle className="text-xl mt-2">{ticket.title}</CardTitle>
-                </div>
-                
-                <div className="flex gap-2">
-                  {canEdit && ticket.status !== 'CLOSED' && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="flex items-center gap-1">
-                          Actions <ChevronDown className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={onEditClick} className="flex items-center gap-2">
-                          <Edit className="h-4 w-4" />
-                          Edit Ticket
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem 
-                          onClick={() => setIsStatusDialogOpen(true)}
-                          className="flex items-center gap-2"
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Main Ticket Info */}
+            <Card className="lg:col-span-3 border border-gray-200 shadow-sm overflow-hidden bg-white">
+              <CardHeader className="pb-4 border-b border-gray-100 bg-white">
+                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      {getStatusIcon()}
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-blue-600 mr-3">
+                          {ticket.ticketId || `TKT-${ticket._id.toString().substr(-8)}`}
+                        </CardTitle>
+                        <motion.div 
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10 }}
                         >
-                          <ClipboardList className="h-4 w-4" />
-                          Change Status
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuSeparator />
-                        
-                        {!ticket.assignee ? (
-                          <>
+                          <Badge className={getStatusColor(ticket.status)}>
+                            {ticket.status}
+                          </Badge>
+                        </motion.div>
+                        <motion.div 
+                          initial={{ scale: 0.9 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 10, delay: 0.1 }}
+                        >
+                          <Badge className={getPriorityColor(ticket.priority)}>
+                            {ticket.priority}
+                          </Badge>
+                        </motion.div>
+                      </div>
+                    </div>
+                    <CardTitle className="text-2xl mt-1 font-bold text-gray-800">{ticket.title}</CardTitle>
+                  </div>
+                  
+                  <div className="flex gap-2 self-start md:self-center">
+                    {canEdit && ticket.status !== 'CLOSED' && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" className="flex items-center h-9 px-3 shadow-sm border-gray-200 hover:border-indigo-300 gap-1">
+                            Actions <ChevronDown className="h-4 w-4 opacity-70" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={onEditClick} className="flex items-center gap-2">
+                            <Edit className="h-4 w-4" />
+                            Edit Ticket
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          
+                          <DropdownMenuItem 
+                            onClick={() => setIsStatusDialogOpen(true)}
+                            className="flex items-center gap-2"
+                          >
+                            <ClipboardList className="h-4 w-4" />
+                            Change Status
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          
+                          {!ticket.assignee ? (
+                            <>
+                              <DropdownMenuItem 
+                                onClick={() => setIsAssignDialogOpen(true)}
+                                className="flex items-center gap-2"
+                              >
+                                <User className="h-4 w-4" />
+                                Assign Manually
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={handleShowAutoAssign}
+                                className="flex items-center gap-2"
+                              >
+                                <Users className="h-4 w-4" />
+                                Auto-Assign
+                              </DropdownMenuItem>
+                            </>
+                          ) : (
                             <DropdownMenuItem 
                               onClick={() => setIsAssignDialogOpen(true)}
                               className="flex items-center gap-2"
                             >
                               <User className="h-4 w-4" />
-                              Assign Manually
+                              Reassign Ticket
                             </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={handleShowAutoAssign}
-                              className="flex items-center gap-2"
-                            >
-                              <Users className="h-4 w-4" />
-                              Auto-Assign
-                            </DropdownMenuItem>
-                          </>
-                        ) : (
-                          <DropdownMenuItem 
-                            onClick={() => setIsAssignDialogOpen(true)}
-                            className="flex items-center gap-2"
-                          >
-                            <User className="h-4 w-4" />
-                            Reassign Ticket
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                    
+                    {canEdit && (
+                      <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                        <Button 
+                          variant="default" 
+                          onClick={onEditClick}
+                          className="flex items-center gap-2 h-9 shadow-sm bg-indigo-600 hover:bg-indigo-700"
+                        >
+                          <Edit className="h-4 w-4" />
+                          Edit
+                        </Button>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="py-6">
+                <div className="space-y-6">
+                  <motion.div
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <h3 className="font-medium mb-3 text-gray-700 text-sm">Description</h3>
+                    <div className="bg-gray-50 p-5 rounded-lg border border-gray-100 shadow-sm">
+                      <p className="text-gray-700 whitespace-pre-line">
+                        {ticket.description}
+                      </p>
+                    </div>
+                  </motion.div>
                   
-                  {canEdit && (
-                    <Button 
-                      variant="default" 
-                      onClick={onEditClick}
-                      className="flex items-center gap-2"
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15 }}
                     >
-                      <Edit className="h-4 w-4" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="py-5">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-medium mb-2 text-gray-700">Description</h3>
-                  <p className="text-gray-700 whitespace-pre-line bg-gray-50 p-4 rounded-md border border-gray-100">
-                    {ticket.description}
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex flex-col">
-                        <span className="text-xs text-gray-500 mb-1">Department</span>
-                        <div className="flex items-center gap-1 text-sm font-medium">
-                          <Users className="h-4 w-4 text-indigo-600" />
-                          <p>{ticket.department.name}</p>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Ticket department</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex flex-col">
-                        <span className="text-xs text-gray-500 mb-1">Category</span>
-                        <div className="flex items-center gap-1 text-sm font-medium">
-                          <Tag className="h-4 w-4 text-indigo-600" />
-                          <p>{ticket.category.name}</p>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Ticket category</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex flex-col">
-                        <span className="text-xs text-gray-500 mb-1">Created</span>
-                        <div className="flex items-center gap-1 text-sm font-medium">
-                          <Clock className="h-4 w-4 text-indigo-600" />
-                          <p title={format(new Date(ticket.createdAt), 'PPP p')}>
-                            {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
-                          </p>
-                        </div>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Created on {format(new Date(ticket.createdAt), 'PPP p')}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  {ticket.dueDate && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex flex-col">
-                          <span className="text-xs text-gray-500 mb-1">Due Date</span>
-                          <div className="flex items-center gap-1 text-sm font-medium">
-                            <CalendarIcon className="h-4 w-4 text-indigo-600" />
-                            <p>{format(new Date(ticket.dueDate), 'PPP')}</p>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-gray-50/80 transition-colors group">
+                            <span className="text-xs text-gray-500 mb-1">Department</span>
+                            <div className="flex items-center gap-1 text-sm font-medium">
+                              <Users className="h-4 w-4 text-indigo-600 group-hover:text-indigo-500 transition-colors" />
+                              <p>{ticket.department.name}</p>
+                            </div>
                           </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Due by {format(new Date(ticket.dueDate), 'PPP')}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Ticket department</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-gray-50/80 transition-colors group">
+                            <span className="text-xs text-gray-500 mb-1">Category</span>
+                            <div className="flex items-center gap-1 text-sm font-medium">
+                              <Tag className="h-4 w-4 text-indigo-600 group-hover:text-indigo-500 transition-colors" />
+                              <p>{ticket.category.name}</p>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Ticket category</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </motion.div>
+                    
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-gray-50/80 transition-colors group">
+                            <span className="text-xs text-gray-500 mb-1">Created</span>
+                            <div className="flex items-center gap-1 text-sm font-medium">
+                              <Clock className="h-4 w-4 text-indigo-600 group-hover:text-indigo-500 transition-colors" />
+                              <p title={format(new Date(ticket.createdAt), 'PPP p')}>
+                                {formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true })}
+                              </p>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Created on {format(new Date(ticket.createdAt), 'PPP p')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </motion.div>
+                    
+                    {ticket.dueDate && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:border-indigo-200 hover:bg-gray-50/80 transition-colors group">
+                              <span className="text-xs text-gray-500 mb-1">Due Date</span>
+                              <div className="flex items-center gap-1 text-sm font-medium">
+                                <CalendarIcon className="h-4 w-4 text-indigo-600 group-hover:text-indigo-500 transition-colors" />
+                                <p>{format(new Date(ticket.dueDate), 'PPP')}</p>
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Due by {format(new Date(ticket.dueDate), 'PPP')}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </motion.div>
+                    )}
+                  </div>
                 </div>
-                
-                <Separator className="my-2" />
-                
-                <div className="flex flex-wrap gap-6 py-2">
-                  <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex flex-col min-w-[200px]">
-                    <h4 className="text-sm text-gray-500 mb-2">Created by</h4>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
-                        <AvatarFallback className="bg-blue-100 text-blue-800">{`${ticket.creator.firstName[0]}${ticket.creator.lastName[0]}`}</AvatarFallback>
+              </CardContent>
+            </Card>
+            
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                  <CardHeader className="bg-gray-50/70 pb-3">
+                    <CardTitle className="text-sm text-gray-700">Created by</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10 border-2 border-blue-100">
+                        <AvatarFallback className="bg-blue-100 text-blue-800 font-medium">
+                          {`${ticket.creator.firstName[0]}${ticket.creator.lastName[0]}`}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">{`${ticket.creator.firstName} ${ticket.creator.lastName}`}</p>
@@ -293,14 +352,26 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
                         </p>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="p-3 bg-gray-50 rounded-md border border-gray-100 flex flex-col min-w-[200px]">
-                    <h4 className="text-sm text-gray-500 mb-2">Assigned to</h4>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                  <CardHeader className="bg-gray-50/70 pb-3">
+                    <CardTitle className="text-sm text-gray-700">Assigned to</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4">
                     {ticket.assignee ? (
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8 border-2 border-white shadow-sm">
-                          <AvatarFallback className="bg-indigo-100 text-indigo-800">{`${ticket.assignee.firstName[0]}${ticket.assignee.lastName[0]}`}</AvatarFallback>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 border-2 border-indigo-100">
+                          <AvatarFallback className="bg-indigo-100 text-indigo-800 font-medium">
+                            {`${ticket.assignee.firstName[0]}${ticket.assignee.lastName[0]}`}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{`${ticket.assignee.firstName} ${ticket.assignee.lastName}`}</p>
@@ -310,58 +381,69 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8 bg-gray-200 text-gray-500 border-2 border-white shadow-sm">
-                          <AvatarFallback>?</AvatarFallback>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 bg-gray-200 border-2 border-gray-100">
+                          <AvatarFallback className="text-gray-500">?</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="text-gray-500">Unassigned</p>
+                          <p className="text-gray-500 font-medium">Unassigned</p>
                           {canEdit && ticket.status !== 'CLOSED' && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setIsAssignDialogOpen(true)}
-                              className="mt-1 h-7 text-xs"
-                            >
-                              Assign
-                            </Button>
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setIsAssignDialogOpen(true)}
+                                className="mt-2 h-8 text-xs bg-white border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
+                              >
+                                <User className="h-3.5 w-3.5 mr-1" />
+                                Assign now
+                              </Button>
+                            </motion.div>
                           )}
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
-                
-                {/* Progress bar */}
-                {ticket.totalEfforts > 0 && (
-                  <div className="p-4 bg-gray-50 rounded-md border border-gray-100">
-                    <div className="flex justify-between items-center mb-2">
-                      <h4 className="font-medium text-sm text-gray-700">Progress</h4>
-                      <div className="flex items-center">
-                        <span className="text-sm font-medium mr-2">{progressPercentage}%</span>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              {/* Progress widget */}
+              {ticket.totalEfforts > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                    <CardHeader className="bg-gray-50/70 pb-3">
+                      <CardTitle className="text-sm text-gray-700">Progress</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-lg font-bold text-indigo-600">{progressPercentage}%</span>
                         <Badge variant="outline" className="bg-indigo-50 text-indigo-800 border-indigo-200">
                           {ticket.efforts} / {ticket.totalEfforts} points
                         </Badge>
                       </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                      <div 
-                        className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
-                        style={{ width: `${progressPercentage}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                      <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                        <div 
+                          className="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" 
+                          style={{ width: `${progressPercentage}%` }}
+                        ></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </div>
+          </div>
         </motion.div>
         
-        <Tabs defaultValue="tasks" className="animate-fade-in">
-          <TabsList className="grid w-full grid-cols-3 p-0 bg-gray-50 rounded-lg">
+        <Tabs defaultValue="tasks" className="mt-8 animate-fade-in">
+          <TabsList className="h-12 rounded-lg">
             <TabsTrigger 
               value="tasks" 
-              className="flex items-center gap-2 data-[state=active]:bg-white rounded-lg"
+              className="flex items-center gap-2 data-[state=active]:shadow-sm rounded-lg h-10 data-[state=active]:text-indigo-700"
             >
               <CheckSquare className="h-4 w-4" />
               <span>Tasks</span>
@@ -373,14 +455,14 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
             </TabsTrigger>
             <TabsTrigger 
               value="attachments" 
-              className="flex items-center gap-2 data-[state=active]:bg-white rounded-lg"
+              className="flex items-center gap-2 data-[state=active]:shadow-sm rounded-lg h-10 data-[state=active]:text-indigo-700"
             >
               <Paperclip className="h-4 w-4" />
               <span>Files</span>
             </TabsTrigger>
             <TabsTrigger 
               value="history" 
-              className="flex items-center gap-2 data-[state=active]:bg-white rounded-lg"
+              className="flex items-center gap-2 data-[state=active]:shadow-sm rounded-lg h-10 data-[state=active]:text-indigo-700"
             >
               <FileText className="h-4 w-4" />
               <span>History</span>
@@ -392,7 +474,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <TabsContent value="tasks" className="mt-4">
+            <TabsContent value="tasks" className="mt-6">
               <TicketTaskComponent 
                 ticketId={ticket._id} 
                 tasks={tasksData?.data || []} 
@@ -403,7 +485,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
               />
             </TabsContent>
             
-            <TabsContent value="attachments" className="mt-4">
+            <TabsContent value="attachments" className="mt-6">
               <TicketAttachmentComponent
                 ticketId={ticket._id}
                 attachments={[]} // This would normally come from an API call
@@ -413,7 +495,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
               />
             </TabsContent>
             
-            <TabsContent value="history" className="mt-4">
+            <TabsContent value="history" className="mt-6">
               <TicketHistoryComponent 
                 history={historyData?.data || []} 
                 isLoading={historyLoading}
@@ -433,7 +515,6 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
             ...(ticket.creator.avatar && { avatar: ticket.creator.avatar })
           }}
         />
-
         {/* Status Change Component */}
         <TicketStatusChangeComponent
           ticketId={ticket._id}

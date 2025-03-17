@@ -6,6 +6,7 @@ import mime from 'mime-types';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('Download API called');
     // Get query parameters from the URL
     const searchParams = new URL(request.url).searchParams;
     const file = searchParams.get('file');
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     
     // Security check to prevent directory traversal
     const sanitizedFilename = path.basename(file);
-    console.log({ sanitizedFilename });
+    console.log('Download request for file:', { sanitizedFilename, originalName, url: request.url });
     
     const filePath = path.join(process.cwd(), 'public', 'uploads', sanitizedFilename);
     
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
     try {
       await fs.access(filePath);
     } catch (error) {
-      console.error(`File not found: ${filePath}`);
+      console.error(`File not found at path: ${filePath}`, error);
       return NextResponse.json({ error: 'File not found' }, { status: 404 });
     }
     
@@ -35,6 +36,8 @@ export async function GET(request: NextRequest) {
     // Read the file
     const fileBuffer = await fs.readFile(filePath);
     
+    console.log(`File read successfully: ${filePath}, size: ${fileBuffer.length} bytes, content type: ${contentType}`);
+    
     // Create and return the response with appropriate headers
     const response = new NextResponse(fileBuffer, {
       status: 200,
@@ -42,9 +45,10 @@ export async function GET(request: NextRequest) {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${encodeURIComponent(originalName || sanitizedFilename)}"`,
         'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'Content-Length': fileBuffer.length.toString()
       },
     });
-    
+    console.log('Download response created successfully');
     return response;
   } catch (error) {
     console.error('Download error:', error);

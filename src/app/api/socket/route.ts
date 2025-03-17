@@ -4,6 +4,7 @@ import { Server as SocketIOServer } from 'socket.io';
 import { dbConnect } from '@/lib/mongoose';
 import { TicketComment, Ticket } from '@/models';
 import { createTicketHistory } from '@/server/services/ticketHistoryServices';
+import mongoose from 'mongoose';
 
 // Global variable to track the Socket.io server instance
 let io: SocketIOServer;

@@ -1,4 +1,3 @@
-// src/components/TicketComponent/MessageBubble.tsx
 import React, { useState, memo, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -24,10 +23,9 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { toast } from 'react-toastify';
-import PlaceholderImage from '@/components/ui/PlaceholderImage';
-import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
+import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
 
 // Common emojis to use for reactions
 const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
@@ -200,7 +198,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const getFileUrl = (attachment: any) => {
     // If we have a direct URL, use it
     if (attachment.url) {
-      return attachment.url;
+      return attachment.url.startsWith('http') ? attachment.url : `${attachment.url}`;
     }
     
     // If we have a stored filename, construct the URL
@@ -209,13 +207,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     }
     
     // Fallback to the original filename
-    return `/uploads/${attachment.fileName || ''}`;
+    return `/uploads/${attachment.fileName || attachment.originalName || ''}`;
   };
   
   // Get download URL with proper parameters
   const getDownloadUrl = (attachment: any) => {
     const filename = attachment.storedFileName || attachment.fileName;
-    const originalName = attachment.originalName || attachment.fileName;
+    const originalName = attachment.originalName || attachment.fileName || 'download';
     
     if (!filename) return '';
     
@@ -229,26 +227,31 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     setShowFilePreview(true);
   };
 
-  // Animation variants
-  const containerVariants = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut",
-        staggerChildren: 0.1
-      }
-    }
+  // Handle file download
+  const handleDownload = (attachment: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const downloadUrl = getDownloadUrl(attachment);
+    
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', attachment.originalName || attachment.fileName || 'download');
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   return (
     <TooltipProvider>
       <motion.div
-        variants={containerVariants}
+        variants={{
+          hidden: { opacity: 0, y: 10 },
+          visible: { opacity: 1, y: 0 }
+        }}
         initial="hidden"
         animate="visible"
+        transition={{ duration: 0.2 }}
         className={cn(
           "flex gap-3",
           isCurrentUser ? "flex-row-reverse" : ""
@@ -460,19 +463,19 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               >
                 {getUniqueReactionEmojis().map(emoji => (
                   <motion.button
-                    key={emoji as string}
+                    key={emoji}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.95 }}
                     className={cn(
                       "inline-flex items-center rounded-full px-2 py-1 text-xs transition-colors",
-                      hasUserReacted(emoji as string)
+                      hasUserReacted(emoji)
                         ? "bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-200"
                         : "bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
                     )}
-                    onClick={() => onReaction(message._id, emoji as string)}
+                    onClick={() => onReaction(message._id, emoji)}
                   >
-                    <span className="mr-1">{emoji as string}</span>
-                    <span>{countReactions(emoji as string)}</span>
+                    <span className="mr-1">{emoji}</span>
+                    <span>{countReactions(emoji)}</span>
                   </motion.button>
                 ))}
               </motion.div>
@@ -485,7 +488,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               <div className="hidden">Trigger</div>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-2" align={isCurrentUser ? 'end' : 'start'} side="top">
-              <div className="flex flex-wrap gap-2 max-w-[200px]">
+              <div className="grid grid-cols-8 gap-2">
                 {commonEmojis.map(emoji => (
                   <motion.button
                     key={emoji}
@@ -526,28 +529,20 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                   >
                     {attachment.fileType?.startsWith('image/') ? (
                       <div className="relative group max-w-[200px] max-h-[200px]">
-                        {(() => {
-                          const [hasError, setHasError] = React.useState(false);
-                          
-                          if (hasError) {
-                            return <PlaceholderImage fileName={attachment.fileName} />;
-                          }
-                          
-                          return (
-                            <img 
-                              src={getFileUrl(attachment)} 
-                              alt={attachment.fileName || 'Image attachment'}
-                              className="max-w-[200px] max-h-[200px] rounded-lg object-contain"
-                              style={{ cursor: 'pointer' }}
-                              onError={() => setHasError(true)}
-                            />
-                          );
-                        })()}
+                        <img 
+                          src={getFileUrl(attachment)} 
+                          alt={attachment.fileName || 'Image attachment'}
+                          className="max-w-[200px] max-h-[200px] rounded-lg object-contain"
+
+                        />
                         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-lg">
-                          <Button size="icon" variant="secondary" className="bg-white bg-opacity-80" asChild>
-                            <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                              <Download className="h-4 w-4" />
-                            </a>
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="bg-white bg-opacity-80"
+                            onClick={(e) => handleDownload(attachment, e)}
+                          >
+                            <Download className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -566,10 +561,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                             {formatFileSize(attachment.fileSize)}
                           </div>
                         </div>
-                        <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                          <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                            <Download className="h-3 w-3" />
-                          </a>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7"
+                          onClick={(e) => handleDownload(attachment, e)}
+                        >
+                          <Download className="h-3 w-3" />
                         </Button>
                       </div>
                     )}
@@ -615,15 +613,17 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
               )}
             </div>
           )}
-
-          {/* File Preview Dialog */}
-          <FilePreviewDialog 
-            isOpen={showFilePreview} 
-            onClose={() => setShowFilePreview(false)} 
-            file={previewFile} 
+        </div>
+        
+        {/* File Preview Dialog */}
+        {showFilePreview && previewFile && (
+          <FilePreviewDialog
+            isOpen={showFilePreview}
+            onClose={() => setShowFilePreview(false)}
+            file={previewFile}
             formatFileSize={formatFileSize}
           />
-        </div>
+        )}
       </motion.div>
     </TooltipProvider>
   );

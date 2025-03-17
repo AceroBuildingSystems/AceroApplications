@@ -1,12 +1,12 @@
-// src/components/TicketComponent/ImprovedMessageBubble.tsx
+// src/components/TicketComponent/MessageBubble.tsx
 import React, { useState, memo, useRef, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  CornerUpRight, Check, CheckCircle, Clock, Edit, 
-  Trash, Download, Reply, MoreVertical, Pencil, Smile, AlertCircle
-, FileText, Image as ImageIcon, Video
+  CornerUpRight, Check, CheckCircle2, Clock, Edit, 
+  Trash, Download, Reply, MoreVertical, Pencil, Smile, AlertCircle,
+  FileText, Image as ImageIcon, Video, Link, File
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -24,9 +24,9 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { toast } from 'react-toastify';
-import PlaceholderImage from '@/components/ui/PlaceholderImage';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { motion, AnimatePresence } from 'framer-motion';
 import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
-import MessageReactions from './MessageReactions';
 
 // Common emojis to use for reactions
 const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
@@ -42,7 +42,7 @@ interface MessageBubbleProps {
   formatFileSize: (bytes: number) => string;
 }
 
-const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
+const MessageBubble: React.FC<MessageBubbleProps> = ({
   message,
   currentUserId,
   onReply,
@@ -58,7 +58,6 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const messageRef = useRef<HTMLDivElement>(null);
   
   const isCurrentUser = message.user._id === currentUserId;
   const isPending = message.isPending;
@@ -103,6 +102,25 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
     return (now - messageTime) < fiveMinutesInMs;
   };
   
+  // Check if the current user has reacted with this emoji
+  const hasUserReacted = (emoji: string) => {
+    if (!message.reactions) return false;
+    return message.reactions.some((r: any) => r.emoji === emoji && r.userId === currentUserId);
+  };
+  
+  // Count reactions by emoji
+  const countReactions = (emoji: string) => {
+    if (!message.reactions) return 0;
+    return message.reactions.filter((r: any) => r.emoji === emoji).length;
+  };
+  
+  // Get unique reaction emojis
+  const getUniqueReactionEmojis = () => {
+    if (!message.reactions || message.reactions.length === 0) return [];
+    const emojis = message.reactions.map((r: any) => r.emoji);
+    return [...new Set(emojis)] as string[];
+  };
+  
   // Handle key press in edit mode
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -120,7 +138,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
     if (isPending) {
       return (
         <span className="ml-1 flex items-center text-xs">
-          <Clock className="h-3 w-3 text-gray-400 mr-1" />
+          <Clock className="h-3 w-3 text-gray-400 mr-1 animate-pulse" />
           <span className="text-gray-400">Sending...</span>
         </span>
       );
@@ -139,7 +157,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
       if (message.readBy && message.readBy.length > 1) {
         return (
           <span className="ml-1">
-            <CheckCircle className="h-3 w-3 text-green-500" />
+            <CheckCircle2 className="h-3 w-3 text-green-500" />
           </span>
         );
       } else if (message.deliveredAt) {
@@ -156,16 +174,24 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
 
   // Get appropriate icon based on file type
   const getAppropriateIcon = (fileType: string) => {
-    if (!fileType) return <FileText className="h-4 w-4" />;
+    if (!fileType) return <FileText className="h-4 w-4 text-gray-500" />;
     
     if (fileType.startsWith('image/')) {
-      return <ImageIcon className="h-4 w-4" />;
+      return <ImageIcon className="h-4 w-4 text-blue-500" />;
     } else if (fileType.startsWith('video/')) {
-      return <Video className="h-4 w-4" />;
+      return <Video className="h-4 w-4 text-red-500" />;
     } else if (fileType.includes('pdf')) {
       return <FileText className="h-4 w-4 text-red-500" />;
+    } else if (fileType.includes('doc') || fileType.includes('docx')) {
+      return <FileText className="h-4 w-4 text-blue-500" />;
+    } else if (fileType.includes('xls') || fileType.includes('xlsx')) {
+      return <FileText className="h-4 w-4 text-green-500" />;
+    } else if (fileType.includes('ppt') || fileType.includes('pptx')) {
+      return <FileText className="h-4 w-4 text-orange-500" />;
+    } else if (fileType.includes('zip') || fileType.includes('rar')) {
+      return <File className="h-4 w-4 text-purple-500" />;
     } else {
-      return <FileText className="h-4 w-4" />;
+      return <File className="h-4 w-4 text-gray-500" />;
     }
   };
   
@@ -173,7 +199,7 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
   const getFileUrl = (attachment: any) => {
     // If we have a direct URL, use it
     if (attachment.url) {
-      return attachment.url;
+      return attachment.url.startsWith('http') ? attachment.url : `${attachment.url}`;
     }
     
     // If we have a stored filename, construct the URL
@@ -182,27 +208,18 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
     }
     
     // Fallback to the original filename
-    return `/uploads/${attachment.fileName || ''}`;
+    return `/uploads/${attachment.fileName || attachment.originalName || ''}`;
   };
   
   // Get download URL with proper parameters
   const getDownloadUrl = (attachment: any) => {
     const filename = attachment.storedFileName || attachment.fileName;
-    const originalName = attachment.fileName;
+    const originalName = attachment.originalName || attachment.fileName || 'download';
     
     if (!filename) return '';
     
     // Use our dedicated download API to ensure proper content disposition
-    if (attachment.storedFileName) {
-      return `/api/download?file=${encodeURIComponent(attachment.storedFileName)}&originalName=${encodeURIComponent(originalName)}`;
-    } else if (attachment.url) {
-      // Extract the filename from the URL if it's a direct URL
-      const urlFilename = attachment.url.split('/').pop();
-      return `/api/download?file=${encodeURIComponent(urlFilename || '')}&originalName=${encodeURIComponent(originalName)}`;
-    }
-    
     return `/api/download?file=${encodeURIComponent(filename)}&originalName=${encodeURIComponent(originalName)}`;
-    
   };
 
   // Handle file preview
@@ -211,346 +228,406 @@ const ImprovedMessageBubble: React.FC<MessageBubbleProps> = ({
     setShowFilePreview(true);
   };
 
-  // Handle reaction
-  const handleReaction = (emoji: string) => {
-    onReaction(message._id, emoji);
-    console.log(`Adding reaction ${emoji} to message ${message._id}`);
-    setShowEmojiPicker(false);
+  // Handle file download
+  const handleDownload = (attachment: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const downloadUrl = getDownloadUrl(attachment);
+    
+    // Create a temporary anchor element and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', attachment.originalName || attachment.fileName || 'download');
+    link.setAttribute('target', '_blank');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
-
-  // Log message reactions for debugging
-  useEffect(() => {
-    if (message.reactions && message.reactions.length > 0) {
-      console.log(`Message ${message._id} has ${message.reactions.length} reactions:`, message.reactions);
-    }
-  }, [message._id, message.reactions]);
   
   return (
-    <div 
-      className={cn(
-        "flex gap-3",
-        isCurrentUser ? "flex-row-reverse" : ""
-      )}
-      ref={messageRef}
-    >
-      <Avatar className="h-8 w-8 flex-shrink-0">
-        {message.user.avatar ? (
-          <AvatarImage src={message.user.avatar} />
-        ) : (
-          <AvatarFallback>
-            {message.user.firstName?.[0] || ''}
-            {message.user.lastName?.[0] || ''}
-            {!message.user.firstName && !message.user.lastName ? message.user._id.substring(0, 2) : ''}
-          </AvatarFallback>
+    <TooltipProvider>
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: 10 },
+          visible: { opacity: 1, y: 0 }
+        }}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.2 }}
+        className={cn(
+          "flex gap-3",
+          isCurrentUser ? "flex-row-reverse" : ""
         )}
-      </Avatar>
-      
-      <div className={cn(
-        "max-w-[80%]",
-        isCurrentUser ? "items-end" : ""
-      )}>
-        <div className={cn(
-          "rounded-lg px-4 py-2 relative",
-          isPending ? "opacity-70" : "",
-          hasError ? "border border-red-300" : "",
-          isCurrentUser 
-            ? "bg-blue-500 text-white" 
-            : "bg-gray-100 text-gray-800"
-        )}>
-          <div className="flex justify-between items-center mb-1">
-            <span className={cn(
-              "font-medium text-xs",
-              isCurrentUser ? "text-blue-100" : "text-gray-600"
-            )}>
-              {isCurrentUser ? 'You' : `${message.user.firstName || ''} ${message.user.lastName || ''}`}
-            </span>
-            <div className="flex items-center gap-1">
-              <span className={cn(
-                "text-xs",
-                isCurrentUser ? "text-blue-100" : "text-gray-500"
-              )}>
-                {format(new Date(message.createdAt), 'h:mm a')}
-                {message.isEdited && (
-                  <span className="ml-1 text-xs italic">
-                    (edited)
-                  </span>
-                )}
-              </span>
-              
-              {/* Message status indicators */}
-              {renderMessageStatus()}
-              
-              {/* Message options dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={cn(
-                      "h-5 w-5 p-0 hover:bg-opacity-20", 
-                      isCurrentUser ? "hover:bg-blue-600" : "hover:bg-gray-200"
-                    )}
-                  >
-                    <MoreVertical className={cn(
-                      "h-3 w-3",
-                      isCurrentUser ? "text-blue-100" : "text-gray-500"
-                    )} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={isCurrentUser ? "end" : "start"} side="top">
-                  <DropdownMenuItem onClick={() => onReply(message)}>
-                    <Reply className="h-4 w-4 mr-2" />
-                    Reply
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuSeparator />
-                  
-                  <DropdownMenuItem onSelect={(e) => {
-                    e.preventDefault();
-                    setShowEmojiPicker(true);
-                  }}>
-                    <Smile className="h-4 w-4 mr-2" />
-                    Add Reaction
-                  </DropdownMenuItem>
-                  
-                  {canEdit() && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                        <Pencil className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  
-                  {hasError && isCurrentUser && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-500">
-                        <Reply className="h-4 w-4 mr-2" />
-                        Retry
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-          
-          {message.replyTo && (
-            <div className={cn(
-              "text-xs p-2 rounded mb-2 flex flex-col gap-1",
-              isCurrentUser 
-                ? "bg-blue-600 border-l-2 border-blue-300" 
-                : "bg-gray-200 border-l-2 border-gray-400"
-            )}>
-              <span className={cn(
-                "font-medium flex items-center gap-1",
-                isCurrentUser ? "text-blue-100" : "text-gray-700"
-              )}>
-                <CornerUpRight className="h-3 w-3" />
-                Replying to {message.replyToUser?.firstName || "User"}
-              </span>
-              <span className={cn(
-                "italic line-clamp-1",
-                isCurrentUser ? "text-blue-100" : "text-gray-600"
-              )}>
-                {message.replyTo?.content || message.replyToContent || "Original message"}
-              </span>
-            </div>
+      >
+        <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+          {message.user.avatar ? (
+            <AvatarImage src={message.user.avatar} />
+          ) : (
+            <AvatarFallback className={isCurrentUser ? "bg-indigo-100 text-indigo-800" : "bg-gray-100"}>
+              {message.user.firstName?.[0] || ''}
+              {message.user.lastName?.[0] || ''}
+              {!message.user.firstName && !message.user.lastName ? message.user._id.substring(0, 2) : ''}
+            </AvatarFallback>
           )}
-          
-          {isEditing ? (
-            <div className="mt-1">
-              <Textarea
-                value={editedContent}
-                onChange={(e) => setEditedContent(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className={cn(
-                  "min-h-[60px] text-sm p-2 resize-none border-0",
-                  isCurrentUser ? "bg-blue-600 text-white placeholder-blue-200" : "bg-white text-gray-800"
-                )}
-                ref={textareaRef}
-              />
-              <div className="flex justify-end gap-2 mt-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={handleCancelEdit}
-                  className={isCurrentUser ? "text-blue-200 hover:text-white hover:bg-blue-600" : ""}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={handleSubmitEdit}
-                  className={isCurrentUser ? "bg-blue-700 hover:bg-blue-800" : ""}
-                >
-                  Save
-                </Button>
+        </Avatar>
+        
+        <div className={cn(
+          "max-w-[80%]",
+          isCurrentUser ? "items-end" : ""
+        )}>
+          <div className={cn(
+            "rounded-lg px-4 py-2 relative shadow-sm",
+            isPending ? "opacity-80" : "",
+            hasError ? "border border-red-300" : "",
+            isCurrentUser 
+              ? "bg-indigo-500 text-white rounded-tr-none" 
+              : "bg-gray-100 text-gray-800 rounded-tl-none"
+          )}>
+            <div className="flex justify-between items-center mb-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={cn(
+                    "font-medium text-xs",
+                    isCurrentUser ? "text-indigo-100" : "text-gray-600"
+                  )}>
+                    {isCurrentUser ? 'You' : `${message.user.firstName || ''} ${message.user.lastName || ''}`}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {isCurrentUser 
+                      ? 'You' 
+                      : `${message.user.firstName || ''} ${message.user.lastName || ''}`}
+                    {message.user.department ? ` • ${message.user.department.name}` : ''}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <div className="flex items-center gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={cn(
+                      "text-xs",
+                      isCurrentUser ? "text-indigo-100" : "text-gray-500"
+                    )}>
+                      {format(new Date(message.createdAt), 'h:mm a')}
+                      {message.isEdited && (
+                        <span className="ml-1 text-xs italic">
+                          (edited)
+                        </span>
+                      )}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{format(new Date(message.createdAt), 'EEEE, MMMM d, yyyy h:mm a')}</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                {/* Message status indicators */}
+                {renderMessageStatus()}
+                
+                {/* Message options dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={cn(
+                        "h-5 w-5 p-0 hover:bg-opacity-20", 
+                        isCurrentUser ? "hover:bg-indigo-600" : "hover:bg-gray-200"
+                      )}
+                    >
+                      <MoreVertical className={cn(
+                        "h-3 w-3",
+                        isCurrentUser ? "text-indigo-100" : "text-gray-500"
+                      )} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align={isCurrentUser ? "end" : "start"} side="top">
+                    <DropdownMenuItem onClick={() => onReply(message)} className="flex items-center">
+                      <Reply className="h-4 w-4 mr-2" />
+                      Reply
+                    </DropdownMenuItem>
+                    
+                    <DropdownMenuSeparator />
+                    
+                    <DropdownMenuItem onSelect={(e) => {
+                      e.preventDefault();
+                      setShowEmojiPicker(true);
+                    }} className="flex items-center">
+                      <Smile className="h-4 w-4 mr-2" />
+                      Add Reaction
+                    </DropdownMenuItem>
+                    
+                    {canEdit() && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setIsEditing(true)} className="flex items-center">
+                          <Pencil className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    
+                    {hasError && isCurrentUser && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-500 flex items-center">
+                          <Reply className="h-4 w-4 mr-2" />
+                          Retry
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
-          ) : (
-            <div className={cn(
-              "whitespace-pre-line break-words",
-              isCurrentUser ? "text-white" : "text-gray-800"
-            )}>
-              {formatMessageContent(message.content || '')}
-            </div>
-          )}
-        </div>
-        
-        {/* Message Reactions */}
-        {message.reactions && message.reactions.length > 0 && (
-          <MessageReactions
-            reactions={message.reactions || []}
-            messageId={message._id}
-            userId={currentUserId}
-            onAddReaction={handleReaction}
-            position={isCurrentUser ? 'right' : 'left'}
-          />
-        )}
-        
-        {/* Emoji Picker */}
-        <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-          <PopoverTrigger asChild>
-            <div className="hidden">Trigger</div>
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-auto p-2" 
-            align={isCurrentUser ? 'end' : 'start'} 
-            side="bottom"
-            sideOffset={5}>
-            <div className="flex flex-wrap gap-2 max-w-[200px]">
-              {commonEmojis.map(emoji => (
-                <button
-                  key={emoji}
-                  className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer"
-                  onClick={() => handleReaction(emoji)}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
-        
-        {/* Display attachments */}
-        {message.attachments && message.attachments.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {message.attachments.map((attachment: any, index: number) => {
-              // Skip rendering duplicate images
-              if (index > 0 && 
-                  attachment.fileType?.startsWith('image/') && 
-                  message.attachments.some((a: any, i: number) => 
-                    i < index && 
-                    a.fileName === attachment.fileName && 
-                    a.fileSize === attachment.fileSize)) {
-                return null;
-              }
-              
-              return (
-              <div key={index} className={cn(
-                "rounded-lg overflow-hidden",
-                isCurrentUser ? "ml-auto" : ""
-              )} style={{ maxWidth: '250px' }} onClick={() => handleFilePreview(attachment)}>
-                {attachment.fileType?.startsWith('image/') ? (
-                  <div className="relative group max-w-[200px] max-h-[200px]">
-                    {(() => {
-                      const [hasError, setHasError] = React.useState(false);
-                      
-                      if (hasError) {
-                        return <PlaceholderImage fileName={attachment.fileName} />;
-                      }
-                      
-                      return (
+            
+            {message.replyTo && (
+              <motion.div 
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+                className={cn(
+                  "text-xs p-2 rounded mb-2 flex flex-col gap-1",
+                  isCurrentUser 
+                    ? "bg-indigo-600 border-l-2 border-indigo-300" 
+                    : "bg-gray-200 border-l-2 border-gray-400"
+                )}
+              >
+                <span className={cn(
+                  "font-medium flex items-center gap-1",
+                  isCurrentUser ? "text-indigo-100" : "text-gray-700"
+                )}>
+                  <CornerUpRight className="h-3 w-3" />
+                  Replying to {message.replyToUser?.firstName || "User"}
+                </span>
+                <span className={cn(
+                  "italic line-clamp-1",
+                  isCurrentUser ? "text-indigo-100" : "text-gray-600"
+                )}>
+                  {message.replyTo?.content || message.replyToContent || "Original message"}
+                </span>
+              </motion.div>
+            )}
+            
+            {isEditing ? (
+              <div className="mt-1">
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  className={cn(
+                    "min-h-[60px] text-sm p-2 resize-none border-0",
+                    isCurrentUser ? "bg-indigo-600 text-white placeholder-indigo-200" : "bg-white text-gray-800"
+                  )}
+                  ref={textareaRef}
+                />
+                <div className="flex justify-end gap-2 mt-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    className={isCurrentUser ? "text-indigo-200 hover:text-white hover:bg-indigo-600" : ""}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={handleSubmitEdit}
+                    className={isCurrentUser ? "bg-indigo-700 hover:bg-indigo-800" : ""}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className={cn(
+                "whitespace-pre-line break-words",
+                isCurrentUser ? "text-white" : "text-gray-800"
+              )}>
+                {formatMessageContent(message.content || '')}
+              </div>
+            )}
+          </div>
+          
+          {/* Message Reactions */}
+          <AnimatePresence>
+            {getUniqueReactionEmojis().length > 0 && (
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                className={cn(
+                  "flex flex-wrap gap-1 mt-1",
+                  isCurrentUser ? "justify-end" : "justify-start"
+                )}
+              >
+                {getUniqueReactionEmojis().map(emoji => (
+                  <motion.button
+                    key={emoji}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={cn(
+                      "inline-flex items-center rounded-full px-2 py-1 text-xs transition-colors",
+                      hasUserReacted(emoji)
+                        ? "bg-indigo-100 hover:bg-indigo-200 text-indigo-800 border border-indigo-200"
+                        : "bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
+                    )}
+                    onClick={() => onReaction(message._id, emoji)}
+                  >
+                    <span className="mr-1">{emoji}</span>
+                    <span>{countReactions(emoji)}</span>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {/* Emoji Picker */}
+          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+            <PopoverTrigger asChild>
+              <div className="hidden">Trigger</div>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-2" align={isCurrentUser ? 'end' : 'start'} side="top">
+              <div className="grid grid-cols-8 gap-2">
+                {commonEmojis.map(emoji => (
+                  <motion.button
+                    key={emoji}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer"
+                    onClick={() => {
+                      onReaction(message._id, emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          
+          {/* Display attachments */}
+          <AnimatePresence>
+            {message.attachments && message.attachments.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="mt-2 flex flex-wrap gap-2"
+              >
+                {message.attachments.map((attachment: any, index: number) => (
+                  <motion.div
+                    key={index}
+                    whileHover={{ y: -2, boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" }}
+                    className={cn(
+                      "rounded-lg overflow-hidden border",
+                      isCurrentUser ? "ml-auto border-indigo-200" : "border-gray-200"
+                    )}
+                    style={{ maxWidth: '250px' }}
+                    onClick={() => handleFilePreview(attachment)}
+                  >
+                    {attachment.fileType?.startsWith('image/') ? (
+                      <div className="relative group max-w-[200px] max-h-[200px]">
                         <img 
                           src={getFileUrl(attachment)} 
                           alt={attachment.fileName || 'Image attachment'}
                           className="max-w-[200px] max-h-[200px] rounded-lg object-contain"
-                          style={{ cursor: 'pointer' }}
-                          onError={() => setHasError(true)}
-                        />
-                      );
-                    })()}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-lg">
-                      <Button size="icon" variant="secondary" className="bg-white bg-opacity-80" asChild>
-                        <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                          <Download className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className={cn(
-                    "flex items-center gap-2 p-2 rounded-lg",
-                    isCurrentUser ? "bg-blue-100" : "bg-gray-200",
-                    "cursor-pointer"
-                  )}>
-                    {getAppropriateIcon(attachment.fileType)}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-medium truncate max-w-[150px]">
-                        {attachment.fileName}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatFileSize(attachment.fileSize)}
-                      </div>
-                    </div>
-                    <Button size="icon" variant="ghost" className="h-7 w-7" asChild>
-                      <a href={getDownloadUrl(attachment)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                        <Download className="h-3 w-3" />
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )})}
-          </div>
-        )}
-        
-        {/* Message actions */}
-        {!isEditing && !isPending && !hasError && (
-          <div className={cn(
-            "flex mt-1 text-xs text-gray-500 gap-2",
-            isCurrentUser ? "justify-end" : ""
-          )}>
-            <button 
-              className="hover:text-gray-700"
-              onClick={() => onReply(message)}
-            >
-              Reply
-            </button>
-            
-            {/* <button 
-              className="hover:text-gray-700"
-              onClick={() => {
-                setShowEmojiPicker(true);
-              }}
-            >
-              React
-            </button> */}
-            
-            {canEdit() && (
-              <button 
-                className="hover:text-gray-700"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit
-              </button>
-            )}
-          </div>
-        )}
 
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100 rounded-lg">
+                          <Button 
+                            size="icon" 
+                            variant="secondary" 
+                            className="bg-white bg-opacity-80"
+                            onClick={(e) => handleDownload(attachment, e)}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={cn(
+                        "flex items-center gap-2 p-2 rounded-lg",
+                        isCurrentUser ? "bg-indigo-50 text-indigo-700" : "bg-gray-50 text-gray-700", 
+                        "cursor-pointer"
+                      )}>
+                        {getAppropriateIcon(attachment.fileType)}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-medium truncate max-w-[150px]">
+                            {attachment.fileName}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {formatFileSize(attachment.fileSize)}
+                          </div>
+                        </div>
+                        <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-7 w-7"
+                          onClick={(e) => handleDownload(attachment, e)}
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
+          {/* Message actions */}
+          {!isEditing && !isPending && !hasError && (
+            <div className={cn(
+              "flex mt-1 text-xs text-gray-500 gap-2",
+              isCurrentUser ? "justify-end" : ""
+            )}>
+              <motion.button 
+                className="hover:text-indigo-600 transition-colors"
+                onClick={() => onReply(message)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Reply
+              </motion.button>
+              
+              <motion.button 
+                className="hover:text-indigo-600 transition-colors"
+                onClick={() => setShowEmojiPicker(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                React
+              </motion.button>
+              
+              {canEdit() && (
+                <motion.button 
+                  className="hover:text-indigo-600 transition-colors"
+                  onClick={() => setIsEditing(true)}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Edit
+                </motion.button>
+              )}
+            </div>
+          )}
+        </div>
+        
         {/* File Preview Dialog */}
-        <FilePreviewDialog 
-          isOpen={showFilePreview} 
-          onClose={() => setShowFilePreview(false)} 
-          file={previewFile} 
-          formatFileSize={formatFileSize}
-        />
-      </div>
-    </div>
+        {showFilePreview && previewFile && (
+          <FilePreviewDialog
+            isOpen={showFilePreview}
+            onClose={() => setShowFilePreview(false)}
+            file={previewFile}
+            formatFileSize={formatFileSize}
+          />
+        )}
+      </motion.div>
+    </TooltipProvider>
   );
 };
 
-export default memo(ImprovedMessageBubble);
+export default memo(MessageBubble);

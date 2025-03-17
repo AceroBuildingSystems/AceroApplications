@@ -15,7 +15,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Paperclip, Send, File, Image, X, AtSign, Reply, CornerUpRight, 
   PlusCircle, UserPlus, Smile, Loader2, MessageSquare, Download, Video,
-  Search, CheckCircle, Clock, AlertCircle, Loader
+  Search, CheckCircle, Clock, AlertCircle, Loader,
+  RefreshCw
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';

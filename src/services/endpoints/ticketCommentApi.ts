@@ -56,11 +56,19 @@ export const ticketCommentApi = baseApi.injectEndpoints({
     }),
 
     updateTicketComment: builder.mutation<TicketCommentApiResponse, any>({
-      query: (commentData) => ({
-        url: 'ticket-comment',
-        method: 'POST',
-        body: commentData,
-      }),
+      query: (commentData) => {
+        // If we're updating with attachments, we need to specify the action
+        const isAttachmentUpdate = commentData.attachments && commentData.attachments.length > 0;
+        
+        return {
+          url: 'ticket-comment',
+          method: 'PUT',
+          body: {
+            ...commentData,
+            action: isAttachmentUpdate ? 'updateAttachments' : 'update'
+          },
+        };
+      },
       invalidatesTags: ['TicketComment'],
     }),
 
@@ -87,14 +95,14 @@ export const ticketCommentApi = baseApi.injectEndpoints({
         
         // Return a properly configured request
         return {
-          url: 'file-upload',
+          url: 'api/file-upload',
           method: 'POST',
           body: formData,
           // CRITICAL FIX: Don't set any Content-Type header manually!
           // Let the browser set it automatically with boundary parameters
           formData: true,
           // This is important for RTK Query to not mess with the Content-Type
-          prepareHeaders: (headers) => {
+          prepareHeaders: (headers: Headers) => {
             // Explicitly REMOVE any Content-Type header that might be set
             // The browser will add the correct one with boundary
             headers.delete('Content-Type');

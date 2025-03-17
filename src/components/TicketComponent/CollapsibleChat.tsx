@@ -1,7 +1,7 @@
 // src/components/TicketComponent/CollapsibleChat.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { MessageCircle, X, Minimize2, Maximize2, MessagesSquare } from 'lucide-react';
@@ -22,6 +22,13 @@ interface CollapsibleChatProps {
   };
 }
 
+// Define the comment type to fix TypeScript errors
+interface Comment {
+  _id: string;
+  user: { _id: string };
+  createdAt: string;
+}
+
 const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
   ticketId,
   userId,
@@ -31,12 +38,27 @@ const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastReadTime, setLastReadTime] = useState<Date | null>(null);
+
+  // Use a ref to track if we've processed the comments data
+  const processedCommentsRef = useRef(false);
+  
+  // Memoize query parameters to prevent unnecessary re-fetches
+  const queryParams = useMemo(() => ({ 
+    ticketId 
+  }), [ticketId]);
   
   // Get comments data to track unread messages
-  const { data: commentsData = {}, isLoading: commentsLoading } = useGetTicketCommentsQuery({ 
-    ticketId 
+  const { 
+data: commentsData, 
+isLoading: commentsLoading 
+} = useGetTicketCommentsQuery(queryParams, {
+    // Disable automatic polling/refetching to prevent multiple calls
+    pollingInterval: 0,
+    refetchOnMountOrArgChange: false
   });
-  
+  /* console.log("callling...",{ticketId,
+    userId,
+    currentUser,commentsData})
   // Update unread count when new comments come in
   useEffect(() => {
     if (commentsData?.data) {
@@ -68,7 +90,8 @@ const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
         }
       }
     }
-  }, [commentsData?.data, isOpen, isMinimized, lastReadTime, userId]);
+  }, []);
+ */
   
   // When opening the chat, mark all messages as read
   useEffect(() => {
@@ -77,6 +100,46 @@ const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
       setUnreadCount(0);
     }
   }, [isOpen, isMinimized]);
+  
+  // Update unread count when new comments come in - with proper dependencies
+  useEffect(() => {
+    // Skip if we don't have comments data yet or if we've already processed this data
+    if (!commentsData?.data || processedCommentsRef.current) {
+      return;
+    }
+    
+    // Mark that we've processed this data
+    processedCommentsRef.current = true;
+    
+    // If the chat is open, mark messages as read
+    if (isOpen && !isMinimized) {
+      setLastReadTime(new Date());
+      setUnreadCount(0);
+      return;
+    }
+    
+    // Otherwise, count unread messages (created after lastReadTime)
+    if (lastReadTime) {
+      const newMessages = commentsData?.data?.filter(
+        (comment: Comment) => 
+           new Date(comment.createdAt) > lastReadTime &&
+          comment.user._id !== userId
+      );
+      setUnreadCount(newMessages.length);
+    } else {
+        // If first time loading, mark all as read if chat is open
+      if (isOpen && !isMinimized) {
+        setLastReadTime(new Date());
+      } else {
+        // Otherwise, count all messages from others as unread
+        const unreadMessages = commentsData?.data?.filter(
+          (comment: Comment) => comment.user._id !== userId
+        );
+        setUnreadCount(unreadMessages.length);
+      }
+    }
+    
+  }, [commentsData]);
   
   const toggleChat = () => {
     if (!isOpen) {
@@ -102,8 +165,8 @@ const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
                 opacity: 1, 
                 y: 0, 
                 scale: 1,
-                height: isMinimized ? 'auto' : '70vh',
-                width: isMinimized ? 'auto' : '400px',
+                height: isMinimized ? '60px' : '70vh',
+                width: '400px',
               }}
               exit={{ opacity: 0, y: 20, scale: 0.9 }}
               transition={{ duration: 0.2 }}
@@ -138,7 +201,7 @@ const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
                 <AnimatePresence>
                   {!isMinimized && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       className="flex-1 overflow-hidden"
@@ -148,6 +211,7 @@ const CollapsibleChat: React.FC<CollapsibleChatProps> = ({
                           ticketId={ticketId}
                           userId={userId}
                           roomId={`ticket-${ticketId}`}
+                          socketCurrentUser={currentUser}
                           currentUser={currentUser}
                           isLoading={commentsLoading}
                         />

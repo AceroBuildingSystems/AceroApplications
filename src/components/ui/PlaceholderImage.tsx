@@ -1,40 +1,44 @@
+// src/components/ui/PlaceholderImage.tsx
 import React from 'react';
+import { cn } from '@/lib/utils';
+import { FileImage, File } from 'lucide-react';
 
 interface PlaceholderImageProps {
   className?: string;
   fileName?: string;
+  fileType?: string;
 }
 
+/**
+ * A placeholder component to display when images fail to load
+ */
 const PlaceholderImage: React.FC<PlaceholderImageProps> = ({ 
-  className = "max-w-[200px] max-h-[200px] rounded-lg",
-  fileName
+  className,
+  fileName,
+  fileType
 }) => {
+  // Determine if it's an image type
+  const isImage = fileType?.startsWith('image/') || 
+                 fileName?.match(/\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i);
+
   return (
     <div 
-      className={`flex items-center justify-center bg-gray-200 ${className}`}
-      style={{ minHeight: '100px', minWidth: '100px' }}
+      className={cn(
+        "flex flex-col items-center justify-center bg-gray-100 rounded-md p-4",
+        className
+      )}
     >
-      <div className="flex flex-col items-center text-gray-500 p-4 text-center">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          className="mb-2"
-        >
-          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-          <circle cx="8.5" cy="8.5" r="1.5"></circle>
-          <polyline points="21 15 16 10 5 21"></polyline>
-        </svg>
-        <span className="text-xs">
-          {fileName ? `Unable to load ${fileName}` : 'Image not available'}
-        </span>
-      </div>
+      {isImage ? (
+        <FileImage className="h-10 w-10 text-gray-400" />
+      ) : (
+        <File className="h-10 w-10 text-gray-400" />
+      )}
+      
+      {fileName && (
+        <p className="mt-2 text-xs text-gray-500 text-center truncate max-w-full">
+          {fileName}
+        </p>
+      )}
     </div>
   );
 };

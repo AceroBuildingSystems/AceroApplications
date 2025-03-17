@@ -26,9 +26,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import TicketComponent from './TicketComponent';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Badge } from '@/components/ui/badge';
 
 // Define column types with proper typing
 interface Ticket {
@@ -68,6 +69,7 @@ interface Column {
   status: string;
   tickets: Ticket[];
   color: string;
+  icon: React.ReactNode;
 }
 
 interface TicketBoardComponentProps {
@@ -76,29 +78,16 @@ interface TicketBoardComponentProps {
   userId: string;
 }
 
-// Column header emojis/icons to make it more visual
-const columnIcons = {
-  new: '🆕',
-  assigned: '👤',
-  inProgress: '⚙️',
-  resolved: '✅',
-  closed: '🔒'
-};
-
 // Droppable container component
-const DroppableColumn = ({ id, children, color }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: id
-  });
-
+const DroppableColumn = ({ id, children, color, isOver }) => {
   return (
     <div 
-      ref={setNodeRef}
-      className={`space-y-3 min-h-[500px] p-2 rounded-md transition-all duration-200
-                  ${isOver ? `bg-${color}-50 ring-2 ring-${color}-300` : ''}`}
+      className={`space-y-3 min-h-[300px] p-3 rounded-xl transition-all duration-200 
+                ${isOver ? `bg-${color}-50 ring-2 ring-${color}-200` : ''}`}
       style={{
         background: isOver ? `var(--${color}-50)` : 'transparent',
-        boxShadow: isOver ? `0 0 0 2px var(--${color}-200)` : 'none'
+        boxShadow: isOver ? `0 0 0 2px var(--${color}-200)` : 'none',
+        transition: 'all 0.2s ease-in-out'
       }}
     >
       {children}
@@ -123,7 +112,6 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [selectedAssignee, setSelectedAssignee] = useState('');
   const [ticketToAssign, setTicketToAssign] = useState<Ticket | null>(null);
   const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [animatingTicketId, setAnimatingTicketId] = useState<string | null>(null);
   const [animationComplete, setAnimationComplete] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -133,7 +121,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 10, // Drag starts after moving 10px (helps distinguish from clicks)
+        distance: 8, // Drag starts after moving 8px (helps distinguish from clicks)
       },
     }),
     useSensor(KeyboardSensor)
@@ -154,60 +142,67 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         title: 'New',
         status: 'NEW',
         tickets: [],
-        color: 'indigo'
+        color: 'blue',
+        icon: <AlertCircle className="h-4 w-4 text-blue-600" />
       },
       assigned: {
         id: 'assigned',
         title: 'Assigned',
         status: 'ASSIGNED',
         tickets: [],
-        color: 'violet'
+        color: 'indigo',
+        icon: <Info className="h-4 w-4 text-indigo-600" />
       },
       inProgress: {
         id: 'inProgress',
         title: 'In Progress',
         status: 'IN_PROGRESS',
         tickets: [],
-        color: 'amber'
+        color: 'amber',
+        icon: <Info className="h-4 w-4 text-amber-600" />
       },
       resolved: {
         id: 'resolved',
         title: 'Resolved',
         status: 'RESOLVED',
         tickets: [],
-        color: 'emerald'
+        color: 'green',
+        icon: <Info className="h-4 w-4 text-green-600" />
       },
       closed: {
         id: 'closed',
         title: 'Closed',
         status: 'CLOSED',
         tickets: [],
-        color: 'gray'
+        color: 'gray',
+        icon: <Info className="h-4 w-4 text-gray-600" />
       }
     };
 
     // Distribute tickets to columns based on status
-    tickets.forEach(ticket => {
-      switch (ticket.status.toUpperCase()) {
-        case 'NEW':
-          initialColumns.new.tickets.push(ticket);
-          break;
-        case 'ASSIGNED':
-          initialColumns.assigned.tickets.push(ticket);
-          break;
-        case 'IN_PROGRESS':
-          initialColumns.inProgress.tickets.push(ticket);
-          break;
-        case 'RESOLVED':
-          initialColumns.resolved.tickets.push(ticket);
-          break;
-        case 'CLOSED':
-          initialColumns.closed.tickets.push(ticket);
-          break;
-        default:
-          initialColumns.new.tickets.push(ticket);
-      }
-    });
+    if (tickets && tickets.length > 0) {
+      tickets.forEach(ticket => {
+        switch (ticket.status.toUpperCase()) {
+          case 'NEW':
+            initialColumns.new.tickets.push(ticket);
+            break;
+          case 'ASSIGNED':
+            initialColumns.assigned.tickets.push(ticket);
+            break;
+          case 'IN_PROGRESS':
+            initialColumns.inProgress.tickets.push(ticket);
+            break;
+          case 'RESOLVED':
+            initialColumns.resolved.tickets.push(ticket);
+            break;
+          case 'CLOSED':
+            initialColumns.closed.tickets.push(ticket);
+            break;
+          default:
+            initialColumns.new.tickets.push(ticket);
+        }
+      });
+    }
 
     updateColumnsState(initialColumns);
   }, [tickets]);
@@ -386,7 +381,6 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     setAnimationComplete(false);
     
     // Create deep copies of the state
-    const originalColumns = JSON.parse(JSON.stringify(columns));
     const newColumns = JSON.parse(JSON.stringify(columns));
     
     // Remove from source column
@@ -434,12 +428,22 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     }
   };
 
-  // Handle navigating to ticket details
-  const handleTicketClick = (ticketId: string) => {
-    if (activeDragId) return; // Don't navigate during drag operations
-    router.push(`/dashboard/ticket/${ticketId}`);
+  // Wrapper for DroppableColumn to handle useDroppable context
+  const DroppableColumnWrapper = ({ columnId, children, color }) => {
+    const { setNodeRef, isOver } = useDroppable({
+      id: columnId
+    });
+  
+    return (
+      <div ref={setNodeRef}>
+        <DroppableColumn id={columnId} color={color} isOver={isOver}>
+          {children}
+        </DroppableColumn>
+      </div>
+    );
   };
 
+  // Update columns state
   const updateColumnsState = (newColumns) => {
     // Schedule state update for next frame to avoid flicker
     requestAnimationFrame(() => {
@@ -449,7 +453,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   
   return (
     <>
-      <div className="flex overflow-x-auto gap-4 pb-6 pt-2 pr-2">
+      <div className="flex overflow-x-auto pb-6 pt-2 pr-2 gap-5 -mx-1 px-1">
         <DndContext 
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -457,59 +461,65 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           onDragEnd={handleDragEnd}
         >
           {Object.entries(columns).map(([columnId, column]) => (
-            <div key={columnId} className="min-w-[300px] flex-shrink-0">
-              <Card className="h-full border border-gray-200 shadow-sm hover:shadow transition-shadow">
-                <CardHeader className={`pb-2 border-b border-${column.color}-100`}>
+            <motion.div 
+              key={columnId} 
+              className="min-w-[320px] w-[320px] flex-shrink-0"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: parseInt(columnId[0]) * 0.1 }}
+            >
+              <Card className="h-full shadow-md border-t-4" style={{ borderTopColor: `var(--${column.color}-500)` }}>
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center">
-                      <span className="mr-2">{columnIcons[columnId]}</span>
+                    <CardTitle className="text-base flex items-center">
+                      <span className="mr-2">{column.icon}</span>
                       <span>{column.title}</span>
                     </CardTitle>
-                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-medium bg-${column.color}-100 text-${column.color}-800 ml-2`}>
+                    <Badge 
+                      variant="secondary" 
+                      className={`bg-${column.color}-50 text-${column.color}-700 hover:bg-${column.color}-100`}
+                      style={{
+                        backgroundColor: `var(--${column.color}-50)`,
+                        color: `var(--${column.color}-700)`,
+                      }}
+                    >
                       {column.tickets.length}
-                    </div>
+                    </Badge>
                   </div>
-                  <CardDescription className="text-xs">
+                  <CardDescription className="text-xs mt-1">
                     {getColumnDescription(columnId)}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-0 h-[calc(100%-70px)]">
+                <CardContent className="p-3 max-h-[75vh] overflow-y-auto">
                   {/* The droppable column container */}
-                  <DroppableColumn id={columnId} color={column.color}>
+                  <DroppableColumnWrapper columnId={columnId} color={column.color}>
                     <SortableContext 
                       items={column.tickets.map(t => t._id)} 
                       strategy={verticalListSortingStrategy}
                     >
                       <AnimatePresence>
                         {column.tickets.map(ticket => (
-                          <motion.div
+                          <SortableTicketItem 
                             key={ticket._id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <SortableTicketItem 
-                              id={ticket._id}
-                              ticket={ticket}
-                              onTicketClick={handleTicketClick}
-                              columnColor={column.color}
-                            />
-                          </motion.div>
+                            id={ticket._id}
+                            ticket={ticket}
+                            onTicketClick={onTicketClick}
+                            columnColor={column.color}
+                          />
                         ))}
                       </AnimatePresence>
                       
                       {column.tickets.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-32 mt-6 text-gray-400 text-center px-4">
-                          <p className="text-sm mb-2">No tickets in this column</p>
+                        <div className="flex flex-col items-center justify-center h-32 mt-6 text-gray-400 text-center px-4 border-2 border-dashed border-gray-200 rounded-lg">
+                          <p className="text-sm mb-2">No tickets</p>
                           <p className="text-xs">Drag tickets here to change their status</p>
                         </div>
                       )}
                     </SortableContext>
-                  </DroppableColumn>
+                  </DroppableColumnWrapper>
                 </CardContent>
               </Card>
-            </div>
+            </motion.div>
           ))}
           
           {/* Drag overlay to show what's being dragged */}
@@ -532,7 +542,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           >
             {(activeTicket && ((activeDragId && !animationComplete) || (!animationComplete && animatingTicketId))) ? (
               <div className="w-[300px] shadow-lg animated-ticket">
-                <Card className="w-full border-2 border-indigo-400">
+                <Card className="w-full border-2 border-indigo-400 bg-white">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div>
@@ -557,7 +567,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           <DialogHeader>
             <DialogTitle>Assign Ticket</DialogTitle>
             <DialogDescription>
-              Select a user to assign this ticket to
+              Select a team member to assign this ticket to
             </DialogDescription>
           </DialogHeader>
           
@@ -588,13 +598,13 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
               <Label>Assignee</Label>
               <Select onValueChange={setSelectedAssignee} value={selectedAssignee}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select user" />
+                  <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
                 <SelectContent>
                   {usersLoading ? (
                     <div className="flex justify-center items-center py-2">
                       <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      <span className="text-sm">Loading users...</span>
+                      <span className="text-sm">Loading team members...</span>
                     </div>
                   ) : (
                     usersData?.data?.map((user: any) => (

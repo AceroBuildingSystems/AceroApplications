@@ -1,14 +1,14 @@
 // src/components/TicketComponent/TicketChat.tsx
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useGetTicketCommentsQuery, useUploadFileMutation } from '@/services/endpoints/ticketCommentApi';
+import { useGetTicketCommentsQuery, useUploadFileMutation, useCreateTicketCommentMutation } from '@/services/endpoints/ticketCommentApi';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import DashboardLoader from '@/components/ui/DashboardLoader';
 import debounce from 'lodash/debounce';
@@ -70,7 +70,46 @@ interface TicketChatProps {
   roomId?: string;
   isLoading?: boolean;
   isMinimal?: boolean;  // New prop for minimal mode in the collapsible view
+  socketCurrentUser?: any; // Add this prop to pass to useSocketIo
 }
+
+// Memoized ConnectionStatus component to prevent re-renders
+const ConnectionStatusIndicator = memo(({ isConnected, isConnecting, isMinimal, reconnect }: {
+  isConnected: boolean;
+  isConnecting: boolean;
+  isMinimal: boolean;
+  reconnect: () => void;
+}) => {
+  if (isConnected) {
+    return (
+      <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 flex items-center gap-1 animate-fade-in">
+        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+        <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Connected</span>
+      </Badge>
+    );
+  }
+  
+  if (isConnecting) {
+    return (
+      <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 flex items-center gap-1 animate-pulse">
+        <Clock className="h-3 w-3 animate-spin" />
+        <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Connecting...</span>
+      </Badge>
+    );
+  }
+  
+  return (
+    <div className="flex items-center gap-1 ml-2">
+      <Badge variant="outline" className="bg-red-50 text-red-700 flex items-center gap-1">
+        <WifiOff className="h-3 w-3" />
+        <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Offline</span>
+      </Badge>
+      <Button variant="ghost" size="sm" onClick={reconnect} className="h-6 p-0 px-1">
+        <RefreshCw className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+});
 
 const TicketChat: React.FC<TicketChatProps> = ({
   ticketId,
@@ -78,7 +117,8 @@ const TicketChat: React.FC<TicketChatProps> = ({
   currentUser,
   roomId,
   isLoading: propLoading = false,
-  isMinimal = false
+  isMinimal = false,
+  socketCurrentUser
 }) => {
   // State
   const [message, setMessage] = useState('');
@@ -102,6 +142,9 @@ const TicketChat: React.FC<TicketChatProps> = ({
   
   // File upload mutation
   const [uploadFileMutation, { isLoading: isUploading }] = useUploadFileMutation();
+
+  // Create comment mutation for offline fallback
+  const [createTicketComment] = useCreateTicketCommentMutation();
   
   // Fetch team members for mentions
   const { data: teamMembersData = {}, isLoading: teamMembersLoading } = useGetMasterQuery({
@@ -110,7 +153,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
     sort: { firstName: 1 }
   });
 
-  const teamMembers = teamMembersData?.data || [];
+  const teamMembers: any[] = teamMembersData?.data || [];
   
   // Socket.io integration
   const { 
@@ -131,7 +174,8 @@ const TicketChat: React.FC<TicketChatProps> = ({
   } = useSocketIo({ 
     ticketId, 
     userId,
-    roomId
+    roomId,
+    currentUser: socketCurrentUser || currentUser
   });
   
   // Initialize socket messages with data from API
@@ -141,11 +185,16 @@ const TicketChat: React.FC<TicketChatProps> = ({
     }
   }, [commentsData?.data, updateMessages]);
   
-  // Scroll to bottom when new messages arrive
+  // Scroll to bottom when component mounts
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
+  }, []);
+  
+  // Scroll to bottom when new messages arrive with a slight delay
+  useEffect(() => {
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   }, [socketMessages]);
   
   // Mark unread messages as read
@@ -187,31 +236,44 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) return [];
     
+    console.log("Starting file upload with", selectedFiles.length, "files");
     const uploadedFiles = [];
     
     for (const file of selectedFiles) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('ticketId', ticketId);
-      formData.append('userId', userId);
-      
       try {
-        // Use your upload API endpoint
+        console.log("Uploading file:", file.name);
+        
+        // Create form data
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('ticketId', ticketId);
+        formData.append('userId', userId);
+      
+  
+        // Use direct fetch API for file upload
         const response = await fetch('/api/file-upload', {
           method: 'POST',
           body: formData,
+          // Let the browser set the Content-Type header with boundary
         });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed with status: ${response.status}`);
+        }
+
         
         const result = await response.json();
+        // Parse the response
+        console.log("Upload result:", result);
         
         if (result.status === 'success') {
           uploadedFiles.push(result.data);
-          notifyFileUpload?.(result.data);
+          console.log("File uploaded successfully:", result.data);
         } else {
           throw new Error(result.message || 'Upload failed');
         }
       } catch (error) {
-        console.error('File upload error:', error);
+        console.error('File upload error:', file.name, error);
         toast.error(`Failed to upload ${file.name}`);
       }
     }
@@ -315,11 +377,30 @@ const TicketChat: React.FC<TicketChatProps> = ({
       // Upload files first if any
       const uploadedFiles = await handleFileUpload();
       
+      console.log("Uploaded files:", uploadedFiles);
       // Extract mentions
       const mentionedUserIds = extractMentions(message);
       
-      // Send message via Socket.io
-      sendMessage(message, uploadedFiles, replyingTo?._id, mentionedUserIds);
+      // Send message via Socket.io with attachments
+      const messageId = sendMessage(message.trim(), uploadedFiles, replyingTo?._id, mentionedUserIds);
+      
+      // If socket is not connected, use API fallback
+      if (!isConnected) {
+        try {
+          // Create comment via API
+          await createTicketComment({
+            ticket: ticketId,
+            user: userId,
+            content: message,
+            attachments: uploadedFiles || [],
+            replyTo: replyingTo?._id,
+            mentions: mentionedUserIds,
+            tempId: messageId
+          });
+        } catch (error) {
+          console.error("API fallback error:", error);
+        }
+      }
       
       // Clear state
       setMessage('');
@@ -330,6 +411,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
       setTimeout(() => {
         try { refetchComments(); } catch (e) { /* Ignore if component unmounted */ }
       }, 1000);
+      
     } catch (error) {
       console.error("Message submission error:", error);
       toast.error("Failed to send message");
@@ -350,9 +432,12 @@ const TicketChat: React.FC<TicketChatProps> = ({
       groups[date].push(message);
     });
     
-    return Object.entries(groups).map(([date, messages]) => ({
+    // Sort dates in ascending order (oldest first)
+    const sortedDates = Object.keys(groups).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+    
+    return sortedDates.map(date => ({
       date,
-      messages
+      messages: groups[date].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) // Sort messages oldest first
     }));
   };
   
@@ -439,44 +524,6 @@ const TicketChat: React.FC<TicketChatProps> = ({
     }
   };
   
-  // Status component for connection status display
-  const ConnectionStatus = () => {
-    if (isConnected) {
-      return (
-        <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 flex items-center gap-1 animate-fade-in">
-          <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-          <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Connected</span>
-        </Badge>
-      );
-    }
-    
-    if (isConnecting) {
-      return (
-        <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 flex items-center gap-1 animate-pulse">
-          <Clock className="h-3 w-3 animate-spin" />
-          <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Connecting...</span>
-        </Badge>
-      );
-    }
-    
-    return (
-      <div className="flex items-center gap-1 ml-2">
-        <Badge variant="outline" className="bg-red-50 text-red-700 flex items-center gap-1">
-          <WifiOff className="h-3 w-3" />
-          <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Offline</span>
-        </Badge>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={reconnect} 
-          className="h-6 p-0 px-1"
-        >
-          <RefreshCw className="h-3 w-3" />
-        </Button>
-      </div>
-    );
-  };
-  
   return (
     <div className={cn("flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 shadow-sm bg-white", 
       isMinimal ? "max-h-[500px]" : "")
@@ -487,7 +534,12 @@ const TicketChat: React.FC<TicketChatProps> = ({
           <Badge className="bg-indigo-100 text-indigo-800 font-medium px-2 py-1 h-6">
             Chat
           </Badge>
-          <ConnectionStatus />
+          <ConnectionStatusIndicator 
+            isConnected={isConnected}
+            isConnecting={isConnecting}
+            isMinimal={isMinimal}
+            reconnect={reconnect}
+          />
         </div>
         
         <div className="flex items-center gap-2">

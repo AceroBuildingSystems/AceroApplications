@@ -1,217 +1,314 @@
 // src/hooks/useSocketIo.ts
-import { useState, useEffect, useCallback, useRef } from 'react';
-import getSocketService, { ChatMessage, MessageReaction } from '@/lib/socketService';
+import { useState, useEffect, useRef, useCallback, useMemo, useLayoutEffect } from 'react';
+import io, { Socket } from 'socket.io-client';
+import { useMarkAsReadMutation } from '@/services/endpoints/ticketCommentApi';
 
 interface UseSocketIoProps {
   ticketId: string;
   userId: string;
   roomId?: string;
+  currentUser?: {
+    _id: string;
+    firstName?: string;
+    lastName?: string;
+    avatar?: string;
+  };
 }
 
-export const useSocketIo = ({ ticketId, userId, roomId }: UseSocketIoProps) => {
+/**
+ * Custom hook for Socket.io integration with the chat
+ * Optimized to prevent excessive re-renders during typing
+ */
+export const useSocketIo = ({ ticketId, userId, roomId, currentUser }: UseSocketIoProps) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [connectionError, setConnectionError] = useState<Error | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [joinedUsers, setJoinedUsers] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
-  const [leftUsers, setLeftUsers] = useState<{userId: string, username: string, timestamp: Date}[]>([]);
-  const [typingUsers, setTypingUsers] = useState<Record<string, boolean>>({});
-  const [onlineUsers, setOnlineUsers] = useState<Record<string, string>>({});
-  const socketServiceRef = useRef(getSocketService());
-  const [messageReactions, setMessageReactions] = useState<Record<string, any>>({});
+  const [isConnecting, setIsConnecting] = useState(true);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   
-  // Initialize socket service
-  useEffect(() => {
-    const socketService = getSocketService();
-    
-    // Set initial states
-    console.log("Socket connection status:", socketService.isConnected());
-    setIsConnected(socketService.isConnected());
-    setIsConnecting(!socketService.isConnected());
-    setMessages(socketService.getMessages());
-    setTypingUsers(socketService.getTypingUsers());
-    setOnlineUsers(socketService.getOnlineUsers());
-    setMessageReactions(socketService.getMessageReactions());
-    
-    // Join the ticket room
-    socketService.joinTicketRoom(ticketId, userId, roomId);
-    
-    // Set up event listeners
-    const handleConnected = () => {
+  // Use refs for frequently changing data to prevent re-renders
+  const typingUsersRef = useRef<Record<string, boolean>>({});
+  const onlineUsersRef = useRef<Record<string, string>>({});
+  
+  // Socket reference
+  const socketRef = useRef<Socket | null>(null);
+  
+  // Mutation for marking messages as read
+  const [markAsRead] = useMarkAsReadMutation();
+  
+  // Connect to socket
+  const connectSocket = useCallback(() => {
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    setIsConnecting(true);
+    setConnectionError(null);
+
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+    const socket = io(socketUrl, {
+      query: {
+        ticketId,
+        userId,
+        roomId: roomId || `ticket-${ticketId}`
+      },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
       setIsConnected(true);
       setIsConnecting(false);
       setConnectionError(null);
-      console.log("Socket connected event received");
-    };
-    
-    const handleDisconnected = () => {
+    });
+
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+
+    socket.on('connect_error', (err) => {
       setIsConnected(false);
       setIsConnecting(false);
-    };
-    
-    const handleReconnecting = () => {
-      console.log("Socket reconnecting...");
-      setIsConnecting(true);
-    };
-    
-    const handleReconnectFailed = () => {
-      setIsConnecting(false);
-      setConnectionError(new Error('Failed to reconnect after multiple attempts'));
-    };
-    
-    const handleConnectError = (error: Error) => {
-      setConnectionError(error);
-    };
-    
-    const handleError = (error: Error) => {
-      setConnectionError(error);
-    };
-    
-    const handleUserJoined = (data: {userId: string, username: string, timestamp: Date}) => {
-      console.log('User joined:', data);
-      if (data.userId !== userId) {
-        setJoinedUsers(prev => [...prev, data]);
-      }
-    };
-    
-    const handleUserLeft = (data: {userId: string, username: string, timestamp: Date}) => {
-      console.log('User left:', data);
-      if (data.userId !== userId) {
-        setLeftUsers(prev => [...prev, data]);
-      }
-    };
-    
-    const handleMessagesUpdated = (updatedMessages: ChatMessage[]) => {
-      console.log(`Received ${updatedMessages.length} messages`);
-      setMessages(updatedMessages);
-    };
-    
-    const handleTypingUpdated = (typingStatus: Record<string, boolean>) => {
-      setTypingUsers(typingStatus);
-    };
-    
-    const handleUserStatusUpdated = (statusObj: Record<string, string>) => {
-      setOnlineUsers(statusObj);
-    };
-    
-    const handleReactionsUpdated = (reactions: Record<string, MessageReaction>) => {
-      setMessageReactions(reactions);
-    console.log('Reactions updated:', reactions);
-    };
-    
-    // Register event listeners
-    socketService.on('connected', handleConnected);
-    socketService.on('disconnected', handleDisconnected);
-    socketService.on('reconnecting', handleReconnecting);
-    socketService.on('reconnect_failed', handleReconnectFailed);
-    socketService.on('connect_error', handleConnectError);
-    socketService.on('error', handleError);
-    socketService.on('user-joined', handleUserJoined);
-    socketService.on('user-left', handleUserLeft);
-    socketService.on('messages-updated', handleMessagesUpdated);
-    socketService.on('typing-updated', handleTypingUpdated);
-    socketService.on('user-status-updated', handleUserStatusUpdated);
-    socketService.on('reactions-updated', handleReactionsUpdated);
-    
-    socketServiceRef.current = socketService;
-    // Update connection state
-    setIsConnected(socketService.isConnected());
-    setIsConnecting(!socketService.isConnected());
-    
-    // Cleanup function
-    return () => {
-      socketService.off('connected', handleConnected);
-      socketService.off('disconnected', handleDisconnected);
-      socketService.off('reconnecting', handleReconnecting);
-      socketService.off('reconnect_failed', handleReconnectFailed);
-      socketService.off('connect_error', handleConnectError);
-      socketService.off('error', handleError);
-      socketService.off('user-joined', handleUserJoined);
-      socketService.off('user-left', handleUserLeft);
-      socketService.off('messages-updated', handleMessagesUpdated);
-      socketService.off('typing-updated', handleTypingUpdated);
-      socketService.off('user-status-updated', handleUserStatusUpdated);
-      socketService.off('reactions-updated', handleReactionsUpdated);
+      setConnectionError(err.message);
+    });
+
+    socket.on('message', (message) => {
+      setMessages(prev => [...prev, message]);
       
-      // Leave the room when component unmounts
-      socketService.leaveTicketRoom();
+      // Mark message as read if it's from someone else
+      if (message.user._id !== userId) {
+        markAsRead({ commentIds: [message._id], userId }).catch(console.error);
+      }
+    });
+
+    socket.on('messages', (data) => {
+      setMessages(data);
+    });
+
+    socket.on('typing', ({ userId, isTyping }) => {
+      typingUsersRef.current = {
+        ...typingUsersRef.current,
+        [userId]: isTyping
+      };
+    });
+
+    socket.on('online_users', (users) => {
+      onlineUsersRef.current = users;
+    });
+
+    socket.on('file_uploaded', (fileData) => {
+      // Find message and add file to attachments
+      setMessages(prev => {
+        const updatedMessages = JSON.parse(JSON.stringify(prev)); // Deep clone to ensure state update
+        const messageIndex = updatedMessages.findIndex(m => m._id === fileData.messageId);
+        
+        if (messageIndex !== -1) {
+          const message = updatedMessages[messageIndex];
+          message.attachments = [...(message.attachments || []), fileData];
+        }
+        
+        return updatedMessages;
+      });
+    });
+
+    return () => {
+      socket.disconnect();
     };
-  }, [ticketId, userId, roomId]);
-  
-  // Callback functions to interact with the socket
-  const updateMessages = useCallback((newMessages: ChatMessage[]) => {
-    const socketService = socketServiceRef.current;
-    socketService.updateMessages(newMessages);
+  }, [ticketId, userId, roomId, markAsRead]);
+
+  // Initialize connection on mount
+  useEffect(() => {
+    const cleanup = connectSocket();
+    return cleanup;
+  }, [connectSocket]);
+
+  // Function to update messages from external sources (e.g., API)
+  const updateMessages = useCallback((newMessages: any[]) => {
+    setMessages(newMessages);
   }, []);
+
+  // Send message
+  const sendMessage = useCallback((content: string, attachments = [], replyTo?: string, mentions = []) => {
+    if (!socketRef.current) {
+      console.warn('Socket not connected. Message will be queued.');
+      return null; // Return null to indicate socket is not available
+    }
   
-  const sendMessage = useCallback((content: string, attachments: any[] = [], replyTo?: string, mentions: string[] = []) => {
-    const socketService = socketServiceRef.current;
-    return socketService.sendMessage(content, attachments, replyTo, mentions);
-  }, []);
-  
+    // Generate temporary ID for optimistic updates
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    
+    // Add message to local state immediately (optimistic update)
+    const newMessage = {
+      _id: tempId,
+      ticket: ticketId,
+      user: {
+        _id: userId,
+        firstName: currentUser?.firstName || "User", // Add current user info for better UX
+        lastName: currentUser?.lastName || ""
+      },
+      content,
+      attachments: attachments || [],
+      replyTo,
+      replyToContent: replyTo ? messages.find(m => m._id === replyTo)?.content : undefined,
+      mentions,
+      isPending: !isConnected,
+      createdAt: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    
+    // Send to server
+    socketRef.current.emit('message', {
+      content: content.trim(),
+      ticketId,
+      userId,
+      replyTo,
+      attachments,
+      mentions,
+      tempId
+    });
+    
+    // For attachments, we'll rely on the file_uploaded event to add them
+    return tempId;
+  }, [ticketId, userId, isConnected, messages, currentUser]);
+
+  // Edit message
   const editMessage = useCallback((messageId: string, newContent: string) => {
-    const socketService = socketServiceRef.current;
-    socketService.editMessage(messageId, newContent);
-  }, []);
-  
+    socketRef.current?.emit('edit_message', {
+      messageId,
+      content: newContent,
+      ticketId,
+      userId
+    });
+
+    // Optimistic update
+    setMessages(prev => {
+      return prev.map(msg => {
+        if (msg._id === messageId) {
+          return { ...msg, content: newContent, isEdited: true };
+        }
+        return msg;
+      });
+    });
+  }, [ticketId, userId]);
+
+  // Add reaction to message
   const addReaction = useCallback((messageId: string, emoji: string) => {
-    const socketService = socketServiceRef.current;
-    socketService.addReaction(messageId, emoji);
-    
-    // Log for debugging
-    console.log(`Adding reaction ${emoji} to message ${messageId}`);
-  }, []);
-  
-  const removeReaction = useCallback((messageId: string, emoji: string) => {
-    const socketService = socketServiceRef.current;
-    socketService.removeReaction(messageId, emoji);
-    
-    // Log for debugging
-    console.log(`Removing reaction ${emoji} from message ${messageId}`);
-  }, []);
-  
+    socketRef.current?.emit('add_reaction', {
+      messageId,
+      emoji,
+      ticketId,
+      userId
+    });
+
+    // Optimistic update
+    setMessages(prev => {
+      return prev.map(msg => {
+        if (msg._id === messageId) {
+          const existingReaction = (msg.reactions || []).find(
+            (r:any) => r.emoji === emoji && r.userId === userId
+          );
+
+          if (existingReaction) {
+            // Remove reaction if already exists
+            return {
+              ...msg,
+              reactions: (msg.reactions || []).filter(
+                (r:any) => !(r.emoji === emoji && r.userId === userId)
+              )
+            };
+          } else {
+            // Add new reaction
+            return {
+              ...msg,
+              reactions: [
+                ...(msg.reactions || []),
+                { emoji, userId, createdAt: new Date().toISOString() }
+              ]
+            };
+          }
+        }
+        return msg;
+      });
+    });
+  }, [ticketId, userId]);
+
+  // Mark messages as read
   const markMessagesAsRead = useCallback((messageIds: string[]) => {
-    const socketService = socketServiceRef.current;
-    socketService.markMessagesAsRead(messageIds);
-  }, []);
-  
+    if (messageIds.length === 0) return;
+    
+    socketRef.current?.emit('mark_as_read', {
+      messageIds,
+      userId
+    });
+
+    // Optimistic update
+    setMessages(prev => {
+      return prev.map(msg => {
+        if (messageIds.includes(msg._id)) {
+          return {
+            ...msg,
+            readBy: [...(msg.readBy || []), userId]
+          };
+        }
+        return msg;
+      });
+    });
+
+    // Also update via API for persistence
+    markAsRead({ commentIds: messageIds, userId }).catch(console.error);
+  }, [userId, markAsRead]);
+
+  // Send typing status
   const sendTyping = useCallback((isTyping: boolean) => {
-    const socketService = socketServiceRef.current;
-    socketService.sendTyping(isTyping);
-  }, []);
-  
-  const updateStatus = useCallback((status: string) => {
-    const socketService = getSocketService();
-    socketService.updateStatus(status);
-  }, []);
-  
-  const notifyFileUpload = useCallback((fileInfo: any) => {
-    const socketService = socketServiceRef.current;
-    socketService.notifyFileUpload(fileInfo);
-  }, []);
-  
+    socketRef.current?.emit('typing', {
+      isTyping,
+      ticketId,
+      userId
+    });
+  }, [ticketId, userId]);
+
+  // Update user status
+  const updateStatus = useCallback((status: 'online' | 'away' | 'busy' | 'offline') => {
+    socketRef.current?.emit('update_status', {
+      status,
+      userId
+    });
+  }, [userId]);
+
+  // Notify about file upload
+  const notifyFileUpload = useCallback((fileData: any, messageId?: string) => {
+    socketRef.current?.emit('file_uploaded', {
+      ...fileData,
+      ticketId,
+      messageId: messageId || fileData.messageId || `temp-${Date.now()}`,
+      userId
+    });
+  }, [ticketId, userId]);
+
+  // Reconnect manually
   const reconnect = useCallback(() => {
-    console.log("Manually reconnecting socket...");
-    const socketService = socketServiceRef.current;
-    socketService.reconnect();
-    setIsConnecting(true);
-  }, []);
-  
+    connectSocket();
+  }, [connectSocket]);
+
+  // Use refs to expose values that change frequently without causing re-renders 
+  const typingUsers = useMemo(() => typingUsersRef.current, []);
+  const onlineUsers = useMemo(() => onlineUsersRef.current, []);
+
   return {
     isConnected,
     isConnecting,
     connectionError,
-    joinedUsers,
-    leftUsers,
     messages,
     typingUsers,
     onlineUsers,
-    messageReactions,
     updateMessages,
     sendMessage,
     editMessage,
     addReaction,
-    removeReaction,
     markMessagesAsRead,
     sendTyping,
     updateStatus,

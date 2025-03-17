@@ -166,7 +166,7 @@ export async function POST(request: NextRequest) {
         
         // Handle mentions and reply references
         if (data.mentions && Array.isArray(data.mentions)) {
-          data.mentions = data.mentions.map(id => 
+          data.mentions = data.mentions.map((id: string | mongoose.Types.ObjectId) => 
             typeof id === 'string' ? createMongooseObjectId(id) : id
           );
         }
@@ -201,6 +201,35 @@ export async function POST(request: NextRequest) {
           data
         });
         break;
+
+      case "updateAttachments":
+        if (!data._id) {
+          return NextResponse.json({ 
+            status: ERROR, 
+            message: "Comment ID is required for attachment updates", 
+            data: {} 
+          }, { status: 400 });
+        }
+        
+        if (!data.attachments || !Array.isArray(data.attachments)) {
+          return NextResponse.json({ 
+            status: ERROR, 
+            message: "Attachments array is required", 
+            data: {} 
+          }, { status: 400 });
+        }
+        
+        // Convert IDs to ObjectIds
+        if (data._id && typeof data._id === 'string') {
+          data._id = createMongooseObjectId(data._id);
+        }
+        
+        // Update the comment with the new attachments
+        response = await ticketCommentManager.updateTicketComment({
+          filter: { _id: data._id },
+          data: { $push: { attachments: { $each: data.attachments } } }
+        });
+        break;
         
       case "markAsRead":
         if (!data.commentIds || !Array.isArray(data.commentIds) || !data.userId) {
@@ -229,11 +258,18 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({ status: 'ERROR', message: response.message, data: {} }, { status: 500 });
   } catch (error) {
-    console.error("Error in ticket-comment route:", error);
+    const err = error as Error;
+    console.error("Error in ticket-comment route:", err);
     return NextResponse.json({ 
       status: 'ERROR', 
-      message: error.message || "Failed to process comment", 
+      message: err.message || "Failed to process comment",
       data: {} 
     }, { status: 500 });
   }
+}
+
+// Add PUT method to handle updates
+export async function PUT(request: NextRequest) {
+  // Reuse the POST handler for PUT requests
+  return POST(request);
 }

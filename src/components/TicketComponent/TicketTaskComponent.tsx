@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Trash, Loader2, AlertCircle, CheckSquare, Badge, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useCreateTicketTaskMutation, useUpdateTicketTaskMutation, useChangeTaskStatusMutation } from '@/services/endpoints/ticketTaskApi';
@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 import DashboardLoader from '@/components/ui/DashboardLoader';
 import { formatDistanceToNow } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
 
 interface TicketTaskComponentProps {
   ticketId: string;

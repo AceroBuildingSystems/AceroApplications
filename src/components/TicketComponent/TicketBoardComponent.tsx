@@ -12,7 +12,6 @@ import {
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
-  useDraggable,
   useDroppable
 } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -27,7 +26,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import TicketComponent from './TicketComponent';
-
+import { AlertCircle, Loader2 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Define column types with proper typing
 interface Ticket {
@@ -66,6 +67,7 @@ interface Column {
   title: string;
   status: string;
   tickets: Ticket[];
+  color: string;
 }
 
 interface TicketBoardComponentProps {
@@ -74,35 +76,35 @@ interface TicketBoardComponentProps {
   userId: string;
 }
 
+// Column header emojis/icons to make it more visual
+const columnIcons = {
+  new: '🆕',
+  assigned: '👤',
+  inProgress: '⚙️',
+  resolved: '✅',
+  closed: '🔒'
+};
+
 // Droppable container component
-const DroppableColumn = ({ id, children, title, count }) => {
+const DroppableColumn = ({ id, children, color }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: id
   });
 
   return (
-    <div className="min-w-[320px] flex flex-col h-full">
-      <div className="flex items-center justify-between mb-3 px-2">
-        <h3 className="font-semibold text-gray-700 flex items-center">
-          {title}
-          <span className="ml-2 text-xs font-medium bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">
-            {count}
-          </span>
-        </h3>
-      </div>
-      <div 
-        ref={setNodeRef}
-        className={`space-y-3 min-h-[500px] p-3 rounded-lg transition-all duration-200 
-                    flex-1 overflow-auto 
-                    ${isOver ? 'bg-blue-50/60 ring-2 ring-blue-200' : 'bg-gray-50/60 ring-1 ring-gray-100'}`}
-      >
-        {children}
-      </div>
+    <div 
+      ref={setNodeRef}
+      className={`space-y-3 min-h-[500px] p-2 rounded-md transition-all duration-200
+                  ${isOver ? `bg-${color}-50 ring-2 ring-${color}-300` : ''}`}
+      style={{
+        background: isOver ? `var(--${color}-50)` : 'transparent',
+        boxShadow: isOver ? `0 0 0 2px var(--${color}-200)` : 'none'
+      }}
+    >
+      {children}
     </div>
   );
 };
-
-
 
 const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({ 
   tickets, 
@@ -124,8 +126,8 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [animatingTicketId, setAnimatingTicketId] = useState<string | null>(null);
   const [animationComplete, setAnimationComplete] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const dropPositionRef = useRef({ x: 0, y: 0 });
-  const [isAssigning, setIsAssigning] = useState(false);
   
   // Set up sensors for drag and drop with activation constraints to help differentiate from clicks
   const sensors = useSensors(
@@ -151,31 +153,36 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         id: 'new',
         title: 'New',
         status: 'NEW',
-        tickets: []
+        tickets: [],
+        color: 'indigo'
       },
       assigned: {
         id: 'assigned',
         title: 'Assigned',
         status: 'ASSIGNED',
-        tickets: []
+        tickets: [],
+        color: 'violet'
       },
       inProgress: {
         id: 'inProgress',
         title: 'In Progress',
         status: 'IN_PROGRESS',
-        tickets: []
+        tickets: [],
+        color: 'amber'
       },
       resolved: {
         id: 'resolved',
         title: 'Resolved',
         status: 'RESOLVED',
-        tickets: []
+        tickets: [],
+        color: 'emerald'
       },
       closed: {
         id: 'closed',
         title: 'Closed',
         status: 'CLOSED',
-        tickets: []
+        tickets: [],
+        color: 'gray'
       }
     };
 
@@ -234,7 +241,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   // Update ticket status
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     try {
-      console.log("Updating ticket status:", { ticketId, newStatus, userId });
+      setErrorMessage(null);
       
       const response = await updateTicket({
         action: 'update',
@@ -245,11 +252,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         }
       }).unwrap();
       
-      console.log("Update ticket response:", response);
-      
-      // Check for both SUCCESS and Success (case insensitive)
       if (response && (response.status === 'SUCCESS' || response.status === 'Success')) {
-        toast.success(`Ticket status updated to ${newStatus}`);
+        const statusMessage = getStatusChangeMessage(newStatus);
+        toast.success(statusMessage);
         return true;
       } else {
         toast.error(`Failed to update status: ${response?.message || 'Unknown error'}`);
@@ -257,17 +262,30 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       }
     } catch (error) {
       console.error("Status update error:", error);
+      setErrorMessage("Failed to update ticket status. Please try again.");
       toast.error('Failed to update ticket status');
       return false;
+    }
+  };
+
+  // Get a user-friendly message based on the new status
+  const getStatusChangeMessage = (status: string) => {
+    switch(status) {
+      case 'NEW': return 'Ticket reverted to New status';
+      case 'ASSIGNED': return 'Ticket has been assigned';
+      case 'IN_PROGRESS': return 'Ticket is now in progress';
+      case 'RESOLVED': return 'Ticket has been resolved';
+      case 'CLOSED': return 'Ticket has been closed';
+      default: return `Ticket status updated to ${status}`;
     }
   };
 
   // Handle ticket assignment
   const handleAssignTicket = async () => {
     if (!selectedAssignee || !ticketToAssign) return;
-    setIsAssigning(true);
     
     try {
+      setErrorMessage(null);
       await assignTicket({
         ticketId: ticketToAssign._id,
         assigneeId: selectedAssignee,
@@ -288,9 +306,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       setTicketToAssign(null);
       setSelectedAssignee('');
       setPendingStatusChange(null);
-      setIsAssigning(false);
     } catch (error) {
       console.error("Assignment error:", error);
+      setErrorMessage("Failed to assign ticket. Please try again.");
       toast.error('Failed to assign ticket');
     }
   };
@@ -340,7 +358,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     const newStatus = columns[destinationColumnId].status;
     
     // Special case for assigning a ticket
-    if (destinationColumnId === 'assigned' && (!ticket?.assignee || sourceColumnId === 'new')) {
+    if (destinationColumnId === 'assigned' && (!ticket.assignee || sourceColumnId === 'new')) {
       setTicketToAssign(ticket);
       setPendingStatusChange(newStatus);
       setIsAssignDialogOpen(true);
@@ -415,6 +433,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       setAnimatingTicketId(null);
     }
   };
+
   // Handle navigating to ticket details
   const handleTicketClick = (ticketId: string) => {
     if (activeDragId) return; // Don't navigate during drag operations
@@ -428,133 +447,210 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     });
   };
   
-
-// Main component with improved styling
-return (
-  <>
-    <div className="flex overflow-x-auto gap-6 pb-6 pt-2">
-      <DndContext 
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {Object.entries(columns).map(([columnId, column]) => (
-          <div key={columnId} className="min-w-[320px] h-full">
-            <DroppableColumn id={columnId} title={column.title} count={column.tickets.length}>
-              <SortableContext 
-                items={column.tickets.map(t => t._id)} 
-                strategy={verticalListSortingStrategy}
-              >
-                {column.tickets.map(ticket => (
-                  <SortableTicketItem 
-                    key={ticket._id}
-                    id={ticket._id}
-                    ticket={ticket}
-                    onTicketClick={handleTicketClick}
-                  />
-                ))}
-              </SortableContext>
-              
-              {/* Empty state for columns with no tickets */}
-              {column.tickets.length === 0 && (
-                <div className="flex flex-col items-center justify-center h-32 border border-dashed border-gray-200 rounded-lg bg-white">
-                  <p className="text-sm text-gray-500">No tickets</p>
-                  <p className="text-xs text-gray-400">Drag tickets here</p>
-                </div>
-              )}
-            </DroppableColumn>
-          </div>
-        ))}
-        
-        {/* Drag overlay with enhanced styling */}
-        <DragOverlay 
-          className={`dnd-overlay ${!animationComplete ? 'fixed-position' : ''}`}
-          dropAnimation={animationComplete ? {
-            duration: 300,
-            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-          } : null}
-          style={
-            !animationComplete && animatingTicketId ? {
-              position: 'fixed',
-              left: `${dropPositionRef.current.x}px`,
-              top: `${dropPositionRef.current.y}px`,
-              margin: 0,
-              transform: 'none',
-              zIndex: 9999,
-            } : undefined
-          }
+  return (
+    <>
+      <div className="flex overflow-x-auto gap-4 pb-6 pt-2 pr-2">
+        <DndContext 
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
         >
-          {(activeTicket && ((activeDragId && !animationComplete) || (!animationComplete && animatingTicketId))) ? (
-            <div className="w-[300px] shadow-lg animated-ticket scale-105">
-              <Card className="w-full border-2 border-primary bg-white">
-                <CardHeader className="pb-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-primary">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
-                      <CardDescription className="text-base font-medium">{activeTicket.title}</CardDescription>
+          {Object.entries(columns).map(([columnId, column]) => (
+            <div key={columnId} className="min-w-[300px] flex-shrink-0">
+              <Card className="h-full border border-gray-200 shadow-sm hover:shadow transition-shadow">
+                <CardHeader className={`pb-2 border-b border-${column.color}-100`}>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center">
+                      <span className="mr-2">{columnIcons[columnId]}</span>
+                      <span>{column.title}</span>
+                    </CardTitle>
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-medium bg-${column.color}-100 text-${column.color}-800 ml-2`}>
+                      {column.tickets.length}
                     </div>
                   </div>
+                  <CardDescription className="text-xs">
+                    {getColumnDescription(columnId)}
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="pb-2">
-                  <p className="text-sm text-gray-700 mb-4 line-clamp-2">{activeTicket.description}</p>
+                <CardContent className="p-0 h-[calc(100%-70px)]">
+                  {/* The droppable column container */}
+                  <DroppableColumn id={columnId} color={column.color}>
+                    <SortableContext 
+                      items={column.tickets.map(t => t._id)} 
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <AnimatePresence>
+                        {column.tickets.map(ticket => (
+                          <motion.div
+                            key={ticket._id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <SortableTicketItem 
+                              id={ticket._id}
+                              ticket={ticket}
+                              onTicketClick={handleTicketClick}
+                              columnColor={column.color}
+                            />
+                          </motion.div>
+                        ))}
+                      </AnimatePresence>
+                      
+                      {column.tickets.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-32 mt-6 text-gray-400 text-center px-4">
+                          <p className="text-sm mb-2">No tickets in this column</p>
+                          <p className="text-xs">Drag tickets here to change their status</p>
+                        </div>
+                      )}
+                    </SortableContext>
+                  </DroppableColumn>
                 </CardContent>
               </Card>
             </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-    </div>
-    
-    {/* Styled Assign Ticket Dialog */}
-    <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-xl">{ticketToAssign?.assignee ? 'Reassign Ticket' : 'Assign Ticket'}</DialogTitle>
-          <DialogDescription>
-            Select a team member to assign this ticket to
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label>Assignee</Label>
-            <Select onValueChange={setSelectedAssignee} value={selectedAssignee}>
-              <SelectTrigger className="w-full border-gray-200 rounded-lg">
-                <SelectValue placeholder="Select team member" />
-              </SelectTrigger>
-              <SelectContent>
-                {usersData?.data?.map(user => (
-                  <SelectItem key={user._id} value={user._id}>
-                    <div className="flex items-center gap-2">
-                      <div className="bg-blue-100 text-blue-700 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
-                        {user.firstName[0]}{user.lastName[0]}
-                      </div>
-                      <span>{`${user.firstName} ${user.lastName}`}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)} className="rounded-lg">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleAssignTicket}
-            disabled={!selectedAssignee || isAssigning}
-            className="rounded-lg bg-primary hover:bg-primary/90"
+          ))}
+          
+          {/* Drag overlay to show what's being dragged */}
+          <DragOverlay 
+            className={`dnd-overlay ${!animationComplete ? 'fixed-position' : ''}`}
+            dropAnimation={animationComplete ? {
+              duration: 300,
+              easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+            } : null}
+            style={
+              !animationComplete && animatingTicketId ? {
+                position: 'fixed',
+                left: `${dropPositionRef.current.x}px`,
+                top: `${dropPositionRef.current.y}px`,
+                margin: 0,
+                transform: 'none',
+                zIndex: 9999,
+              } : undefined
+            }
           >
-            {isAssigning ? 'Assigning...' : 'Assign Ticket'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  </>
-);
+            {(activeTicket && ((activeDragId && !animationComplete) || (!animationComplete && animatingTicketId))) ? (
+              <div className="w-[300px] shadow-lg animated-ticket">
+                <Card className="w-full border-2 border-indigo-400">
+                  <CardHeader className="pb-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-indigo-600">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
+                        <CardDescription className="text-base font-medium">{activeTicket.title}</CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pb-2">
+                    <p className="text-sm text-gray-700 mb-4 line-clamp-2">{activeTicket.description}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </div>
+      
+      {/* Assignment Dialog */}
+      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Ticket</DialogTitle>
+            <DialogDescription>
+              Select a user to assign this ticket to
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {errorMessage && (
+              <Alert variant="destructive" className="text-sm">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+            
+            {ticketToAssign && (
+              <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                <p className="font-medium text-sm">{ticketToAssign.title}</p>
+                <p className="text-xs text-gray-500 mt-1 line-clamp-1">{ticketToAssign.description}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge variant="outline" className="text-xs">
+                    {ticketToAssign.department?.name}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {ticketToAssign.category?.name}
+                  </Badge>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <Label>Assignee</Label>
+              <Select onValueChange={setSelectedAssignee} value={selectedAssignee}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  {usersLoading ? (
+                    <div className="flex justify-center items-center py-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span className="text-sm">Loading users...</span>
+                    </div>
+                  ) : (
+                    usersData?.data?.map((user: any) => (
+                      <SelectItem key={user._id} value={user._id}>
+                        {`${user.firstName} ${user.lastName}`}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter className="flex space-x-2 justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsAssignDialogOpen(false);
+                setTicketToAssign(null);
+                setPendingStatusChange(null);
+                setErrorMessage(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAssignTicket}
+              disabled={!selectedAssignee}
+              className="relative"
+            >
+              {usersLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                'Assign Ticket'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
+
+// Helper function to get column descriptions
+function getColumnDescription(columnId: string): string {
+  switch(columnId) {
+    case 'new': return 'Newly created, unassigned tickets';
+    case 'assigned': return 'Tickets assigned but not started';
+    case 'inProgress': return 'Tickets currently being worked on';
+    case 'resolved': return 'Completed tickets awaiting closure';
+    case 'closed': return 'Finalized tickets (read-only)';
+    default: return '';
+  }
+}
 
 export default TicketBoardComponent;

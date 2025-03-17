@@ -41,6 +41,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const [taskEfforts, setTaskEfforts] = useState('1');
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   
   // Debug information
   useEffect(() => {
@@ -190,109 +191,199 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
     }
   };
   
-  // Check if creating/editing tasks is allowed based on ticket status
+  // Toggle task expanded state
+  const toggleTaskExpanded = (taskId: string) => {
+    setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
+  };
+  
+  // Can create tasks based on ticket status
   const canCreateTasks = canEdit && ['NEW', 'ASSIGNED', 'IN_PROGRESS'].includes(ticketStatus);
   
+  // Calculate total progress
+  const calculateTotalProgress = () => {
+    if (tasks.length === 0) return 0;
+    
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.status === 'COMPLETED').length;
+    const progressSum = tasks.reduce((sum, task) => sum + (task.progress || 0), 0);
+    
+    return Math.round(progressSum / totalTasks);
+  };
+  
   return (
-    <Card>
-      <CardContent className="p-4">
+    <Card className="border-none shadow-md overflow-hidden">
+      <CardContent className="p-0">
+        <div className="bg-gray-50/70 border-b p-4 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800">Tasks</h3>
+            <p className="text-sm text-gray-600">Break down this ticket into manageable tasks</p>
+          </div>
+          
+          {canCreateTasks && (
+            <Button 
+              onClick={() => handleOpenDialog()}
+              className="rounded-lg bg-primary hover:bg-primary/90 shadow-sm"
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Task
+            </Button>
+          )}
+        </div>
+        
         <DashboardLoader loading={isLoading}>
-          <div className="space-y-6">
-            {canCreateTasks && (
-              <div className="mb-4">
-                <Button 
-                  onClick={() => handleOpenDialog()}
-                  className="w-full"
-                  variant="outline"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Task
-                </Button>
-              </div>
-            )}
-            
+          <div className="divide-y divide-gray-100">
             {tasks.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No tasks created yet. Break down this ticket into manageable tasks!
+              <div className="text-center py-16 px-4 bg-white">
+                <CheckSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-lg font-medium text-gray-700 mb-2">No tasks created yet</p>
+                <p className="text-gray-500 mb-6 max-w-md mx-auto">Break down this ticket into smaller, manageable tasks to track progress more effectively.</p>
+                {canCreateTasks && (
+                  <Button 
+                    onClick={() => handleOpenDialog()}
+                    variant="outline"
+                    className="rounded-lg border-gray-200 hover:border-primary hover:text-primary"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create First Task
+                  </Button>
+                )}
               </div>
             ) : (
-              <div className="space-y-4">
-                {tasks.map((task) => (
-                  <div 
-                    key={task._id} 
-                    className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Checkbox 
-                        checked={task.status === 'COMPLETED'}
-                        onCheckedChange={() => handleToggleTaskStatus(task)}
-                        disabled={!canEdit || isChangingStatus}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className={`font-medium ${task.status === 'COMPLETED' ? 'line-through text-gray-500' : ''}`}>
-                              {task.title}
-                            </h4>
+              <div>
+                {/* Overall progress */}
+                <div className="p-4 bg-white border-b">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">Overall Progress</span>
+                    <span className="text-sm font-semibold text-primary">{calculateTotalProgress()}%</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2.5">
+                    <div 
+                      className="bg-primary h-2.5 rounded-full transition-all duration-300" 
+                      style={{ width: `${calculateTotalProgress()}%` }}
+                    ></div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>{tasks.filter(t => t.status === 'COMPLETED').length} of {tasks.length} tasks completed</span>
+                    <span>Total effort: {tasks.reduce((sum, task) => sum + (task.efforts || 1), 0)} points</span>
+                  </div>
+                </div>
+                
+                {/* Task list */}
+                <div className="space-y-0 divide-y divide-gray-100">
+                  {tasks.map((task) => (
+                    <div 
+                      key={task._id} 
+                      className={cn(
+                        "px-4 py-3 transition-colors",
+                        task.status === 'COMPLETED' ? "bg-gray-50/70" : "bg-white",
+                        expandedTaskId === task._id ? "bg-blue-50/50" : ""
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Checkbox 
+                          checked={task.status === 'COMPLETED'}
+                          onCheckedChange={() => handleToggleTaskStatus(task)}
+                          disabled={!canEdit || isChangingStatus}
+                          className={cn(
+                            "mt-1",
+                            task.status === 'COMPLETED' ? "text-primary border-primary" : ""
+                          )}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <button 
+                              className="text-left group"
+                              onClick={() => toggleTaskExpanded(task._id)}
+                            >
+                              <h4 className={cn(
+                                "font-medium text-sm transition-colors",
+                                task.status === 'COMPLETED' ? "line-through text-gray-500" : "text-gray-800 group-hover:text-primary"
+                              )}>
+                                {task.title}
+                              </h4>
+                            </button>
+                            <div className="flex items-center space-x-2 ml-2">
+                              <Badge variant="outline" className={cn(
+                                "text-xs font-medium h-5",
+                                task.status === 'COMPLETED' 
+                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                              )}>
+                                {task.status || 'In Progress'}
+                              </Badge>
+                              {canEdit && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleOpenDialog(task)}
+                                  className="h-7 w-7 rounded-full p-0 hover:bg-gray-100"
+                                >
+                                  <Edit className="h-3 w-3 text-gray-500" />
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Task description and details */}
+                          <div className={cn(
+                            "overflow-hidden transition-all duration-200",
+                            expandedTaskId === task._id ? "max-h-96 mt-2" : "max-h-0"
+                          )}>
                             {task.description && (
-                              <p className="mt-1 text-sm text-gray-700 whitespace-pre-line">
+                              <p className="mt-2 text-sm text-gray-700 whitespace-pre-line bg-white p-3 rounded-lg border border-gray-100">
                                 {task.description}
                               </p>
                             )}
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs text-gray-500">
-                              {formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}
-                            </span>
-                            {canEdit && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleOpenDialog(task)}
+                          
+                          <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div className="flex items-center gap-2 text-sm text-gray-500">
+                              <span className="inline-flex items-center gap-1">
+                                <CheckSquare className="h-3.5 w-3.5" />
+                                <span className="font-medium">{task.efforts || 1} pts</span>
+                              </span>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className="flex justify-between items-center text-xs mb-1">
+                                <span className="text-gray-500">Progress:</span>
+                                <span className="font-medium text-gray-700">{task.progress || 0}%</span>
+                              </div>
+                              <Progress 
+                                value={task.progress || 0} 
+                                className={cn(
+                                  "h-1.5", 
+                                  task.status === 'COMPLETED' ? "bg-gray-200" : "bg-gray-100"
+                                )}
+                                indicatorClassName={task.status === 'COMPLETED' ? "bg-emerald-500" : "bg-primary"}
+                              />
+                            </div>
+                            
+                            {canEdit && task.status !== 'COMPLETED' && (
+                              <Select
+                                value={task.progress?.toString()}
+                                onValueChange={(value) => handleChangeProgress(task, parseInt(value))}
                               >
-                                Edit
-                              </Button>
+                                <SelectTrigger className="w-24 h-8 text-xs rounded-lg">
+                                  <SelectValue placeholder="Progress" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="0">0%</SelectItem>
+                                  <SelectItem value="25">25%</SelectItem>
+                                  <SelectItem value="50">50%</SelectItem>
+                                  <SelectItem value="75">75%</SelectItem>
+                                  <SelectItem value="100">100%</SelectItem>
+                                </SelectContent>
+                              </Select>
                             )}
                           </div>
                         </div>
-                        
-                        <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                          <div className="text-sm">
-                            <span className="text-gray-500">Effort:</span>{' '}
-                            <span className="font-medium">{task.efforts || 1} points</span>
-                          </div>
-                          
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center text-sm mb-1">
-                              <span className="text-gray-500">Progress:</span>
-                              <span className="font-medium">{task.progress || 0}%</span>
-                            </div>
-                            <Progress value={task.progress || 0} className="h-2" />
-                          </div>
-                          
-                          {canEdit && task.status !== 'COMPLETED' && (
-                            <Select
-                              value={task.progress?.toString()}
-                              onValueChange={(value) => handleChangeProgress(task, parseInt(value))}
-                            >
-                              <SelectTrigger className="w-24">
-                                <SelectValue placeholder="Progress" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="0">0%</SelectItem>
-                                <SelectItem value="25">25%</SelectItem>
-                                <SelectItem value="50">50%</SelectItem>
-                                <SelectItem value="75">75%</SelectItem>
-                                <SelectItem value="100">100%</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
-                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -301,9 +392,9 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       
       {/* Task Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{selectedTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
+            <DialogTitle className="text-xl">{selectedTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
             <DialogDescription>
               {selectedTask 
                 ? 'Update the task details below' 
@@ -314,7 +405,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           
           <div className="space-y-4 py-4">
             {formError && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="rounded-lg">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
                 <AlertDescription>{formError}</AlertDescription>
@@ -330,10 +421,16 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 value={taskTitle}
                 onChange={(e) => setTaskTitle(e.target.value)}
                 placeholder="What needs to be done?"
-                className={!taskTitle.trim() ? "border-red-300" : ""}
+                className={cn(
+                  "rounded-lg",
+                  !taskTitle.trim() ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""
+                )}
               />
               {!taskTitle.trim() && (
-                <p className="text-sm text-red-500">Title is required</p>
+                <p className="text-sm text-red-500 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Title is required
+                </p>
               )}
             </div>
             
@@ -345,6 +442,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 onChange={(e) => setTaskDescription(e.target.value)}
                 placeholder="Add any details or instructions"
                 rows={3}
+                className="rounded-lg resize-none"
               />
             </div>
             
@@ -354,7 +452,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 value={taskEfforts}
                 onValueChange={setTaskEfforts}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-lg">
                   <SelectValue placeholder="Select effort" />
                 </SelectTrigger>
                 <SelectContent>
@@ -365,22 +463,20 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-            
-            {/* Debug information */}
-            <div className="text-xs text-gray-500 border-t pt-2">
-              <p>Ticket ID: {ticketId}</p>
-              <p>User ID: {userId}</p>
+              <p className="text-xs text-gray-500 ml-1">
+                Higher points indicate more complex tasks
+              </p>
             </div>
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={handleCloseDialog}>
+            <Button variant="outline" onClick={handleCloseDialog} className="rounded-lg">
               Cancel
             </Button>
             <Button 
               onClick={handleSubmitTask}
               disabled={!taskTitle.trim() || isCreating || isUpdating}
+              className="rounded-lg bg-primary hover:bg-primary/90"
             >
               {isCreating || isUpdating ? (
                 <>

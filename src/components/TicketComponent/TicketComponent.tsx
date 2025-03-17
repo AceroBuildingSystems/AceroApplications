@@ -27,19 +27,19 @@ interface TicketComponentProps {
 }
 
 const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, className }) => {
-  // Color mappings
+  // Status color mappings with more vibrant, accessible colors
   const statusColors = {
-    'NEW': 'bg-blue-100 text-blue-800',
-    'ASSIGNED': 'bg-indigo-100 text-indigo-800',
-    'IN_PROGRESS': 'bg-yellow-100 text-yellow-800',
-    'RESOLVED': 'bg-green-100 text-green-800',
-    'CLOSED': 'bg-gray-100 text-gray-800'
+    'NEW': 'bg-blue-100 text-blue-700 border border-blue-200',
+    'ASSIGNED': 'bg-indigo-100 text-indigo-700 border border-indigo-200',
+    'IN_PROGRESS': 'bg-amber-100 text-amber-700 border border-amber-200',
+    'RESOLVED': 'bg-emerald-100 text-emerald-700 border border-emerald-200',
+    'CLOSED': 'bg-gray-100 text-gray-700 border border-gray-200'
   };
   
   const priorityColors = {
-    'HIGH': 'bg-red-100 text-red-800',
-    'MEDIUM': 'bg-orange-100 text-orange-800',
-    'LOW': 'bg-green-100 text-green-800'
+    'HIGH': 'bg-rose-100 text-rose-700 border border-rose-200',
+    'MEDIUM': 'bg-orange-100 text-orange-700 border border-orange-200',
+    'LOW': 'bg-emerald-100 text-emerald-700 border border-emerald-200'
   };
   
   const statusColor = statusColors[ticket.status.toUpperCase()] || statusColors.NEW;
@@ -47,52 +47,65 @@ const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, className }) 
   
   return (
     <TooltipProvider>
-      <Card className={cn("w-full shadow-sm hover:shadow-md transition-shadow overflow-hidden hover:cursor-pointer ", className)}>
-        {/* Card body with minimal padding */}
-        <div className="p-2.5">
+      <Card className={cn(
+        "w-full transition-all duration-150 overflow-hidden relative group",
+        "border border-gray-200 hover:border-primary/20",
+        "hover:shadow-md shadow-sm",
+        className
+      )}>
+        {/* Priority indicator stripe */}
+        <div className={cn(
+          "absolute left-0 top-0 bottom-0 w-1",
+          ticket.priority === 'HIGH' ? 'bg-rose-500' :
+          ticket.priority === 'MEDIUM' ? 'bg-orange-500' : 'bg-emerald-500'
+        )} />
+        
+        {/* Card body with improved padding */}
+        <div className="p-4 pl-6">
           {/* Header row */}
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-3">
             <Tooltip>
-              <TooltipTrigger className="text-xs font-medium text-blue-600">
-                TKT-{ticket._id.toString().substr(-8)}
+              <TooltipTrigger className="text-sm font-semibold text-primary hover:underline">
+                {ticket.ticketId || `TKT-${ticket._id.toString().substr(-8)}`}
               </TooltipTrigger>
-              <TooltipContent side="top">
-                <p>Created: {new Date(ticket.createdAt).toLocaleString()}</p>
-                <p>Last updated: {new Date(ticket.updatedAt).toLocaleString()}</p>
+              <TooltipContent side="top" className="bg-white shadow-md border border-gray-100 p-3 rounded-lg">
+                <p className="font-medium mb-1">Ticket Details</p>
+                <p className="text-xs text-gray-600">Created: {new Date(ticket.createdAt).toLocaleString()}</p>
+                <p className="text-xs text-gray-600">Updated: {new Date(ticket.updatedAt).toLocaleString()}</p>
               </TooltipContent>
             </Tooltip>
             
-            <div className="flex gap-1">
-              <Badge className={cn("text-[10px] py-0 h-4 px-1", statusColor)}>
+            <div className="flex gap-2">
+              <Badge className={cn("px-2 py-1 text-xs font-medium rounded-md", statusColor)}>
                 {ticket.status}
               </Badge>
-              <Badge className={cn("text-[10px] py-0 h-4 px-1", priorityColor)}>
+              <Badge className={cn("px-2 py-1 text-xs font-medium rounded-md", priorityColor)}>
                 {ticket.priority}
               </Badge>
             </div>
           </div>
           
           {/* Title */}
-          <h3 className="text-xs font-medium mb-1 line-clamp-1">
+          <h3 className="text-sm font-semibold mb-2 line-clamp-1 group-hover:text-primary transition-colors">
             {ticket.title}
           </h3>
           
           {/* Truncated description */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="text-xs text-gray-500 mb-1.5 line-clamp-1">{ticket.description}</p>
+              <p className="text-sm text-gray-600 mb-3 line-clamp-2">{ticket.description}</p>
             </TooltipTrigger>
-            <TooltipContent>
-              <p className="max-w-xs">{ticket.description}</p>
+            <TooltipContent className="max-w-md p-3 bg-white shadow-md border border-gray-100 rounded-lg">
+              <p className="text-sm text-gray-700">{ticket.description}</p>
             </TooltipContent>
           </Tooltip>
           
-          {/* Compact meta info */}
-          <div className="flex items-center text-[10px] text-gray-500 gap-2">
+          {/* Improved meta info with better spacing */}
+          <div className="flex items-center text-xs text-gray-500 gap-4 mb-3">
             <Tooltip>
-              <TooltipTrigger className="flex items-center gap-0.5">
-                <Tag size={10} className="opacity-70" />
-                <span className="truncate max-w-[4rem]">{ticket.category.name.split(' ')[0]}</span>
+              <TooltipTrigger className="flex items-center gap-1.5">
+                <Tag size={12} className="text-gray-400" />
+                <span className="truncate max-w-[8rem] font-medium">{ticket.category.name}</span>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Category: {ticket.category.name}</p>
@@ -100,9 +113,9 @@ const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, className }) 
             </Tooltip>
             
             <Tooltip>
-              <TooltipTrigger className="flex items-center gap-0.5">
-                <Clock size={10} className="opacity-70" />
-                <span className="truncate">{formatDistanceToNow(new Date(ticket.createdAt), {addSuffix: true})}</span>
+              <TooltipTrigger className="flex items-center gap-1.5">
+                <Clock size={12} className="text-gray-400" />
+                <span className="truncate font-medium">{formatDistanceToNow(new Date(ticket.createdAt), {addSuffix: true})}</span>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Created {new Date(ticket.createdAt).toLocaleString()}</p>
@@ -111,16 +124,16 @@ const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, className }) 
           </div>
           
           {/* Divider */}
-          <div className="my-1 border-t border-gray-100"></div>
+          <div className="border-t border-gray-100 my-2"></div>
           
-          {/* Ultra-compact attribution */}
-          <div className="flex items-center justify-between text-[10px] text-gray-600">
+          {/* User attribution with better visual presentation */}
+          <div className="flex items-center justify-between text-xs text-gray-600">
             <Tooltip>
-              <TooltipTrigger className="flex items-center gap-0.5">
-                <div className="flex items-center justify-center bg-gray-100 rounded-full w-3.5 h-3.5 text-[8px] font-bold">
+              <TooltipTrigger className="flex items-center gap-2">
+                <div className="flex items-center justify-center bg-gray-100 rounded-full w-5 h-5 text-[10px] font-bold">
                   {ticket.creator.firstName[0]}
                 </div>
-                <span>{ticket.creator.lastName}</span>
+                <span className="font-medium">{ticket.creator.lastName}</span>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Created by: {ticket.creator.firstName} {ticket.creator.lastName}</p>
@@ -129,13 +142,13 @@ const TicketComponent: React.FC<TicketComponentProps> = ({ ticket, className }) 
             
             {ticket.assignee && (
               <>
-                <span className="text-gray-300 mx-0.5">→</span>
+                <span className="text-gray-300 mx-2">→</span>
                 <Tooltip>
-                  <TooltipTrigger className="flex items-center gap-0.5">
-                    <div className="flex items-center justify-center bg-gray-100 rounded-full w-3.5 h-3.5 text-[8px] font-bold">
+                  <TooltipTrigger className="flex items-center gap-2">
+                    <div className="flex items-center justify-center bg-blue-100 text-blue-700 rounded-full w-5 h-5 text-[10px] font-bold">
                       {ticket.assignee.firstName[0]}
                     </div>
-                    <span>{ticket.assignee.lastName}</span>
+                    <span className="font-medium">{ticket.assignee.lastName}</span>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Assigned to: {ticket.assignee.firstName} {ticket.assignee.lastName}</p>

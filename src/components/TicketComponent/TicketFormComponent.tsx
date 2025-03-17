@@ -53,7 +53,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
     departmentId: selectedDepartment
   });
   
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm({
     resolver: zodResolver(ticketSchema),
     defaultValues: initialData ? {
       title: initialData.title,
@@ -67,6 +67,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
     }
   });
   
+  // Watch handlers remain the same
   // Watch for department changes
   const watchedDepartment = watch('department');
   
@@ -96,133 +97,199 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
   };
   
   return (
-    <Card className="w-full max-w-3xl mx-auto">
+    <Card className="w-full max-w-3xl mx-auto border-none shadow-lg overflow-hidden">
       <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <CardHeader>
-          <CardTitle>{isEdit ? 'Edit Ticket' : 'Create New Ticket'}</CardTitle>
-          <CardDescription>
+        <CardHeader className="pb-6 bg-gray-50/70">
+          <CardTitle className="text-2xl text-gray-800">{isEdit ? 'Edit Ticket' : 'Create New Ticket'}</CardTitle>
+          <CardDescription className="text-gray-600">
             {isEdit 
               ? 'Update the ticket details below' 
               : 'Fill in the details below to create a new support ticket'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6 pt-6">
+          {/* Title field */}
           <div className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium">
+            <label htmlFor="title" className="text-sm font-medium flex items-center text-gray-700">
               Title
+              <span className="text-red-500 ml-1">*</span>
             </label>
-            <Input
-              id="title"
-              placeholder="Enter a clear title for your issue"
-              {...register('title')}
-            />
-            {errors.title && (
-              <p className="text-sm text-red-500">{errors.title.message}</p>
-            )}
+            <div className="relative">
+              <Input
+                id="title"
+                placeholder="Enter a clear title for your issue"
+                {...register('title')}
+                className={cn(
+                  "rounded-lg border-gray-200 focus:border-primary focus:ring-primary",
+                  errors.title ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""
+                )}
+                aria-invalid={errors.title ? "true" : "false"}
+              />
+              {errors.title && (
+                <p className="text-sm text-red-500 mt-1 ml-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.title.message}
+                </p>
+              )}
+            </div>
           </div>
           
+          {/* Description field */}
           <div className="space-y-2">
-            <label htmlFor="description" className="text-sm font-medium">
+            <label htmlFor="description" className="text-sm font-medium flex items-center text-gray-700">
               Description
+              <span className="text-red-500 ml-1">*</span>
             </label>
-            <Textarea
-              id="description"
-              placeholder="Describe your issue"
-              rows={5}
-              className="resize-none"
-              {...register('description')}
-            />
-            {errors.description && (
-              <p className="text-sm text-red-500">{errors.description.message}</p>
-            )}
+            <div className="relative">
+              <Textarea
+                id="description"
+                placeholder="Describe your issue in detail"
+                rows={6}
+                className={cn(
+                  "resize-none rounded-lg border-gray-200 focus:border-primary focus:ring-primary",
+                  errors.description ? "border-red-300 focus:border-red-500 focus:ring-red-500" : ""
+                )}
+                {...register('description')}
+                aria-invalid={errors.description ? "true" : "false"}
+              />
+              {errors.description && (
+                <p className="text-sm text-red-500 mt-1 ml-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Department field */}
             <div className="space-y-2">
-              <label htmlFor="department" className="text-sm font-medium">
+              <label htmlFor="department" className="text-sm font-medium flex items-center text-gray-700">
                 Department
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <Select 
                 onValueChange={(value) => setValue('department', value)} 
                 defaultValue={initialData?.department?._id}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(
+                  "rounded-lg border-gray-200 focus:border-primary focus:ring-primary",
+                  errors.department ? "border-red-300" : ""
+                )}>
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg">
                   {departmentData?.data?.map((dept: any) => (
-                    <SelectItem key={dept._id} value={dept._id}>
+                    <SelectItem key={dept._id} value={dept._id} className="cursor-pointer">
                       {dept.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.department && (
-                <p className="text-sm text-red-500">{errors.department.message}</p>
+                <p className="text-sm text-red-500 mt-1 ml-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.department.message}
+                </p>
               )}
             </div>
             
+            {/* Category field */}
             <div className="space-y-2">
-              <label htmlFor="category" className="text-sm font-medium">
+              <label htmlFor="category" className="text-sm font-medium flex items-center text-gray-700">
                 Category
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <Select 
                 onValueChange={(value) => setValue('category', value)}
                 defaultValue={initialData?.category?._id}
                 disabled={!selectedDepartment}
               >
-                <SelectTrigger>
+                <SelectTrigger className={cn(
+                  "rounded-lg border-gray-200 focus:border-primary focus:ring-primary",
+                  errors.category ? "border-red-300" : "",
+                  !selectedDepartment ? "opacity-60" : ""
+                )}>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-lg">
                   {categoryData?.data?.map((cat: any) => (
-                    <SelectItem key={cat._id} value={cat._id}>
+                    <SelectItem key={cat._id} value={cat._id} className="cursor-pointer">
                       {cat.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               {errors.category && (
-                <p className="text-sm text-red-500">{errors.category.message}</p>
+                <p className="text-sm text-red-500 mt-1 ml-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  {errors.category.message}
+                </p>
               )}
               {!selectedDepartment && (
-                <p className="text-sm text-amber-500">Select a department first</p>
+                <p className="text-sm text-amber-500 mt-1 ml-1 flex items-center">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Select a department first
+                </p>
               )}
             </div>
             
+            {/* Priority field */}
             <div className="space-y-2">
-              <label htmlFor="priority" className="text-sm font-medium">
+              <label htmlFor="priority" className="text-sm font-medium flex items-center text-gray-700">
                 Priority
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <Select 
                 onValueChange={(value) => setValue('priority', value)}
                 defaultValue={initialData?.priority || 'MEDIUM'}
               >
-                <SelectTrigger>
+                <SelectTrigger className="rounded-lg border-gray-200 focus:border-primary focus:ring-primary">
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="LOW">Low</SelectItem>
-                  <SelectItem value="MEDIUM">Medium</SelectItem>
-                  <SelectItem value="HIGH">High</SelectItem>
+                <SelectContent className="rounded-lg">
+                  <SelectItem value="LOW" className="cursor-pointer">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 mr-2"></div>
+                      Low
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="MEDIUM" className="cursor-pointer">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
+                      Medium
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="HIGH" className="cursor-pointer">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-rose-500 mr-2"></div>
+                      High
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {errors.priority && (
-                <p className="text-sm text-red-500">{errors.priority.message}</p>
+                <p className="text-sm text-red-500 mt-1 ml-1">
+                  {errors.priority.message}
+                </p>
               )}
             </div>
             
+            {/* Due Date field */}
             <div className="space-y-2">
-              <label htmlFor="dueDate" className="text-sm font-medium">
+              <label htmlFor="dueDate" className="text-sm font-medium text-gray-700">
                 Due Date (Optional)
               </label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full justify-start text-left font-normal"
+                    className={cn(
+                      "w-full justify-start text-left font-normal rounded-lg border-gray-200",
+                      !watch('dueDate') ? "text-gray-500" : "text-gray-900"
+                    )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon className="mr-2 h-4 w-4 text-gray-500" />
                     {watch('dueDate') ? (
                       format(watch('dueDate'), 'PPP')
                     ) : (
@@ -230,25 +297,42 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 rounded-lg shadow-md" align="start">
                   <Calendar
                     mode="single"
                     selected={watch('dueDate')}
                     onSelect={(date) => setValue('dueDate', date)}
                     initialFocus
                     disabled={(date) => date < new Date()}
+                    className="rounded-lg border-none"
                   />
                 </PopoverContent>
               </Popover>
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline">
+        <CardFooter className="flex justify-between py-6 bg-gray-50/70">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="rounded-lg border-gray-200 hover:border-gray-300"
+            onClick={() => window.history.back()}
+          >
             Cancel
           </Button>
-          <Button type="submit">
-            {isEdit ? 'Update Ticket' : 'Create Ticket'}
+          <Button 
+            type="submit" 
+            className="rounded-lg bg-primary hover:bg-primary/90 shadow-sm"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {isEdit ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              isEdit ? 'Update Ticket' : 'Create Ticket'
+            )}
           </Button>
         </CardFooter>
       </form>

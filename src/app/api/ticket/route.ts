@@ -116,6 +116,11 @@ export async function POST(request: NextRequest) {
   if (data.department) data.department = createMongooseObjectId(data.department);
   if (data.category) data.category = createMongooseObjectId(data.category);
   if (data.assignee) data.assignee = createMongooseObjectId(data.assignee);
+  // Handle multiple assignees
+  if (data.assignees && Array.isArray(data.assignees)) {
+    data.assignees = data.assignees.map((id: string) => createMongooseObjectId(id));
+  }
+  
   if (data.addedBy) data.addedBy = createMongooseObjectId(data.addedBy);
   if (data.updatedBy) data.updatedBy = createMongooseObjectId(data.updatedBy);
 
@@ -143,6 +148,7 @@ export async function POST(request: NextRequest) {
             ...(data.department && { department: createMongooseObjectId(data.department) }),
             ...(data.category && { category: createMongooseObjectId(data.category) }),
             ...(data.assignee && { assignee: createMongooseObjectId(data.assignee) }),
+            ...(data.assignees && { assignees: data.assignees.map((id: string) => createMongooseObjectId(id)) }),
             ...(data.dueDate && { dueDate: data.dueDate }),
             updatedBy: createMongooseObjectId(data.updatedBy)
           }
@@ -155,6 +161,15 @@ export async function POST(request: NextRequest) {
         updatedBy: data.updatedBy
       });
       break;
+    case "updateAssignees":
+      response = await ticketManager.updateTicketAssignees({
+        ticketId: data.ticketId,
+        assignees: data.assignees,
+        updatedBy: data.updatedBy
+      });
+      break;
+      
+      
     case "changeStatus":
       response = await ticketManager.changeTicketStatus({
         ticketId: data.ticketId,

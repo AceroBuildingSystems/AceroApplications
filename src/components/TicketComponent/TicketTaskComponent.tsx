@@ -1,7 +1,7 @@
 // src/components/TicketComponent/TicketTaskComponent.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,15 +9,31 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash, Loader2, AlertCircle, CheckSquare, Badge, Edit } from 'lucide-react';
+import { Plus, Trash, Loader2, AlertCircle, CheckSquare, Badge, Edit, Calendar, Clock, RefreshCw, X, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useCreateTicketTaskMutation, useUpdateTicketTaskMutation, useChangeTaskStatusMutation } from '@/services/endpoints/ticketTaskApi';
 import { toast } from 'react-toastify';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
 import DashboardLoader from '@/components/ui/DashboardLoader';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format, isPast, isToday, addDays, addWeeks, addMonths, addYears, differenceInDays, isFuture, isBefore } from 'date-fns';
 import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
+// Define types for task completion history
+interface CompletionHistoryEntry {
+  date: string;
+  status: string;
+}
+
+
+
 
 interface TicketTaskComponentProps {
   ticketId: string;
@@ -40,21 +56,39 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskEfforts, setTaskEfforts] = useState('1');
+  const [taskDueDate, setTaskDueDate] = useState<Date>(addDays(new Date(), 1)); // Default to tomorrow
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringType, setRecurringType] = useState('WEEKLY');
+  const [recurringInterval, setRecurringInterval] = useState('1');
+  const [recurringEndDate, setRecurringEndDate] = useState<Date | null>(null);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [todayCompleted, setTodayCompleted] = useState<boolean>(false);
+  const [localTasks, setTasks] = useState<any[]>(tasks);
+  const [assignee, setAssignee] = useState<string | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [taskHistory, setTaskHistory] = useState<any[]>([]);
   
   // Debug information
   useEffect(() => {
     console.log("TicketTaskComponent mounted with ticketId:", ticketId);
     console.log("Current tasks:", tasks);
-  }, [ticketId, tasks]);
+  }, [ticketId, localTasks]);
+  
+  // Update localTasks when tasks prop changes
+  useEffect(() => {
+    setTasks(tasks);
+  }, [tasks]);
   
   const [createTask, { isLoading: isCreating }] = useCreateTicketTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTicketTaskMutation();
   const [changeStatus, { isLoading: isChangingStatus }] = useChangeTaskStatusMutation();
   
-  const handleOpenDialog = (task = null) => {
+  const { data: usersData, isLoading: usersLoading } = useGetUsersQuery();
+
+  const availableUsers = usersData || [];
+  const handleOpenDialog = (task: any = null) => {
     setFormError(null);
     
     if (task && typeof task === 'object') {
@@ -62,11 +96,25 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       setTaskTitle(task.title || '');
       setTaskDescription(task.description || '');
       setTaskEfforts((task.efforts || 1).toString());
+      setTaskDueDate(task.dueDate ? new Date(task.dueDate) : addDays(new Date(), 1));
+      setIsRecurring(task.isRecurring || false);
+      setRecurringType(task.recurringType || 'WEEKLY');
+      setRecurringInterval((task.recurringInterval || 1).toString());
+      setRecurringEndDate(task.recurringEndDate ? new Date(task.recurringEndDate) : null);
+      setAssignee(task.assignee?._id || null);
+      setTodayCompleted(task.todayCompleted || false);
     } else {
       setSelectedTask(null);
       setTaskTitle('');
       setTaskDescription('');
       setTaskEfforts('1');
+      setTaskDueDate(addDays(new Date(), 1));
+      setIsRecurring(false);
+      setRecurringType('WEEKLY');
+      setRecurringInterval('1');
+      setAssignee(null);
+      setRecurringEndDate(null);
+      setTodayCompleted(false);
     }
     setIsDialogOpen(true);
   };
@@ -83,6 +131,11 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       return false;
     }
     
+    if (!taskDueDate) {
+      setFormError("Due date is required");
+      return false;
+    }
+    
     if (!ticketId) {
       setFormError("Ticket ID is missing");
       console.error("Ticket ID is missing");
@@ -92,10 +145,27 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
     return true;
   };
   
+  // Calculate next recurring date based on current settings
+  const calculateNextRecurringDate = (baseDate: Date = new Date(), type = recurringType, intervalValue = recurringInterval) => {
+    const interval = parseInt(recurringInterval) || 1;
+    
+    switch (recurringType) {
+      case 'DAILY': return addDays(baseDate, interval);
+      case 'WEEKLY': return addWeeks(baseDate, interval);
+      case 'MONTHLY': return addMonths(baseDate, interval);
+      case 'YEARLY': return addYears(baseDate, interval);
+ // Keep for backward compatibility
+      case 'CUSTOM': return addYears(baseDate, interval); // Use CUSTOM for yearly recurrence
+      default: return addWeeks(baseDate, interval);
+    }
+  };
+  
   const handleSubmitTask = async () => {
     if (!validateForm()) return;
     
     try {
+      setIsSubmitting(true);
+      
       if (selectedTask) {
         // Update existing task
         const updatePayload = {
@@ -103,6 +173,17 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           title: taskTitle,
           description: taskDescription,
           efforts: parseInt(taskEfforts),
+          dueDate: taskDueDate,
+          isRecurring,
+          ...(isRecurring && {
+            recurringType,
+            recurringInterval: parseInt(recurringInterval),
+            recurringEndDate,
+            nextRecurringDate: calculateNextRecurringDate()
+          }),
+          completionHistory: selectedTask.completionHistory || [],
+          assignee: assignee,
+          todayCompleted,
           updatedBy: userId
         };
         
@@ -118,7 +199,17 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           description: taskDescription,
           efforts: parseInt(taskEfforts),
           status: 'TODO',
+          dueDate: taskDueDate,
+          assignee: assignee,
+          isRecurring,
+          ...(isRecurring && {
+            recurringType,
+            recurringInterval: parseInt(recurringInterval),
+            recurringEndDate,
+            nextRecurringDate: calculateNextRecurringDate()
+          }),
           progress: 0,
+          todayCompleted: false,
           addedBy: userId,
           updatedBy: userId
         };
@@ -150,6 +241,8 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       
       setFormError(errorMsg);
       toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -192,6 +285,105 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
     }
   };
   
+  const handleToggleTodayCompleted = async (task: any, completed: boolean) => {
+    try {
+      // Update the task locally for immediate UI feedback
+      const updatedTasks = localTasks.map(t => 
+        t._id === task._id ? {...t, todayCompleted: completed} : t
+      );
+      
+      // Update the tasks state with the new array
+      setTasks(updatedTasks);
+      
+      // If task is marked as completed and is recurring, add to history
+      if (completed && task.isRecurring) {
+        // Find the task in our local state
+        const taskToUpdate = updatedTasks.find(t => t._id === task._id);
+        
+        if (taskToUpdate) {
+          // Add to completion history if it doesn't exist already
+          if (!taskToUpdate.completionHistory) {
+            taskToUpdate.completionHistory = [];
+          }
+          
+          // Add new completion record
+          taskToUpdate.completionHistory.push({
+            date: new Date().toISOString(),
+            status: 'COMPLETED'
+          });
+          
+          // Calculate next occurrence date
+          const nextDate = calculateNextRecurringDate(new Date());
+          
+          // Update the next recurring date
+          if (nextDate) {
+            taskToUpdate.nextRecurringDate = nextDate.toISOString();
+          }
+        }
+      }
+      
+      // Send API request
+      const result = await updateTask({
+        _id: task._id,
+          todayCompleted: completed,
+        updatedBy: userId
+,
+        completionHistory: task.completionHistory || []
+      }).unwrap();
+      
+      console.log("Task completion update result:", result);
+      
+      // Show success message
+      toast.success(completed ? 'Today\'s task marked as completed' : 'Today\'s task marked as incomplete');
+    } catch (error) {
+      console.error("Task completion update error:", error);
+      toast.error('Failed to update task completion status');
+    }
+  };
+  
+  // Check if a task is overdue
+  const isTaskOverdue = (task: any) => {
+    if (!task.dueDate || task.status === 'COMPLETED') return false;
+    const dueDate = new Date(task.dueDate);
+    return isPast(dueDate) && !isToday(dueDate);
+  };
+  
+  // Get due date status text and color
+  const getDueDateStatus = (task: any) => {
+    if (!task.dueDate) return { text: 'No due date', color: 'text-gray-500' };
+    
+    const dueDate = new Date(task.dueDate);
+    const today = new Date();
+    const daysRemaining = differenceInDays(dueDate, today);
+    
+    if (task.status === 'COMPLETED') {
+      return { text: 'Completed', color: 'text-green-600' };
+    }
+    
+    if (isToday(dueDate)) {
+      return { text: 'Due today', color: 'text-amber-600 font-medium' };
+    }
+    
+    if (isPast(dueDate)) {
+      return { 
+        text: `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? 's' : ''}`, 
+        color: 'text-red-600 font-medium' 
+      };
+    }
+    
+    if (daysRemaining <= 2) {
+      return { 
+        text: `Due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`, 
+        color: 'text-amber-600' 
+      };
+    }
+    
+    return { 
+      text: `Due in ${daysRemaining} days`, 
+      color: 'text-indigo-600' 
+    };
+  };
+  
   // Toggle task expanded state
   const toggleTaskExpanded = (taskId: string) => {
     setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
@@ -201,15 +393,17 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const canCreateTasks = canEdit && ['NEW', 'ASSIGNED', 'IN_PROGRESS'].includes(ticketStatus);
   
   // Calculate total progress
-  const calculateTotalProgress = () => {
-    if (tasks.length === 0) return 0;
+  const calculateTotalProgress = (taskList: any[] = localTasks) => {
+    if (taskList.length === 0) return 0;
     
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(task => task.status === 'COMPLETED').length;
-    const progressSum = tasks.reduce((sum, task) => sum + (task.progress || 0), 0);
+    const totalTasks = taskList.length;
+    const completedTasks = taskList.filter(task => task.status === 'COMPLETED').length;
+    const progressSum = taskList.reduce((sum, task) => sum + (task.progress || 0), 0);
     
     return Math.round(progressSum / totalTasks);
   };
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   return (
     <Card className="border-none shadow-md overflow-hidden">
@@ -234,7 +428,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
         
         <DashboardLoader loading={isLoading}>
           <div className="divide-y divide-gray-100">
-            {tasks.length === 0 ? (
+            {localTasks.length === 0 ? (
               <div className="text-center py-16 px-4 bg-white">
                 <CheckSquare className="h-12 w-12 mx-auto text-gray-300 mb-3" />
                 <p className="text-lg font-medium text-gray-700 mb-2">No tasks created yet</p>
@@ -256,134 +450,239 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 <div className="p-4 bg-white border-b">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium text-gray-700">Overall Progress</span>
-                    <span className="text-sm font-semibold text-primary">{calculateTotalProgress()}%</span>
+                    <span className="text-sm font-semibold text-primary">{calculateTotalProgress(localTasks)}%</span>
                   </div>
                   <div className="w-full bg-gray-100 rounded-full h-2.5">
                     <div 
                       className="bg-primary h-2.5 rounded-full transition-all duration-300" 
-                      style={{ width: `${calculateTotalProgress()}%` }}
+                      style={{ width: `${calculateTotalProgress(localTasks)}%` }}
                     ></div>
                   </div>
                   
                   <div className="flex justify-between text-xs text-gray-500 mt-2">
-                    <span>{tasks.filter(t => t.status === 'COMPLETED').length} of {tasks.length} tasks completed</span>
-                    <span>Total effort: {tasks.reduce((sum, task) => sum + (task.efforts || 1), 0)} points</span>
+                    <span>{localTasks.filter(t => t.status === 'COMPLETED').length} of {localTasks.length} tasks completed</span>
+                    <span>Total effort: {localTasks.reduce((sum, task) => sum + (task.efforts || 1), 0)} points</span>
                   </div>
                 </div>
                 
                 {/* Task list */}
                 <div className="space-y-0 divide-y divide-gray-100">
-                  {tasks.map((task) => (
-                    <div 
-                      key={task._id} 
-                      className={cn(
-                        "px-4 py-3 transition-colors",
-                        task.status === 'COMPLETED' ? "bg-gray-50/70" : "bg-white",
-                        expandedTaskId === task._id ? "bg-blue-50/50" : ""
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Checkbox 
-                          checked={task.status === 'COMPLETED'}
-                          onCheckedChange={() => handleToggleTaskStatus(task)}
-                          disabled={!canEdit || isChangingStatus}
-                          className={cn(
-                            "mt-1",
-                            task.status === 'COMPLETED' ? "text-primary border-primary" : ""
-                          )}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <button 
-                              className="text-left group"
-                              onClick={() => toggleTaskExpanded(task._id)}
-                            >
-                              <h4 className={cn(
-                                "font-medium text-sm transition-colors",
-                                task.status === 'COMPLETED' ? "line-through text-gray-500" : "text-gray-800 group-hover:text-primary"
+                  {localTasks.map((task) => {
+                    const dueDateStatus = getDueDateStatus(task);
+                    return (
+                      <div 
+                        key={task._id} 
+                        className={cn(
+                          "px-4 py-3 transition-colors",
+                          task.status === 'COMPLETED' ? "bg-gray-50/70" : "bg-white",
+                          expandedTaskId === task._id ? "bg-blue-50/50" : ""
+                        )}
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox 
+                            checked={task.status === 'COMPLETED'}
+                            onCheckedChange={() => handleToggleTaskStatus(task)}
+                            disabled={!canEdit || isChangingStatus}
+                            className={cn(
+                              "mt-1",
+                              task.status === 'COMPLETED' ? "text-primary border-primary" : ""
+                            )}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                              <button 
+                                className="text-left group"
+                                onClick={() => toggleTaskExpanded(task._id)}
+                              >
+                                <h4 className={cn(
+                                  "font-medium text-sm transition-colors",
+                                  task.status === 'COMPLETED' ? "line-through text-gray-500" : "text-gray-800 group-hover:text-primary"
+                                )}>
+                                  {task.title}
+                                </h4>
+                              </button>
+                              <div className="flex items-center space-x-2 ml-2">
+                                <div className={cn(
+                                  "text-xs font-medium h-5 px-2 py-0.5 rounded-full border",
+                                  task.status === 'COMPLETED' 
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                    : "bg-amber-50 text-amber-700 border-amber-200"
+                                )}>
+                                  {task.status || 'In Progress'}
+                                </div>
+                                {canEdit && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleOpenDialog(task)}
+                                    className="h-7 w-7 rounded-full p-0 hover:bg-gray-100"
+                                  >
+                                    <Edit className="h-3 w-3 text-gray-500" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Due date and recurring status */}
+                            <div className="flex items-center gap-2 mt-1 text-xs">
+                              <div className={cn(
+                                "flex items-center gap-1",
+                                dueDateStatus.color
                               )}>
-                                {task.title}
-                              </h4>
-                            </button>
-                            <div className="flex items-center space-x-2 ml-2">
-                              <Badge variant="outline" className={cn(
-                                "text-xs font-medium h-5",
-                                task.status === 'COMPLETED' 
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                                  : "bg-amber-50 text-amber-700 border-amber-200"
-                              )}>
-                                {task.status || 'In Progress'}
-                              </Badge>
-                              {canEdit && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => handleOpenDialog(task)}
-                                  className="h-7 w-7 rounded-full p-0 hover:bg-gray-100"
+                                {isTaskOverdue(task) ? (
+                                  <AlertTriangle className="h-3 w-3 text-red-500" />
+                                ) : (
+                                  <Calendar className="h-3 w-3" />
+                                )}
+                                <span>{task.dueDate ? format(new Date(task.dueDate), 'MMM d, yyyy') : 'No date'} - {dueDateStatus.text}</span>
+                              </div>
+                              
+                              {task.isRecurring && (
+                                <div className="flex items-center gap-1 text-indigo-600">
+                                  <RefreshCw className="h-3 w-3" />
+                                  <span>
+                                    {task.recurringInterval > 1 ? `Every ${task.recurringInterval} ` : 'Every '}
+                                    {task.recurringType.toLowerCase() === 'daily' ? 'day' : ''}
+                                    {task.recurringType.toLowerCase() === 'weekly' ? 'week' : ''}
+                                    {task.recurringType.toLowerCase() === 'monthly' || task.recurringType.toLowerCase() === 'custom' ? 'month' : ''}
+                                    {task.recurringType.toLowerCase() === 'yearly' ? 'year' : ''}
+                                    {task.recurringInterval > 1 ? 's' : ''}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Task description and details */}
+                            <div className={cn(
+                              "overflow-hidden transition-all duration-200",
+                              expandedTaskId === task._id ? "max-h-96 mt-2" : "max-h-0"
+                            )}>
+                              {task.description && (
+                                <p className="mt-2 text-sm text-gray-700 whitespace-pre-line bg-white p-3 rounded-lg border border-gray-100">
+                                  {task.description}
+                                </p>
+                              )}
+                              
+                              {/* Recurring task completion status */}
+                              {task.isRecurring && (
+                                <div className="mt-3 p-3 bg-indigo-50 rounded-lg border border-indigo-100">
+                                  <h5 className="text-sm font-medium text-indigo-700 mb-2 flex items-center">
+                                    <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                                    Recurring Task Status
+                                  </h5>
+                                  
+                                  <RadioGroup 
+                                    value={task.todayCompleted ? "completed" : "incomplete"}
+                                    onValueChange={(value) => handleToggleTodayCompleted(task, value === "completed")}
+                                    className="flex gap-4 mt-2"
+                                    disabled={!canEdit}
+                                  >
+                                    <div className="flex items-center space-x-2 cursor-pointer">
+                                      <RadioGroupItem value="completed" id={`completed-${task._id}`} />
+                                      <Label htmlFor={`completed-${task._id}`} className="text-sm flex items-center cursor-pointer">
+                                        <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-500" />
+                                        Completed
+                                      </Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <RadioGroupItem value="incomplete" id={`incomplete-${task._id}`} />
+                                      <Label htmlFor={`incomplete-${task._id}`} className="text-sm cursor-pointer">Not completed</Label>
+                                    </div>
+                                  </RadioGroup>
+                                  
+                                  <div className="text-xs text-gray-500 mt-2">
+                                    {task.nextRecurringDate && (
+                                      <>
+                                        Next occurrence: {format(new Date(task.nextRecurringDate), 'MMM d, yyyy')}
+                                        {task.todayCompleted && (
+                                          <div className="mt-1 flex items-center">
+                                            {isBefore(new Date(), new Date(task.nextRecurringDate)) ? (
+                                              <span className="text-amber-600">Locked until {format(new Date(task.nextRecurringDate), 'MMM d, yyyy')}</span>
+                                            ) : (
+                                              <span className="text-green-600">Available now</span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+                                  </div>
+
+                                  {/* Completion History */}
+                                  {task.completionHistory && task.completionHistory.length > 0 && (
+                                    <div className="mt-3 border-t border-indigo-100 pt-2">
+                                      <h6 className="text-xs font-medium text-indigo-700 mb-1">Completion History</h6>
+                                      <div className="max-h-32 overflow-y-auto">
+                                        <table className="w-full text-xs">
+                                          <thead className="text-left text-gray-500">
+                                            <tr>
+                                              <th className="pb-1 pr-2">Date</th>
+                                              <th className="pb-1 pr-2">Status</th>
+                                            </tr>
+                                          </thead>
+                                          <tbody>
+                                            {task.completionHistory.map((entry: CompletionHistoryEntry, idx: number) => (
+                                              <tr key={idx} className="border-b border-gray-50 last:border-0">
+                                                <td className="py-1 pr-2">{format(new Date(entry.date), 'MMM d, yyyy')}</td>
+                                                <td className="py-1 pr-2 text-green-600">{entry.status}</td>
+                                              </tr>
+                                            ))}
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                              <div className="flex items-center gap-3 text-sm text-gray-500">
+                                <div className="inline-flex items-center gap-1">
+                                  <CheckSquare className="h-3.5 w-3.5 text-indigo-500" />
+                                  <span className="font-medium text-gray-700">{task.efforts || 1} pts</span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex-1">
+                                <div className="flex justify-between items-center text-xs mb-1">
+                                  <span className="text-gray-500">Progress:</span>
+                                  <span className="font-medium text-gray-700">{task.progress || 0}%</span>
+                                </div>
+                                <div className="w-full bg-gray-100 rounded-full h-1.5">
+                                  <div 
+                                    className={cn(
+                                      "h-1.5 rounded-full transition-all duration-300",
+                                      task.status === 'COMPLETED' ? "bg-emerald-500" : "bg-primary"
+                                    )}
+                                    style={{ width: `${task.progress || 0}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                              
+                              {canEdit && task.status !== 'COMPLETED' && (
+                                <Select
+                                  value={task.progress?.toString()}
+                                  onValueChange={(value) => handleChangeProgress(task, parseInt(value))}
                                 >
-                                  <Edit className="h-3 w-3 text-gray-500" />
-                                </Button>
+                                  <SelectTrigger className="w-24 h-8 text-xs rounded-lg">
+                                    <SelectValue placeholder="Progress" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="0">0%</SelectItem>
+                                    <SelectItem value="25">25%</SelectItem>
+                                    <SelectItem value="50">50%</SelectItem>
+                                    <SelectItem value="75">75%</SelectItem>
+                                    <SelectItem value="100">100%</SelectItem>
+                                  </SelectContent>
+                                </Select>
                               )}
                             </div>
                           </div>
-                          
-                          {/* Task description and details */}
-                          <div className={cn(
-                            "overflow-hidden transition-all duration-200",
-                            expandedTaskId === task._id ? "max-h-96 mt-2" : "max-h-0"
-                          )}>
-                            {task.description && (
-                              <p className="mt-2 text-sm text-gray-700 whitespace-pre-line bg-white p-3 rounded-lg border border-gray-100">
-                                {task.description}
-                              </p>
-                            )}
-                          </div>
-                          
-                          <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                            <div className="flex items-center gap-2 text-sm text-gray-500">
-                              <span className="inline-flex items-center gap-1">
-                                <CheckSquare className="h-3.5 w-3.5" />
-                                <span className="font-medium">{task.efforts || 1} pts</span>
-                              </span>
-                            </div>
-                            
-                            <div className="flex-1">
-                              <div className="flex justify-between items-center text-xs mb-1">
-                                <span className="text-gray-500">Progress:</span>
-                                <span className="font-medium text-gray-700">{task.progress || 0}%</span>
-                              </div>
-                              <Progress 
-                                value={task.progress || 0} 
-                                className={cn(
-                                  "h-1.5", 
-                                  task.status === 'COMPLETED' ? "bg-gray-200" : "bg-gray-100"
-                                )}
-                                indicatorClassName={task.status === 'COMPLETED' ? "bg-emerald-500" : "bg-primary"}
-                              />
-                            </div>
-                            
-                            {canEdit && task.status !== 'COMPLETED' && (
-                              <Select
-                                value={task.progress?.toString()}
-                                onValueChange={(value) => handleChangeProgress(task, parseInt(value))}
-                              >
-                                <SelectTrigger className="w-24 h-8 text-xs rounded-lg">
-                                  <SelectValue placeholder="Progress" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="0">0%</SelectItem>
-                                  <SelectItem value="25">25%</SelectItem>
-                                  <SelectItem value="50">50%</SelectItem>
-                                  <SelectItem value="75">75%</SelectItem>
-                                  <SelectItem value="100">100%</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            )}
-                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -393,7 +692,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       
       {/* Task Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl">{selectedTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
             <DialogDescription>
@@ -468,18 +767,183 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 Higher points indicate more complex tasks
               </p>
             </div>
+            
+
+            {/* Due Date Section */}
+            <div className="space-y-2">
+              <Label htmlFor="due-date">
+                Due Date <span className="text-red-500">*</span>
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal"
+                      )}
+                    >
+                      <Calendar className="mr-2 h-4 w-4" />
+                      {taskDueDate ? format(taskDueDate, "PPP") : <span>Select due date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 z-50" align="start">
+                    <CalendarComponent
+                      mode="single"
+                      selected={taskDueDate}
+                      onSelect={(date) => date && setTaskDueDate(date)}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="flex gap-2 mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-7" 
+                  onClick={() => setTaskDueDate(addDays(new Date(), 1))}
+                >
+                  Tomorrow
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-7" 
+                  onClick={() => setTaskDueDate(addDays(new Date(), 7))}
+                >
+                  Next Week
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-7" 
+                  onClick={() => setTaskDueDate(addMonths(new Date(), 1))}
+                >
+                  Next Month
+                </Button>
+              </div>
+            </div>
+            
+            <Separator className="my-4" />
+            
+            {/* Recurring Task Section */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="recurring-toggle" className="font-medium">Recurring Task</Label>
+                <Switch
+                  id="recurring-toggle"
+                  checked={isRecurring}
+                  onCheckedChange={setIsRecurring}
+                />
+              </div>
+              
+              {isRecurring && (
+                <div className="space-y-4 pl-2 border-l-2 border-gray-100">
+                  <div className="space-y-2">
+                    <Label>Recurrence Pattern</Label>
+                    <Select
+                      value={recurringType}
+                      onValueChange={setRecurringType}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select recurrence pattern" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DAILY" defaultChecked>Daily</SelectItem>
+                        <SelectItem value="WEEKLY">Weekly</SelectItem>
+                        <SelectItem value="MONTHLY">Monthly</SelectItem>
+                        <SelectItem value="CUSTOM">Yearly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="interval">Repeat Every</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+ 
+                        id="interval"
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={recurringInterval}
+                        onChange={(e) => setRecurringInterval(e.target.value)}
+                        className="rounded-lg w-20"
+                      />
+                      <span className="text-sm text-gray-500">
+                        {recurringType.toLowerCase() === 'daily' && (recurringInterval === '1' ? 'day' : 'days')}
+                        {recurringType.toLowerCase() === 'weekly' && (recurringInterval === '1' ? 'week' : 'weeks')}
+                        {recurringType.toLowerCase() === 'monthly' && (recurringInterval === '1' ? 'month' : 'months')}
+                        {recurringType.toLowerCase() === 'custom' && (recurringInterval === '1' ? 'year' : 'years')}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>End Date (Optional)</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !recurringEndDate && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {recurringEndDate ? format(recurringEndDate, "PPP") : <span>No end date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 z-50" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={recurringEndDate || undefined}
+                          onSelect={(date) => setRecurringEndDate(date || null)}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  {selectedTask && selectedTask.isRecurring && (
+                    <div className="space-y-2 mt-4">
+                      <Label>Today's Completion Status</Label>
+                      <RadioGroup 
+                        value={todayCompleted ? "completed" : "incomplete"}
+                        onValueChange={(value: string) => setTodayCompleted(value === "completed")}
+                        className="flex gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="completed" id="completed" />
+                          <Label htmlFor="completed" className="text-sm flex items-center cursor-pointer">
+                            <CheckCircle className="h-3.5 w-3.5 mr-1 text-green-500" />
+                            Completed today
+                          </Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="incomplete" id="incomplete" />
+                          <Label htmlFor="incomplete" className="text-sm cursor-pointer">Not completed</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="mt-6">
             <Button variant="outline" onClick={handleCloseDialog} className="rounded-lg">
               Cancel
             </Button>
             <Button 
               onClick={handleSubmitTask}
-              disabled={!taskTitle.trim() || isCreating || isUpdating}
+              disabled={!taskTitle.trim() || isCreating || isUpdating || isSubmitting}
               className="rounded-lg bg-primary hover:bg-primary/90"
             >
-              {isCreating || isUpdating ? (
+              {isCreating || isUpdating || isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   {selectedTask ? 'Updating...' : 'Creating...'}

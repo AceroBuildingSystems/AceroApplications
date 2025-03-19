@@ -105,6 +105,40 @@ export const assignTicket = catchAsync(async (options) => {
   return result;
 });
 
+export const updateTicketAssignees = catchAsync(async (options) => {
+  const { ticketId, assignees, updatedBy } = options;
+  
+  // Validate inputs
+  if (!ticketId || !assignees || !Array.isArray(assignees)) {
+    return { status: ERROR, message: "Invalid assignees data" };
+  }
+  
+  // Update ticket with multiple assignees
+  const result = await crudManager.mongooose.update('TICKET_MASTER', {
+    filter: { _id: ticketId },
+    data: { 
+      assignees,
+      // If there are assignees, set status to ASSIGNED
+      ...(assignees.length > 0 && { status: 'ASSIGNED' }),
+      updatedBy
+    }
+  });
+  
+  // Create ticket history entry for assignment
+  if (result.status === SUCCESS) {
+    await createTicketHistory({
+      data: {
+        ticket: ticketId,
+        action: 'ASSIGN',
+        user: updatedBy,
+        details: { assignees }
+      }
+    });
+  }
+  
+  return result;
+});
+
 export const changeTicketStatus = catchAsync(async (options) => {
   const { ticketId, status, updatedBy } = options;
   

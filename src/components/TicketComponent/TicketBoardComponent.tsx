@@ -145,14 +145,14 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         color: 'blue',
         icon: <AlertCircle className="h-4 w-4 text-blue-600" />
       },
-      assigned: {
-        id: 'assigned',
-        title: 'Assigned',
-        status: 'ASSIGNED',
-        tickets: [],
-        color: 'indigo',
-        icon: <Info className="h-4 w-4 text-indigo-600" />
-      },
+      // assigned: {
+      //   id: 'assigned',
+      //   title: 'Assigned',
+      //   status: 'ASSIGNED',
+      //   tickets: [],
+      //   color: 'indigo',
+      //   icon: <Info className="h-4 w-4 text-indigo-600" />
+      // },
       inProgress: {
         id: 'inProgress',
         title: 'In Progress',
@@ -187,9 +187,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
             initialColumns.new.tickets.push(ticket);
             break;
           case 'ASSIGNED':
-            initialColumns.assigned.tickets.push(ticket);
+            initialColumns.inProgress.tickets.push(ticket);
             break;
-          case 'IN_PROGRESS':
+          case 'IN_PROGRESS' :
             initialColumns.inProgress.tickets.push(ticket);
             break;
           case 'RESOLVED':
@@ -562,7 +562,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       </div>
       
       {/* Assignment Dialog */}
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+      {/* <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Assign Ticket</DialogTitle>
@@ -646,7 +646,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </>
   );
 };

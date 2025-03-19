@@ -77,6 +77,15 @@ export const ticketApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Ticket'],
     }),
+    
+    updateTicketAssignees: builder.mutation<TicketApiResponse, any>({
+      query: (assigneesData) => ({
+        url: 'ticket',
+        method: 'POST',
+        body: { action: 'updateAssignees', data: assigneesData },
+      }),
+      invalidatesTags: ['Ticket'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -88,4 +97,5 @@ export const {
   useAssignTicketMutation,
   useChangeTicketStatusMutation,
   useAutoAssignTicketMutation,
+  useUpdateTicketAssigneesMutation,
 } = ticketApi;

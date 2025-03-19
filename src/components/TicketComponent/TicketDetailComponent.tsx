@@ -11,7 +11,8 @@ import { Separator } from '@/components/ui/separator';
 import { 
   CalendarIcon, Clock, Edit, MessageSquare, Tag, Users, 
   ChevronDown, CheckSquare, Paperclip, FileText, AlertCircle,
-  ClipboardList, User, BarChart, CheckCircle2, Lock, ArrowLeftCircle
+  ClipboardList, User, BarChart, CheckCircle2, Lock, ArrowLeftCircle,
+  RefreshCw, UserPlus
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useGetTicketCommentsQuery } from '@/services/endpoints/ticketCommentApi';
@@ -28,6 +29,8 @@ import {
 import TicketStatusChangeComponent from './TicketStatusChangeComponent';
 import TicketAutoAssignComponent from './TicketAutoAssignComponent';
 import TicketAttachmentComponent from './TicketAttachmentComponent';
+import TicketAssigneesComponent from './TicketAssigneesComponent';
+import TicketRecurringComponent from './TicketRecurringComponent';
 import CollapsibleChat from './CollapsibleChat';
 import { getStatusColor, getPriorityColor } from '@/lib/getStatusColor';
 import { useRouter } from 'next/navigation';
@@ -68,6 +71,8 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isAutoAssignDialogOpen, setIsAutoAssignDialogOpen] = useState(false);
+  const [isAssigneesDialogOpen, setIsAssigneesDialogOpen] = useState(false);
+  const [isRecurringDialogOpen, setIsRecurringDialogOpen] = useState(false);
   
   // Get status icon based on ticket status
   const getStatusIcon = () => {
@@ -92,7 +97,20 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
     : 0;
   
   // Check if user can edit this ticket
-  const canEdit = userId === ticket.creator._id || userId === ticket.assignee?._id || userRole === 'ADMIN';
+  const canEdit = userId === ticket.creator._id || 
+                 (ticket.assignees && ticket.assignees.some(a => a._id === userId)) || 
+                 userId === ticket.assignee?._id || 
+                 userRole === 'ADMIN';
+  
+  // Get assignees from ticket (handle both new and old format)
+  const getAssignees = () => {
+    if (ticket.assignees && ticket.assignees.length > 0) {
+      return ticket.assignees;
+    } else if (ticket.assignee) {
+      return [ticket.assignee];
+    }
+    return [];
+  };
   
   return (
     <TooltipProvider>
@@ -173,32 +191,23 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
                           
                           <DropdownMenuSeparator />
                           
-                          {!ticket.assignee ? (
-                            <>
-                              <DropdownMenuItem 
-                                onClick={() => setIsAssignDialogOpen(true)}
-                                className="flex items-center gap-2"
-                              >
-                                <User className="h-4 w-4" />
-                                Assign Manually
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                onClick={handleShowAutoAssign}
-                                className="flex items-center gap-2"
-                              >
-                                <Users className="h-4 w-4" />
-                                Auto-Assign
-                              </DropdownMenuItem>
-                            </>
-                          ) : (
-                            <DropdownMenuItem 
-                              onClick={() => setIsAssignDialogOpen(true)}
-                              className="flex items-center gap-2"
-                            >
-                              <User className="h-4 w-4" />
-                              Reassign Ticket
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem 
+                            onClick={() => setIsAssigneesDialogOpen(true)}
+                            className="flex items-center gap-2"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                            Manage Assignees
+                          </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          
+                          <DropdownMenuItem 
+                            onClick={() => setIsRecurringDialogOpen(true)}
+                            className="flex items-center gap-2"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            Recurring Settings
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     )}
@@ -363,46 +372,102 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
               >
                 <Card className="overflow-hidden border border-gray-200 shadow-sm">
                   <CardHeader className="bg-gray-50/70 pb-3">
-                    <CardTitle className="text-sm text-gray-700">Assigned to</CardTitle>
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-sm text-gray-700">Assigned to</CardTitle>
+                      {canEdit && ticket.status !== 'CLOSED' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setIsAssigneesDialogOpen(true)}
+                          className="h-7 w-7 p-0 rounded-full hover:bg-gray-200"
+                        >
+                          <UserPlus className="h-3.5 w-3.5 text-gray-500" />
+                        </Button>
+                      )}
+                    </div>
                   </CardHeader>
                   <CardContent className="p-4">
-                    {ticket.assignee ? (
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border-2 border-indigo-100">
-                          <AvatarFallback className="bg-indigo-100 text-indigo-800 font-medium">
-                            {`${ticket.assignee.firstName[0]}${ticket.assignee.lastName[0]}`}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{`${ticket.assignee.firstName} ${ticket.assignee.lastName}`}</p>
-                          <p className="text-xs text-gray-500">
-                            {ticket.assignedAt ? format(new Date(ticket.assignedAt), 'MMM d, yyyy') : 'Date not available'}
-                          </p>
-                        </div>
-                      </div>
+                    {/* Show multiple assignees if available */}
+                    {getAssignees().length > 0 ? (
+                      <div className="space-y-3">
+                        {getAssignees().map((assignee: any) => (
+                          <div key={assignee._id} className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 border-2 border-indigo-100">
+                              <AvatarFallback className="bg-indigo-100 text-indigo-800 font-medium">
+                                {`${assignee.firstName[0]}${assignee.lastName[0]}`}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{`${assignee.firstName} ${assignee.lastName}`}</p>
+                              <p className="text-xs text-gray-500">
+                                {ticket.assignedAt ? format(new Date(ticket.assignedAt), 'MMM d, yyyy') : 'Date not available'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div> 
                     ) : (
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 bg-gray-200 border-2 border-gray-100">
-                          <AvatarFallback className="text-gray-500">?</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-gray-500 font-medium">Unassigned</p>
-                          {canEdit && ticket.status !== 'CLOSED' && (
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => setIsAssignDialogOpen(true)}
-                                className="mt-2 h-8 text-xs bg-white border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
-                              >
-                                <User className="h-3.5 w-3.5 mr-1" />
-                                Assign now
-                              </Button>
-                            </motion.div>
-                          )}
+                      // No assignees
+                      <div>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10 bg-gray-200 border-2 border-gray-100">
+                            <AvatarFallback className="text-gray-500">?</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="text-gray-500 font-medium">Unassigned</p>
+                            {canEdit && ticket.status !== 'CLOSED' && (
+                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setIsAssigneesDialogOpen(true)}
+                                  className="mt-2 h-8 text-xs bg-white border-gray-200 hover:bg-gray-50 hover:border-indigo-300"
+                                >
+                                  <UserPlus className="h-3.5 w-3.5 mr-1" />
+                                  Add assignees
+                                </Button>
+                              </motion.div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+              
+              {/* Recurring settings widget */}
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 }}
+              >
+                <Card className="overflow-hidden border border-gray-200 shadow-sm">
+                  <CardHeader className="bg-gray-50/70 pb-3">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-sm text-gray-700">Recurring Settings</CardTitle>
+                      {canEdit && ticket.status !== 'CLOSED' && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setIsRecurringDialogOpen(true)}
+                          className="h-7 w-7 p-0 rounded-full hover:bg-gray-200"
+                        >
+                          <Edit className="h-3.5 w-3.5 text-gray-500" />
+                        </Button>
+                      )}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-4">
+                    {ticket.isRecurring ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <RefreshCw className="h-4 w-4 text-indigo-600" />
+                          <span className="font-medium">{ticket.recurringType.charAt(0) + ticket.recurringType.slice(1).toLowerCase()}</span>
+                        </div>
+                        {ticket.nextRecurringDate && <p className="text-xs text-gray-500">Next: {format(new Date(ticket.nextRecurringDate), 'MMM d, yyyy')}</p>}
+                      </div>
+                    ) : <p className="text-sm text-gray-500">One-time ticket</p>}
                   </CardContent>
                 </Card>
               </motion.div>
@@ -515,6 +580,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
             ...(ticket.creator.avatar && { avatar: ticket.creator.avatar })
           }}
         />
+        
         {/* Status Change Component */}
         <TicketStatusChangeComponent
           ticketId={ticket._id}
@@ -522,7 +588,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
           userId={userId}
           isOpen={isStatusDialogOpen}
           onClose={() => setIsStatusDialogOpen(false)}
-          hasAssignee={!!ticket.assignee}
+          hasAssignee={getAssignees().length > 0}
         />
         
         {/* Auto Assign Component */}
@@ -531,6 +597,27 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
           userId={userId}
           isOpen={isAutoAssignDialogOpen}
           onClose={() => setIsAutoAssignDialogOpen(false)}
+        />
+        
+        {/* Assignees Management Component */}
+        <TicketAssigneesComponent
+          ticketId={ticket._id}
+          currentAssignees={getAssignees()}
+          isOpen={isAssigneesDialogOpen}
+          onClose={() => setIsAssigneesDialogOpen(false)}
+          userId={userId}
+        />
+        
+        {/* Recurring Settings Component */}
+        <TicketRecurringComponent
+          ticketId={ticket._id}
+          isRecurring={ticket.isRecurring || false}
+          recurringType={ticket.recurringType || 'WEEKLY'}
+          recurringEndDate={ticket.recurringEndDate}
+          recurringInterval={ticket.recurringInterval || 1}
+          isOpen={isRecurringDialogOpen}
+          onClose={() => setIsRecurringDialogOpen(false)}
+          userId={userId}
         />
       </div>
     </TooltipProvider>

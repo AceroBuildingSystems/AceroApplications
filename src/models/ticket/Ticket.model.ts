@@ -1,5 +1,5 @@
 // src/models/ticket/Ticket.model.ts
-import mongoose, { Document, Model, Schema,Query } from "mongoose";
+import mongoose, { Document, Model, Schema, Query } from "mongoose";
 
 export interface TicketDocument extends Document {
   title: string;
@@ -9,7 +9,8 @@ export interface TicketDocument extends Document {
   department: mongoose.Types.ObjectId;
   category: mongoose.Types.ObjectId;
   creator: mongoose.Types.ObjectId;
-  assignee: mongoose.Types.ObjectId;
+  assignees: mongoose.Types.ObjectId[];
+  assignee?: mongoose.Types.ObjectId; // For backward compatibility
   dueDate: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +20,11 @@ export interface TicketDocument extends Document {
   efforts: number;
   totalEfforts: number;
   roomId: string;
+  isRecurring: boolean;
+  recurringType: string;
+  recurringEndDate?: Date;
+  recurringInterval?: number;
+  nextRecurringDate?: Date;
 }
 
 const TicketSchema: Schema<TicketDocument> = new Schema({
@@ -41,19 +47,32 @@ const TicketSchema: Schema<TicketDocument> = new Schema({
     ref: "User",
     required: true
   },
+  assignees: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: []
+  }],
   assignee: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    default: null
+    default: null // Kept for backward compatibility
   },
   dueDate: { type: Date },
   isActive: { type: Boolean, default: true },
   addedBy: { type: String },
   updatedBy: { type: String },
   efforts: { type: Number, default: 0 },
-  totalEfforts: { type: Number, default: 0 }
-,
-  roomId: { type: String, default: () => `room-${new mongoose.Types.ObjectId().toString()}` }
+  totalEfforts: { type: Number, default: 0 },
+  roomId: { type: String, default: () => `room-${new mongoose.Types.ObjectId().toString()}` },
+  isRecurring: { type: Boolean, default: false },
+  recurringType: { 
+    type: String, 
+    enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'CUSTOM'], 
+    default: 'WEEKLY' 
+  },
+  recurringEndDate: { type: Date },
+  recurringInterval: { type: Number, default: 1 }, // For custom intervals
+  nextRecurringDate: { type: Date }
 }, { timestamps: true });
 
 TicketSchema.pre<Query<any, TicketDocument>>(/^find/, function (next) {
@@ -61,7 +80,8 @@ TicketSchema.pre<Query<any, TicketDocument>>(/^find/, function (next) {
     { path: "department" },
     { path: "category" },
     { path: "creator" },
-    { path: "assignee" }
+    { path: "assignee" },
+    { path: "assignees" }
   ]);
   next();
 });

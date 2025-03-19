@@ -7,6 +7,8 @@ import {
     assignTicket,
     changeTicketStatus,
     calculateTicketProgress,
+ 
+    updateTicketAssignees,
     autoAssignTicket
   } from '@/server/services/ticketServices';
   
@@ -18,5 +20,6 @@ import {
     assignTicket,
     changeTicketStatus,
     calculateTicketProgress,
+    updateTicketAssignees,
     autoAssignTicket
   };

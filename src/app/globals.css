@@ -333,3 +333,13 @@ border: 3px solid transparent;
   ring: 2px;
   ring-color: rgba(99, 102, 241, 0.6);
 }
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

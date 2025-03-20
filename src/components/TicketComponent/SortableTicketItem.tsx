@@ -26,20 +26,7 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     id: id,
     data: {
       ticket: ticket
-    },
-    // Center the dragged item with the pointer for better UX
-    modifiers: [{
-      name: 'centerOnCursor',
-      enabled: true,
-      phase: 'beforeDrag',
-      fn: ({ active, context }) => {
-        if (!context.currentCoordinates) return { x: 0, y: 0 };
-        return {
-          x: 0,
-          y: 0 
-        };
-      }
-    }]
+    }
   });
 
   // Adjust the style to handle the appearance/disappearance more smoothly

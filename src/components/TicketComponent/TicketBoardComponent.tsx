@@ -136,12 +136,12 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
   
-  // Set up sensors for drag and drop with activation constraints
+  // Set up sensors for drag and drop with custom offset measurement
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8, // Slightly reduced to make dragging more responsive
-      },
+      }
     }),
     useSensor(KeyboardSensor)
   );
@@ -519,6 +519,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                   }
                 }}
                 adjustScale={false}
+                modifiers={[]}
                 zIndex={1000}
               >
                 {activeTicket ? (
@@ -682,12 +683,14 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           cursor: grabbing;
         }
         
-        /* Set the drag overlay to be directly under the cursor */
+        /* Fix the drag overlay positioning */
         .dnd-overlay {
           cursor: grabbing !important;
           pointer-events: none !important;
-          transform-origin: 50% 0;
-          margin-top: -20px; /* Adjust to position the overlay closer to cursor */
+          transform-origin: 0 0 !important;
+          margin-top: -120px !important; /* Bring the overlay much closer to cursor */
+          margin-left: -140px !important; /* Center horizontally */
+          z-index: 9999 !important;
         }
       `}</style>
     </>

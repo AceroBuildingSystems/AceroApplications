@@ -20,7 +20,8 @@ const TicketHistorySchema: Schema<TicketHistoryDocument> = new Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
+    autopopulate: true
   },
   details: { type: Object }
 }, { timestamps: true });
@@ -34,5 +35,5 @@ TicketHistorySchema.pre<Query<any, TicketHistoryDocument>>(/^find/, function (ne
 
 const TicketHistory: Model<TicketHistoryDocument> = 
   mongoose.models.TicketHistory || mongoose.model<TicketHistoryDocument>("TicketHistory", TicketHistorySchema);
-
+TicketHistorySchema.plugin(require('mongoose-autopopulate'));
 export default TicketHistory;

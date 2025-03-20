@@ -36,11 +36,12 @@ const getHistoryActionLabel = (action: string) => {
 };
 
 const getHistoryDetails = (action: string, details: any) => {
+  console.log({details})
   switch (action) {
     case 'STATUS_CHANGE':
       return `Status changed to ${details.status}`;
     case 'ASSIGN':
-      return `Ticket assigned to ${details.assignee.firstName} ${details.assignee.lastName}`;
+      return `Ticket assigned to ${details.assignees.map((assignee)=>`${assignee.firstName} ${assignee.lastName}`)}`;
     case 'TASK_CREATE':
       return `Created task: ${details.title}`;
     case 'TASK_STATUS_CHANGE':
@@ -54,6 +55,7 @@ const TicketHistoryComponent: React.FC<TicketHistoryComponentProps> = ({
   history,
   isLoading
 }) => {
+  console.log({history})
   return (
     <Card>
       <CardContent className="p-4">

@@ -72,7 +72,8 @@ const TicketSchema: Schema<TicketDocument> = new Schema({
   },
   recurringEndDate: { type: Date },
   recurringInterval: { type: Number, default: 1 }, // For custom intervals
-  nextRecurringDate: { type: Date }
+  nextRecurringDate: { type: Date },
+  child: { type: Number, ref: 'Child', autopopulate: true }
 }, { timestamps: true });
 
 TicketSchema.pre<Query<any, TicketDocument>>(/^find/, function (next) {
@@ -85,7 +86,7 @@ TicketSchema.pre<Query<any, TicketDocument>>(/^find/, function (next) {
   ]);
   next();
 });
-
+TicketSchema.plugin(require('mongoose-autopopulate'));
 const Ticket: Model<TicketDocument> = mongoose.models.Ticket || mongoose.model<TicketDocument>("Ticket", TicketSchema);
 
 export default Ticket;

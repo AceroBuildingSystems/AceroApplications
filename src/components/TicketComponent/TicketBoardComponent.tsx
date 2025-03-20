@@ -127,6 +127,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
   const [updateTicket] = useUpdateTicketMutation();
   const [assignTicket] = useAssignTicketMutation();
+  const [dragStartClientOffset, setDragStartClientOffset] = useState({ x: 0, y: 0 });
   
   // Assignment dialog state
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -238,6 +239,14 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const ticketId = active.id as string;
+    
+    // Capture the initial client offset for more accurate positioning
+    if (event.activatorEvent && 'clientY' in event.activatorEvent) {
+      setDragStartClientOffset({
+        x: (event.activatorEvent as MouseEvent).clientX,
+        y: (event.activatorEvent as MouseEvent).clientY
+      });
+    }
     
     setActiveDragId(ticketId);
     
@@ -509,9 +518,11 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                     ];
                   }
                 }}
+                adjustScale={false}
+                zIndex={1000}
               >
                 {activeTicket ? (
-                  <div className="w-[290px] shadow-lg animated-ticket">
+                  <div className="w-[280px] shadow-lg animated-ticket cursor-grabbing">
                     <Card className="w-full border border-border/50 bg-white rounded-lg overflow-hidden">
                       <CardHeader className="py-3 px-4 bg-primary/5 border-b">
                         <div>
@@ -660,6 +671,23 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         
         .animate-highlight {
           animation: highlightTicket 1s ease-out forwards;
+        }
+        
+        /* Cursor styles for dragging */
+        [data-draggable=true] {
+          cursor: grab;
+        }
+        
+        [data-draggable=true]:active {
+          cursor: grabbing;
+        }
+        
+        /* Set the drag overlay to be directly under the cursor */
+        .dnd-overlay {
+          cursor: grabbing !important;
+          pointer-events: none !important;
+          transform-origin: 50% 0;
+          margin-top: -20px; /* Adjust to position the overlay closer to cursor */
         }
       `}</style>
     </>

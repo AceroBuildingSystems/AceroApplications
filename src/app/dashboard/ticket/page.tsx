@@ -187,8 +187,8 @@ const TicketDashboardPage = () => {
         {/* Header Section */}
         <motion.div 
           variants={dashboardItemVariants}
-          className="rounded-xl shadow-sm px-6 py-5 border border-border/30 backdrop-blur-sm"
-          whileHover={{ boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)" }}
+          className="rounded-xl  px-6 py-5  backdrop-blur-sm"
+
           transition={{ duration: 0.3 }}
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

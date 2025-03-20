@@ -26,7 +26,20 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     id: id,
     data: {
       ticket: ticket
-    }
+    },
+    // Center the dragged item with the pointer for better UX
+    modifiers: [{
+      name: 'centerOnCursor',
+      enabled: true,
+      phase: 'beforeDrag',
+      fn: ({ active, context }) => {
+        if (!context.currentCoordinates) return { x: 0, y: 0 };
+        return {
+          x: 0,
+          y: 0 
+        };
+      }
+    }]
   });
 
   // Adjust the style to handle the appearance/disappearance more smoothly
@@ -62,6 +75,7 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
       ref={setNodeRef}
       style={style}
       data-ticket-id={id}
+      data-draggable={true}
       className="mb-3 relative animate-fade-in"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
@@ -73,9 +87,9 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
       >
         <TicketComponent ticket={ticket} />
         
-        {/* Improved visual feedback for draggable area */}
+        {/* Improved visual feedback for draggable area with grab cursor */}
         <div 
-          className={`absolute inset-0 cursor-grab rounded-lg transition-opacity duration-200 
+          className={`absolute inset-0 cursor-grab active:cursor-grabbing rounded-lg transition-opacity duration-200 
                     ${isHovering ? 'bg-primary/5 opacity-30' : 'opacity-0'}`}
           {...attributes}
           {...listeners}

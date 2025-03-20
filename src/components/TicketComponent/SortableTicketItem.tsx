@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import TicketComponent from './TicketComponent';
+import { motion } from 'framer-motion';
 
 interface SortableTicketItemProps {
   id: string;
@@ -20,7 +21,6 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging
   } = useDraggable({
     id: id,
@@ -37,14 +37,11 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     // Disable transitions when completing a drag to prevent snapping
     transition: isDragging 
       ? 'none' // No transition during drag
-      : 'all 300ms cubic-bezier(0.2, 0, 0.2, 1)', // Smooth transition otherwise
+      : 'transform 300ms cubic-bezier(0.2, 0, 0.2, 1)', // Smooth transition otherwise
     
     // Fade out when dragging starts, but do it immediately
     opacity: isDragging ? 0 : 1,
     visibility: isDragging ? 'hidden' : 'visible',
-    
-    // Keep space in the document flow to prevent layout shifts
-    height: isDragging ? 'auto' : 'auto',
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -58,23 +55,47 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     <div
       ref={setNodeRef}
       style={style}
-      className="mb-2 relative"
+      data-ticket-id={id}
+      className="mb-3 relative animate-fade-in"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       <div 
-        className={`bg-white rounded-md transition-transform duration-200 
-                   ${isHovering ? 'shadow-md translate-y-[-1px]' : 'shadow-sm'}`}
+        className={`bg-white rounded-lg border border-border/50 transition-all duration-200 
+                  ${isHovering ? 'shadow-md translate-y-[-2px] border-primary/20' : 'shadow-card'}`}
         onClick={handleClick}
       >
         <TicketComponent ticket={ticket} />
         
-        {/* Invisible drag handle that covers the entire component */}
+        {/* Improved visual feedback for draggable area */}
         <div 
-          className="absolute inset-0 cursor-grab opacity-0"
+          className={`absolute inset-0 cursor-grab rounded-lg transition-opacity duration-200 
+                    ${isHovering ? 'bg-primary/5 opacity-30' : 'opacity-0'}`}
           {...attributes}
           {...listeners}
-        />
+        >
+          {/* Subtle drag indicator that only appears on hover */}
+          {isHovering && (
+            <div className="absolute top-1 right-1 bg-primary/10 rounded-full p-1">
+              <svg 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                className="text-primary/60"
+              >
+                <path 
+                  d="M8 6H9.5M9.5 6H11M9.5 6V4.5M9.5 6V7.5M8 12H9.5M9.5 12H11M9.5 12V10.5M9.5 12V13.5M8 18H9.5M9.5 18H11M9.5 18V16.5M9.5 18V19.5M15 6H16.5M16.5 6H18M16.5 6V4.5M16.5 6V7.5M15 12H16.5M16.5 12H18M16.5 12V10.5M16.5 12V13.5M15 18H16.5M16.5 18H18M16.5 18V16.5M16.5 18V19.5" 
+                  stroke="currentColor" 
+                  strokeWidth="1.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

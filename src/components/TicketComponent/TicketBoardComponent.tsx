@@ -1,7 +1,7 @@
 // src/components/TicketComponent/TicketBoardComponent.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DndContext, 
   closestCenter,
@@ -64,6 +64,7 @@ interface Column {
   status: string;
   tickets: Ticket[];
   color?: string;
+  icon?: string;
 }
 
 interface TicketBoardComponentProps {
@@ -72,38 +73,39 @@ interface TicketBoardComponentProps {
   userId: string;
 }
 
-// Droppable container component
+// Droppable container component with enhanced visuals
 const DroppableColumn = ({ id, children, title, count, color = 'gray' }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: id
   });
 
-  // Map color names to tailwind classes (more subtle)
+  // Map color names to tailwind classes (more refined)
   const colorMap = {
-    gray: { light: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700' },
-    blue: { light: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700' },
-    green: { light: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700' },
-    amber: { light: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700' },
-    purple: { light: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-700' },
+    gray: { bg: 'bg-secondary/20', border: 'border-secondary/30', text: 'text-secondary-foreground', hover: 'bg-secondary/30' },
+    blue: { bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700', hover: 'bg-blue-100/50' },
+    green: { bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700', hover: 'bg-emerald-100/50' },
+    amber: { bg: 'bg-amber-50', border: 'border-amber-100', text: 'text-amber-700', hover: 'bg-amber-100/50' },
+    purple: { bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-700', hover: 'bg-purple-100/50' },
+    red: { bg: 'bg-primary/10', border: 'border-primary/20', text: 'text-primary-foreground', hover: 'bg-primary/20' }
   };
 
   const colors = colorMap[color] || colorMap.gray;
 
   return (
-    <div className="flex flex-col h-full w-[280px] transition-all duration-200">
-      <div className={`flex items-center justify-between mb-2 p-2 ${colors.light} rounded-t-md border-t border-l border-r ${colors.border}`}>
-        <h3 className={`font-semibold ${colors.text} text-sm`}>
+    <div className="flex flex-col h-full w-[300px] transition-all duration-200 rounded-lg shadow-card">
+      <div className={`flex items-center justify-between p-3 ${colors.bg} rounded-t-lg border-t border-l border-r ${colors.border}`}>
+        <h3 className={`font-medium ${colors.text} flex items-center`}>
           {title}
-          <span className={`ml-2 text-xs font-medium bg-white ${colors.text} rounded-full px-2 py-0.5 shadow-sm`}>
+          <span className={`ml-2 text-xs font-medium bg-white/80 ${colors.text} rounded-full px-2.5 py-1 shadow-sm`}>
             {count}
           </span>
         </h3>
       </div>
       <div 
         ref={setNodeRef}
-        className={`space-y-2 min-h-[500px] p-2 rounded-b-md transition-all duration-200
-                    flex-1 overflow-auto border-b border-l border-r
-                    ${isOver ? `bg-white ${colors.border} shadow-sm` : `bg-white ${colors.border}`}`}
+        className={`space-y-3 min-h-[500px] p-3 rounded-b-lg transition-all duration-200
+                    flex-1 overflow-auto border ${colors.border} bg-white
+                    ${isOver ? `${colors.hover} border-dashed` : ''}`}
         style={{ 
           transition: 'all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
         }}
@@ -133,7 +135,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [pendingStatusChange, setPendingStatusChange] = useState<string | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
   
-  // Set up sensors for drag and drop with activation constraints to help differentiate from clicks
+  // Set up sensors for drag and drop with activation constraints
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -398,18 +400,22 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   // Empty state component for cleaner code
   const EmptyColumnState = ({ columnColor = 'gray' }) => {
     const colorMap = {
-      gray: { bg: 'bg-gray-50', text: 'text-gray-400', border: 'border-gray-100' },
-      blue: { bg: 'bg-blue-50', text: 'text-blue-400', border: 'border-blue-100' },
-      green: { bg: 'bg-emerald-50', text: 'text-emerald-400', border: 'border-emerald-100' },
-      amber: { bg: 'bg-amber-50', text: 'text-amber-400', border: 'border-amber-100' },
-      purple: { bg: 'bg-purple-50', text: 'text-purple-400', border: 'border-purple-100' },
+      gray: { bg: 'bg-secondary/10', text: 'text-secondary-foreground/40', border: 'border-secondary/20' },
+      blue: { bg: 'bg-blue-50', text: 'text-blue-500/70', border: 'border-blue-100' },
+      green: { bg: 'bg-emerald-50', text: 'text-emerald-500/70', border: 'border-emerald-100' },
+      amber: { bg: 'bg-amber-50', text: 'text-amber-500/70', border: 'border-amber-100' },
+      purple: { bg: 'bg-purple-50', text: 'text-purple-500/70', border: 'border-purple-100' },
+      red: { bg: 'bg-primary/5', text: 'text-primary/40', border: 'border-primary/10' }
     };
     
     const colors = colorMap[columnColor] || colorMap.gray;
     
     return (
-      <div className={`flex flex-col items-center justify-center h-32 border border-dashed ${colors.border} rounded-md ${colors.bg} transition-all duration-200`}>
-        <p className={`text-sm ${colors.text}`}>No tickets</p>
+      <div className={`flex flex-col items-center justify-center h-40 border border-dashed ${colors.border} rounded-lg ${colors.bg} transition-all duration-200 animate-fade-in`}>
+        <svg className={`w-8 h-8 ${colors.text} mb-2`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <p className={`text-sm font-medium ${colors.text}`}>No tickets</p>
         <p className={`text-xs ${colors.text} mt-1`}>Drag tickets here</p>
       </div>
     );
@@ -418,9 +424,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   // Main component with redesigned styling
   return (
     <>
-      <div className="w-full overflow-hidden">
-        <div className="w-full overflow-x-auto pb-6 pt-2 snap-x">
-          <div className="flex gap-5 px-1 min-w-max">
+      <div className="w-full overflow-hidden bg-background/50 rounded-xl p-4">
+        <div className="w-full overflow-x-auto pb-6 pt-2 snap-x hide-scrollbar">
+          <div className="flex gap-6 px-1 min-w-max">
             <DndContext 
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -428,7 +434,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
               onDragEnd={handleDragEnd}
             >
               {Object.entries(columns).map(([columnId, column]) => (
-                <div key={columnId} className="snap-start">
+                <div key={columnId} className="snap-start animate-fade-in">
                   <DroppableColumn 
                     id={columnId} 
                     title={column.title} 
@@ -473,30 +479,30 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                 }}
               >
                 {activeTicket ? (
-                  <div className="w-[270px] shadow-md animated-ticket">
-                    <Card className="w-full border-0 bg-white rounded-md overflow-hidden">
+                  <div className="w-[290px] shadow-lg animated-ticket">
+                    <Card className="w-full border border-border/50 bg-white rounded-lg overflow-hidden">
                       <CardHeader className="py-3 px-4 bg-primary/5 border-b">
                         <div>
-                          <CardTitle className="text-xs font-medium text-primary/80">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
-                          <CardDescription className="text-sm font-medium text-gray-800 mt-1">{activeTicket.title}</CardDescription>
+                          <CardTitle className="text-xs font-medium text-primary/90">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
+                          <CardDescription className="text-sm font-medium text-foreground mt-1 line-clamp-1">{activeTicket.title}</CardDescription>
                         </div>
                       </CardHeader>
                       <CardContent className="py-3 px-4">
-                        <p className="text-xs text-gray-600 line-clamp-2">{activeTicket.description}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{activeTicket.description}</p>
                         
                         <div className="flex items-center justify-between mt-3">
                           <div>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                                          ${activeTicket.priority === 'HIGH' ? 'bg-red-100 text-red-700' : 
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shadow-sm
+                                          ${activeTicket.priority === 'HIGH' ? 'bg-primary/10 text-primary' : 
                                             activeTicket.priority === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 
-                                            'bg-green-100 text-green-700'}`}>
+                                            'bg-emerald-100 text-emerald-700'}`}>
                               {activeTicket.priority}
                             </span>
                           </div>
                           
                           {activeTicket.assignee && (
                             <div className="flex items-center">
-                              <div className="bg-primary/10 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+                              <div className="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white">
                                 {activeTicket.assignee.firstName[0]}{activeTicket.assignee.lastName[0]}
                               </div>
                             </div>
@@ -514,28 +520,28 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       
       {/* Redesigned Assign Ticket Dialog */}
       <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
-        <DialogContent className="sm:max-w-md rounded-md border shadow-md">
+        <DialogContent className="sm:max-w-md rounded-lg border shadow-md bg-white">
           <DialogHeader className="border-b pb-3">
-            <DialogTitle className="text-lg font-semibold text-primary/90">
+            <DialogTitle className="text-lg font-semibold text-primary">
               {ticketToAssign?.assignee ? 'Reassign Ticket' : 'Assign Ticket'}
             </DialogTitle>
-            <DialogDescription className="text-gray-600 text-sm">
+            <DialogDescription className="text-muted-foreground text-sm">
               Select a team member to assign this ticket to
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label className="text-sm font-medium">Assignee</Label>
+              <Label className="text-sm font-medium text-foreground">Assignee</Label>
               <Select onValueChange={setSelectedAssignee} value={selectedAssignee}>
-                <SelectTrigger className="w-full border-gray-200 rounded-md h-10">
+                <SelectTrigger className="w-full border border-input rounded-md h-10 focus-ring">
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
-                <SelectContent className="rounded-md border-gray-200">
+                <SelectContent className="rounded-md border-border">
                   {usersData?.data?.map(user => (
-                    <SelectItem key={user._id} value={user._id} className="cursor-pointer py-1">
+                    <SelectItem key={user._id} value={user._id} className="cursor-pointer py-2 px-2">
                       <div className="flex items-center gap-2">
-                        <div className="bg-primary/10 text-primary w-6 h-6 rounded-full flex items-center justify-center text-xs">
+                        <div className="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-xs ring-2 ring-white">
                           {user.firstName[0]}{user.lastName[0]}
                         </div>
                         <span>{`${user.firstName} ${user.lastName}`}</span>
@@ -548,15 +554,15 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           </div>
           
           <DialogFooter className="border-t pt-3">
-            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)} className="rounded-md border-gray-200 h-9">
+            <Button variant="outline" onClick={() => setIsAssignDialogOpen(false)} className="rounded-md border h-10">
               Cancel
             </Button>
             <Button 
               onClick={handleAssignTicket}
               disabled={!selectedAssignee || isAssigning}
-              className="rounded-md bg-primary hover:bg-primary/90 h-9"
+              className="rounded-md bg-primary hover:bg-primary/90 h-10 text-white"
             >
-              {isAssigning ? 'Assigning...' : 'Assign'}
+              {isAssigning ? 'Assigning...' : 'Assign Ticket'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -572,7 +578,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         
         .dnd-overlay .animated-ticket {
           transform: scale(1.03);
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         
         .snap-x {
@@ -584,22 +590,24 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           scroll-snap-align: start;
         }
         
+        /* Enhanced scrollbars with your design system colors */
         ::-webkit-scrollbar {
-          width: 4px;
-          height: 4px;
+          width: 6px;
+          height: 6px;
         }
         
         ::-webkit-scrollbar-track {
-          background: transparent;
+          background: rgba(0, 0, 0, 0.03);
+          border-radius: 8px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: #e2e8f0;
-          border-radius: 4px;
+          background: #d55959;
+          border-radius: 8px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: #cbd5e1;
+          background: #c94a4a;
         }
       `}</style>
     </>

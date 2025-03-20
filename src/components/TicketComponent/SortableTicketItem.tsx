@@ -34,14 +34,20 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     // Only apply transform when actually moving (not when appearing/disappearing)
     transform: CSS.Transform.toString(transform),
     
-    // Disable transitions when completing a drag to prevent snapping
-    transition: isDragging 
-      ? 'none' // No transition during drag
-      : 'transform 300ms cubic-bezier(0.2, 0, 0.2, 1)', // Smooth transition otherwise
+    // No transition to prevent the snapping issue when drag ends
+    transition: 'none',
     
-    // Fade out when dragging starts, but do it immediately
+    // Hide the original immediately when dragging starts
     opacity: isDragging ? 0 : 1,
     visibility: isDragging ? 'hidden' : 'visible',
+    
+    // Set position to position:fixed when dragging to avoid layout shifts
+    position: isDragging ? 'fixed' : 'relative',
+    zIndex: isDragging ? -1 : 'auto',
+    pointerEvents: isDragging ? 'none' : 'auto',
+    
+    // Prevent other styles from interfering
+    willChange: isDragging ? 'transform' : 'auto',
   };
 
   const handleClick = (e: React.MouseEvent) => {

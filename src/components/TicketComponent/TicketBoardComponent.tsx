@@ -1,7 +1,7 @@
 // src/components/TicketComponent/TicketBoardComponent.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   DndContext, 
   closestCenter,
@@ -92,7 +92,7 @@ const DroppableColumn = ({ id, children, title, count, color = 'gray' }) => {
   const colors = colorMap[color] || colorMap.gray;
 
   return (
-    <div className="flex flex-col h-full w-[300px] transition-all duration-200 rounded-lg shadow-card">
+    <div className="flex flex-col h-full w-[280px] transition-all duration-200 rounded-lg shadow-card">
       <div className={`flex items-center justify-between p-3 ${colors.bg} rounded-t-lg border-t border-l border-r ${colors.border}`}>
         <h3 className={`font-medium ${colors.text} flex items-center`}>
           {title}
@@ -152,8 +152,20 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     sort: { firstName: 1 }
   }, { skip: !ticketToAssign });
 
+  // Store the previous tickets ref to avoid unnecessary re-renders
+  const prevTicketsRef = useRef(null);
+  
   // Initialize columns with tickets and added visual indicators
   useEffect(() => {
+    // Skip re-processing if no change in tickets data
+    if (prevTicketsRef.current && 
+        JSON.stringify(prevTicketsRef.current) === JSON.stringify(tickets)) {
+      return;
+    }
+    
+    // Update the ref
+    prevTicketsRef.current = tickets;
+    
     const initialColumns: { [key: string]: Column } = {
       new: {
         id: 'new',
@@ -208,7 +220,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       }
     });
 
-    updateColumnsState(initialColumns);
+    setColumns(initialColumns);
   }, [tickets]);
 
   // Find which column a ticket is in
@@ -358,30 +370,51 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // Create deep copies of the state
     const newColumns = JSON.parse(JSON.stringify(columns));
     
-    // Remove from source column
+    // Remove from source column immediately to prevent the snap-back effect
     newColumns[sourceColumnId].tickets = newColumns[sourceColumnId].tickets.filter(t => t._id !== ticketId);
     
     // Update ticket status
     const updatedTicket = { ...ticket, status: newStatus };
     
-    // Add to destination column
+    // Add to destination column immediately
     newColumns[destinationColumnId].tickets.push(updatedTicket);
-  
-    // First, cleanly close the drag operation
+    
+    // First, update local state immediately
+    setColumns(newColumns);
+    
+    // Close the drag operation
     setActiveDragId(null);
     setActiveTicket(null);
-
-    // Use a small delay to ensure the drag overlay completes its animation
-    setTimeout(() => {
-      // Now update the columns state (the visual change)
-      updateColumnsState(newColumns);
+    
+    try {
+      // Update the backend
+      await updateTicketStatus(ticket._id, newStatus);
       
-      // Then, in the background, update the backend
-      updateTicketStatus(ticket._id, newStatus).catch(error => {
-        console.error("Error updating ticket status:", error);
-        toast.error("Failed to update ticket status");
-      });
-    }, 100);
+      // Add a class to the moved ticket to highlight it briefly
+      setTimeout(() => {
+        const ticketElement = document.querySelector(`[data-ticket-id="${ticket._id}"]`);
+        if (ticketElement) {
+          ticketElement.classList.add('animate-highlight');
+          
+          // Remove the highlight class after animation completes
+          setTimeout(() => {
+            ticketElement.classList.remove('animate-highlight');
+          }, 1000);
+        }
+      }, 100);
+      
+    } catch (error) {
+      console.error("Error updating ticket status:", error);
+      toast.error("Failed to update ticket status");
+      
+      // If the backend update fails, revert the visual change
+      const revertColumns = JSON.parse(JSON.stringify(columns));
+      revertColumns[sourceColumnId].tickets.push(ticket);
+      revertColumns[destinationColumnId].tickets = revertColumns[destinationColumnId].tickets.filter(
+        t => t._id !== ticket._id
+      );
+      setColumns(revertColumns);
+    }
   };
   
   // Handle navigating to ticket details
@@ -391,10 +424,9 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   };
 
   const updateColumnsState = (newColumns) => {
-    // Schedule state update for next frame to avoid flicker
-    requestAnimationFrame(() => {
-      setColumns(newColumns);
-    });
+    // Update state immediately instead of using requestAnimationFrame
+    // This helps prevent the snap-back effect
+    setColumns(newColumns);
   };
   
   // Empty state component for cleaner code
@@ -426,7 +458,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     <>
       <div className="w-full overflow-hidden bg-background/50 rounded-xl p-4">
         <div className="w-full overflow-x-auto pb-6 pt-2 snap-x hide-scrollbar">
-          <div className="flex gap-6 px-1 min-w-max">
+          <div className="flex gap-6 px-1">
             <DndContext 
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -434,7 +466,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
               onDragEnd={handleDragEnd}
             >
               {Object.entries(columns).map(([columnId, column]) => (
-                <div key={columnId} className="snap-start animate-fade-in">
+                <div key={columnId} className="snap-start animate-fade-in flex-shrink-0">
                   <DroppableColumn 
                     id={columnId} 
                     title={column.title} 
@@ -608,6 +640,26 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         
         ::-webkit-scrollbar-thumb:hover {
           background: #c94a4a;
+        }
+        
+        /* Animation to highlight a ticket after it's moved */
+        @keyframes highlightTicket {
+          0% { 
+            box-shadow: 0 0 0 2px #d55959; 
+            transform: translateY(-2px);
+          }
+          70% { 
+            box-shadow: 0 0 0 2px #d55959; 
+            transform: translateY(-2px);
+          }
+          100% { 
+            box-shadow: none; 
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-highlight {
+          animation: highlightTicket 1s ease-out forwards;
         }
       `}</style>
     </>

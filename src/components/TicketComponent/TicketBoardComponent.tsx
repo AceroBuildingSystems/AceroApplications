@@ -365,31 +365,21 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // Add to destination column
     newColumns[destinationColumnId].tickets.push(updatedTicket);
   
-    // Update backend first, but keep visual consistency
-    try {
-      // Update visual state immediately for responsiveness
+    // First, cleanly close the drag operation
+    setActiveDragId(null);
+    setActiveTicket(null);
+
+    // Use a small delay to ensure the drag overlay completes its animation
+    setTimeout(() => {
+      // Now update the columns state (the visual change)
       updateColumnsState(newColumns);
       
-      // Then update backend
-      const success = await updateTicketStatus(ticket._id, newStatus);
-      
-      if (!success) {
-        // If update fails, revert to the original state
-        console.log("Reverting due to failed backend update");
-        // Re-fetch the tickets would be better here
-      }
-      
-      // Clean up
-      setActiveDragId(null);
-      setActiveTicket(null);
-      
-    } catch (error) {
-      console.error("Error updating ticket status:", error);
-      toast.error("Failed to update ticket status");
-      // Clean up
-      setActiveDragId(null);
-      setActiveTicket(null);
-    }
+      // Then, in the background, update the backend
+      updateTicketStatus(ticket._id, newStatus).catch(error => {
+        console.error("Error updating ticket status:", error);
+        toast.error("Failed to update ticket status");
+      });
+    }, 100);
   };
   
   // Handle navigating to ticket details
@@ -471,8 +461,15 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
               <DragOverlay 
                 className="dnd-overlay"
                 dropAnimation={{
-                  duration: 200,
+                  duration: 300,
                   easing: 'cubic-bezier(0.2, 0, 0.2, 1)',
+                  keyframes: ({ active, dragOverlay }) => {
+                    return [
+                      { opacity: 0, transform: 'scale(1.05)' },
+                      { opacity: 0, transform: 'scale(1.05)' },
+                      { opacity: 0, transform: 'scale(1.05)' },
+                    ];
+                  }
                 }}
               >
                 {activeTicket ? (

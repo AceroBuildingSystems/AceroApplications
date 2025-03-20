@@ -1,7 +1,6 @@
-// src/app/dashboard/ticket/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useGetTicketsQuery } from '@/services/endpoints/ticketApi';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import DashboardLoader from '@/components/ui/DashboardLoader';
@@ -14,7 +13,7 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { 
   Plus, LayoutDashboard, LayoutList, Filter, Search,
   ListFilter, X, ChevronDown, Loader2, Settings, RefreshCw,
-  Table
+  Table, Inbox, AlertTriangle, Check
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import TicketBoardComponent from '@/components/TicketComponent/TicketBoardComponent';
@@ -38,7 +37,7 @@ const TicketDashboardPage = () => {
   const [view, setView] = useState('board');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [priorityFilter, setpPriorityFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -89,11 +88,47 @@ const TicketDashboardPage = () => {
     return true;
   });
   
-  const handleTicketClick = (ticketId: string) => {
+  const handleTicketClick = (ticketId) => {
     router.push(`/dashboard/ticket/${ticketId}`);
   };
 
+  // Get active filters count
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (departmentFilter && departmentFilter !== 'all_departments') count++;
+    if (statusFilter && statusFilter !== 'all_statuses') count++;
+    if (priorityFilter && priorityFilter !== 'all_priorities') count++;
+    return count;
+  };
+
   // Animation variants
+  const microButtonAnimation = {
+    hover: { scale: 1.03, y: -1, boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)" },
+    tap: { scale: 0.97, y: 1, boxShadow: "0 2px 6px rgba(0, 0, 0, 0.05)" },
+    transition: { type: "spring", stiffness: 500, damping: 25 }
+  };
+
+  // Staggered children animation for the dashboard content
+  const dashboardStaggerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        staggerChildren: 0.07,
+        delayChildren: 0.05
+      }
+    }
+  };
+
+  const dashboardItemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0, 
+      transition: { type: "spring", stiffness: 400, damping: 30 }
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: { 
@@ -132,91 +167,136 @@ const TicketDashboardPage = () => {
       } 
     }
   };
+
+  // Reset all filters
+  const resetFilters = () => {
+    setDepartmentFilter('');
+    setStatusFilter('');
+    setPriorityFilter('');
+    setSearchQuery('');
+  };
   
   return (
     <DashboardLoader loading={loading}>
-      <div className="space-y-6 max-w-full">
+      <motion.div 
+        className="space-y-6 max-w-full"
+        variants={dashboardStaggerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {/* Header Section */}
         <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={dashboardItemVariants}
+          className="rounded-xl shadow-sm px-6 py-5 border border-border/30 backdrop-blur-sm"
+          whileHover={{ boxShadow: "0 8px 30px rgba(0, 0, 0, 0.04)" }}
           transition={{ duration: 0.3 }}
-          className="rounded-lg shadow-card px-6 py-5 border"
         >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-                <span>Tickets</span>
+              <h1 className="text-2xl font-bold mb-1 flex items-center gap-2 text-foreground">
+                <motion.span
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >Tickets</motion.span>
                 {filteredTickets && (
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 500, delay: 0.3 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.3 }}
                   >
-                    <Badge className="ml-2 badge-status bg-primary/10 text-primary">
+                    <Badge className="ml-2 badge-status bg-primary/10 text-primary font-medium px-2.5 py-0.5 text-xs">
                       {filteredTickets.length} {filteredTickets.length === 1 ? 'ticket' : 'tickets'}
                     </Badge>
                   </motion.div>
                 )}
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage and track all support tickets efficiently
-              </p>
+              <motion.p 
+                className="text-sm text-muted-foreground"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                Track and manage support requests efficiently
+              </motion.p>
             </div>
             
             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap justify-end">
               <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={microButtonAnimation.hover}
+                whileTap={microButtonAnimation.tap}
+                transition={microButtonAnimation.transition}
               >
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="btn-hover-effect focus-ring h-9"
+                  className="focus-ring h-9 rounded-lg border-border/40 bg-white/50 dark:bg-card/50"
                   onClick={handleRefresh}
                   disabled={isRefreshing}
                 >
                   {isRefreshing ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    >
+                      <Loader2 className="h-4 w-4" />
+                    </motion.div>
                   ) : (
-                    <RefreshCw className="h-4 w-4" />
+                    <motion.div
+                      whileHover={{ rotate: 180 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </motion.div>
                   )}
                   <span className="hidden sm:inline ml-1.5">Refresh</span>
                 </Button>
               </motion.div>
               
               <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={microButtonAnimation.hover}
+                whileTap={microButtonAnimation.tap}
+                transition={microButtonAnimation.transition}
               >
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="btn-hover-effect focus-ring h-9"
+                      className="focus-ring h-9 rounded-lg border-border/40 bg-white/50 dark:bg-card/50"
                     >
-                      <Settings className="h-4 w-4" />
+                      <motion.div
+                        whileHover={{ rotate: 45 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </motion.div>
                       <span className="hidden sm:inline ml-1.5">Options</span>
-                      <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
+                      <motion.div
+                        animate={{ y: [0, 2, 0] }}
+                        transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
+                      >
+                        <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
+                      </motion.div>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="shadow-dropdown animate-fade-in">
+                  <DropdownMenuContent align="end" className="shadow-lg rounded-lg border-border/40 bg-white dark:bg-card animate-in slide-in-from-top-5 zoom-in-95 duration-200">
                     <DropdownMenuItem 
                       onClick={() => router.push('/dashboard/ticket/categories')}
-                      className="cursor-pointer"
+                      className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md transition-all duration-200"
                     >
                       Categories
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       onClick={() => router.push('/dashboard/ticket/skills')}
-                      className="cursor-pointer"
+                      className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md transition-all duration-200"
                     >
                       User Skills
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    <DropdownMenuSeparator className="bg-border/30" />
                     <DropdownMenuItem 
                       onClick={() => setShowFilters(!showFilters)}
-                      className="cursor-pointer"
+                      className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md transition-all duration-200"
                     >
                       {showFilters ? 'Hide Filters' : 'Show Filters'}
                     </DropdownMenuItem>
@@ -225,14 +305,20 @@ const TicketDashboardPage = () => {
               </motion.div>
               
               <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={microButtonAnimation.hover}
+                whileTap={microButtonAnimation.tap}
+                transition={microButtonAnimation.transition}
               >
                 <Button 
-                  className="flex items-center gap-1.5 h-9 shadow-md btn-hover-effect focus-ring"
+                  className="flex items-center gap-1.5 h-9 shadow-sm focus-ring rounded-lg"
                   onClick={() => router.push('/dashboard/ticket/create')}
                 >
-                  <Plus className="h-4 w-4" />
+                  <motion.div
+                    whileHover={{ rotate: 90 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </motion.div>
                   <span>Create Ticket</span>
                 </Button>
               </motion.div>
@@ -240,80 +326,111 @@ const TicketDashboardPage = () => {
           </div>
         </motion.div>
 
+        {/* Tabs & Search Section */}
         <Tabs 
-          defaultValue="board" 
+          defaultValue="list" 
           className="space-y-4"
           onValueChange={(value) => setView(value)}
         >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-card rounded-lg p-3 shadow-sm border">
+          <motion.div 
+            variants={dashboardItemVariants}
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-border/30"
+          >
             <div className="flex items-center flex-wrap sm:flex-nowrap gap-2">
-              <TabsList className="mr-2">
-                <TabsTrigger 
-                  value="board" 
-                  className="flex items-center gap-1.5 focus-ring transition-all duration-200"
-                >
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span>Board</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="list" 
-                  className="flex items-center gap-1.5 focus-ring transition-all duration-200"
-                >
-                  <LayoutList className="h-4 w-4" />
-                  <span>List</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="statistics" 
-                  className="flex items-center gap-1.5 focus-ring transition-all duration-200"
-                >
-                  <Table className="h-4 w-4" />
-                  <span>Stats</span>
-                </TabsTrigger>
+              <TabsList className="mr-2 p-1 bg-muted/40 rounded-lg backdrop-blur-md">
+                {['list', 'board', 'statistics'].map((tabValue, index) => (
+                  <TabsTrigger 
+                    key={tabValue}
+                    value={tabValue} 
+                    className={`flex items-center gap-1.5 focus-ring transition-all duration-300 rounded-md relative overflow-hidden 
+                              data-[state=active]:bg-white/90 dark:data-[state=active]:bg-secondary/90 data-[state=active]:shadow-sm`}
+                  >
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.1 * index, duration: 0.3 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      {tabValue === 'board' && <LayoutDashboard className="h-4 w-4" />}
+                      {tabValue === 'list' && <LayoutList className="h-4 w-4" />}
+                      {tabValue === 'statistics' && <Table className="h-4 w-4" />}
+                      <span className="capitalize">{tabValue === 'statistics' ? 'Stats' : tabValue}</span>
+                    </motion.div>
+                    {view === tabValue && (
+                      <motion.div 
+                        layoutId="activeTab"
+                        className="absolute inset-0 bg-primary/5 rounded-md -z-10"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    )}
+                  </TabsTrigger>
+                ))}
               </TabsList>
               
               <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={microButtonAnimation.hover}
+                whileTap={microButtonAnimation.tap}
+                transition={microButtonAnimation.transition}
               >
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex items-center gap-1.5 transition-all duration-200 h-9 rounded-lg focus-ring"
+                  className="flex items-center gap-1.5 transition-all duration-200 h-9 rounded-lg focus-ring "
                   onClick={() => setShowFilters(!showFilters)}
                 >
-                  <Filter className="h-4 w-4" />
+                  <motion.div
+                    animate={showFilters ? { rotate: 180 } : { rotate: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <Filter className="h-4 w-4" />
+                  </motion.div>
                   <span>Filters</span>
-                  {(departmentFilter && departmentFilter !== 'all_departments') || 
-                   (statusFilter && statusFilter !== 'all_statuses') || 
-                   (priorityFilter && priorityFilter !== 'all_priorities') ? (
-                    <Badge className="ml-1 badge-status bg-primary/10 text-primary">
-                      Active
-                    </Badge>
-                  ) : null}
+                  {getActiveFiltersCount() > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                    >
+                      <Badge className="ml-1 badge-status bg-primary/15 text-primary text-xs px-1.5 py-0.5 rounded-full">
+                        {getActiveFiltersCount()}
+                      </Badge>
+                    </motion.div>
+                  )}
                 </Button>
               </motion.div>
             </div>
             
-            <div className="relative max-w-xs sm:max-w-sm w-full group">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
+            <motion.div 
+              variants={dashboardItemVariants}
+              className="relative max-w-xs sm:max-w-sm w-full group"
+            >
+              <motion.div
+                initial={{ opacity: 0.5 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
+              </motion.div>
               <Input
                 placeholder="Search tickets..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 input-modern"
+                className="pl-9 pr-9 rounded-lg border-border/30 h-9 focus:border-primary/40 transition-all duration-200 bg-white/70 dark:bg-card/70 backdrop-blur-sm focus:ring-2 focus:ring-primary/10 focus:ring-offset-0"
               />
               <AnimatePresence>
                 {searchQuery && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={{ duration: 0.15 }}
+                    initial={{ opacity: 0, scale: 0.8, rotate: -90 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, rotate: 90 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="absolute right-1 top-0 h-full px-2 text-muted-foreground hover:text-primary"
+                      className="absolute right-1 top-0 h-full px-2 text-muted-foreground hover:text-primary transition-colors duration-200"
                       onClick={() => setSearchQuery('')}
                     >
                       <X className="h-4 w-4" />
@@ -321,103 +438,141 @@ const TicketDashboardPage = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
           
+          {/* Filters Section */}
           <AnimatePresence>
             {showFilters && (
               <motion.div
-                variants={filterVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
+                initial={{ opacity: 0, height: 0, y: -20 }}
+                animate={{ opacity: 1, height: "auto", y: 0 }}
+                exit={{ opacity: 0, height: 0, y: -20 }}
+                transition={{ 
+                  type: "spring", 
+                  stiffness: 300, 
+                  damping: 30,
+                  opacity: { duration: 0.2 } 
+                }}
               >
-                <Card className="shadow-card card-hover">
-                  <CardHeader className="pb-3 border-b">
-                    <CardTitle className="text-base flex items-center">
-                      <ListFilter className="h-4 w-4 mr-2 text-primary" />
+                <Card className="shadow-sm border border-border/20 rounded-xl overflow-hidden bg-white/90 dark:bg-card/90 backdrop-blur-md">
+                  <CardHeader className="pb-3 border-b border-border/20 bg-muted/10">
+                    <CardTitle className="text-base flex items-center text-foreground font-medium">
+                      <motion.div
+                        initial={{ rotate: -90, opacity: 0 }}
+                        animate={{ rotate: 0, opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <ListFilter className="h-4 w-4 mr-2 text-primary" />
+                      </motion.div>
                       Filter Options
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium mb-1.5 block">Department</label>
+                    <motion.div 
+                      className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                      initial="hidden"
+                      animate="visible"
+                      variants={{
+                        hidden: { opacity: 0 },
+                        visible: {
+                          opacity: 1,
+                          transition: { staggerChildren: 0.07 }
+                        }
+                      }}
+                    >
+                      <motion.div 
+                        className="space-y-1.5"
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: { opacity: 1, y: 0 }
+                        }}
+                      >
+                        <label className="text-sm font-medium mb-1.5 block text-foreground">Department</label>
                         <Select onValueChange={setDepartmentFilter} value={departmentFilter}>
-                          <SelectTrigger className="input-modern">
+                          <SelectTrigger className="rounded-lg border-border/30 focus:border-primary/40 transition-all duration-200 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
                             <SelectValue placeholder="Select Department" />
                           </SelectTrigger>
-                          <SelectContent className="shadow-dropdown">
-                            <SelectItem value="all_departments" className="cursor-pointer">All Departments</SelectItem> 
+                          <SelectContent className="shadow-lg rounded-lg border-border/30 bg-white/95 dark:bg-card/95 backdrop-blur-lg">
+                            <SelectItem value="all_departments" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">All Departments</SelectItem> 
                             {departmentData?.data?.map(dept => (
-                              <SelectItem key={dept._id} value={dept._id} className="cursor-pointer">
+                              <SelectItem key={dept._id} value={dept._id} className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">
                                 {dept.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
-                      </div>
+                      </motion.div>
                       
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium mb-1.5 block">Status</label>
+                      <motion.div 
+                        className="space-y-1.5"
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: { opacity: 1, y: 0 }
+                        }}
+                      >
+                        <label className="text-sm font-medium mb-1.5 block text-foreground">Status</label>
                         <Select onValueChange={setStatusFilter} value={statusFilter}>
-                          <SelectTrigger className="input-modern">
+                          <SelectTrigger className="rounded-lg border-border/30 focus:border-primary/40 transition-all duration-200 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
                             <SelectValue placeholder="Select Status" />
                           </SelectTrigger>
-                          <SelectContent className="shadow-dropdown">
-                            <SelectItem value="all_statuses" className="cursor-pointer">All Statuses</SelectItem>
-                            <SelectItem value="NEW" className="cursor-pointer">New</SelectItem>
-                            <SelectItem value="ASSIGNED" className="cursor-pointer">Assigned</SelectItem>
-                            <SelectItem value="IN_PROGRESS" className="cursor-pointer">In Progress</SelectItem>
-                            <SelectItem value="RESOLVED" className="cursor-pointer">Resolved</SelectItem>
-                            <SelectItem value="CLOSED" className="cursor-pointer">Closed</SelectItem>
+                          <SelectContent className="shadow-lg rounded-lg border-border/30 bg-white/95 dark:bg-card/95 backdrop-blur-lg">
+                            <SelectItem value="all_statuses" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">All Statuses</SelectItem>
+                            <SelectItem value="NEW" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">New</SelectItem>
+                            <SelectItem value="ASSIGNED" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">Assigned</SelectItem>
+                            <SelectItem value="IN_PROGRESS" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">In Progress</SelectItem>
+                            <SelectItem value="RESOLVED" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">Resolved</SelectItem>
+                            <SelectItem value="CLOSED" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">Closed</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
+                      </motion.div>
                       
-                      <div className="space-y-1.5">
-                        <label className="text-sm font-medium mb-1.5 block">Priority</label>
-                        <Select onValueChange={setpPriorityFilter} value={priorityFilter}>
-                          <SelectTrigger className="input-modern">
+                      <motion.div 
+                        className="space-y-1.5"
+                        variants={{
+                          hidden: { opacity: 0, y: 10 },
+                          visible: { opacity: 1, y: 0 }
+                        }}
+                      >
+                        <label className="text-sm font-medium mb-1.5 block text-foreground">Priority</label>
+                        <Select onValueChange={setPriorityFilter} value={priorityFilter}>
+                          <SelectTrigger className="rounded-lg border-border/30 focus:border-primary/40 transition-all duration-200 bg-white/70 dark:bg-card/70 backdrop-blur-sm">
                             <SelectValue placeholder="Select Priority" />
                           </SelectTrigger>
-                          <SelectContent className="shadow-dropdown">
-                            <SelectItem value="all_priorities" className="cursor-pointer">All Priorities</SelectItem>
-                            <SelectItem value="HIGH" className="cursor-pointer">High</SelectItem>
-                            <SelectItem value="MEDIUM" className="cursor-pointer">Medium</SelectItem>
-                            <SelectItem value="LOW" className="cursor-pointer">Low</SelectItem>
+                          <SelectContent className="shadow-lg rounded-lg border-border/30 bg-white/95 dark:bg-card/95 backdrop-blur-lg">
+                            <SelectItem value="all_priorities" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">All Priorities</SelectItem>
+                            <SelectItem value="HIGH" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">High</SelectItem>
+                            <SelectItem value="MEDIUM" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">Medium</SelectItem>
+                            <SelectItem value="LOW" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">Low</SelectItem>
                           </SelectContent>
                         </Select>
-                      </div>
-                    </div>
+                      </motion.div>
+                    </motion.div>
                     
                     <div className="flex justify-end mt-5">
                       <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={microButtonAnimation.hover}
+                        whileTap={microButtonAnimation.tap}
+                        transition={microButtonAnimation.transition}
                         className="mr-2"
                       >
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="btn-hover-effect focus-ring"
-                          onClick={() => {
-                            setDepartmentFilter('');
-                            setStatusFilter('');
-                            setpPriorityFilter('');
-                            setSearchQuery('');
-                          }}
+                          className="focus-ring rounded-lg border-border/30 bg-white/70 dark:bg-card/70"
+                          onClick={resetFilters}
                         >
                           Reset Filters
                         </Button>
                       </motion.div>
                       <motion.div
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={microButtonAnimation.hover}
+                        whileTap={microButtonAnimation.tap}
+                        transition={microButtonAnimation.transition}
                       >
                         <Button 
                           size="sm"
-                          className="shadow-md btn-hover-effect focus-ring"
+                          className="shadow-sm focus-ring rounded-lg"
                           onClick={() => setShowFilters(false)}
                         >
                           Apply
@@ -430,6 +585,7 @@ const TicketDashboardPage = () => {
             )}
           </AnimatePresence>
           
+          {/* Board View */}
           <TabsContent value="board" className="mt-0 pt-2">
             <motion.div
               key="board-view"
@@ -437,6 +593,7 @@ const TicketDashboardPage = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
+              variants={dashboardItemVariants}
             >
               <TicketBoardComponent 
                 tickets={filteredTickets || []} 
@@ -446,6 +603,7 @@ const TicketDashboardPage = () => {
             </motion.div>
           </TabsContent>
           
+          {/* List View */}
           <TabsContent value="list" className="mt-0 pt-2">
             <motion.div
               key="list-view"
@@ -453,6 +611,7 @@ const TicketDashboardPage = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
+              variants={dashboardItemVariants}
             >
               <div className="space-y-4">
                 {filteredTickets?.length > 0 ? (
@@ -466,9 +625,9 @@ const TicketDashboardPage = () => {
                       <motion.div
                         key={ticket._id}
                         variants={itemVariants}
-                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileHover={{ scale: 1.02, y: -2, boxShadow: "0 10px 30px -5px rgba(0, 0, 0, 0.08)" }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                        className="card-hover"
+                        className="rounded-xl overflow-hidden"
                       >
                         <TicketComponent 
                           ticket={ticket} 
@@ -479,13 +638,13 @@ const TicketDashboardPage = () => {
                   </motion.div>
                 ) : (
                   <motion.div 
-                    className="flex flex-col items-center justify-center py-16 rounded-lg shadow-sm border"
+                    className="flex flex-col items-center justify-center py-16 rounded-xl shadow-sm border border-border/30 bg-white/90 dark:bg-card/90 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.5 }}
                   >
                     <motion.div 
-                      className="bg-muted p-4 rounded-full mb-4 text-primary"
+                      className="bg-muted/30 p-4 rounded-full mb-4 text-primary"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: "spring", stiffness: 400, damping: 17, delay: 0.3 }}
@@ -493,7 +652,7 @@ const TicketDashboardPage = () => {
                       <Search className="h-10 w-10" />
                     </motion.div>
                     <motion.h3 
-                      className="text-xl font-medium mb-2"
+                      className="text-xl font-medium mb-2 text-foreground"
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.4, duration: 0.3 }}
@@ -517,29 +676,26 @@ const TicketDashboardPage = () => {
                       transition={{ delay: 0.6, duration: 0.3 }}
                     >
                       <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={microButtonAnimation.hover}
+                        whileTap={microButtonAnimation.tap}
+                        transition={microButtonAnimation.transition}
                       >
                         <Button 
                           variant="outline"
-                          className="btn-hover-effect focus-ring"
-                          onClick={() => {
-                            setDepartmentFilter('');
-                            setStatusFilter('');
-                            setpPriorityFilter('');
-                            setSearchQuery('');
-                          }}
+                          className="focus-ring rounded-lg border-border/30 bg-white/70 dark:bg-card/70"
+                          onClick={resetFilters}
                         >
                           Reset Filters
                         </Button>
                       </motion.div>
                       <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        whileHover={microButtonAnimation.hover}
+                        whileTap={microButtonAnimation.tap}
+                        transition={microButtonAnimation.transition}
                       >
                         <Button 
                           onClick={() => router.push('/dashboard/ticket/create')}
-                          className="shadow-md btn-hover-effect focus-ring"
+                          className="shadow-sm focus-ring rounded-lg"
                         >
                           Create New Ticket
                         </Button>
@@ -551,6 +707,7 @@ const TicketDashboardPage = () => {
             </motion.div>
           </TabsContent>
           
+          {/* Statistics View */}
           <TabsContent value="statistics" className="mt-0 pt-2">
             <motion.div
               key="statistics-view"
@@ -558,6 +715,7 @@ const TicketDashboardPage = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
+              variants={dashboardItemVariants}
             >
               <TicketStatisticsComponent 
                 tickets={ticketsData?.data || []}
@@ -566,7 +724,7 @@ const TicketDashboardPage = () => {
             </motion.div>
           </TabsContent>
         </Tabs>
-      </div>
+      </motion.div>
     </DashboardLoader>
   );
 };

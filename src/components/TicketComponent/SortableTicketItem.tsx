@@ -29,11 +29,22 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     }
   });
 
-  const dragStyle = {
+  // Adjust the style to handle the appearance/disappearance more smoothly
+  const style = {
+    // Only apply transform when actually moving (not when appearing/disappearing)
     transform: CSS.Transform.toString(transform),
-    transition: 'transform 250ms cubic-bezier(0.2, 0, 0.2, 1), opacity 200ms ease',
-    // Hide the original ticket completely when dragging
+    
+    // Disable transitions when completing a drag to prevent snapping
+    transition: isDragging 
+      ? 'none' // No transition during drag
+      : 'all 300ms cubic-bezier(0.2, 0, 0.2, 1)', // Smooth transition otherwise
+    
+    // Fade out when dragging starts, but do it immediately
     opacity: isDragging ? 0 : 1,
+    visibility: isDragging ? 'hidden' : 'visible',
+    
+    // Keep space in the document flow to prevent layout shifts
+    height: isDragging ? 'auto' : 'auto',
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -46,22 +57,17 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
   return (
     <div
       ref={setNodeRef}
-      style={dragStyle}
-      className="mb-2"
-      data-ticket-id={id}
+      style={style}
+      className="mb-2 relative"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
       <div 
-        className={`bg-white rounded-md transition-all duration-200 
-                   ${isHovering ? 'shadow-md translate-y-[-1px]' : 'shadow-sm'}
-                   ${isDragging ? 'ring-2 ring-primary/30' : ''}`}
+        className={`bg-white rounded-md transition-transform duration-200 
+                   ${isHovering ? 'shadow-md translate-y-[-1px]' : 'shadow-sm'}`}
         onClick={handleClick}
       >
-        {/* The actual ticket component */}
-        <div className="p-[1px]">
-          <TicketComponent ticket={ticket} />
-        </div>
+        <TicketComponent ticket={ticket} />
         
         {/* Invisible drag handle that covers the entire component */}
         <div 

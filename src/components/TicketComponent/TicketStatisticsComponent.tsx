@@ -243,7 +243,7 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
           <Card className="overflow-hidden h-full border-border/30 shadow-sm hover:border-primary/30 hover:shadow-md transition-all duration-300">
             <CardContent className="p-0">
               <div className="flex h-full">
-                <div className="w-2 bg-primary"></div>
+                <div className="w-2 min-h-[162px] bg-primary"></div>
                 <div className="flex-1 p-5">
                   <div className="flex justify-between">
                     <div>
@@ -356,12 +356,12 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
         <motion.div variants={item}>
           <Card className="overflow-hidden h-full border-border/30 shadow-sm hover:border-emerald-300/30 hover:shadow-md transition-all duration-300">
             <CardContent className="p-0">
-              <div className="flex h-full">
+              <div className="flex min-h-[162px] h-full">
                 <div className="w-2 bg-emerald-500"></div>
                 <div className="flex-1 p-5">
                   <div className="flex justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Completed</p>
+                      <p className="text-sm font-medium text-muted-foreground  mb-1">Completed</p>
                       <div className="text-3xl font-bold">
                         {filteredTickets.filter(t => t.status === 'CLOSED').length}
                       </div>

@@ -80,7 +80,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             ticket.status === 'IN_PROGRESS' ? "border-l-amber-500" :
             ticket.status === 'RESOLVED' ? "border-l-green-500" :
             "border-l-gray-500",
-            compactView ? "p-2" : "p-3",
+            compactView ? "p-2 max-w-[270px]" : "p-3",
             className
           )}
           style={style}
@@ -91,7 +91,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             <div className="flex items-center">
               <StatusIcon />
               <Tooltip delayDuration={300}>
-                <TooltipTrigger className="ml-1.5 text-xs font-mono text-muted-foreground group-hover:text-primary transition-colors">
+                <TooltipTrigger className="ml-1.5 text-xs font-mono text-muted-foreground group-hover:text-primary transition-colors truncate max-w-[60px]">
                   {ticketId}
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-sm shadow-md bg-popover border-border">
@@ -103,30 +103,30 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
               </Tooltip>
             </div>
             
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-shrink-0">
               {/* Make badges more compact in the board view */}
               <Badge className={cn(
                 "text-xs py-0 h-5 font-medium border shadow-sm badge-hover",
                 compactView ? "px-1.5 text-[10px]" : "",
                 getStatusColor(ticket.status)
               )}>
-                {String(ticket.status).replace(/_/g, ' ')}
+                {compactView ? String(ticket.status).replace(/_/g, ' ').substring(0, 3) : String(ticket.status).replace(/_/g, ' ')}
               </Badge>
               <Badge className={cn(
                 "text-xs py-0 h-5 font-medium border shadow-sm badge-hover", 
                 compactView ? "px-1.5 text-[10px]" : "",
                 getPriorityColor(ticket.priority)
               )}>
-                {String(ticket.priority)}
+                {compactView ? String(ticket.priority).substring(0, 1) : String(ticket.priority)}
               </Badge>
             </div>
           </div>
           
           {/* Title and description */}
-          <div className="mb-2">
+          <div className={cn("mb-2", compactView ? "max-w-full" : "")}>
             <h3 className={cn(
               "font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1",
-              compactView ? "text-xs" : "text-sm"
+              compactView ? "text-xs max-w-[230px]" : "text-sm"
             )}>
               {String(ticket.title)}
             </h3>
@@ -135,7 +135,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
               <TooltipTrigger asChild>
                 <p className={cn(
                   "text-muted-foreground",
-                  compactView ? "text-[10px] line-clamp-1" : "text-xs line-clamp-2"
+                  compactView ? "text-[10px] line-clamp-1 max-w-[230px]" : "text-xs line-clamp-2"
                 )}>
                   {String(ticket.description)}
                 </p>
@@ -152,13 +152,13 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             compactView ? "grid-cols-1 gap-1 text-[10px]" : "grid-cols-2 gap-y-1.5 gap-x-2 text-xs"
           )}>
             {/* Category */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 overflow-hidden">
               <Tooltip delayDuration={300}>
                 <TooltipTrigger className="flex items-center gap-1 truncate">
                   <Tag size={compactView ? 10 : 12} className="flex-shrink-0" />
                   <span className={cn(
                     "truncate",
-                    compactView ? "max-w-[5rem]" : "max-w-[6rem]"
+                    compactView ? "max-w-[100px]" : "max-w-[6rem]"
                   )}>
                     {String(ticket.category?.name || 'Uncategorized')}
                   </span>
@@ -171,13 +171,16 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             
             {/* Time information */}
             <div className={cn(
-              "flex items-center gap-1",
+              "flex items-center gap-1 overflow-hidden",
               !compactView && "justify-end"
             )}>
               <Tooltip delayDuration={300}>
                 <TooltipTrigger className="flex items-center gap-1 truncate">
                   <Clock size={compactView ? 10 : 12} className="flex-shrink-0" />
-                  <span className="truncate max-w-[5rem]">{createdAtFormatted}</span>
+                  <span className="truncate max-w-[70px]">{compactView 
+                    ? createdAtFormatted.replace(' ago', '').replace('about ', '') 
+                    : createdAtFormatted}
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent className="shadow-md bg-popover border-border">
                   <p className="text-xs">Created {new Date(ticket.createdAt).toLocaleString()}</p>
@@ -203,20 +206,20 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             
             {/* Creator and assignee information */}
             <div className={cn(
-              "flex items-center gap-1",
+              "flex items-center gap-1 overflow-hidden",
               compactView ? "" : "justify-end col-span-2 mt-0.5"
             )}>
               <Tooltip delayDuration={300}>
                 <TooltipTrigger className="flex items-center gap-1">
                   <div className={cn(
-                    "flex items-center justify-center bg-muted rounded-full text-[9px] font-medium text-muted-foreground",
+                    "flex items-center justify-center bg-muted rounded-full text-[9px] font-medium text-muted-foreground flex-shrink-0",
                     compactView ? "w-3.5 h-3.5 text-[8px]" : "w-4 h-4"
                   )}>
                     {creatorInitial}
                   </div>
                   <span className={cn(
                     "truncate",
-                    compactView ? "max-w-[3rem] text-[10px]" : "max-w-[4rem] text-xs"
+                    compactView ? "max-w-[40px] text-[10px]" : "max-w-[4rem] text-xs"
                   )}>
                     {String(ticket.creator?.lastName || '')}
                   </span>
@@ -228,18 +231,18 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
               
               {ticket.assignee && (
                 <>
-                  <span className="text-border mx-0.5">→</span>
+                  <span className="text-border mx-0.5 flex-shrink-0">→</span>
                   <Tooltip delayDuration={300}>
                     <TooltipTrigger className="flex items-center gap-1">
                       <div className={cn(
-                        "flex items-center justify-center bg-primary/10 rounded-full text-[9px] font-medium text-primary",
+                        "flex items-center justify-center bg-primary/10 rounded-full text-[9px] font-medium text-primary flex-shrink-0",
                         compactView ? "w-3.5 h-3.5 text-[8px]" : "w-4 h-4"
                       )}>
                         {assigneeInitial}
                       </div>
                       <span className={cn(
                         "truncate",
-                        compactView ? "max-w-[3rem] text-[10px]" : "max-w-[4rem] text-xs"
+                        compactView ? "max-w-[40px] text-[10px]" : "max-w-[4rem] text-xs"
                       )}>
                         {String(ticket.assignee?.lastName || '')}
                       </span>

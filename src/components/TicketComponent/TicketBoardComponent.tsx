@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import TicketComponent from './TicketComponent';
 
+
 // Define column types with proper typing
 interface Ticket {
   _id: string;
@@ -93,7 +94,7 @@ const DroppableColumn = ({ id, children, title, count, color = 'gray' }) => {
   const colors = colorMap[color] || colorMap.gray;
 
   return (
-    <div className="flex flex-col h-full w-[280px] transition-all duration-200 rounded-lg shadow-card">
+    <div className="flex flex-col h-full w-[270px] transition-all duration-200 rounded-lg shadow-card">
       <div className={`flex items-center justify-between p-3 ${colors.bg} rounded-t-lg border-t border-l border-r ${colors.border}`}>
         <h3 className={`font-medium ${colors.text} flex items-center`}>
           {title}
@@ -524,7 +525,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                 zIndex={1000}
               >
                 {activeTicket ? (
-                  <div className="w-[280px] shadow-lg animated-ticket cursor-grabbing">
+                  <div className="w-[270px] shadow-lg animated-ticket cursor-grabbing">
                     <TicketComponent
                       ticket={activeTicket}
                       compactView={true}

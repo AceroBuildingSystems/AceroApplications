@@ -32,15 +32,15 @@ const TicketCategoriesPage = () => {
   
   return (
     <DashboardLoader loading={loading}>
-      <div className="space-y-6">
+      <div className="space-y-6 p-4">
         <div className="flex items-center mb-6">
           <Button 
-            variant="ghost" 
-            className="mr-4"
+          variant="link"
+            className="mr-4 flex justify-center items-center"
             onClick={() => router.push('/dashboard/ticket')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            <ArrowLeft className="mr-2 w-36 h-36" />
+            
           </Button>
           <h1 className="text-3xl font-bold">Ticket Categories</h1>
         </div>

@@ -13,7 +13,14 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { 
   Plus, LayoutDashboard, LayoutList, Filter, Search,
   ListFilter, X, ChevronDown, Loader2, Settings, RefreshCw,
-  Table, Inbox, AlertTriangle, Check
+  Table, Inbox, AlertTriangle, Check,
+  FileDown,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  CalendarDays,
+  FileText,
+  MoreHorizontal
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import TicketBoardComponent from '@/components/TicketComponent/TicketBoardComponent';
@@ -29,6 +36,11 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { toast } from 'react-toastify';
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Checkbox } from '@radix-ui/react-checkbox';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TicketDashboardPage = () => {
   const { user, status } = useUserAuthorised();
@@ -604,7 +616,7 @@ const TicketDashboardPage = () => {
           </TabsContent>
           
           {/* List View */}
-          <TabsContent value="list" className="mt-0 pt-2">
+          <TabsContent value="list" className="pt-2 p-4 mt-2">
             <motion.div
               key="list-view"
               initial={{ opacity: 0, y: 10 }}

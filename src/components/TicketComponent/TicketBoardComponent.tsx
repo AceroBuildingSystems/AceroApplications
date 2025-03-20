@@ -467,7 +467,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   // Main component with redesigned styling
   return (
     <>
-      <div className="w-full overflow-hidden bg-background/50 rounded-xl p-4">
+      <div className="w-full max-w-[83vw] overflow-x-scroll bg-background/50 rounded-xl p-4">
         <div className="w-full overflow-x-auto pb-6 pt-2 snap-x hide-scrollbar">
           <div className="flex gap-6 px-1">
             <DndContext 

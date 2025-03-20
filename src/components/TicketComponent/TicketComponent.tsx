@@ -62,6 +62,19 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
   // Define a shorter ticket ID for space efficiency
   const ticketId = `TKT-${String(ticket._id).substr(-8)}`;
   
+  // Define a comprehensive tooltip for the comment count
+  const CommentTooltip = () => {
+    if (!ticket.commentCount || ticket.commentCount === 0) {
+      return <p className="text-xs">No comments yet</p>;
+    }
+    
+    return (
+      <div>
+        {ticket.commentCount} comment{ticket.commentCount !== 1 ? 's' : ''}
+      </div>
+    );
+  };
+
   return (
     <TooltipProvider>
       <motion.div 
@@ -94,42 +107,61 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                 <TooltipTrigger className="ml-1.5 text-xs font-mono text-muted-foreground group-hover:text-primary transition-colors truncate max-w-[60px]">
                   {ticketId}
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-sm shadow-md bg-popover border-border">
-                  <div className="space-y-1">
-                    <p className="text-xs">Created: {new Date(ticket.createdAt).toLocaleString()}</p>
-                    <p className="text-xs">Last updated: {new Date(ticket.updatedAt).toLocaleString()}</p>
-                  </div>
+                <TooltipContent side="top">
+                  ID: {ticketId}
                 </TooltipContent>
               </Tooltip>
             </div>
             
             <div className="flex gap-1 flex-shrink-0">
               {/* Make badges more compact in the board view */}
-              <Badge className={cn(
-                "text-xs py-0 h-5 font-medium border shadow-sm badge-hover",
-                compactView ? "px-1.5 text-[10px]" : "",
-                getStatusColor(ticket.status)
-              )}>
-                {compactView ? String(ticket.status).replace(/_/g, ' ').substring(0, 3) : String(ticket.status).replace(/_/g, ' ')}
-              </Badge>
-              <Badge className={cn(
-                "text-xs py-0 h-5 font-medium border shadow-sm badge-hover", 
-                compactView ? "px-1.5 text-[10px]" : "",
-                getPriorityColor(ticket.priority)
-              )}>
-                {compactView ? String(ticket.priority).substring(0, 1) : String(ticket.priority)}
-              </Badge>
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <Badge className={cn(
+                    "text-xs py-0 h-5 font-medium border shadow-sm badge-hover",
+                    compactView ? "px-1.5 text-[10px]" : "",
+                    getStatusColor(ticket.status)
+                  )}>
+                    {compactView ? String(ticket.status).replace(/_/g, ' ').substring(0, 3) : String(ticket.status).replace(/_/g, ' ')}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Status: {String(ticket.status).replace(/_/g, ' ')}
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip delayDuration={300}>
+                <TooltipTrigger asChild>
+                  <Badge className={cn(
+                    "text-xs py-0 h-5 font-medium border shadow-sm badge-hover", 
+                    compactView ? "px-1.5 text-[10px]" : "",
+                    getPriorityColor(ticket.priority)
+                  )}>
+                    {compactView ? String(ticket.priority).substring(0, 1) : String(ticket.priority)}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Priority: {String(ticket.priority)}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
           
           {/* Title and description */}
           <div className={cn("mb-2", compactView ? "max-w-full" : "")}>
-            <h3 className={cn(
-              "font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1",
-              compactView ? "text-xs max-w-[230px]" : "text-sm"
-            )}>
-              {String(ticket.title)}
-            </h3>
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <h3 className={cn(
+                  "font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1",
+                  compactView ? "text-xs max-w-[230px]" : "text-sm"
+                )}>
+                  {String(ticket.title)}
+                </h3>
+              </TooltipTrigger>
+              <TooltipContent>
+                {String(ticket.title)}
+              </TooltipContent>
+            </Tooltip>
             
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
@@ -140,8 +172,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                   {String(ticket.description)}
                 </p>
               </TooltipTrigger>
-              <TooltipContent className="max-w-sm shadow-md bg-popover border-border">
-                <p className="text-xs">{String(ticket.description)}</p>
+              <TooltipContent>
+                {String(ticket.description)}
               </TooltipContent>
             </Tooltip>
           </div>
@@ -163,8 +195,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                     {String(ticket.category?.name || 'Uncategorized')}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className="shadow-md bg-popover border-border">
-                  <p className="text-xs">Category: {String(ticket.category?.name || 'Uncategorized')}</p>
+                <TooltipContent>
+                  Category: {String(ticket.category?.name || 'Uncategorized')}
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -182,23 +214,22 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                     : createdAtFormatted}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className="shadow-md bg-popover border-border">
-                  <p className="text-xs">Created {new Date(ticket.createdAt).toLocaleString()}</p>
-                  <p className="text-xs">Updated {new Date(ticket.updatedAt).toLocaleString()}</p>
+                <TooltipContent>
+                  {new Date(ticket.createdAt).toLocaleString()}
                 </TooltipContent>
               </Tooltip>
             </div>
             
             {/* Comment count - Optional */}
-            {ticket.commentCount && ticket.commentCount > 0 && (
+            {ticket.commentCount !== undefined && (
               <div className="flex items-center gap-1">
                 <Tooltip delayDuration={300}>
                   <TooltipTrigger className="flex items-center gap-1">
                     <MessageSquare size={compactView ? 10 : 12} className="flex-shrink-0" />
                     <span>{ticket.commentCount}</span>
                   </TooltipTrigger>
-                  <TooltipContent className="shadow-md bg-popover border-border">
-                    <p className="text-xs">{ticket.commentCount} comment{ticket.commentCount !== 1 ? 's' : ''}</p>
+                  <TooltipContent>
+                    {ticket.commentCount} comment{ticket.commentCount !== 1 ? 's' : ''}
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -224,8 +255,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                     {String(ticket.creator?.lastName || '')}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent className="shadow-md bg-popover border-border">
-                  <p className="text-xs">Created by: {String(ticket.creator?.firstName || '')} {String(ticket.creator?.lastName || '')}</p>
+                <TooltipContent>
+                  {String(ticket.creator?.firstName || '')} {String(ticket.creator?.lastName || '')}
                 </TooltipContent>
               </Tooltip>
               
@@ -247,8 +278,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                         {String(ticket.assignee?.lastName || '')}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent className="shadow-md bg-popover border-border">
-                      <p className="text-xs">Assigned to: {String(ticket.assignee?.firstName || '')} {String(ticket.assignee?.lastName || '')}</p>
+                    <TooltipContent>
+                      {String(ticket.assignee?.firstName || '')} {String(ticket.assignee?.lastName || '')}
                     </TooltipContent>
                   </Tooltip>
                 </>

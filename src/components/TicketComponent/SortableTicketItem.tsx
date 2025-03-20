@@ -5,7 +5,6 @@ import React, { useState } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import TicketComponent from './TicketComponent';
-import { motion } from 'framer-motion';
 
 interface SortableTicketItemProps {
   id: string;
@@ -29,24 +28,15 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
     }
   });
 
-  // Adjust the style to handle the appearance/disappearance more smoothly
+  // Style to handle dragging smoothly
   const style = {
-    // Only apply transform when actually moving (not when appearing/disappearing)
     transform: CSS.Transform.toString(transform),
-    
-    // No transition to prevent the snapping issue when drag ends
     transition: 'none',
-    
-    // Hide the original immediately when dragging starts
     opacity: isDragging ? 0 : 1,
     visibility: isDragging ? 'hidden' : 'visible',
-    
-    // Set position to position:fixed when dragging to avoid layout shifts
     position: isDragging ? 'fixed' : 'relative',
     zIndex: isDragging ? -1 : 'auto',
     pointerEvents: isDragging ? 'none' : 'auto',
-    
-    // Prevent other styles from interfering
     willChange: isDragging ? 'transform' : 'auto',
   };
 
@@ -63,18 +53,20 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
       style={style}
       data-ticket-id={id}
       data-draggable={true}
-      className="mb-3 relative animate-fade-in"
+      className="relative animate-fade-in"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      <div 
-        className={`bg-white rounded-lg border border-border/50 transition-all duration-200 
-                  ${isHovering ? 'shadow-md translate-y-[-2px] border-primary/20' : 'shadow-card'}`}
-        onClick={handleClick}
-      >
-        <TicketComponent ticket={ticket} />
+      <div className="relative">
+        {/* The ticket component - using compactView for board */}
+        <TicketComponent 
+          ticket={ticket}
+          onClick={handleClick}
+          compactView={true}
+          className={isHovering ? 'ring-1 ring-primary/20' : ''}
+        />
         
-        {/* Improved visual feedback for draggable area with grab cursor */}
+        {/* Draggable overlay - only visible on hover */}
         <div 
           className={`absolute inset-0 cursor-grab active:cursor-grabbing rounded-lg transition-opacity duration-200 
                     ${isHovering ? 'bg-primary/5 opacity-30' : 'opacity-0'}`}
@@ -85,8 +77,8 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
           {isHovering && (
             <div className="absolute top-1 right-1 bg-primary/10 rounded-full p-1">
               <svg 
-                width="14" 
-                height="14" 
+                width="12" 
+                height="12" 
                 viewBox="0 0 24 24" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"

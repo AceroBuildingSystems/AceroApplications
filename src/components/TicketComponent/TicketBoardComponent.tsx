@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
+import TicketComponent from './TicketComponent';
 
 // Define column types with proper typing
 interface Ticket {
@@ -524,36 +525,11 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
               >
                 {activeTicket ? (
                   <div className="w-[280px] shadow-lg animated-ticket cursor-grabbing">
-                    <Card className="w-full border border-border/50 bg-white rounded-lg overflow-hidden">
-                      <CardHeader className="py-3 px-4 bg-primary/5 border-b">
-                        <div>
-                          <CardTitle className="text-xs font-medium text-primary/90">{activeTicket.ticketId || `TKT-${activeTicket._id.substr(-8)}`}</CardTitle>
-                          <CardDescription className="text-sm font-medium text-foreground mt-1 line-clamp-1">{activeTicket.title}</CardDescription>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="py-3 px-4">
-                        <p className="text-xs text-muted-foreground line-clamp-2">{activeTicket.description}</p>
-                        
-                        <div className="flex items-center justify-between mt-3">
-                          <div>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium shadow-sm
-                                          ${activeTicket.priority === 'HIGH' ? 'bg-primary/10 text-primary' : 
-                                            activeTicket.priority === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 
-                                            'bg-emerald-100 text-emerald-700'}`}>
-                              {activeTicket.priority}
-                            </span>
-                          </div>
-                          
-                          {activeTicket.assignee && (
-                            <div className="flex items-center">
-                              <div className="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ring-2 ring-white">
-                                {activeTicket.assignee.firstName[0]}{activeTicket.assignee.lastName[0]}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <TicketComponent
+                      ticket={activeTicket}
+                      compactView={true}
+                      className="border-2 border-primary/20"
+                    />
                   </div>
                 ) : null}
               </DragOverlay>

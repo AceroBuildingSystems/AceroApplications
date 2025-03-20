@@ -2,7 +2,6 @@
 "use client";
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCreateTicketMutation } from '@/services/endpoints/ticketApi';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
@@ -11,6 +10,7 @@ import DashboardLoader from '@/components/ui/DashboardLoader';
 import TicketFormComponent from '@/components/TicketComponent/TicketFormComponent';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 
 const CreateTicketPage = () => {
   const router = useRouter();
@@ -31,27 +31,53 @@ const CreateTicketPage = () => {
     }
   };
   
+  const pageVariants = {
+    initial: { opacity: 0 },
+    animate: { 
+      opacity: 1,
+      transition: { 
+        duration: 0.3,
+        staggerChildren: 0.1
+      }
+    }
+  };
+  
+  const itemVariants = {
+    initial: { y: 10, opacity: 0 },
+    animate: { y: 0, opacity: 1 }
+  };
+  
   return (
     <DashboardLoader loading={status === 'loading' || isCreating}>
-      <div className="space-y-6">
-        <div className="flex items-center mb-6">
+      <motion.div 
+        className="max-w-3xl mx-auto px-4 py-2"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+      >
+        <motion.div 
+          className="mb-4"
+          variants={itemVariants}
+        >
           <Button 
             variant="ghost" 
-            className="mr-4"
+            size="sm"
+            className="rounded-md absolute left-0 ml-2 flex items-center text-muted-foreground hover:text-foreground"
             onClick={() => router.push('/dashboard/ticket')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to tickets
           </Button>
-          <h1 className="text-3xl font-bold">Create Ticket</h1>
-        </div>
+        </motion.div>
         
-        <TicketFormComponent 
-          onSubmit={handleSubmit}
-          userId={user?._id}
-          isEdit={false}
-        />
-      </div>
+        <motion.div variants={itemVariants}>
+          <TicketFormComponent 
+            onSubmit={handleSubmit}
+            userId={user?._id}
+            isEdit={false}
+          />
+        </motion.div>
+      </motion.div>
     </DashboardLoader>
   );
 };

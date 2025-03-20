@@ -96,70 +96,7 @@ const TicketDetailPage = () => {
     <DashboardLoader loading={loading}>
       <TooltipProvider>
         <div className="container px-4 py-6 mx-auto max-w-7xl">
-          {/* Back Button & Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                className="mr-2 p-2"
-                onClick={() => router.push('/dashboard/ticket')}
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="text-xl md:text-2xl font-bold">
-                    {ticket.ticketId || `TKT-${ticket._id.toString().substr(-8)}`}
-                  </h1>
-                  <Badge className={getStatusColor(ticket.status)}>
-                    {ticket.status}
-                  </Badge>
-                  <Badge className={getPriorityColor(ticket.priority)}>
-                    {ticket.priority}
-                  </Badge>
-                </div>
-                <h2 className="text-lg md:text-xl mt-1 text-gray-700">
-                  {ticket.title}
-                </h2>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2 self-end md:self-auto">
-              {canEdit && (
-                <Button
-                  onClick={() => setIsEditDialogOpen(true)}
-                  className="flex items-center"
-                >
-                  <Edit className="h-4 w-4 mr-2" /> 
-                  Edit
-                </Button>
-              )}
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {canEdit && ticket.status !== 'CLOSED' && (
-                    <>
-                      <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                        Edit Ticket
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>Change Status</DropdownMenuItem>
-                      {!ticket.assignee && (
-                        <DropdownMenuItem>Assign Ticket</DropdownMenuItem>
-                      )}
-                    </>
-                  )}
-                  <DropdownMenuItem onClick={() => router.push(`/dashboard/ticket/create`)}>
-                    Create New Ticket
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
+
           
           {/* Use TicketDetailComponent to display ticket details */}
           <TicketDetailComponent 

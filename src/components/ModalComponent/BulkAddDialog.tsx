@@ -104,7 +104,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   warehouses,
   vendors,
 }) => {
-  const { user } = useUserAuthorised();
+  const { user }:any = useUserAuthorised();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveResults, setSaveResults] = useState<SaveResult[]>([]);
@@ -536,7 +536,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     toast.info(`Retry complete: ${successCount} of ${newResults.length} items successful`);
   };
 
-const handleSubmit = async (e) => {
+const handleSubmit = async (e:any) => {
   console.log("handleSubmit called");
 
   if (e && typeof e.preventDefault === 'function') {
@@ -562,7 +562,7 @@ const handleSubmit = async (e) => {
   try {
     // Create asset items from product items
     const assetItems: AssetFormData[] = [];
-    
+    console.log(productItems);
     for (const item of productItems) {
       for (const serialNumber of item.serialNumbers) {
         assetItems.push({
@@ -625,7 +625,7 @@ const handleSubmit = async (e) => {
           results[i].success = true;
           results[i].message = "";
         }
-      } catch (error) {
+      } catch (error:any) {
         // This will catch any errors that weren't handled in the parent
         results[i].success = false;
         results[i].message = error.message || "Error saving item";

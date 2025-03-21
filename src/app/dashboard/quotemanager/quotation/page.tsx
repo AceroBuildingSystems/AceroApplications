@@ -598,13 +598,12 @@ const page = () => {
             data: formData,
         };
 console.log('formattedData',formattedData);
+
         const response: any = await createApplication(formattedData);
-console.log(response)
 
         if (response.data?.status === SUCCESS && action === 'Add') {
 
             toast.success('data added successfully');
-
         }
         else {
             if (response.data?.status === SUCCESS && action === 'Update') {
@@ -617,7 +616,7 @@ console.log(response)
             throw new Error("Something went wrong!");
             toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
         }
-
+console.log(response);
         return response;
     };
 
@@ -648,7 +647,7 @@ console.log(response)
 
 
         setSupportTeamMemberData(formattedTeamMemberData);
-
+        console.log(transformedData);
         setInitialData(transformedData);
         openDialog("update quotation");
         // Your add logic for user page
@@ -661,6 +660,7 @@ console.log(response)
             salesSupportEngineer: rowData?.salesSupportEngineer.map((eng: { _id: any; }) => eng._id), // Map `location` to just the `_id`s
 
         };
+       
         setInitialData(transformedData);
         !['draft', 'quoterequested'].includes(rowData?.status) && openStausDialog("quote status");
         // Your add logic for user page
@@ -691,7 +691,7 @@ console.log(response)
             projectTypeData,
             paintTypeData,
             currencyData,
-            incotermData, quotationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation"
+            incotermData, quotationData, locationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation"
         });
     };
 
@@ -946,7 +946,7 @@ console.log(response)
                 ]
             },
 
-            { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+            { label: 'Add', action: handleAdd, icon: Plus, },
         ]
     };
     const rowClassMap = {
@@ -959,7 +959,7 @@ console.log(response)
 
     };
 
-
+console.log(quotationDataNew);
     return (
         <>
             <MasterComponentAQM config={quotationConfig} loadingState={loading} rowClassMap={rowClassMap} handleExport={handleExport} />

@@ -15,6 +15,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import * as XLSX from "xlsx";
+import { Combobox } from '../ui/ComboBoxWrapper';
 
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
@@ -36,14 +37,14 @@ interface ButtonConfig {
 interface MasterComponentProps {
     config: any;
     loadingState: boolean;
-    rowClassMap:any;
+    rowClassMap: any;
     summary: boolean;
 }
 
 
 
 
-const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,rowClassMap,summary }) => {
+const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
@@ -90,7 +91,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
             });
 
             // Check if item matches filter criteria
-           
+
             const matchesFilter = Object.keys(filterValues).every((key) => {
 
                 const filterValue = filterValues[key];
@@ -126,22 +127,22 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const [open, setOpen] = React.useState(false)
     const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
-   interface FieldObject {
-       options: any;
-    key:string;
-       addNew: string;
-       label: string;
-       name: string;
-       type: string;
-       section: string;
-       subSection?: string;
-       data: { value: any; label: string }[];
-       placeholder?: string;
-       format: string;
-       required?: boolean;
-       readOnly?: boolean;
-       CustomComponent?: React.FC<{ accessData: any }>;
-     }
+    interface FieldObject {
+        options: any;
+        key: string;
+        addNew: string;
+        label: string;
+        name: string;
+        type: string;
+        section: string;
+        subSection?: string;
+        data: { value: any; label: string }[];
+        placeholder?: string;
+        format: string;
+        required?: boolean;
+        readOnly?: boolean;
+        CustomComponent?: React.FC<{ accessData: any }>;
+    }
 
     return (
         <>
@@ -167,75 +168,19 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
 
                             <div className='flex items-center gap-1'>
-                                {config.filterFields?.map((field: FieldObject, index: number) => (
-                                    <div key={index}>
-                                        <Popover open={open} onOpenChange={setOpen}>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={open ? true : false}
-                                                    className=" w-[200px] justify-between overflow-hidden text-ellipsis whitespace-nowrap"
-                                                >
-                                                    {filterValues[field.label] || field.placeholder}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-[200px] p-0">
-                                                <Command>
-                                                    <CommandInput placeholder="Search role" />
+                                {config.filterFields?.map((field: FieldObject, index: number) => {
 
-                                                    <CommandList>
-                                                        <CommandEmpty>No {field?.key} found.</CommandEmpty>
-                                                        <CommandGroup>
-                                                            {/* Add "All" option */}
-                                                            <CommandItem
-                                                                key="all"
-                                                                value="All"
-                                                                onSelect={() => {
-                                                                    handleFilterChange(null, field.label); // Set the value to null for "All"
-                                                                    setOpen(false);
-                                                                }}
-                                                            >
-                                                                <Check
-                                                                    className={cn(
-                                                                        "mr-2 h-4 w-4",
-                                                                        filterValues[field.label] === null ? "opacity-100" : "opacity-0"
-                                                                    )}
-                                                                />
-                                                                All
-                                                            </CommandItem>
+                                    return (
+                                        <Combobox
+                                            key={field.key || index}
+                                            field={field}
+                                            formData={[]}
+                                            handleChange={handleFilterChange}
+                                            placeholder={field.placeholder || ""}
 
-                                                            {field?.options?.map((option: string, i: number) => {
-
-                                                                return (
-                                                                    <CommandItem
-                                                                        key={i}
-                                                                        value={option}
-                                                                        onSelect={(value: string) => {
-
-                                                                            handleFilterChange(value?.toProperCase(), field.label);
-                                                                            setOpen(false)
-                                                                        }}
-                                                                    >
-                                                                        <Check
-                                                                            className={cn(
-                                                                                "mr-2 h-4 w-4",
-                                                                                filterValues[field.label] === option ? "opacity-100" : "opacity-0"
-                                                                            )}
-                                                                        />
-                                                                        {option}
-                                                                    </CommandItem>);
-                                                            }
-                                                            )}
-                                                        </CommandGroup>
-                                                    </CommandList>
-                                                </Command>
-                                            </PopoverContent>
-                                        </Popover>
-
-                                    </div>
-                                ))}
+                                        />
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -269,6 +214,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
                                                     onClick={() => {
+                                                        console.log(option)
                                                         option.action(option.value); // Execute the action for this dropdown option
                                                         setActiveDropdown(null); // Close the dropdown after selection
                                                     }}
@@ -286,7 +232,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                     <div className="h-[85%]">
                         {<DataTable data={filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
-                        rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
+                            rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
                     </div>
                 </div>
 

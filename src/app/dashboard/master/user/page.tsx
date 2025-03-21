@@ -17,32 +17,32 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import * as XLSX from "xlsx";
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-import {bulkImport} from '@/shared/functions';
+import { bulkImport } from '@/shared/functions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 
 
 const page = () => {
-  
-const { user, status, authenticated } = useUserAuthorised();
-  const { data: userData = [], isLoading: userLoading }:any = useGetUsersQuery();
-  const { data: departmentData = [], isLoading: departmentLoading }:any = useGetMasterQuery({
+
+  const { user, status, authenticated } = useUserAuthorised();
+  const { data: userData = [], isLoading: userLoading }: any = useGetUsersQuery();
+  const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { createdAt: -1 },
   });
-   const { data: designationData = [], isLoading: designationLoading }:any = useGetMasterQuery({
-      db: 'DESIGNATION_MASTER',
-    });
-    const { data: roleData = [], isLoading: roleLoading }:any = useGetMasterQuery( {db:"ROLE_MASTER" });
-    const { data: employeeTypeData = [], isLoading: employeeTypeLoading }:any = useGetMasterQuery({db: 'EMPLOYEE_TYPE_MASTER'});
-    const { data: organisationData = [], isLoading: organisationLoading }:any = useGetMasterQuery({db:"ORGANISATION_MASTER"} );
-  const [createUser, { isLoading: isCreatingUser }]:any = useUserOperationsMutation();
+  const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
+    db: 'DESIGNATION_MASTER',
+  });
+  const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER" });
+  const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER' });
+  const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({ db: "ORGANISATION_MASTER" });
+  const [createUser, { isLoading: isCreatingUser }]: any = useUserOperationsMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading||isCreatingUser;
+  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser;
 
   const fieldsToAdd = [
     { fieldName: 'roleName', path: ['role', 'name'] }
@@ -51,16 +51,10 @@ const { user, status, authenticated } = useUserAuthorised();
 
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
-  const distinctRoles = userData?.data?.reduce((acc: any[], user: { role: { name: any; }; }) => {
-    // Check if the role is already in the accumulator
-    if (!acc.some(role => role?.name === user?.role?.name)) {
-      acc.push(user.role); // Add the role if it's not already added
-    }
-    return acc;
-  }, []);
-
-const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
-?.map((role: { name: any; }) => role.name);             // Extract only the 'name' property
+  const roleNames = roleData?.data
+    ?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
+    ?.map((role: { _id: any; name: any }) => ({ _id: role.name, name: role.name }));
+  // Extract only the 'name' property
 
   interface RowData {
     id: string;
@@ -70,23 +64,23 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   }
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-    { label: 'Employee ID', name: "empId", type: "text",required: true, placeholder:'Employee ID'  },
-    { label: 'First Name', name: "firstName", type: "text",required: true, placeholder:'First Name' },
-    { label: 'Last Name', name: "lastName", type: "text", placeholder:'Last Name' },
-    { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder:'Full Name' },
-    { label: 'Short Name', name: "shortName", type: "text",required: true, placeholder:'Short Name' },
-    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId',required: true, placeholder:'Select Designation' },
-    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId',required: true, placeholder:'Select Department' },
-    { label: 'Email', name: "email", type: "text",required: true, placeholder:'Email' },
-    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data,required: true, placeholder:'Select Reporting To' },
-    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId',required: true, placeholder:'Select Role' },
-    { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId',required: true, placeholder:'Select Location' },
-    { label: 'Extension', name: "extension", type: "text", placeholder:'Extension' },
-    { label: 'Mobile', name: "mobile", type: "text", placeholder:'Mobile' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
-    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId',required: true, placeholder:'Select Employee Type' },
-    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder:'Pick Joining Date' },
-    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder:'Pick Leaving Date' },
+    { label: 'Employee ID', name: "empId", type: "text", required: true, placeholder: 'Employee ID' },
+    { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
+    { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
+    { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
+    { label: 'Short Name', name: "shortName", type: "text", required: true, placeholder: 'Short Name' },
+    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
+    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department' },
+    { label: 'Email', name: "email", type: "text", required: true, placeholder: 'Email' },
+    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data, required: true, placeholder: 'Select Reporting To' },
+    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
+    { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Extension', name: "extension", type: "text", placeholder: 'Extension' },
+    { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
+    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
+    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
   ]
 
 
@@ -108,29 +102,29 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}: { formData: any; action: string }) => {
+  const saveData = async ({ formData, action }: { formData: any; action: string }) => {
     const formattedData = {
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
     const response = await createUser(formattedData);
 
-       
-       if (response.data?.status === SUCCESS && action === 'Add') {
-         toast.success('User added successfully');
-   
-       }
-       else{
-         if (response.data?.status === SUCCESS && action === 'Update') {
-           toast.success('User updated successfully');
-         }
-       }
-   
-       if(response?.error?.data?.message?.message){
-         toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-       }
-   
+
+    if (response.data?.status === SUCCESS && action === 'Add') {
+      toast.success('User added successfully');
+
+    }
+    else {
+      if (response.data?.status === SUCCESS && action === 'Update') {
+        toast.success('User updated successfully');
+      }
+    }
+
+    if (response?.error?.data?.message?.message) {
+      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
+    }
+
   };
 
   const editUser = (rowData: RowData) => {
@@ -147,7 +141,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:[], action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
   };
 
   const exportToExcel = (data: any[]) => {
@@ -172,8 +166,8 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
   };
 
   const handleExport = (type: string) => {
-    type === 'excel' && exportToExcel(userData?.data) ;
-    
+    type === 'excel' && exportToExcel(userData?.data);
+
   };
 
   const handleDelete = () => {
@@ -255,7 +249,7 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
       { key: "email", label: 'email', type: "email" as const, placeholder: 'Search by email' },
     ],
     filterFields: [
-      { key: "role", label: 'roleName', type: "select" as const, options: roleNames, placeholder: 'Search by Role' },
+      { key: "role", label: 'roleName', type: "select" as const, data: roleNames, placeholder: 'Search by Role', name:'roleName' },
 
     ],
     dataTable: {
@@ -265,10 +259,12 @@ const roleNames = roleData?.data?.filter((role: undefined) => role !== undefined
     buttons: [
 
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300',dropdownOptions:[
-        { label: "Export to Excel", value: "excel",action: (type: string) => handleExport(type) },
-        { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
-      ]  },
+      {
+        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+          { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+          { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+        ]
+      },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };

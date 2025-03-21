@@ -3,9 +3,9 @@ import { vendor, ContactPerson } from "@/types/master/vendor.types";
 
 const ContactPersonSchema = new Schema<ContactPerson>({
     name: { type: String, required: true },
-    designation: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true }
+    designation: { type: String, required: false },
+    email: { type: String, required: false },
+    phone: { type: String, required: false }
 }, { _id: false });
 
 

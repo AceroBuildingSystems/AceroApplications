@@ -113,7 +113,7 @@ const page = () => {
   };
 
  const handleImport = () => {
-      bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
+      bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser:createMaster,db:"DESIGNATION_MASTER", masterName:"Designation" });
     };
 
   const handleExport = () => {

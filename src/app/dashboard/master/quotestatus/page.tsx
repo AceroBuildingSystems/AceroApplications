@@ -116,7 +116,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser:createMaster,db:"QUOTE_STATUS_MASTER", masterName:"QuoteStatus" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser:createMaster,db:"QUOTE_STATUS_MASTER", masterName:"QuoteStatus" });
   };
 
   const handleExport = () => {

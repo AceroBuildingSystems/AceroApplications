@@ -4,6 +4,7 @@ import { MenuItem } from '../types';
 import * as XLSX from "xlsx";
 import { toast } from 'react-toastify';
 import { SUCCESS } from '@/shared/constants';
+import moment from 'moment';
 
 
 export const createMongooseObjectId = (id: any) => {
@@ -71,6 +72,13 @@ interface BulkImportParams {
     continentData: any;
     regionData: any;
     countryData: any;
+    locationData: any;
+    categoryData: any;
+    vendorData: any;
+    productData: any;
+    warehouseData: any;
+    customerTypeData: any;
+    customerData: any;
     action: string;
     user: any;
     createUser: (data: any) => Promise<any>;
@@ -78,7 +86,7 @@ interface BulkImportParams {
     masterName: string;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, action, user, createUser, db, masterName }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, action, user, createUser, db, masterName }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -101,16 +109,55 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 continentData: continentData?.data || [],
                 regionData: regionData?.data || [],
                 countryData: countryData?.data || [],
-
+                locationData: locationData?.data || [],
+                categoryData: categoryData?.data || [],
+                vendorData: vendorData?.data || [],
+                productData: productData?.data || [],
+                warehouseData: warehouseData?.data || [],
+                customerTypeData: customerTypeData?.data || [],
+                customerData: customerData?.data || []
             };
 
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
 
-            const enrichedData = finalData.map((item: any) => ({
+            let enrichedData = finalData.map((item: any) => ({
                 ...item,
                 addedBy: user?._id,
                 updatedBy: user?._id,
             }));
+
+            if (masterName === 'Asset') {
+                enrichedData = finalData.map((item: any) => ({
+                    ...item,
+                    specifications: JSON.parse(item?.specifications),
+                    purchaseDate: moment(item?.purchaseDate, "DD-MM-YYYY").toDate(),
+                    warrantyStartDate: moment(item?.warrantyStartDate, "DD-MM-YYYY").toDate(),
+                    warrantyEndDate: moment(item?.warrantyEndDate, "DD-MM-YYYY").toDate(),
+                }));
+            };
+
+            if (masterName === 'Category') {
+                enrichedData = finalData.map((item: any) => ({
+                    name: item?.name,
+                    description: item?.description,
+                    specsRequired: JSON.parse(item?.specsRequired),
+                    addedBy: user?._id,
+                    updatedBy: user?._id,
+                }));
+            };
+
+            if (masterName === 'Vendor') {
+                enrichedData = finalData.map((item: any) => ({
+                    name: item?.name,
+                    email: item?.email,
+                    phone: item?.phone,
+                    location: item?.location,
+                    contactPersons: [{ name: item?.contactName, designation: item?.designation, email: item?.contactEmail, phone: item?.contactPhone }],
+                    addedBy: user?._id,
+                    updatedBy: user?._id,
+                }));
+            };
+
             // Send the transformed data for bulk insert
             try {
 
@@ -120,7 +167,6 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     bulkInsert: true,
                     data: enrichedData,
                 };
-
                 const response = await createUser(formattedData);
 
                 if (response.data?.status === SUCCESS && action === 'Add') {
@@ -136,7 +182,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 if (response?.error?.data?.message?.message) {
                     toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
                 }
-            } catch (err) {
+            } catch (err: any) {
                 const errorMessage = err instanceof Error ? err.message : 'Unknown error';
                 toast.error(`Error during import: ${errorMessage}`);
             }
@@ -145,7 +191,6 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
     };
     input.click();
 };
-
 
 interface BulkImportQuotationParams {
     roleData: any;
@@ -168,6 +213,7 @@ interface BulkImportQuotationParams {
     currencyData: any;
     incotermData: any;
     quotationData: any;
+    locationData: any;
     action: string;
     user: any;
     createUser: (data: any) => Promise<any>;
@@ -190,7 +236,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
     projectTypeData,
     paintTypeData,
     currencyData,
-    incotermData, quotationData, action, user, createUser, db, masterName }: BulkImportQuotationParams) => {
+    incotermData, quotationData, locationData, action, user, createUser, db, masterName }: BulkImportQuotationParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -235,6 +281,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 addedBy: user?._id,
                 updatedBy: user?._id,
             }));
+            console.log(enrichedData);
             // Send the transformed data for bulk insert
             try {
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
@@ -311,6 +358,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
 
                 // Step 3: Insert Quotation Entries
                 const quotationDataImport = enrichedData.map((item: { country: any; year: any; option: any; revNo: any; quoteNo: any; quoteStatus: any; salesEngineer: any; salesSupportEngineer1: any; salesSupportEngineer2: any; salesSupportEngineer3: any; rcvdDateFromCustomer: any; sellingTeam: any; responsibleTeam: any; forecastMonth: string | number; status: any; handleBy: any; addedBy: any; updatedBy: any; }, index: number) => ({
+                    ...item,
                     country: item.country,
                     year: item.year,
                     option: item.option,
@@ -349,6 +397,8 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     return true; // Unique entry, keep it
                 });
                 // Proceed with bulk insert only if there are new records
+                console.log(uniqueDataToImport);
+                
                 if (uniqueDataToImport.length > 0) {
 
                     const quotationResponse = await createUser({
@@ -465,14 +515,33 @@ const fieldMappingConfig: { [key: string]: any } = {
             }
         },
     },
+    Warehouse: {
+        location: { source: "locationData", key: "name", value: "_id" },
+    },
+    Vendor: {
+        location: { source: "locationData", key: "name", value: "_id" },
+    },
+    Product: {
+        category: { source: "categoryData", key: "name", value: "_id" },
+    },
+    Asset: {
+        vendor: { source: "vendorData", key: "name", value: "_id" },
+        product: { source: "productData", key: "name", value: "_id" },
+        warehouse: { source: "warehouseData", key: "name", value: "_id" },
+    },
+    Customer: {
+        customerType: { source: "customerTypeData", key: "name", value: "_id" },
+    },
+    CustomerContact: {
+        customer: { source: "customerData", key: "name", value: "_id" },
+    },
     // Add more entity mappings if needed
 };
 
 
-const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; }) => {
+const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; locationData?: any; }) => {
 
     const mappings = fieldMappingConfig[entityType as keyof typeof fieldMappingConfig];
-
     return data.map((item) => {
         const transformedItem = { ...item };
         if (mappings) {
@@ -722,11 +791,77 @@ const entityFieldMappings = {
         "Remarks": "remarks",
         "Lost To": "lostTo",
         "Lost To Others": "lostToOthers",
+        "Lost Date": "lostDate",
         "Reason": "reason",
         "Initial Ship Date": "initialShipDate",
         "Final Ship Date": "finalShipDate",
         "Status": 'status',
         "Handle By": 'handleBy',
+    },
+
+    Warehouse: {
+        "Name": "name",
+        "Location": "location",
+        "Contact Person": "contactPerson",
+        "Contact Number": "contactNumber",
+        // Add more mappings for Country
+    },
+    Vendor: {
+        "Name": "name",
+        "Email": "email",
+        "Contact Number": "phone",
+        "Location": "location",
+        "Contact Person": "contactName",
+        "Designation": "designation",
+        "Contact Email": "contactEmail",
+        "Phone": "contactPhone",
+        // Add more mappings for Country
+    },
+    Product: {
+        "Name": "name",
+        "Description": "description",
+        "Category": "category",
+        "Brand": "brand",
+        "Model": "model",
+        // Add more mappings for Country
+    },
+    Category: {
+        "Name": "name",
+        "Description": "description",
+        "Required Specification": "specsRequired",
+        // Add more mappings for Country
+    },
+    Asset: {
+        'Vendor Name': 'vendor',
+        'Invoice No': 'invoiceNumber',
+        'PO Number': 'poNumber',
+        'PR Number': 'prNumber',
+        'Purchase Date': 'purchaseDate',
+        'Warehouse': 'warehouse',
+        'Product Name': 'product',
+        'Serial No': 'serialNumber',
+        'Specifications': 'specifications',
+        'Status': 'status',
+        'Warranty Details': 'warrantyDetails',
+        'Warranty Start Date': 'warrantyStartDate',
+        'Warranty End Date': 'warrantyEndDate'
+    },
+    Customer: {
+        "Name": "name",
+        "Website": "website",
+        "Email": "email",
+        "Phone": "phone",
+        "Address": "address",
+        "Customer Type": "customerType",
+        // Add more mappings for Country
+    },
+    CustomerContact: {
+        "Name": "name",
+        "Email": "email",
+        "Phone": "phone",
+        "Position": "position",
+        "Customer Name": "customer",
+        // Add more mappings for Country
     },
     // Add mappings for other entities
 };

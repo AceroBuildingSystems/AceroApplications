@@ -39,9 +39,6 @@ const page = () => {
 
     const loading = approvalAuthorityLoading;
 
-
-  
-
     const formattedLocationData = locationData?.data?.map((option: { name: any; _id: any; }) => ({
         label: option.name, // Display name
         value: option._id, // Unique ID as value
@@ -115,7 +112,6 @@ const page = () => {
 
     };
 
-
     const editUser = (rowData: any) => {
         setAction('Update');
         const transformedData = {
@@ -136,7 +132,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [],continentData:[],regionData:[],countryData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
+        bulkImport({ roleData: [],continentData:[],regionData:[],countryData:[],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
     };
 
     const handleExport = () => {
@@ -148,8 +144,6 @@ const page = () => {
         console.log('UserPage Delete button clicked');
         // Your delete logic for user page
     };
-
-
 
     const approvalAuthorityColumns = [
         {

@@ -16,20 +16,20 @@ import { RowExpanding } from '@tanstack/react-table';
 import { createMasterData } from '@/server/services/masterDataServices';
 import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-
+import * as XLSX from "xlsx";
 
 const page = () => {
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: customerData = [], isLoading: customerLoading }:any = useGetMasterQuery({
+    const { data: customerData = [], isLoading: customerLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_MASTER,
         sort: { name: 'asc' },
     });
 
-    const { data: customerTypeData = [], isLoading: customerTypeLoading }:any = useGetMasterQuery({
+    const { data: customerTypeData = [], isLoading: customerTypeLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
         sort: { name: 'asc' },
-      });
-    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
+    });
+    const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -121,13 +121,34 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_MASTER, masterName: "Customer" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: customerTypeData, customerData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_MASTER, masterName: "Customer" });
     };
 
-    const handleExport = () => {
-        console.log('UserPage Update button clicked');
-        // Your update logic for user page
+    const exportToExcel = (data: any[]) => {
+        const formattedData = data.map(data => ({
+            "Name": data?.name,
+            "Website": data?.website,
+            "Email": data?.email,
+            "Phone": data?.phone,
+            "Address": data?.address,
+            "Customer Type": data?.customerType?.name,
+        }));
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
+
+
+    const handleExport = (type: string) => {
+        type === 'excel' && exportToExcel(customerData?.data);
+
+    };
+
 
     const handleDelete = () => {
         console.log('UserPage Delete button clicked');
@@ -230,34 +251,34 @@ const page = () => {
             ),
             cell: ({ row }: { row: any }) => <div >{row.getValue("address")}</div>,
         },
-         {
-                accessorKey: "customerType",
-                header: ({ column }: { column: any }) => (
-                  <button
+        {
+            accessorKey: "customerType",
+            header: ({ column }: { column: any }) => (
+                <button
                     className="flex items-center space-x-2"
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          
-                  >
+
+                >
                     <span>Customer Type</span> {/* Label */}
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                  </button>
-                ),
-                cell: ({ row }: { row: any }) => <div >{row.getValue("customerType")?.name}</div>,
-              },
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div >{row.getValue("customerType")?.name}</div>,
+        },
         {
-             accessorKey: "isActive",
-             header: ({ column }: { column: any }) => (
-               <button
-                 className="flex items-center space-x-2"
-                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-       
-               >
-                 <span>Status</span> {/* Label */}
-                 <ArrowUpDown size={15} /> {/* Sorting Icon */}
-               </button>
-             ),
-             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-           },
+            accessorKey: "isActive",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>Status</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+        },
 
     ];
 
@@ -273,9 +294,13 @@ const page = () => {
             data: customerData?.data,
         },
         buttons: [
-
             { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-            { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
+            {
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };

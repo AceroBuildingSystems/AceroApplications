@@ -161,7 +161,6 @@ const QuotationSchema: Schema<quotation> = new Schema({
     handleBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "TeamMember", // Reference to the User model
-
         autopopulate: true, // Automatically populate this field
     },
     status: {

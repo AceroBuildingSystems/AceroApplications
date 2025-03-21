@@ -4,7 +4,7 @@ import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
 import { Input } from "@/components/ui/input";
 import { Button } from '../ui/button';
-import { ChevronsUpDown, Check } from 'lucide-react';
+import { ChevronsUpDown, Check, Currency } from 'lucide-react';
 
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
@@ -29,7 +29,7 @@ interface FieldConfig {
 // Interface for Button configuration
 interface ButtonConfig {
     label: string; // The label for the button
-    action: () => void; // Function to handle button click
+    action: (value: string, filteredData: any[]) => void; // Function to handle button click
     icon?: React.ElementType; // Icon for the button
     className?: string; // Optional CSS class for styling
 }
@@ -61,7 +61,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-            console.log(receivedDate.getFullYear(), receivedDate.getMonth() + 1); // Debugging
+
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
@@ -139,7 +139,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-            console.log(receivedDate.getFullYear(), receivedDate.getMonth() + 1); // Debugging
+
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
@@ -246,7 +246,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-            console.log(receivedDate.getFullYear(), receivedDate.getMonth() + 1); // Debugging
+
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
@@ -262,7 +262,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-            console.log(receivedDate.getFullYear(), receivedDate.getMonth() + 1); // Debugging
+          
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
@@ -278,14 +278,14 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-            console.log(receivedDate.getFullYear(), receivedDate.getMonth() + 1); // Debugging
+           
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
             );
         });
 
-       
+
         return filteredData?.filter((q: any) => q.quoteStatus?.name === "J - Job");
     };
 
@@ -332,6 +332,22 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                 break;
             case "Job Details":
                 formattedData = (formatJobDetails(selectedYear, selectedMonth));
+                formattedData = formattedData?.map((row: any) => {
+                    return {
+                        region: row.region,
+                        area: row.area,
+                        country: row.country,
+                        jobNo: row.jobNo,
+                        types: row.projectType?.name,
+                        customer: row.customer,
+                        q22Value: row.q22Value,
+                        totalWt: row.totalWt,
+                        currency: row.currency,
+                        totalEstPrice: row.totalEstPrice,
+
+                    };
+                });
+
                 summaryTotal = formattedData?.reduce(
                     (acc: { totalQ22Value: any; totalWeight: any; totalEstPrice: any; }, row: any) => {
                         acc.totalQ22Value += row.q22Value || 0;
@@ -345,36 +361,62 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                 );
 
                 break;
-                case "Job Lost Report":
-                    formattedData = (formatJobLost(selectedYear, selectedMonth));
-                    summaryTotal = formattedData?.reduce(
-                        (acc: { totalQ22Value: any; totalWeight: any; totalEstPrice: any; }, row: any) => {
-                            acc.totalQ22Value += row.q22Value || 0;
-                            acc.totalWeight += row.totalWt || 0;
-                            acc.totalEstPrice += row.totalEstPrice || 0;
-    
-                            return acc;
-    
-                        },
-                        { totalQ22Value: 0, totalWeight: 0, totalEstPrice: 0 }
-                    );
-    
-                    break;
+            case "Job Lost Report":
+                formattedData = (formatJobLost(selectedYear, selectedMonth));
+                formattedData = formattedData?.map((row: any) => {
+                    return {
+                        quoteNo: row.quoteNo,
+                        customer: row.customer,
+                        projectName: row.projectName,
+                        totalWt: row.totalWt,
+                        q22Value: row.q22Value,
+                        totalEstPrice: row.totalEstPrice,
+                        currency: row.currency,
+                        lostTo: row.lostTo,
+                        lostToOthers: row.lostToOthers,
+                        lostDate: row.lostDate,
+                        reason: row.reason
+                    };
+                });
+                summaryTotal = formattedData?.reduce(
+                    (acc: { totalQ22Value: any; totalWeight: any; totalEstPrice: any; }, row: any) => {
+                        acc.totalQ22Value += row.q22Value || 0;
+                        acc.totalWeight += row.totalWt || 0;
+                        acc.totalEstPrice += row.totalEstPrice || 0;
 
-                    case "3 Month SF":
-                    formattedData = (format3MonthSF(selectedYear, selectedMonth));
-                    summaryTotal = formattedData?.reduce(
-                        (acc: { totalQ22Value: any; totalWeight: any; totalEstPrice: any; }, row: any) => {
-                            
-                            acc.totalWeight += row.totalWt || 0;
-                           
-                            return acc;
-    
-                        },
-                        { totalWeight: 0 }
-                    );
-    
-                    break;
+                        return acc;
+
+                    },
+                    { totalQ22Value: 0, totalWeight: 0, totalEstPrice: 0 }
+                );
+
+                break;
+
+            case "3 Month SF":
+                formattedData = (format3MonthSF(selectedYear, selectedMonth));
+                formattedData = formattedData?.map((row: any) => {
+                    return {
+                        forecastMonth: row.forecastMonth,
+                        quoteNo: row.quoteNo,
+                        jobNo: row.jobNo,
+                        customer: row.customer,
+                        projectName: row.projectName,
+                        totalWt: row.totalWt,
+                        remarks: row.remarks
+                    };
+                });
+                summaryTotal = formattedData?.reduce(
+                    (acc: { totalQ22Value: any; totalWeight: any; totalEstPrice: any; }, row: any) => {
+
+                        acc.totalWeight += row.totalWt || 0;
+
+                        return acc;
+
+                    },
+                    { totalWeight: 0 }
+                );
+
+                break;
             default:
                 return;
 
@@ -383,7 +425,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
         setFilteredData(formattedData);
         setSummaryData(summaryTotal);
         setLoading(formattedData.length === 0);
-       
+
     }, [config, loading]);
 
     // Handle input field change
@@ -665,7 +707,8 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
                                                     onClick={() => {
-                                                        option.action(option.value); // Execute the action for this dropdown option
+
+                                                        option.action(option.value, (filteredData !== undefined && filteredData?.length > 0) ? filteredData : filteredData?.length === 0 ? [] : config?.dataTable?.data); // Execute the action for this dropdown option
                                                         setActiveDropdown(null); // Close the dropdown after selection
                                                     }}
                                                 >

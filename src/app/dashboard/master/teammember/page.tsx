@@ -23,42 +23,42 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: teamMemberData = [], isLoading: teamMemberLoading }:any = useGetMasterQuery({
+    const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         sort: { name: 'asc' },
     });
-    const { data: userData = [], isLoading: userLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER,sort: { name: 'asc' }, });
+    const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER, sort: { name: 'asc' }, });
 
-    const { data: roleData = [], isLoading: roleLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.ROLE_MASTER,sort: { name: 'asc' }, });
+    const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.ROLE_MASTER, sort: { name: 'asc' }, });
 
-    const { data: teamData = [], isLoading: teamLoading }:any = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER,sort: { name: 'asc' }, });
+    const { data: teamData = [], isLoading: teamLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER, sort: { name: 'asc' }, });
 
-    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = teamMemberLoading || roleLoading || userLoading || teamLoading|| isCreatingMaster;
+    const loading = teamMemberLoading || roleLoading || userLoading || teamLoading || isCreatingMaster;
 
     const formattedRoleData = roleData?.data?.map((option: { name: string; _id: any; }) => ({
         label: option?.name?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
-      }));
+    }));
 
-      const formattedUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
+    const formattedUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
         label: option?.shortName?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
-      }));
+    }));
 
-      const transformUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
+    const transformUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
         name: option?.shortName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
-      }));
+    }));
 
-      const fieldsToAdd = [
-          { fieldName: 'name', path: ['user', 'shortName'] }
-        ];
-        const transformedData = transformData(teamMemberData?.data, fieldsToAdd);
-  
+    const fieldsToAdd = [
+        { fieldName: 'name', path: ['user', 'shortName'] }
+    ];
+    const transformedData = transformData(teamMemberData?.data, fieldsToAdd);
+
     interface RowData {
         id: string;
         name: string;
@@ -128,16 +128,16 @@ const page = () => {
 
 
     const editUser = (rowData: any) => {
-      
+
         setAction('Update');
         const transformedData = {
             ...rowData, // Keep the existing fields
             teamRole: rowData?.teamRole.map((role: { _id: any; }) => role._id), // Map `location` to just the `_id`s
             teamReportingTo: rowData?.teamReportingTo.map((reporting: { _id: any; }) => reporting._id)
-          };
-  
+        };
+
         setInitialData(transformedData);
-       
+
         openDialog("team");
         // Your add logic for user page
     };
@@ -150,7 +150,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerData: [], customerTypeData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
     };
 
     const handleExport = () => {
@@ -278,10 +278,14 @@ const page = () => {
             data: transformedData,
         },
         buttons: [
-
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-            { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
-            { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+{ label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      {
+        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+          { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+          { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+        ]
+      },
+      { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
 

@@ -2,12 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus } from 'lucide-react';
+import { Download, Import, Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-import { MONGO_MODELS } from '@/shared/constants';
-import { validate } from '@/shared/functions';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
+import { bulkImport, validate } from '@/shared/functions';
+import { transformData } from '@/lib/utils';
+import { toast } from 'react-toastify';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
+import * as XLSX from "xlsx";
 
 interface WarehouseFormData {
     _id?: string;
@@ -15,33 +19,47 @@ interface WarehouseFormData {
     location: string;
     contactPerson: string;
     contactNumber: string;
-    isActive: string;
+    isActive: boolean;
 }
 
 const WarehousesPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<WarehouseFormData | null>(null);
-
+    const { user, status, authenticated } = useUserAuthorised();
     // API hooks
     const { data: warehousesResponse, isLoading: warehousesLoading } = useGetMasterQuery({
         db: MONGO_MODELS.WAREHOUSE_MASTER,
         filter: { isActive: true }
     });
 
-    const { data: locationsResponse } = useGetMasterQuery({
+    const { data: locationsResponse, isLoading: locationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
     });
+
+
+    const location = locationsResponse?.data?.filter((location: undefined) => location !== undefined)  // Remove undefined entries
+        ?.map((location: any) => ({
+            _id: location?.name,
+            name: location?.name
+        }));
+
+
+    const fieldsToAdd = [
+        { fieldName: 'locationName', path: ['location', 'name'] }
+    ];
+    const transformedData = transformData(warehousesResponse?.data, fieldsToAdd);
+
+    const loading = warehousesLoading || locationLoading;
 
     const [createMaster] = useCreateMasterMutation();
 
     const statusData = [
         { _id: true, name: "True" },
         { _id: false, name: "False" },
-      ];
+    ];
 
     // Form fields configuration
     const formFields = [
@@ -133,22 +151,49 @@ const WarehousesPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: WarehouseFormData; action: string }) => {
         try {
-            const response = await createMaster({
+            const response: any = await createMaster({
                 db: MONGO_MODELS.WAREHOUSE_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
                 data: {
-                    ...formData,
-                    isActive: formData.isActive ?? true
+                    ...formData
                 }
-            }).unwrap();
+            });
             // handle the response if needed
-            return;
+            return response;
+
         } catch (error) {
             console.error('Error saving warehouse:', error);
         }
     };
 
+    const handleImport = () => {
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "WAREHOUSE_MASTER", masterName: "Warehouse" });
+    };
+
+    const handleExport = (type: string) => {
+        const formattedData = warehousesResponse?.data.map((data: any) => {
+            return {
+                name: data.name,
+                location: data?.location?.name,
+                contactPerson: data?.contactPerson,
+                contactNumber: data?.contactNumber
+            };
+        })
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
+
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
+    };
     // Configure page layout
     const pageConfig = {
         searchFields: [
@@ -162,22 +207,17 @@ const WarehousesPage = () => {
         filterFields: [
             {
                 key: "location",
-                label: "Location",
+                label: "locationName",
                 type: "select" as const,
                 placeholder: "Filter by location",
-                data: locationsResponse?.data?.map((loc: any) => loc.name) || []
+                data: location,
+                name: "locationName"
             },
-            {
-                key: "isActive",
-                label: "Status",
-                type: "select" as const,
-                placeholder: "Filter by status",
-                options: ["Active", "Inactive"]
-            }
+
         ],
         dataTable: {
             columns: columns,
-            data: (warehousesResponse?.data || []) as any[],
+            data: transformedData,
             onRowClick: (row: any) => {
                 setDialogAction("Update");
                 setSelectedItem({
@@ -189,8 +229,17 @@ const WarehousesPage = () => {
             }
         },
         buttons: [
+            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+
             {
-                label: "Add New",
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
+
+            {
+                label: "Add",
                 action: () => {
                     setDialogAction("Add");
                     setSelectedItem({
@@ -198,26 +247,22 @@ const WarehousesPage = () => {
                         location: '',
                         contactPerson: '',
                         contactNumber: '',
-                        isActive: "Active"
+                        isActive: true
                     });
                     setIsDialogOpen(true);
                 },
                 icon: Plus,
-                className: "bg-primary text-white hover:bg-primary/90"
-            }
-        ]
-    };
 
-    useEffect(() => {
-        if (!warehousesLoading) {
-            setLoading(false);
-        }
-    }, [warehousesLoading]);
+            },
+
+        ],
+
+    };
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
-            
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+
             <DynamicDialog<WarehouseFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => {

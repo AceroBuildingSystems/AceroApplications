@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus, Save } from 'lucide-react';
+import { Download, Import, Plus, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -10,8 +10,10 @@ import { MONGO_MODELS } from '@/shared/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'react-toastify';
-import { validate } from '@/shared/functions';
-
+import { bulkImport, validate } from '@/shared/functions';
+import { transformData } from '@/lib/utils';
+import * as XLSX from "xlsx";
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 interface ContactPerson {
     name: string;
@@ -28,7 +30,7 @@ interface VendorFormData {
     website?: string;
     location: string;
     contactPersons: ContactPerson[];
-    isActive: string;
+   isActive:boolean
 }
 
 const ContactPersonsComponent = ({ accessData, handleChange }: { accessData: ContactPerson[]; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
@@ -125,11 +127,10 @@ const ContactPersonsComponent = ({ accessData, handleChange }: { accessData: Con
 
 const VendorsPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<VendorFormData | null>(null);
-
+const { user, status, authenticated } = useUserAuthorised();
     // API hooks
     const { data: vendorsResponse, isLoading: vendorsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.VENDOR_MASTER,
@@ -137,16 +138,30 @@ const VendorsPage = () => {
         populate: ['location']
     });
 
-    const { data: locationsResponse } = useGetMasterQuery({
+    const { data: locationsResponse, isLoading: locationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
     });
+
+    const location = locationsResponse?.data?.filter((location: undefined) => location !== undefined)  // Remove undefined entries
+        ?.map((location: any) => ({
+            _id: location?.name,
+            name: location?.name
+        }));
+
+
+    const fieldsToAdd = [
+        { fieldName: 'locationName', path: ['location', 'name'] }
+    ];
+    const transformedData = transformData(vendorsResponse?.data, fieldsToAdd);
+
+    const loading = vendorsLoading || locationLoading;
 
     const [createMaster] = useCreateMasterMutation();
     const statusData = [
         { _id: true, name: "True" },
         { _id: false, name: "False" },
-      ];
+    ];
     // Form fields configuration
     const formFields = [
         {
@@ -243,7 +258,7 @@ const VendorsPage = () => {
                 if (contacts.length === 0) return '-';
                 return (
                     <div className="max-w-[300px] overflow-hidden text-ellipsis">
-                        {contacts.map((contact: ContactPerson) => 
+                        {contacts.map((contact: ContactPerson) =>
                             `${contact.name} (${contact.designation})`
                         ).join(", ")}
                     </div>
@@ -264,19 +279,54 @@ const VendorsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: VendorFormData; action: string }): Promise<void> => {
         try {
-            await createMaster({
+           
+            const reponse:any = await createMaster({
                 db: MONGO_MODELS.VENDOR_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
-                data: {
-                    ...formData,
-                    isActive: formData.isActive ?? true
-                }
-            }).unwrap();
+                data: formData
+            });
+
+            return reponse;
+
         } catch (error) {
             console.error('Error saving vendor:', error);
         }
     };
+
+    const handleImport = () => {
+            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
+        };
+    
+        const handleExport = (type: string) => {
+           
+            const formattedData = vendorsResponse?.data.map((data: any) => {
+                return {
+                    Name: data.name,
+                    Email: data?.email,
+                    'Contact Number': data?.phone,
+                    Location:data?.location?.name,
+                    'Contact Person': data?.contactPersons[0]?.name,
+                    Designation:data?.contactPersons[0]?.designation,
+                    'Contact Email': data?.contactPersons[0]?.email,
+                    'Phone':data?.contactPersons[0]?.phone,
+
+                };
+            })
+            type === 'excel' && exportToExcel(formattedData);
+    
+        };
+    
+        const exportToExcel = (data: any[]) => {
+            // Convert JSON data to a worksheet
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            // Create a new workbook
+            const workbook = XLSX.utils.book_new();
+            // Append the worksheet to the workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+            // Write the workbook and trigger a download
+            XLSX.writeFile(workbook, 'exported_data.xlsx');
+        };
 
     // Configure page layout
     const pageConfig = {
@@ -291,22 +341,17 @@ const VendorsPage = () => {
         filterFields: [
             {
                 key: "location",
-                label: "Location",
+                label: "locationName",
                 type: "select" as const,
                 placeholder: "Filter by location",
-                options: locationsResponse?.data?.map((loc: any) => loc.name) || []
+                data: location,
+                name: "locationName"
             },
-            {
-                key: "isActive",
-                label: "Status",
-                type: "select" as const,
-                placeholder: "Filter by status",
-                options: ["Active", "Inactive"]
-            }
+
         ],
         dataTable: {
             columns: columns,
-            data: (vendorsResponse?.data || []) as any[],
+            data: transformedData,
             onRowClick: (row: any) => {
                 setDialogAction("Update");
                 setSelectedItem({
@@ -318,8 +363,16 @@ const VendorsPage = () => {
             }
         },
         buttons: [
+            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+
             {
-                label: "Add New",
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
+            {
+                label: "Add",
                 action: () => {
                     setDialogAction("Add");
                     setSelectedItem({
@@ -328,7 +381,7 @@ const VendorsPage = () => {
                         phone: '',
                         location: '',
                         contactPersons: [],
-                        isActive: "Active"
+                       isActive: true
                     });
                     setIsDialogOpen(true);
                 },
@@ -338,16 +391,11 @@ const VendorsPage = () => {
         ]
     };
 
-    useEffect(() => {
-        if (!vendorsLoading) {
-            setLoading(false);
-        }
-    }, [vendorsLoading]);
 
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
-            
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+
             <DynamicDialog<VendorFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => {

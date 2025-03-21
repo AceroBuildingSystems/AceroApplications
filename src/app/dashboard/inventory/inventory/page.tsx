@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Box, Plus } from 'lucide-react';
+import { Box, Download, Import, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -10,9 +10,13 @@ import { MONGO_MODELS } from '@/shared/constants';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { validate } from '@/shared/functions';
+import { bulkImport, validate } from '@/shared/functions';
 import BulkAddDialog from '@/components/ModalComponent/BulkAddDialog';
 import { Input } from '@/components/ui/input';
+import { transformData } from '@/lib/utils';
+import * as XLSX from "xlsx";
+import useUserAuthorised from '@/hooks/useUserAuthorised';
+import moment from 'moment';
 
 interface AssetFormData {
     _id?: string;
@@ -39,7 +43,7 @@ interface SpecificationsComponentProps {
     selectedItem: any;
 }
 
-const SpecificationsComponent = ({ accessData, handleChange, selectedItem:selectedProduct }: SpecificationsComponentProps) => {
+const SpecificationsComponent = ({ accessData, handleChange, selectedItem: selectedProduct }: SpecificationsComponentProps) => {
     const [specs, setSpecs] = useState<Record<string, any>>(accessData || {});
 
     useEffect(() => {
@@ -70,7 +74,7 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem:select
                                 onValueChange={(val) => {
                                     const newSpecs = {
                                         ...specs,
-                                        [key]: {type: (value as { type: string }).type, value: val === "true"}
+                                        [key]: { type: (value as { type: string }).type, value: val === "true" }
                                     };
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specifications");
@@ -91,7 +95,7 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem:select
                                 onChange={(e) => {
                                     const newSpecs = {
                                         ...specs,
-                                        [key]: {type: (value as { type: string }).type, value: (value as { type: string }).type === "number" ? Number(e.target.value) : e.target.value}
+                                        [key]: { type: (value as { type: string }).type, value: (value as { type: string }).type === "number" ? Number(e.target.value) : e.target.value }
                                     };
                                     setSpecs(newSpecs);
                                     handleChange({ target: { value: newSpecs } }, "specifications");
@@ -108,35 +112,42 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem:select
 
 const AssetsPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<AssetFormData | null>(null);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
-
+    const { user, status, authenticated } = useUserAuthorised();
     // API hooks
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.ASSET_MASTER,
         filter: { isActive: true },
-        populate: ['product', 'warehouse', 'vendor',"product.category"]
+        populate: ['product', 'warehouse', 'vendor', "product.category"]
     });
 
-    const { data: productsResponse } = useGetMasterQuery({
+    const { data: productsResponse, isLoading: productLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_MASTER,
         filter: { isActive: true },
         populate: ['category']
     });
 
-    const { data: warehousesResponse } = useGetMasterQuery({
+    const { data: warehousesResponse, isLoading: warehouseLoading } = useGetMasterQuery({
         db: MONGO_MODELS.WAREHOUSE_MASTER,
         filter: { isActive: true }
     });
 
-    const { data: vendorsResponse } = useGetMasterQuery({
+    const { data: vendorsResponse, isLoading: vendorLoading } = useGetMasterQuery({
         db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true }
     });
+
+    const fieldsToAdd = [
+        { fieldName: 'productName', path: ['product', 'name'] },
+        { fieldName: 'warehouseName', path: ['warehouse', 'name'] }
+    ];
+    const transformedData = transformData(assetsResponse?.data, fieldsToAdd);
+
+    const loading = productLoading || assetsLoading || warehouseLoading || vendorLoading;
 
     const [createMaster] = useCreateMasterMutation();
 
@@ -158,14 +169,14 @@ const AssetsPage = () => {
     const statusData = [
         { _id: true, name: "True" },
         { _id: false, name: "False" },
-      ];
+    ];
 
-    const formFields = [ 
+    const formFields = [
         {
             name: "product",
             label: "Product",
             type: "select",
-            placeholder:"select product",
+            placeholder: "select product",
             required: true,
             data: productsResponse?.data?.map((prod: any) => ({
                 name: `${prod.category.name} (${prod.name}-${prod.model})`,
@@ -181,12 +192,12 @@ const AssetsPage = () => {
             placeholder: "Enter serial number",
             validate: validate.mixString
         },
-       
+
         {
             name: "warehouse",
             label: "Warehouse",
             type: "select",
-            placeholder:"select warehouse",
+            placeholder: "select warehouse",
             required: true,
             data: warehousesResponse?.data?.map((wh: any) => ({
                 name: wh.name,
@@ -200,10 +211,10 @@ const AssetsPage = () => {
             CustomComponent: (props: any) => <SpecificationsComponent {...props} selectedProduct={selectedProduct} />,
             validate: (value: Record<string, any>, formData: AssetFormData) => {
                 if (!selectedProduct?.category?.specsRequired) return undefined;
-                
+
                 const missingSpecs = Object.keys(selectedProduct.category.specsRequired)
                     .filter(key => !value[key] && value[key] !== false && value[key] !== 0);
-                
+
                 if (missingSpecs.length > 0) {
                     return `Missing specifications: ${missingSpecs.join(", ")}`;
                 }
@@ -221,15 +232,14 @@ const AssetsPage = () => {
             name: "purchasePrice",
             label: "Purchase Price",
             type: "number",
-            required: true,
             placeholder: "Enter purchase price",
-            validate: validate.greaterThanZero
+
         },
         {
             name: "vendor",
             label: "Vendor",
             type: "select",
-            placeholder:"select vendor",
+            placeholder: "select vendor",
             required: true,
             data: vendorsResponse?.data?.map((vendor: any) => ({
                 name: vendor.name,
@@ -249,7 +259,7 @@ const AssetsPage = () => {
             label: "PR Number",
             type: "text",
             placeholder: "Enter PR number",
-            validate:validate.mixString
+            validate: validate.mixString
         },
         {
             name: "invoiceNumber",
@@ -303,18 +313,17 @@ const AssetsPage = () => {
             required: true
         }
     ];
+
     const editAsset = (data: any) => {
         setSelectedItem(data)
         setDialogAction("Update");
         setIsDialogOpen(true);
-    }
-
-    
+    };
 
     const columns = [
         {
             accessorKey: "serialNumber",
-            header: "serialNumber",
+            header: "Serial Number",
             cell: ({ row }: any) => (
                 <div className='text-red-700' onClick={() => editAsset(row.original)}>
                     {row.original.serialNumber}
@@ -344,12 +353,12 @@ const AssetsPage = () => {
             header: "Status",
             cell: ({ row }: any) => {
                 const status = row.original.status;
-                const variant = 
+                const variant =
                     status === 'available' ? "default" :
-                    status === 'assigned' ? "secondary" :
-                    status === 'maintenance' ? "outline" :
-                    "destructive";
-                
+                        status === 'assigned' ? "secondary" :
+                            status === 'maintenance' ? "outline" :
+                                "destructive";
+
                 return (
                     <Badge variant={variant}>
                         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -377,10 +386,10 @@ const AssetsPage = () => {
                 const endDate = new Date(row.original.warrantyEndDate);
                 const today = new Date();
                 const variant = endDate < today ? "destructive" : "default";
-                
+
                 return (
                     <Badge variant={variant}>
-                        {endDate.toLocaleDateString()}
+                        {moment(endDate).format("DD-MMM-YYYY")}
                     </Badge>
                 );
             }
@@ -398,7 +407,7 @@ const AssetsPage = () => {
 
     const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
         console.log("handle save called with:", action, formData.serialNumber);
-        
+      
         try {
             // Wrap in Promise to ensure only one call is made
             return await new Promise(async (resolve, reject) => {
@@ -413,7 +422,7 @@ const AssetsPage = () => {
                             isActive: formData.isActive ?? true
                         }
                     }).unwrap();
-                    
+
                     console.log("API call successful:", response);
                     resolve(response);
                 } catch (error) {
@@ -425,6 +434,43 @@ const AssetsPage = () => {
             console.error('Error in handleSave:', error);
             return { error };
         }
+    };
+
+    const handleImport = () => {
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse, action: "Add", user, createUser: createMaster, db: "ASSET_MASTER", masterName: "Asset" });
+    };
+
+    const handleExport = (type: string) => {
+        const formattedData = assetsResponse?.data.map((data: any) => {
+            return {
+                'Vendor Name': data.vendor?.name,
+                'Invoice No': data?.invoiceNumber,
+                'PO Number': data?.poNumber,
+                'PR Number': data?.prNumber,
+                'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
+                'Warehouse': data?.warehouse?.name,
+                'Product Name': data?.product?.name,
+                'Serial No': data?.serialNumber,
+                'Specifications': JSON.stringify(data.specifications),
+                'Status': data?.status,
+                'Warranty Details': data?.warrantyDetails,
+                'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
+                'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
+            };
+        })
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
+
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
     // Configure page layout
     const pageConfig = {
@@ -439,29 +485,31 @@ const AssetsPage = () => {
         filterFields: [
             {
                 key: "product",
-                label: "Product",
+                label: "productName",
                 type: "select" as const,
                 placeholder: "Filter by product",
-                options: productsResponse?.data?.map((prod: any) => prod.name) || []
+                data: productsResponse?.data?.map((prod: any) => ({
+                    _id: prod?.name,
+                    name: prod?.name
+                })),
+                name: "productName",
             },
             {
                 key: "warehouse",
-                label: "Warehouse",
+                label: "warehouseName",
                 type: "select" as const,
                 placeholder: "Filter by warehouse",
-                options: warehousesResponse?.data?.map((wh: any) => wh.name) || []
+                data: warehousesResponse?.data?.map((wr: any) => ({
+                    _id: wr?.name,
+                    name: wr?.name
+                })),
+                name: "warehouseName",
             },
-            {
-                key: "status",
-                label: "Status",
-                type: "select" as const,
-                placeholder: "Filter by status",
-                options: ["available", "assigned", "maintenance", "retired"]
-            }
+
         ],
         dataTable: {
             columns: columns,
-            data: (assetsResponse?.data || []) as any[],
+            data: transformedData,
             onRowClick: (row: any) => {
                 setDialogAction("Update");
                 const product = productsResponse?.data?.find((p: any) => p._id === row.original.product?._id);
@@ -477,41 +525,29 @@ const AssetsPage = () => {
             }
         },
         buttons: [
+            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+
             {
-                label: "Add Product",
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
+            {
+                label: "Add",
                 action: () => {
                     setIsBulkDialogOpen(true);
                 },
-                icon: Box,
-                className: "bg-neutral-800 text-white hover:bg-neutral-800/90"
+                icon: Plus,
+
             }
         ]
     };
 
-    useEffect(() => {
-        if (!assetsLoading) {
-            setLoading(false);
-        }
-    }, [assetsLoading]);
-
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
-            
-            {/* <DynamicDialog<AssetFormData>
-                isOpen={isDialogOpen}
-                closeDialog={() => {
-                    setSelectedItem(null)
-                    setIsDialogOpen(false)
-                }}
-                selectedMaster="Asset"
-                onSave={handleSave}
-                fields={formFields}
-                initialData={selectedItem || {}}
-                action={dialogAction}
-                height="auto"
-            /> */}
-            
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+
             <BulkAddDialog
                 isOpen={isBulkDialogOpen}
                 closeDialog={() => setIsBulkDialogOpen(false)}

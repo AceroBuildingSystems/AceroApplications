@@ -8,7 +8,7 @@ import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
-import {useGetUsersQuery } from '@/services/endpoints/usersApi';
+import { useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -20,21 +20,20 @@ import { createMasterData } from '@/server/services/masterDataServices';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
 
-
 const page = () => {
-   
+
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: continentData = [], isLoading: continentLoading }:any = useGetMasterQuery({
-      db: MONGO_MODELS.CONTINENT_MASTER,
-      sort: { name: 'asc' },
-    });
-  
+  const { data: continentData = [], isLoading: continentLoading }: any = useGetMasterQuery({
+    db: MONGO_MODELS.CONTINENT_MASTER,
+    sort: { name: 'asc' },
+    filter: { isActive: true }
+  });
+
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  continentLoading;
-
+  const loading = continentLoading;
 
   interface RowData {
     id: string;
@@ -43,14 +42,12 @@ const page = () => {
     role: string;
   }
 
-
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-   
-    { label: 'Continent', name: "name", type: "text",required: true, placeholder:'Continent' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
-   
-  ]
 
+    { label: 'Continent', name: "name", type: "text", required: true, placeholder: 'Continent' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
+  ]
 
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
@@ -71,36 +68,19 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}: { formData: any; action: string }) => {
-   
+  const saveData = async ({ formData, action }: { formData: any; action: string }) => {
+
     const formattedData = {
-        db: MONGO_MODELS.CONTINENT_MASTER,
+      db: MONGO_MODELS.CONTINENT_MASTER,
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
 
+    const response: any = await createMaster(formattedData);
+    return response;
 
-
-    const response:any = await createMaster(formattedData);
-
-    
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Continent added successfully');
-
-    }
-    else{
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Continent updated successfully');
-      }
-    }
-
-    if(response?.error?.data?.message?.message){
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
-   
   };
-
 
   const editUser = (rowData: RowData) => {
     setAction('Update');
@@ -117,7 +97,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CONTINENT_MASTER, masterName: "Continent" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CONTINENT_MASTER, masterName: "Continent" });
   };
 
   const handleExport = () => {
@@ -129,8 +109,6 @@ const page = () => {
     console.log('UserPage Delete button clicked');
     // Your delete logic for user page
   };
-
- 
 
   const continentColumns = [
     {
@@ -184,15 +162,13 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
-    
-
 
   ];
 
   const continentConfig = {
     searchFields: [
       { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by continent' },
-      
+
     ],
     filterFields: [
       // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
@@ -210,7 +186,6 @@ const page = () => {
     ]
   };
 
-
   return (
     <>
 
@@ -223,7 +198,7 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
-        height = 'auto'
+        height='auto'
       />
     </>
 

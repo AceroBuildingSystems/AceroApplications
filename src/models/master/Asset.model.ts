@@ -89,7 +89,7 @@ const AssetSchema = new mongoose.Schema({
     },
     purchasePrice: {
         type: Number,
-        required: true
+    
     },
     vendor: {
         type: mongoose.Schema.Types.ObjectId,

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus } from 'lucide-react';
+import { Download, Import, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -13,7 +13,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { validate } from '@/shared/functions';
+import { bulkImport, validate } from '@/shared/functions';
+import { transformData } from '@/lib/utils';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
+import * as XLSX from "xlsx";
 
 interface ProductFormData {
     _id?: string;
@@ -23,17 +26,16 @@ interface ProductFormData {
     model: string;
     description?: string;
     unitOfMeasure?: string;
-    isActive: string;
+    isActive: boolean;
     vendor?: string;
 }
 
 const ProductsPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<ProductFormData | null>(null);
-
+    const { user, status, authenticated } = useUserAuthorised();
     // API hooks
     const { data: productsResponse, isLoading: productsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_MASTER,
@@ -41,21 +43,23 @@ const ProductsPage = () => {
         populate: ['category']
     });
 
-    const { data: categoriesResponse } = useGetMasterQuery({
+    const { data: categoriesResponse, isLoading: categoryLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
         filter: { isActive: true }
     });
 
-    const { data: vendorsResponse } = useGetMasterQuery({
-        db: MONGO_MODELS.VENDOR_MASTER,
-        filter: { isActive: true }
-    });
+    const loading = productsLoading || categoryLoading;
+
+    const fieldsToAdd = [
+        { fieldName: 'categoryName', path: ['category', 'name'] }
+    ];
+    const transformedData = transformData(productsResponse?.data, fieldsToAdd);
 
     const [createMaster] = useCreateMasterMutation();
     const statusData = [
         { _id: true, name: "True" },
         { _id: false, name: "False" },
-      ];
+    ];
     // Form fields configuration with validation
     const formFields = [
         {
@@ -66,7 +70,7 @@ const ProductsPage = () => {
             placeholder: "Enter product name",
             validate: validate.text
         },
-   
+
         {
             name: "category",
             label: "Category",
@@ -163,7 +167,7 @@ const ProductsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: ProductFormData; action: string }) => {
         try {
-           const response = await createMaster({
+            const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
@@ -171,13 +175,42 @@ const ProductsPage = () => {
                     ...formData,
                     isActive: formData.isActive ?? true
                 }
-            }).unwrap();
+            });
 
-            return;
+            return response;
         } catch (error) {
             console.error('Error saving product:', error);
         }
     };
+
+    const handleImport = () => {
+            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [],categoryData: categoriesResponse,vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_MASTER", masterName: "Product" });
+        };
+    
+        const handleExport = (type: string) => {
+            const formattedData = productsResponse?.data.map((data: any) => {
+                return {
+                    'Name': data.name,
+                    'Description': data?.description,
+                    'Category': data?.category?.name,
+                    'Brand': data?.brand,
+                    'Model': data?.model
+                };
+            })
+            type === 'excel' && exportToExcel(formattedData);
+    
+        };
+    
+        const exportToExcel = (data: any[]) => {
+            // Convert JSON data to a worksheet
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            // Create a new workbook
+            const workbook = XLSX.utils.book_new();
+            // Append the worksheet to the workbook
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+            // Write the workbook and trigger a download
+            XLSX.writeFile(workbook, 'exported_data.xlsx');
+        };
 
     // Configure page layout
     const pageConfig = {
@@ -192,22 +225,20 @@ const ProductsPage = () => {
         filterFields: [
             {
                 key: "category",
-                label: "Category",
+                label: "categoryName",
                 type: "select" as const,
                 placeholder: "Filter by category",
-                options: categoriesResponse?.data?.map((cat: any) => cat.name) || []
+                data: categoriesResponse?.data?.map((cat: any) => ({
+                    _id: cat?.name,
+                    name: cat?.name
+                })),
+                name: "categoryName",
             },
-            {
-                key: "isActive",
-                label: "Status",
-                type: "select" as const,
-                placeholder: "Filter by status",
-                options: ["Active", "Inactive"]
-            }
+
         ],
         dataTable: {
             columns: columns,
-            data: (productsResponse?.data || []) as any[],
+            data: transformedData,
             onRowClick: (row: any) => {
                 setDialogAction("Update");
                 setSelectedItem({
@@ -221,8 +252,16 @@ const ProductsPage = () => {
             }
         },
         buttons: [
+            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+
             {
-                label: "Add New",
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
+            {
+                label: "Add",
                 action: () => {
                     setDialogAction("Add");
                     setSelectedItem({
@@ -232,7 +271,7 @@ const ProductsPage = () => {
                         model: '',
                         unitOfMeasure: '',
                         vendor: '',
-                        isActive: "Active"
+                        isActive: true
                     });
                     setIsDialogOpen(true);
                 },
@@ -242,16 +281,10 @@ const ProductsPage = () => {
         ]
     };
 
-    useEffect(() => {
-        if (!productsLoading) {
-            setLoading(false);
-        }
-    }, [productsLoading]);
-
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
-            
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+
             <DynamicDialog<ProductFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => {

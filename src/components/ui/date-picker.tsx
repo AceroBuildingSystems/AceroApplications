@@ -16,7 +16,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
 
 interface DatePickerProps {
-  currentDate?: Date;
+  currentDate?: any;
   startYear?: number;
   endYear?: number;
   handleChange?: any;

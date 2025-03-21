@@ -119,19 +119,7 @@ const Access = () => {
       data: formData,
     };
     const response: any = await createMaster(formattedData);
-    if (response.data?.status === SUCCESS && action === "Add") {
-      toast.success("Access added successfully");
-    } else {
-      if (response.data?.status === SUCCESS && action === "Update") {
-        toast.success("Access updated successfully");
-      }
-    }
-
-    if (response?.error?.data?.message?.message) {
-      toast.error(
-        `Error encountered: ${response?.error?.data?.message?.message}`
-      );
-    }
+   
     return response;
   };
 

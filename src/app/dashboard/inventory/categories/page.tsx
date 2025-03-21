@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Plus } from 'lucide-react';
+import { Download, Import, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -12,21 +12,26 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { validate } from '@/shared/functions';
+import { bulkImport, validate } from '@/shared/functions';
+import * as XLSX from "xlsx";
+import useUserAuthorised from '@/hooks/useUserAuthorised';
+
 interface CategoryFormData {
     _id?: string;
     name: string;
     description?: string;
     specsRequired: Record<string, "string" | "number" | "boolean">;
-    isActive: string;
+    isActive: boolean;
 }
 
 const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Record<string, "string" | "number" | "boolean">; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
-    const [specs, setSpecs]:any = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
+    const [specs, setSpecs]: any = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
     const [newSpecName, setNewSpecName] = useState('');
     const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
-    const [unitMeasurement,setUnitMeasurement] = useState<string>('');  
-    const { data: unitMeasurementData = [], isLoading:unitMeasurementLoading }:any = useGetMasterQuery({
+    const [unitMeasurement, setUnitMeasurement] = useState<string>('');
+   
+
+    const { data: unitMeasurementData = [], isLoading: unitMeasurementLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
         filter: { isActive: true }
     });
@@ -42,7 +47,7 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                     {Object.entries(specs).map(([key, value], index) => (
                         <div key={index} className="flex items-center gap-2 p-2 border rounded">
                             <span className="flex-1 font-medium">{key}</span>
-                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find((unit: { _id: any; })=>unit._id === (value as { unit: string }).unit)?.name)}</Badge>
+                            <Badge variant="secondary">{String(unitMeasurementData?.data?.find((unit: { _id: any; }) => unit._id === (value as { unit: string }).unit)?.name)}</Badge>
                             <Badge variant="default">{String((value as { type: string }).type)}</Badge>
                             <Button
                                 type="button"
@@ -73,17 +78,17 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                         value={unitMeasurement}
                         onValueChange={(value) => setUnitMeasurement(value as any)}
                     >
-                        
+
                         <SelectTrigger className="w-[180px]">
                             <SelectValue placeholder="unit" />
                         </SelectTrigger>
                         <SelectContent>
-                            {unitMeasurementData && unitMeasurementData?.data?.map((unitData: { _id: string; name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; })=>{
+                            {unitMeasurementData && unitMeasurementData?.data?.map((unitData: { _id: string; name: string | number | bigint | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | Iterable<React.ReactNode> | React.ReactPortal | Promise<React.AwaitedReactNode> | null | undefined; }) => {
                                 return <SelectItem value={unitData._id}>{unitData.name}</SelectItem>
                             })}
                         </SelectContent>
                     </Select>
-                    
+
                     <Select
                         value={newSpecType}
                         onValueChange={(value) => setNewSpecType(value as "string" | "number" | "boolean")}
@@ -103,7 +108,7 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
                             if (newSpecName.trim()) {
                                 const newSpecs = {
                                     ...specs,
-                                    [newSpecName]: {type:newSpecType,unit:unitMeasurement}
+                                    [newSpecName]: { type: newSpecType, unit: unitMeasurement }
                                 };
                                 setSpecs(newSpecs);
                                 handleChange({ target: { value: newSpecs } }, "specsRequired");
@@ -124,11 +129,10 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
 
 const ProductCategoriesPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<CategoryFormData | null>(null);
-
+    const { user, status, authenticated } = useUserAuthorised();
     // API hooks
     const { data: categoriesResponse, isLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
@@ -140,7 +144,9 @@ const ProductCategoriesPage = () => {
     const statusData = [
         { _id: true, name: "True" },
         { _id: false, name: "False" },
-      ];
+    ];
+
+    const loading = isLoading;
 
     // Form fields configuration with validation
     const formFields = [
@@ -215,7 +221,7 @@ const ProductCategoriesPage = () => {
                 );
             }
         },
-       {
+        {
             accessorKey: "isActive",
             header: "Status",
             cell: ({ row }: any) => (
@@ -227,9 +233,10 @@ const ProductCategoriesPage = () => {
     ];
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }): Promise<void> => {
+    const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }): Promise<any> => {
         try {
-            await createMaster({
+            
+            const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
@@ -238,10 +245,40 @@ const ProductCategoriesPage = () => {
                     isActive: formData.isActive ?? true
                 }
             });
+
+            return response;
         } catch (error) {
             console.error('Error saving category:', error);
         }
     };
+
+    const handleImport = () => {
+                bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData:[],categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_CATEGORY_MASTER", masterName: "Category" });
+            };
+        
+            const handleExport = (type: string) => {
+               
+                const formattedData = categoriesResponse?.data.map((data: any) => {
+                    return {
+                        Name: data.name,
+                        Description: data.description,
+                        "Required Specification": JSON.stringify(data.specsRequired)
+                    };
+                })
+                type === 'excel' && exportToExcel(formattedData);
+        
+            };
+        
+            const exportToExcel = (data: any[]) => {
+                // Convert JSON data to a worksheet
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                // Create a new workbook
+                const workbook = XLSX.utils.book_new();
+                // Append the worksheet to the workbook
+                XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+                // Write the workbook and trigger a download
+                XLSX.writeFile(workbook, 'exported_data.xlsx');
+            };
 
     // Configure page layout
     const pageConfig = {
@@ -254,13 +291,7 @@ const ProductCategoriesPage = () => {
             }
         ],
         filterFields: [
-            {
-                key: "isActive",
-                label: "Status",
-                type: "select" as const,
-                placeholder: "Filter by status",
-                options: ["Active", "Inactive"]
-            }
+
         ],
         dataTable: {
             columns: columns,
@@ -275,15 +306,23 @@ const ProductCategoriesPage = () => {
             }
         },
         buttons: [
+            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+
             {
-                label: "Add New",
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
+            {
+                label: "Add",
                 action: () => {
                     setDialogAction("Add");
                     setSelectedItem({
                         name: '',
                         description: '',
                         specsRequired: {},
-                        isActive: "Active"
+                        isActive: true
                     });
                     setIsDialogOpen(true);
                 },
@@ -293,16 +332,10 @@ const ProductCategoriesPage = () => {
         ]
     };
 
-    useEffect(() => {
-        if (!isLoading) {
-            setLoading(false);
-        }
-    }, [isLoading]);
-
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
-            
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+
             <DynamicDialog<CategoryFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => {

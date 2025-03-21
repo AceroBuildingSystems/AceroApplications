@@ -57,6 +57,7 @@ const page = () => {
 
     const regionNames = regionData?.data?.filter((region: undefined) => region !== undefined)  // Remove undefined entries
   ?.map((region: { name: any; }) => region.name);             // Extract only the 'name' property
+
   const fieldsToAdd = [
     { fieldName: 'regionName', path: ['region', 'name'] }
   ];
@@ -127,7 +128,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData, countryData, action: "Add", user, createUser: createMaster, db: "COUNTRY_MASTER", masterName: "Country" });
+        bulkImport({ roleData: [], continentData: [], regionData, countryData,locationData:[],categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "COUNTRY_MASTER", masterName: "Country" });
     };
 
     const handleExport = () => {
@@ -227,11 +228,13 @@ const page = () => {
 
     ];
 
+
     const countryConfig = {
         searchFields: [
             { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by country' },
 
         ],
+        
         filterFields: [
              { key: "region", label: 'regionName', type: "select" as const, options: regionNames , placeholder: 'Search by Region'},
 
@@ -241,17 +244,14 @@ const page = () => {
             data: transformedData,
         },
         buttons: [
-
             { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
 
-
     return (
         <>
-
             <MasterComponent config={countryConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
             <DynamicDialog
                 isOpen={isDialogOpen}

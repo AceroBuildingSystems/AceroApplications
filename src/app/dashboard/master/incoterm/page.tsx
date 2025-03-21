@@ -118,7 +118,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.INCOTERM_MASTER, masterName:"Incoterm" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.INCOTERM_MASTER, masterName:"Incoterm" });
   };
 
   const handleExport = () => {

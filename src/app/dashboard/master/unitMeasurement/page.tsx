@@ -2,7 +2,7 @@
 
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import { ArrowUpDown} from "lucide-react"
+import { ArrowUpDown } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
@@ -15,21 +15,19 @@ import { bulkImport } from '@/shared/functions';
 
 
 const page = () => {
-   
-  const { user, status, authenticated } = useUserAuthorised();
-  const { data: unitMeasurementData = [], isLoading: continentLoading }:any = useGetMasterQuery({
-      db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
-      sort: { name: 'asc' },
-    });
 
-    console.log({unitMeasurementData})
-  
-  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
+  const { user, status, authenticated } = useUserAuthorised();
+  const { data: unitMeasurementData = [], isLoading: continentLoading }: any = useGetMasterQuery({
+    db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
+    sort: { name: 'asc' },
+    filter: { isActive: true }
+  });
+
+  const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  continentLoading|| isCreatingMaster;
-
+  const loading = continentLoading || isCreatingMaster;
 
   interface RowData {
     id: string;
@@ -40,10 +38,10 @@ const page = () => {
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-   
-    { label: 'Unit measurement', name: "name", type: "text",required: true, placeholder:'Unit measurement' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
-   
+
+    { label: 'Unit measurement', name: "name", type: "text", required: true, placeholder: 'Unit measurement' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
   ]
 
 
@@ -66,34 +64,17 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}: { formData: any, action: string }) => {
-   
+  const saveData = async ({ formData, action }: { formData: any, action: string }) => {
+
     const formattedData = {
-        db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
+      db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
 
-
-
-    const response:any = await createMaster(formattedData);
-
-    
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Unit measurement added successfully');
-
-    }
-    else{
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Unit measurement updated successfully');
-      }
-    }
-
-    if(response?.error?.data?.message?.message){
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
-   
+    const response: any = await createMaster(formattedData);
+    return response;
   };
 
 
@@ -112,7 +93,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], action: "Add", user, createUser:createMaster, db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER, masterName: "UnitMeasurement" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER, masterName: "UnitMeasurement" });
   };
 
   const handleExport = () => {
@@ -125,7 +106,7 @@ const page = () => {
     // Your delete logic for user page
   };
 
- 
+
 
   const continentColumns = [
     {
@@ -179,7 +160,7 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
-    
+
 
 
   ];
@@ -187,7 +168,7 @@ const page = () => {
   const continentConfig = {
     searchFields: [
       { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by Unit measurement' },
-      
+
     ],
     filterFields: [
       // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
@@ -218,7 +199,7 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
-        height = 'auto'
+        height='auto'
       />
     </>
 

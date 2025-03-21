@@ -38,6 +38,7 @@ interface Field {
 }
 
 interface BaseFormData {
+  isActive: boolean;
   addedBy?: string;
   updatedBy?: string;
   [key: string]: any;
@@ -47,7 +48,7 @@ interface DynamicDialogProps<T extends BaseFormData> {
   isOpen: boolean;
   closeDialog: () => void;
   selectedMaster: string;
-  onSave: (data: { formData: T; action: string }) => Promise<void>;
+  onSave: (data: { formData: T; action: string }) => Promise<any>;
   fields: Field[];
   initialData: Partial<T>;
   action: string;
@@ -185,7 +186,7 @@ function DynamicDialog<T extends BaseFormData>({
   };
 
   // Handle form submission
-  const handleSubmit = async () => {
+  const handleSubmit = async (status:string) => {
     if (!validateForm()) {
       toast.error("Please fix the form errors before submitting");
       return;
@@ -197,16 +198,19 @@ function DynamicDialog<T extends BaseFormData>({
         updatedBy: user._id
       } as T;
 
+      if (status === "delete") {
+        updatedData.isActive = false;
+      }
       if (action === "Add") {
         updatedData.addedBy = user._id;
       }
-     
       const response: any = await onSave({ formData: updatedData, action });
+      console.log(response);
       if (!response || response?.error) {
         toast.error(response?.error.message || "Something Went Wrong!");
         return;
       }
-      toast.success(`${selectedMaster} ${action === 'Add' ? 'created' : 'updated'} successfully`);
+      toast.success(`${selectedMaster} ${action === 'Add' ? 'created' : status === 'delete' ? 'deleted' : 'updated'} successfully`);
       handleClose();
     } catch (error) {
       console.error("Error saving data:", error);
@@ -358,9 +362,13 @@ function DynamicDialog<T extends BaseFormData>({
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : "Save"}
+          <Button onClick={()=>handleSubmit('update')} disabled={isSubmitting} className={`${action === 'Update' && 'bg-blue-800 hover:bg-blue-700 duration-300'} `}>
+            {action === 'Add' ? isSubmitting ? "Saving..." : "Save" : isSubmitting ? "Updating..." : "Update"}
           </Button>
+
+          {action === 'Update' && <Button onClick={()=>handleSubmit('delete')} disabled={isSubmitting}>
+            {isSubmitting ? "Deleting..." : "Delete"}
+          </Button>}
         </DialogFooter>
       </DialogContent>
     </Dialog>

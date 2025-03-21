@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'react-toastify';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { validate } from '@/shared/functions';
+import { transformData } from '@/lib/utils';
 
 interface AssignmentFormData {
     _id: string;
@@ -26,6 +27,7 @@ interface AssignmentFormData {
     assignedType: 'User' | 'Department';
     location?: string;
     remarks?: string;
+    isActive: boolean;
 }
 
 interface HistoryDialogProps {
@@ -149,14 +151,13 @@ const HistoryDialog = ({ isOpen, onClose, asset }: HistoryDialogProps) => {
 
 const AssetManagementPage = () => {
     const router = useRouter();
-    const [loading, setLoading] = useState(true);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Assign" | "Return">("Assign");
     const [actionLoading, setActionLoading] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any>(null);
     const [assignmentType, setAssignmentType] = useState<'User' | 'Department'>('User');
-    const { user }:any = useUserAuthorised();
+    const { user }: any = useUserAuthorised();
 
     // API hooks with proper population
     const { data: assetsResponse, isLoading: assetsLoading } = useGetMasterQuery({
@@ -183,10 +184,15 @@ const AssetManagementPage = () => {
             }
         ]
     });
-    const { data: locationResponse } = useGetMasterQuery({
+    const { data: locationResponse, isLoading: locationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
-    }); 
+    });
+    const { data: productsResponse, isLoading: productsLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.PRODUCT_MASTER,
+        filter: { isActive: true },
+        populate: ['category']
+    });
 
     const { data: usersResponse } = useGetMasterQuery({
         db: MONGO_MODELS.USER_MASTER,
@@ -197,20 +203,26 @@ const AssetManagementPage = () => {
         db: MONGO_MODELS.DEPARTMENT_MASTER,
         filter: { isActive: true }
     });
+    const fieldsToAdd = [
+        { fieldName: 'productName', path: ['product', 'name'] }
+    ];
+    const transformedData = transformData(assetsResponse?.data, fieldsToAdd);
 
+
+    const loading = productsLoading || assetsLoading || locationLoading;
     const [createMaster] = useCreateMasterMutation();
 
     const statusData = [
         { _id: true, name: "True" },
         { _id: false, name: "False" },
-      ];
+    ];
 
     // Form fields for assignment
     const formFields = [
         {
             name: "assignedType",
             label: "Assign To",
-            placeholder:"Select assign to",
+            placeholder: "Select assign to",
             type: "select",
             required: true,
             data: [
@@ -225,7 +237,7 @@ const AssetManagementPage = () => {
             placeholder: "Select user/department",
             type: "select",
             required: true,
-            data: assignmentType === 'User' 
+            data: assignmentType === 'User'
                 ? usersResponse?.data?.map((user: any) => ({
                     name: `${user.firstName} ${user.lastName}`,
                     _id: user._id
@@ -285,9 +297,9 @@ const AssetManagementPage = () => {
             cell: ({ row }: any) => (
                 <Badge variant={
                     row.original.status === 'available' ? "default" :
-                    row.original.status === 'assigned' ? "secondary" :
-                    row.original.status === 'maintenance' ? "outline" :
-                    "destructive"
+                        row.original.status === 'assigned' ? "secondary" :
+                            row.original.status === 'maintenance' ? "outline" :
+                                "destructive"
                 }>
                     {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
                 </Badge>
@@ -300,7 +312,7 @@ const AssetManagementPage = () => {
                 const assignment = row.original.currentAssignment;
                 if (!assignment) return '-';
                 const assignee = assignment.assignedTo;
-                const name = assignment.assignedType === 'User' 
+                const name = assignment.assignedType === 'User'
                     ? `${assignee.firstName} ${assignee.lastName}`
                     : assignee.name;
                 return (
@@ -318,18 +330,18 @@ const AssetManagementPage = () => {
             header: "Actions",
             cell: ({ row }: any) => (
                 <div className="flex gap-2">
-                  
-                        <Button
-                            size="sm"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleAssign(row.original);
-                            }}
-                            disabled={actionLoading}
-                        >
-                            <UserPlus className="h-4 w-4" />
-                        </Button>
-                   
+
+                    <Button
+                        size="sm"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleAssign(row.original);
+                        }}
+                        disabled={actionLoading}
+                    >
+                        <UserPlus className="h-4 w-4" />
+                    </Button>
+
                     {row.original.status === 'assigned' && (
                         <Button
                             size="sm"
@@ -374,7 +386,7 @@ const AssetManagementPage = () => {
         try {
             setActionLoading(true);
             // Add to history before clearing current assignment
-            const currentAssignment:any = { ...asset.currentAssignment };
+            const currentAssignment: any = { ...asset.currentAssignment };
             await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: 'update',
@@ -400,10 +412,10 @@ const AssetManagementPage = () => {
     };
 
     // Handle dialog save
-    const handleSave = async ({ formData, action }: { formData: AssignmentFormData; action: string }): Promise<void> => {
+    const handleSave = async ({ formData, action }: { formData: AssignmentFormData; action: string }): Promise<any> => {
         try {
             setActionLoading(true);
-            const updatedData:any = ({
+            const updatedData: any = ({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: 'update',
                 filter: { _id: formData._id },
@@ -416,11 +428,11 @@ const AssetManagementPage = () => {
                         location: formData.location,
                         assignedBy: user._id,
                         remarks: formData.remarks
-                    },  
+                    },
                 }
             });
 
-            if(selectedAsset.currentAssignment){
+            if (selectedAsset.currentAssignment) {
                 updatedData.data.$push = {
                     assignmentHistory: {
                         ...selectedAsset.currentAssignment,
@@ -430,7 +442,7 @@ const AssetManagementPage = () => {
             }
             const response = await createMaster(updatedData).unwrap();
             setSelectedItem(null);
-            toast.success('Asset assigned successfully');
+            return response;
         } catch (error) {
             console.error('Error assigning asset:', error);
             toast.error('Failed to assign asset');
@@ -455,19 +467,17 @@ const AssetManagementPage = () => {
                 label: "Product",
                 type: "select" as const,
                 placeholder: "Filter by product",
-                options: assetsResponse?.data?.map((asset: any) => asset.product?.name) || []
+                data: productsResponse?.data?.map((prod: any) => ({
+                    _id: prod?.name,
+                    name: prod?.name
+                })),
+                name: "productName",
             },
-            {
-                key: "status",
-                label: "Status",
-                type: "select" as const,
-                placeholder: "Filter by status",
-                options: ["available", "assigned", "maintenance", "retired"]
-            }
+
         ],
         dataTable: {
             columns: columns,
-            data: (assetsResponse?.data || []) as any[],
+            data: transformedData,
             onRowClick: (row: any) => {
                 // Show assignment history or details
                 setSelectedItem(row.original);
@@ -476,16 +486,10 @@ const AssetManagementPage = () => {
         }
     };
 
-    useEffect(() => {
-        if (!assetsLoading) {
-            setLoading(false);
-        }
-    }, [assetsLoading]);
-
     return (
         <div className="h-full w-full">
-            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} />
-            
+            <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+
             <DynamicDialog<AssignmentFormData>
                 isOpen={isDialogOpen}
                 closeDialog={() => {

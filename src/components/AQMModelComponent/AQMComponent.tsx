@@ -239,8 +239,8 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
   }, [initialData]);
 
-
-
+console.log(formData);
+console.log(initialData);
   function updateCycleTimeForArray(dataArray: any[]) {
     return dataArray.map(item => {
       const { sentToEstimation, receivedFromEstimation } = item;
@@ -1261,15 +1261,15 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             {/* Tabs Section */}
             <div className="w-full flex-1 min-h-0 overflow-hidden">
               <Tabs defaultValue="QuoteDetails" className="h-full flex flex-col min-h-0">
-                <TabsList width={"full"}>
-                  <TabsTrigger value="QuoteDetails" width={"full"}>Quote Details</TabsTrigger>
-                  <TabsTrigger value="CustomerDetails" width={"full"}>Customer Details</TabsTrigger>
-                  <TabsTrigger value="ProjectDetails" width={"full"}>Project Details</TabsTrigger>
-                  {action !== 'Add' && (<TabsTrigger value="CycleTimeDetails" width={"full"}>Cycle Time Details</TabsTrigger>)}
-                  {action !== 'Add' && (<TabsTrigger value="TechnicalDetails" width={"full"}>Technical Details</TabsTrigger>)}
-                  {action !== 'Add' && (<TabsTrigger value="CommercialDetails" width={"full"}>Commercial Details</TabsTrigger>)}
+                <TabsList width={"full"} >
+                  <TabsTrigger value="QuoteDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Quote Details</TabsTrigger>
+                  <TabsTrigger value="CustomerDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Customer Details</TabsTrigger>
+                  <TabsTrigger value="ProjectDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Project Details</TabsTrigger>
+                  {action !== 'Add' && (<TabsTrigger value="CycleTimeDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Cycle Time Details</TabsTrigger>)}
+                  {action !== 'Add' && (<TabsTrigger value="TechnicalDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Technical Details</TabsTrigger>)}
+                  {action !== 'Add' && (<TabsTrigger value="CommercialDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Commercial Details</TabsTrigger>)}
                   {action !== 'Add' && initialData?.quoteStatus?.name === 'J - Job' && (
-                    <TabsTrigger value="JobDetails" width={"full"}>Job Details</TabsTrigger>
+                    <TabsTrigger value="JobDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Job Details</TabsTrigger>
                   )}
                 </TabsList>
 

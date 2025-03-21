@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react'
-import { ArrowUpDown } from "lucide-react"
+import { ArrowUpDown, Download } from "lucide-react"
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
@@ -13,6 +13,42 @@ import { useGetApplicationQuery } from '@/services/endpoints/applicationApi';
 import ReportComponent from '@/components/ReportComponent/ReportComponent';
 import { transformQuoteData } from '@/lib/utils';
 import moment from 'moment';
+import * as XLSX from "xlsx";
+
+interface OriginalData {
+    area: string;
+    avgQ22Value: string;
+    country: string;
+    region: string;
+    totalJobs: number;
+    totalQuotes: number;
+    totalWeight: string;
+    active: number;
+    budgetary: number; 
+    cancel: number;
+    decline: number;
+    hold: number;
+    hotQuote: number;
+    job: number;
+    jobShipped: number;
+    lost: number;
+    total: number;
+    jobNo: string;
+    types: string;
+    customer: string;
+    q22Value: string;
+    totalWt: string;
+    currency: string;
+    totalEstPrice: string;
+    quoteNo: string;
+    projectName:string;
+    lostTo: string;
+    lotToOthers:string;
+    lostDate:Date;
+    reason:string;
+    forecastMonth:string;
+    remarks:string;
+}
 
 const page = () => {
     const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
@@ -83,7 +119,7 @@ const page = () => {
         { _id: 11, name: "November" },
         { _id: 12, name: "December" }
     ];
-    
+
     const transformedData = quotationDataNew?.map((q: any) => ({
         ...q, // Keep all existing fields
         country: q.country?.name,
@@ -104,14 +140,77 @@ const page = () => {
     }));
 
     const loading: boolean = transformedData?.length === 0;
-    const handleExport = () => {
-        console.log('UserPage Update button clicked');
-        // Your update logic for user page
+    const handleExport = (type: string, data: OriginalData[]) => {
+        const keyMapping: Record<string, string> = {
+            region: "Region",
+            area: "Area",
+            country: "Country",
+            totalQuotes: "Total Quotes",
+            totalJobs: "No Of Jobs",
+            totalWeight: "Sum Of Total Weight",
+            avgQ22Value: "Avg Q22 Value",
+            active: "Active",
+            budgetary: "Budgetary",
+            cancel: "Cancel",
+            decline: "Decline",
+            hold: "Hold",
+            hotQuote: "Hot Quote",
+            job: "Job",
+            jobShipped: "Job Shipped",
+            lost: "Lost",
+            total: "Total",
+            jobNo: "Job No",
+            types: "Types",
+            customer: "Customer Name",
+            q22Value: "Q22 Value (AED)",
+            totalWt: "Total Weight (Tons)",
+            currency: "Currency",
+            totalEstPrice: "Total Estimated Price",
+            quoteNo:"Quote No",
+            projectName: "Project Name",
+            lostTo: "Lost To",
+            lostToOthers: "Lost To Others",
+            lostDate: "Lost Date",
+            reason:"Lost Reason",
+            forecastMonth: "Forecast Month",
+            remarks: "Remarks"
+          };
+          const transformedData = data.map((item) => {
+            const transformedItem: Record<string, any> = {};
+        
+            for (const key in item) {
+              if (Object.prototype.hasOwnProperty.call(item, key)) {
+                const newKey = keyMapping[key] || key; // Rename key if mapping exists, else keep original
+                const value = item[key as keyof OriginalData];
+        
+                // Convert numerical fields (handling strings with commas)
+                if (typeof value === "string" && value.match(/^\d{1,3}(,\d{3})*(\.\d+)?$/)) {
+                  transformedItem[newKey] = parseFloat(value.replace(/,/g, ""));
+                } else {
+                  transformedItem[newKey] = value; // Keep other fields unchanged
+                }
+              }
+            }
+        
+            return transformedItem;
+          });
+
+        if (type === "excel") {
+            exportToExcel(transformedData);
+        }
     };
 
-    const handleDelete = () => {
-        console.log('UserPage Delete button clicked');
-        // Your delete logic for user page
+
+
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
     const generateColumns = (columns: { key: string; label: string }[], editUser?: (user: any) => void) => {
@@ -281,6 +380,14 @@ const page = () => {
                     columns: quoteDetailsCol,
                     data: transformedData, // Dynamic user data
                 },
+                buttons: [
+                    {
+                        label: 'Export', action: (type: string, data: any) => handleExport(type, data), icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                            { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+                        ]
+                    },
+                ],
             },
             {
                 title: "Quote Status",
@@ -298,6 +405,14 @@ const page = () => {
                     columns: quoteStatusCol,
                     data: transformedData, // Dynamic order data
                 },
+                buttons: [
+                    {
+                        label: 'Export', action: (type: string, data: any) => handleExport(type, data), icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                            { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+                        ]
+                    },
+                ],
             },
             {
                 title: "Job Details",
@@ -317,6 +432,14 @@ const page = () => {
                     columns: jobDetailsCol,
                     data: transformedData, // Dynamic order data
                 },
+                buttons: [
+                    {
+                        label: 'Export', action: (type: string, data: any) => handleExport(type, data), icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                            { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+                        ]
+                    },
+                ],
             },
             {
                 title: "Job Lost Report",
@@ -330,42 +453,58 @@ const page = () => {
                     columns: jobLostCol,
                     data: transformedData, // Dynamic order data
                 },
+                buttons: [
+                    {
+                        label: 'Export', action: (type: string, data: any) => handleExport(type, data), icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                            { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+                        ]
+                    },
+                ],
             },
             {
                 title: "3 Month OIF",
                 searchFields: [
-                  
+
                 ],
                 filterFields: [
-                   
+
                 ],
                 dataTable: {
-                   
+
                 },
             },
             {
                 title: "3 Month SF",
                 searchFields: [
-                 
+
                 ],
                 filterFields: [
-                  
+
                 ],
                 dataTable: {
                     columns: MonthSFCol,
                     data: transformedData, // Dynamic order data
                 },
+                buttons: [
+                    {
+                        label: 'Export', action: (type: string, data: any) => handleExport(type, data), icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                            { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+                        ]
+                    },
+                ],
             },
             {
                 title: "QSR",
                 searchFields: [
-                  
+
                 ],
                 filterFields: [
-                   
+
                 ],
                 dataTable: {
-                  
+
                 },
             },
         ],

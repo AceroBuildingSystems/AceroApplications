@@ -1,10 +1,9 @@
-
 "use client"
-
+ 
 import * as React from "react"
 import { format, getMonth, getYear, setMonth, setYear, setHours, setMinutes } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
-
+ 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -14,9 +13,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select"
-
+ 
 interface DatePickerProps {
-  currentDate?: Date;
+  currentDate?: any;
   startYear?: number;
   endYear?: number;
   handleChange?: any;
@@ -29,9 +28,9 @@ export function DatePicker({
   handleChange,
   placeholder
 }: DatePickerProps) {
-
-  const [date, setDate] = React.useState<Date>(currentDate);
-
+ 
+  const [date, setDate]:any = React.useState<Date | undefined>(currentDate);
+ 
   const months = [
     'January',
     'February',
@@ -50,7 +49,7 @@ export function DatePicker({
     { length: endYear - startYear + 1 },
     (_, i) => startYear + i
   );
-
+ 
   const handleMonthChange = (month: string) => {
     const newDate = setMonth(date, months.indexOf(month));
     const customChange = handleChange(newDate,setDate)
@@ -58,16 +57,16 @@ export function DatePicker({
       setDate(newDate);
     }
   }
-
+ 
   const handleYearChange = (year: string) => {
     const newDate = setYear(date, parseInt(year));
     const customChange = handleChange(newDate,setDate)
     if(!customChange){
       setDate(newDate);
     }
-
+ 
   }
-
+ 
   const handleSelect = (selectedData: Date | undefined) => {
     if (selectedData) {
       const now = new Date();
@@ -78,7 +77,7 @@ export function DatePicker({
       }
     }
   }
-
+ 
   return (
     <>
       <div className="relative w-full">
@@ -124,7 +123,7 @@ export function DatePicker({
                 </SelectContent>
               </Select>
             </div>
-
+ 
             <Calendar
               mode="single"
               selected={date}
@@ -138,13 +137,13 @@ export function DatePicker({
         <div className="absolute top-[-18] cursor-pointer text-xs font-medium text-white  right-0 w-4 h-4 rounded-full bg-red-500 flex justify-center" onClick={() => {setDate(undefined); handleChange(undefined)}}>
        
           X
-        
+       
         </div>
       </div>
-        
-      
-
+       
+     
+ 
     </>
-
+ 
   )
 }

@@ -29,6 +29,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { DatePicker } from '../ui/date-picker';
 
 // Define types for task completion history
 interface CompletionHistoryEntry {
@@ -809,12 +810,21 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 z-50" align="start">
-                      <CalendarComponent
+
+                    <DatePicker
+                      currentDate={taskDueDate}
+                      handleChange={(selectedDate=>{
+                        setTaskDueDate(selectedDate)
+                      })}
+                      placeholder='Please select date'
+                      />
+ 
+                      {/* <CalendarComponent
                         mode="single"
                         selected={taskDueDate}
                         onSelect={(date) => date && setTaskDueDate(date)}
                         initialFocus
-                      />
+                      /> */}
                     </PopoverContent>
                   </Popover>
                 </div>

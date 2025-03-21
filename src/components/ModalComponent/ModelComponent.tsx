@@ -15,6 +15,8 @@ import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
 import MultipleSelector from "../ui/multiple-selector";
 import { toast } from "react-toastify";
+import { FocusScope } from '@radix-ui/react-focus-scope';
+import {DismissableLayer} from '@radix-ui/react-dismissable-layer'
 
 interface Field {
   name: string;
@@ -266,12 +268,18 @@ function DynamicDialog<T extends BaseFormData>({
                           case "select":
                             return (
                               <div>
+                                {/* <FocusScope asChild loop trapped> */}
+                                
+
                                 <Combobox
                                   field={field}
                                   formData={formData}
                                   handleChange={handleChange}
                                   placeholder={field.placeholder || ""}
-                                />
+                                  modal
+                                  />
+                                  
+                                  {/* </FocusScope> */}
                                 {errors[field.name] && (
                                   <span className="text-sm text-destructive">{errors[field.name]}</span>
                                 )}

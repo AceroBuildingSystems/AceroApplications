@@ -280,6 +280,7 @@ function DynamicDialog<T extends BaseFormData>({
                                   formData={formData}
                                   handleChange={handleChange}
                                   placeholder={field.placeholder || ""}
+                                  modal
                                 />
                                 {errors[field.name] && (
                                   <span className="text-sm text-destructive">{errors[field.name]}</span>

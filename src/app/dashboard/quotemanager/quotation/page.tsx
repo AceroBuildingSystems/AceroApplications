@@ -40,8 +40,25 @@ const page = () => {
     const { data: quotationData = [], isLoading: quotationLoading }: any = useGetApplicationQuery({
         db: MONGO_MODELS.QUOTATION_MASTER,
         filter: { isActive: true },
-        sort: { name: 'asc' },
+        sort: { year:'desc', quoteNo: 'desc' },
     });
+
+    const sortedQuotations = Array.isArray(quotationData?.data)
+  ? [...quotationData?.data].sort((a, b) => {
+    const aEmpty = a.quoteNo === null || a.quoteNo === undefined;
+      const bEmpty = b.quoteNo === null || b.quoteNo === undefined;
+
+      // Step 1: Put empty quoteNo values at the top
+      if (aEmpty && !bEmpty) return -1;
+      if (!aEmpty && bEmpty) return 1;
+
+      // Step 2: Sort by year descending
+      if (b.year !== a.year) return b.year - a.year;
+
+      // Step 3: Sort by quoteNo descending (numeric)
+      return (b.quoteNo ?? 0) - (a.quoteNo ?? 0);
+    })
+  : [];
     
     const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
@@ -49,7 +66,7 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
-    const quotationDataNew = transformQuoteData(quotationData?.data, user, teamMemberData?.data);
+    const quotationDataNew = transformQuoteData(sortedQuotations, user, teamMemberData?.data);
   
     const { data: countryData = [], isLoading: countryLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.COUNTRY_MASTER,
@@ -285,7 +302,7 @@ const page = () => {
     const teamId = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.team?._id;
     const teamRole = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
 
-    let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === teamId)?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
+    let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; teamRole: { name: string }[]; }) => data?.team?._id === teamId && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
         name: option?.user?.shortName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
         team: option?.team?._id,
@@ -294,7 +311,7 @@ const page = () => {
     }));
 
     if (teamRole === 'Engineer') {
-        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
+        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; teamRole: { name: string }[]; }) => data?.user?._id === user?._id && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
             name: option?.user?.shortName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
@@ -304,7 +321,7 @@ const page = () => {
     }
 
     if (user?.role?.name === 'Admin') {
-        salesEngData = teamMemberData?.data?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
+        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; teamRole: { name: string }[]; }) => data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
             name: option?.user?.shortName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
@@ -597,7 +614,6 @@ const page = () => {
             filter: { "_id": formData?._id },
             data: formData,
         };
-console.log('formattedData',formattedData);
 
         const response: any = await createApplication(formattedData);
 
@@ -616,7 +632,7 @@ console.log('formattedData',formattedData);
             throw new Error("Something went wrong!");
             toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
         }
-console.log(response);
+
         return response;
     };
 
@@ -959,7 +975,6 @@ console.log(response);
 
     };
 
-console.log(quotationDataNew);
     return (
         <>
             <MasterComponentAQM config={quotationConfig} loadingState={loading} rowClassMap={rowClassMap} handleExport={handleExport} />

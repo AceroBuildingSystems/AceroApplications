@@ -239,8 +239,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
   }, [initialData]);
 
-console.log(formData);
-console.log(initialData);
+
   function updateCycleTimeForArray(dataArray: any[]) {
     return dataArray.map(item => {
       const { sentToEstimation, receivedFromEstimation } = item;
@@ -298,9 +297,9 @@ console.log(initialData);
     if (type === "multiselect") {
       value = Array.isArray(e) ? e.map((item) => item.value) : ''; // Store only `_id`s as a comma-separated string
     } else if (type === "select") {
-      value = typeof e === 'string' ? e : ""; // Ensure single select values are stored correctly
+      value = typeof e === 'string' || typeof e === 'number'  ? e : ""; // Ensure single select values are stored correctly
     } else {
-      if (typeof e === 'string') {
+      if (typeof e === 'string' || typeof e === 'number') {
         value = e;
        
       } else if (Array.isArray(e)) {
@@ -319,6 +318,7 @@ console.log(initialData);
     if (field?.section !== 'CycleTimeDetails') {
 
       setFormData((prev) => {
+        console.log(value);
         let formattedValue = value;
         if (format === "ObjectId") {
           formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : ""; // Validate ObjectId format
@@ -329,6 +329,8 @@ console.log(initialData);
           ...prev,
           [fieldName]: formattedValue,
         };
+
+        console.log(updatedFormData);
 
         if (fieldName === "company") {
           updatedFormData['customerType'] = data.filter((item) => item?._id === e)[0]?.customerType?._id;

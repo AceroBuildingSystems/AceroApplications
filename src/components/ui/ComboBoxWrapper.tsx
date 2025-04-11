@@ -56,10 +56,10 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                 onSelect={() => {
                                     setSelectedValue(null);
                                     handleChange(null, field.name, field?.format, field?.type, field?.data, field); // Set the value to null for "All"
-                                    if (field.name === "year") {
+                                    if (field?.key === "year") {
                                         setSelectedYear(0); // Update region
                                     }
-                                    if (field.name === "month") {
+                                    if (field?.key === "month") {
                                         setSelectedMonth(0); // Update region
                                     }
                                     setOpen(false);
@@ -82,16 +82,16 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                     onSelect={(value) => {
                                         setSelectedValue(value);
                                         handleChange(data._id, field.name, field?.format, field?.type, field?.data, field);
-                                        if (field.name === "region") {
+                                        if (field?.key === "region") {
                                             setSelectedRegion(data._id); // Update region
                                         }
-                                        if (field.name === "area") {
+                                        if (field?.key === "area") {
                                             setSelectedArea(data._id); // Update region
                                         }
-                                        if (field.name === "year") {
+                                        if (field?.key === "year") {
                                             setSelectedYear(data._id); // Update region
                                         }
-                                        if (field.name === "month") {
+                                        if (field?.key === "month") {
                                             setSelectedMonth(data._id); // Update region
                                         }
                                         setOpen(false);

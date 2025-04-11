@@ -278,7 +278,6 @@ function DynamicDialog<T extends BaseFormData>({
                             return (
                               <div>
                                 {/* <FocusScope asChild loop trapped> */}
-                                
 
                                 <Combobox
                                   field={field}
@@ -286,7 +285,8 @@ function DynamicDialog<T extends BaseFormData>({
                                   handleChange={handleChange}
                                   placeholder={field.placeholder || ""}
                                   modal
-                                />
+                                  />
+                                  {/* </FocusScope> */}
                                 {errors[field.name] && (
                                   <span className="text-sm text-destructive">{errors[field.name]}</span>
                                 )}

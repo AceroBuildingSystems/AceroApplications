@@ -18,7 +18,7 @@ import { RowExpanding } from '@tanstack/react-table';
 import { createMasterData } from '@/server/services/masterDataServices';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
-
+import * as XLSX from "xlsx";
 
 const page = () => {
 
@@ -153,17 +153,36 @@ const page = () => {
         bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerData: [], customerTypeData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
     };
 
-    const handleExport = () => {
-        console.log('UserPage Update button clicked');
-        // Your update logic for user page
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
+    };
+
+    const handleExport = (type: string) => {
+           console.log(teamMemberData?.data);
+        const formattedData = teamMemberData?.data.map((data: any) => {
+            return {
+                User: data?.user?.shortName,
+                'Team Role': data?.teamRole[0]?.name,
+                'Reporting To':data?.teamReportingTo[0]?.shortName,
+                Team:data?.team?.name,
+
+            };
+        })
+        type === 'excel' && exportToExcel(formattedData);
+
     };
 
     const handleDelete = () => {
         console.log('UserPage Delete button clicked');
         // Your delete logic for user page
     };
-
-
 
     const teamMemberColumns = [
         {
@@ -278,14 +297,14 @@ const page = () => {
             data: transformedData,
         },
         buttons: [
-{ label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-          { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-          { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
-        ]
-      },
-      { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            {
+                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                ]
+            },
+            { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
 

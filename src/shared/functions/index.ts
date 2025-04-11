@@ -79,6 +79,8 @@ interface BulkImportParams {
     warehouseData: any;
     customerTypeData: any;
     customerData: any;
+    userData: any;
+    teamData: any;
     action: string;
     user: any;
     createUser: (data: any) => Promise<any>;
@@ -86,7 +88,7 @@ interface BulkImportParams {
     masterName: string;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, action, user, createUser, db, masterName }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData,userData,teamData, action, user, createUser, db, masterName }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -534,6 +536,9 @@ const fieldMappingConfig: { [key: string]: any } = {
     },
     CustomerContact: {
         customer: { source: "customerData", key: "name", value: "_id" },
+    },
+    Role: {
+        role: { source: "roleData", key: "name", value: "_id" },
     },
     // Add more entity mappings if needed
 };

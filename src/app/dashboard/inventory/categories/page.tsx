@@ -253,7 +253,7 @@ const ProductCategoriesPage = () => {
     };
 
     const handleImport = () => {
-                bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData:[],categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_CATEGORY_MASTER", masterName: "Category" });
+                bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData:[],categoryData:[],vendorData:[], productData:[], warehouseData:[], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_CATEGORY_MASTER", masterName: "Category" });
             };
         
             const handleExport = (type: string) => {

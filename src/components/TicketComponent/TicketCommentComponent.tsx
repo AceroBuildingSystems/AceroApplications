@@ -26,7 +26,7 @@ interface User {
 interface Comment {
   _id: string;
   ticket: string;
-  user: User;
+  user: any;
   content: string;
   attachments?: Array<{
     fileName: string;
@@ -68,7 +68,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
   const departmentId = comments?.[0]?.user?.department?._id;
   
   // Fetch team members for mentions
-  const { data: teamMembersData = {}} = useGetMasterQuery({
+  const { data: teamMembersData = {data:[]}} = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
     sort: { firstName: 1 }
@@ -139,7 +139,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
   };
   
   // Filter team members for mention suggestions
-  const filteredTeamMembers = teamMembers.filter(user => 
+  const filteredTeamMembers = teamMembers.filter((user:any) => 
     `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase())
   );
   
@@ -178,7 +178,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
       matches.forEach(match => {
         const name = match.substring(1).trim();
         const user = teamMembers.find(
-          u => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
+          (u:any) => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
         );
         if (user) mentionedUserIds.push(user._id);
       });
@@ -209,7 +209,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
       setSelectedFiles([]);
       setReplyingTo(null);
       toast.success('Comment added successfully');
-    } catch (error) {
+    } catch (error:any) {
       console.error("Comment creation error:", error);
       const errorMessage = error.data?.message || 'Failed to add comment';
       toast.error(errorMessage);
@@ -270,7 +270,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
   };
   
   // Render a comment with its attachments
-  const renderComment = (comment: Comment, isReply = false) => (
+  const renderComment = (comment: any, isReply = false) => (
     <div 
       key={comment._id} 
       className={`flex gap-3 ${isReply ? 'ml-12 mt-2' : 'mt-4'}`}
@@ -311,7 +311,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
           
           {comment.attachments && comment.attachments.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
-              {comment.attachments.map((attachment, index) => (
+              {comment.attachments.map((attachment:any, index:any) => (
                 <div 
                   key={index}
                   className="flex flex-col items-center border rounded-md p-1 bg-gray-50 w-16"
@@ -390,7 +390,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
                         <CommandInput placeholder="Search team members..." />
                         <CommandList>
                           {filteredTeamMembers.length > 0 ? (
-                            filteredTeamMembers.map(user => (
+                            filteredTeamMembers.map((user:any) => (
                               <CommandItem
                                 key={user._id}
                                 onSelect={() => insertMention(user)}
@@ -478,7 +478,7 @@ const TicketCommentComponent: React.FC<TicketCommentComponentProps> = ({
                         <Command>
                           <CommandInput placeholder="Search team members..." />
                           <CommandList>
-                            {teamMembers.map(user => (
+                            {teamMembers.map((user:any) => (
                               <CommandItem
                                 key={user._id}
                                 onSelect={() => {

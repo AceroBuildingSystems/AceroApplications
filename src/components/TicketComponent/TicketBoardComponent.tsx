@@ -76,13 +76,13 @@ interface TicketBoardComponentProps {
 }
 
 // Droppable container component with enhanced visuals
-const DroppableColumn = ({ id, children, title, count, color = 'gray' }) => {
+const DroppableColumn = ({ id, children, title, count, color = 'gray' }:any) => {
   const { setNodeRef, isOver } = useDroppable({
     id: id
   });
 
   // Map color names to tailwind classes (more refined)
-  const colorMap = {
+  const colorMap:any = {
     gray: { bg: 'bg-secondary/20', border: 'border-secondary/30', text: 'text-secondary-foreground', hover: 'bg-secondary/30' },
     blue: { bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-700', hover: 'bg-blue-100/50' },
     green: { bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-700', hover: 'bg-emerald-100/50' },
@@ -91,7 +91,7 @@ const DroppableColumn = ({ id, children, title, count, color = 'gray' }) => {
     red: { bg: 'bg-primary/10', border: 'border-primary/20', text: 'text-primary-foreground', hover: 'bg-primary/20' }
   };
 
-  const colors = colorMap[color] || colorMap.gray;
+  const colors:any = colorMap[color] || colorMap.gray;
 
   return (
     <div className="flex flex-col h-full w-[270px] transition-all duration-200 rounded-lg shadow-card">
@@ -149,14 +149,14 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   );
 
   // Fetch users for assignment dialog
-  const { data: usersData = {}, isLoading: usersLoading } = useGetMasterQuery({
+  const { data: usersData = {data:[]}, isLoading: usersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: ticketToAssign ? { department: ticketToAssign.department._id, isActive: true } : {},
     sort: { firstName: 1 }
   }, { skip: !ticketToAssign });
 
   // Store the previous tickets ref to avoid unnecessary re-renders
-  const prevTicketsRef = useRef(null);
+  const prevTicketsRef:any = useRef(null);
   
   // Initialize columns with tickets and added visual indicators
   useEffect(() => {
@@ -382,7 +382,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     const newColumns = JSON.parse(JSON.stringify(columns));
     
     // Remove from source column immediately to prevent the snap-back effect
-    newColumns[sourceColumnId].tickets = newColumns[sourceColumnId].tickets.filter(t => t._id !== ticketId);
+    newColumns[sourceColumnId].tickets = newColumns[sourceColumnId].tickets.filter((t:any) => t._id !== ticketId);
     
     // Update ticket status
     const updatedTicket = { ...ticket, status: newStatus };
@@ -422,7 +422,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       const revertColumns = JSON.parse(JSON.stringify(columns));
       revertColumns[sourceColumnId].tickets.push(ticket);
       revertColumns[destinationColumnId].tickets = revertColumns[destinationColumnId].tickets.filter(
-        t => t._id !== ticket._id
+        (t:any) => t._id !== ticket._id
       );
       setColumns(revertColumns);
     }
@@ -434,7 +434,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     router.push(`/dashboard/ticket/${ticketId}`);
   };
 
-  const updateColumnsState = (newColumns) => {
+  const updateColumnsState = (newColumns:any) => {
     // Update state immediately instead of using requestAnimationFrame
     // This helps prevent the snap-back effect
     setColumns(newColumns);
@@ -442,7 +442,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   
   // Empty state component for cleaner code
   const EmptyColumnState = ({ columnColor = 'gray' }) => {
-    const colorMap = {
+    const colorMap:any = {
       gray: { bg: 'bg-secondary/10', text: 'text-secondary-foreground/40', border: 'border-secondary/20' },
       blue: { bg: 'bg-blue-50', text: 'text-blue-500/70', border: 'border-blue-100' },
       green: { bg: 'bg-emerald-50', text: 'text-emerald-500/70', border: 'border-emerald-100' },
@@ -559,7 +559,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md border-border">
-                  {usersData?.data?.map(user => (
+                  {usersData?.data?.map((user:any) => (
                     <SelectItem key={user._id} value={user._id} className="cursor-pointer py-2 px-2">
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-xs ring-2 ring-white">

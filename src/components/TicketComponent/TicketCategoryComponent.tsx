@@ -44,7 +44,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
   const [createCategory, { isLoading: isCreating }] = useCreateTicketCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateTicketCategoryMutation();
   
-  const handleOpenDialog = (category = null) => {
+  const handleOpenDialog = (category:any = null) => {
     if (category) {
       setSelectedCategory(category);
       setName(category.name);

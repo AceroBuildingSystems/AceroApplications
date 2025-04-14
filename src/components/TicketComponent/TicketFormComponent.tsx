@@ -49,13 +49,13 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
   // Monitor form completion for enabling the submit button
   const [canSubmit, setCanSubmit] = useState(false);
   
-  const { data: departmentData = [], isLoading: departmentLoading } = useGetMasterQuery({
+  const { data: departmentData = [], isLoading: departmentLoading }:any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { name: 1 },
   });
   
-  const { data: categoryData = [], isLoading: categoryLoading, refetch: refetchCategories } = useGetTicketCategoriesQuery({
+  const { data: categoryData = [], isLoading: categoryLoading, refetch: refetchCategories }:any = useGetTicketCategoriesQuery({
     departmentId: selectedDepartment
   });
   
@@ -401,7 +401,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                       >
                         <CalendarIcon className="mr-2 h-4 w-4 text-primary/70" />
                         {watch('dueDate') ? (
-                          format(watch('dueDate'), 'PPP')
+                          format(watch('dueDate') || new Date(), 'PPP')
                         ) : (
                           <span>Pick a date</span>
                         )}

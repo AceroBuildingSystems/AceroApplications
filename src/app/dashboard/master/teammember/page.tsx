@@ -150,7 +150,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerData: [], customerTypeData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
     };
 
     const exportToExcel = (data: any[]) => {

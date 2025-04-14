@@ -38,7 +38,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
   onClick,
   style,
   compactView = false
-}) => {
+}:any) => {
   // Card icon based on status
   const StatusIcon = () => {
     switch(ticket.status.toUpperCase()) {

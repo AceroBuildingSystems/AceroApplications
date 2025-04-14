@@ -136,7 +136,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Fetch comments
-  const { data: commentsData = {}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
+  const { data: commentsData = {data:[]}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
     ticketId 
   });
   
@@ -147,7 +147,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const [createTicketComment] = useCreateTicketCommentMutation();
   
   // Fetch team members for mentions
-  const { data: teamMembersData = {}, isLoading: teamMembersLoading } = useGetMasterQuery({
+  const { data: teamMembersData = {data:[]}, isLoading: teamMembersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
     sort: { firstName: 1 }
@@ -375,11 +375,11 @@ const TicketChat: React.FC<TicketChatProps> = ({
       setIsSubmitting(true);
       
       // Upload files first if any
-      const uploadedFiles = await handleFileUpload();
+      const uploadedFiles:any = await handleFileUpload();
       
       console.log("Uploaded files:", uploadedFiles);
       // Extract mentions
-      const mentionedUserIds = extractMentions(message);
+      const mentionedUserIds:any = extractMentions(message);
       
       // Send message via Socket.io with attachments
       const messageId = sendMessage(message.trim(), uploadedFiles, replyingTo?._id, mentionedUserIds);

@@ -691,7 +691,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                                                 // Toggle dropdown visibility for this button
                                                 setActiveDropdown(index === activeDropdown ? null : index);
                                             } else {
-                                                button.action(); // Call action directly if no dropdown
+                                                button.action("Excel", (filteredData !== undefined && filteredData?.length > 0) ? filteredData : filteredData?.length === 0 ? [] : config?.dataTable?.data); // Call action with default arguments
                                             }
                                         }}
                                         className={`w-28 ${button.className}`}
@@ -702,7 +702,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                                     {/* Dropdown (only if dropdownOptions are provided and active) */}
                                     {button.dropdownOptions && activeDropdown === index && (
                                         <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
-                                            {button.dropdownOptions.map((option, optionIndex) => (
+                                            {button.dropdownOptions.map((option:any, optionIndex) => (
                                                 <div
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"

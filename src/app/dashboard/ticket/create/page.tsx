@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 
 const CreateTicketPage = () => {
   const router = useRouter();
-  const { user, status } = useUserAuthorised();
+  const { user, status }: { user?: { _id?: string | null; name?: string | null; email?: string | null; image?: string | null }; status: 'authenticated' | 'loading' | 'unauthenticated' } = useUserAuthorised();
   const [createTicket, { isLoading: isCreating }] = useCreateTicketMutation();
   
   const handleSubmit = async (data: any) => {
@@ -73,7 +73,7 @@ const CreateTicketPage = () => {
         <motion.div variants={itemVariants}>
           <TicketFormComponent 
             onSubmit={handleSubmit}
-            userId={user?._id}
+            userId={user?._id || ''}
             isEdit={false}
           />
         </motion.div>

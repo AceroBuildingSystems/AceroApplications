@@ -11,27 +11,13 @@ let io: SocketIOServer;
 
 // Keep track of user connections and rooms
 const userConnections = new Map<string, Set<string>>();
-const typingUsers = new Map<string, Map<string, boolean>>();
+const typingUsers = new Map<string, Map<string, boolean>>(); 
 const userStatus = new Map<string, string>();
 const ticketRooms = new Map<string, Set<string>>(); // Track rooms and their members
 const messageQueue = new Map<string, any[]>(); // Queue for storing messages when no users are in room
 
-export async function GET(req: NextRequest) {
-  try {
-    await dbConnect();
-    
-    // Return success response
-    return NextResponse.json({
-      status: 'success',
-      message: 'Socket.io server is running'
-    });
-  } catch (error) {
-    console.error('Socket initialization error:', error);
-    return NextResponse.json({
-      status: 'error',
-      message: 'Failed to initialize Socket.io server'
-    }, { status: 500 });
-  }
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  return NextResponse.json({ message: 'Socket.IO API is running' });
 }
 
 // Add a POST handler for client ping
@@ -490,4 +476,4 @@ function getSocketIO(server: any): SocketIOServer {
   return io;
 }
 
-export { getSocketIO };
+// Do not export `getSocketIO` directly

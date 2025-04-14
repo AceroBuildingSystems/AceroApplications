@@ -209,7 +209,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                     {/* Dropdown (only if dropdownOptions are provided and active) */}
                                     {button.dropdownOptions && activeDropdown === index && (
                                         <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
-                                            {button.dropdownOptions.map((option, optionIndex) => (
+                                            {button.dropdownOptions.map((option:any, optionIndex) => (
                                                 <div
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"

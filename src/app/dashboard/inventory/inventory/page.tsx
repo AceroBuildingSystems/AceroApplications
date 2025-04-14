@@ -437,7 +437,7 @@ const AssetsPage = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse, action: "Add", user, createUser: createMaster, db: "ASSET_MASTER", masterName: "Asset" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse,customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ASSET_MASTER", masterName: "Asset" });
     };
 
     const handleExport = (type: string) => {

@@ -33,7 +33,7 @@ export const getUserSkillsByCategory = catchAsync(async (categoryId) => {
       category: categoryId,
       isActive: true
     },
-    sort: { rating: -1 }
+    sort: { rating: 'asc' }
   });
   return result;
 });

@@ -13,17 +13,17 @@ import TicketCategoryComponent from '@/components/TicketComponent/TicketCategory
 
 const TicketCategoriesPage = () => {
   const router = useRouter();
-  const { user, status } = useUserAuthorised();
+  const { user, status } = useUserAuthorised() as { user: { _id?: string; name?: string | null; email?: string | null; image?: string | null; role?: { name?: string | null } }, status: string };
   
   // Get departments
-  const { data: departmentData = {}, isLoading: departmentLoading } = useGetMasterQuery({
+  const { data: departmentData = {data:[]}, isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { name: 1 }
   });
   
   // Get all categories
-  const { data: categoryData = {}, isLoading: categoryLoading } = useGetTicketCategoriesQuery({});
+  const { data: categoryData = {data:[]}, isLoading: categoryLoading } = useGetTicketCategoriesQuery({});
   
   const loading = departmentLoading || categoryLoading || status === 'loading';
   
@@ -48,7 +48,7 @@ const TicketCategoriesPage = () => {
         <TicketCategoryComponent 
           departments={departmentData?.data || []}
           categories={categoryData?.data || []}
-          userId={user?._id}
+          userId={user?._id||''}
           isAdmin={isAdmin}
         />
       </div>

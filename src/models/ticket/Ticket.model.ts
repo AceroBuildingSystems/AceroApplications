@@ -25,6 +25,7 @@ export interface TicketDocument extends Document {
   recurringEndDate?: Date;
   recurringInterval?: number;
   nextRecurringDate?: Date;
+  child?: number; // Add the 'child' field to match the schema
 }
 
 const TicketSchema: Schema<TicketDocument> = new Schema({

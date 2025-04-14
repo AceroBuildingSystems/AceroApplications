@@ -11,7 +11,7 @@ import {
 import { QueryResult } from "./types";
 import { Model, Document } from "mongoose";
 import { dbConnect } from "@/lib/mongoose";
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 interface MultiQuery {
   action: "find" | "create" | "update" | "delete";

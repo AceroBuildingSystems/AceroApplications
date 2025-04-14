@@ -123,7 +123,7 @@ export const getMessageReactions = catchAsync(async (messageId) => {
   }
   
   // Group reactions by emoji for easier display
-  const groupedReactions = message.reactions.reduce((groups, reaction) => {
+  const groupedReactions = message.reactions.reduce((groups:any, reaction:any) => {
     const { emoji, userId } = reaction;
     
     if (!groups[emoji]) {

@@ -10,7 +10,7 @@ export const getTicketHistory = catchAsync(async (options) => {
 export const getTicketHistoryByTicketId = catchAsync(async (ticketId) => {
   const result = await crudManager.mongooose.find('TICKET_HISTORY_MASTER', {
     filter: { ticket: ticketId },
-    sort: { createdAt: -1 }
+    sort: { createdAt: 'asc' }
   });
   return result;
 });

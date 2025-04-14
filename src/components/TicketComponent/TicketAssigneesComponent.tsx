@@ -37,7 +37,7 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
   
-  const { data: usersData, isLoading: usersLoading } = useGetUsersQuery();
+  const { data: usersData, isLoading: usersLoading }:any = useGetUsersQuery();
   const [updateAssignees, { isLoading: isUpdating }] = useUpdateTicketAssigneesMutation();
   
   // Initialize selected users from current assignees

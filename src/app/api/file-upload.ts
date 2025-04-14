@@ -12,7 +12,7 @@ export const config = {
   },
 };
 
-export default async function handler(req, res) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ status: 'error', message: 'Method Not Allowed' });
   }
@@ -56,26 +56,26 @@ export default async function handler(req, res) {
       }
 
       // Generate a unique filename WITH extension
-      const originalName = file.originalFilename || file.name || 'file';
+      const originalName = (file as formidable.File).originalFilename || 'file';
       const ext = path.extname(originalName);
       const newFilename = `${uuidv4()}${ext}`;
 
       // Get the file path based on formidable version
-      const oldPath = file.filepath || file.path;
+      const oldPath = (file as formidable.File).filepath;
       const newPath = path.join(uploadDir, newFilename);
       
       // Rename the file to include the extension
       fs.renameSync(oldPath, newPath);
 
       // Determine correct mimetype
-      const fileType = file.mimetype || file.type || mime.lookup(originalName) || 'application/octet-stream';
+      const fileType = (file as formidable.File).mimetype || mime.lookup(originalName) || 'application/octet-stream';
 
       const fileData = {
         fileName: originalName,
         originalName,
         storedFileName: newFilename,
         fileType,
-        fileSize: file.size,
+        fileSize: (file as formidable.File).size,
         url: `/uploads/${newFilename}`,
         uploadedAt: new Date(),
         ticketId,

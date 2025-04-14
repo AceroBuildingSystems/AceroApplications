@@ -41,7 +41,7 @@ const getHistoryDetails = (action: string, details: any) => {
     case 'STATUS_CHANGE':
       return `Status changed to ${details.status}`;
     case 'ASSIGN':
-      return `Ticket assigned to ${details.assignees.map((assignee)=>`${assignee.firstName} ${assignee.lastName}`)}`;
+      return `Ticket assigned to ${details.assignees.map((assignee:any)=>`${assignee.firstName} ${assignee.lastName}`)}`;
     case 'TASK_CREATE':
       return `Created task: ${details.title}`;
     case 'TASK_STATUS_CHANGE':

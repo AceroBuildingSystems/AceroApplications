@@ -168,7 +168,7 @@ const WarehousesPage = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "WAREHOUSE_MASTER", masterName: "Warehouse" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "WAREHOUSE_MASTER", masterName: "Warehouse" });
     };
 
     const handleExport = (type: string) => {

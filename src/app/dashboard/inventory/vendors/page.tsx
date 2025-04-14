@@ -295,7 +295,7 @@ const { user, status, authenticated } = useUserAuthorised();
     };
 
     const handleImport = () => {
-            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
+            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
         };
     
         const handleExport = (type: string) => {

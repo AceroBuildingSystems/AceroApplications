@@ -43,7 +43,7 @@ import { Checkbox } from '@radix-ui/react-checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const TicketDashboardPage = () => {
-  const { user, status } = useUserAuthorised();
+  const { user, status }:any = useUserAuthorised();
   const router = useRouter();
   
   const [view, setView] = useState('board');
@@ -55,12 +55,12 @@ const TicketDashboardPage = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Fetch tickets
-  const { data: ticketsData = {}, isLoading: ticketsLoading, refetch } = useGetTicketsQuery({
+  const { data: ticketsData = {data:[]}, isLoading: ticketsLoading, refetch } = useGetTicketsQuery({
     sort: { createdAt: -1 }
   });
   
   // Fetch departments
-  const { data: departmentData = {}, isLoading: departmentLoading } = useGetMasterQuery({
+  const { data: departmentData = {data:[]}, isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { name: 1 }
@@ -77,7 +77,7 @@ const TicketDashboardPage = () => {
   };
   
   // Filter tickets
-  const filteredTickets = ticketsData?.data?.filter(ticket => {
+  const filteredTickets = ticketsData?.data?.filter((ticket:any) => {
     // Department filter
     if (departmentFilter && departmentFilter !== 'all_departments' && ticket.department._id !== departmentFilter) return false;
     
@@ -100,7 +100,7 @@ const TicketDashboardPage = () => {
     return true;
   });
   
-  const handleTicketClick = (ticketId) => {
+  const handleTicketClick = (ticketId:any) => {
     router.push(`/dashboard/ticket/${ticketId}`);
   };
 
@@ -507,7 +507,7 @@ const TicketDashboardPage = () => {
                           </SelectTrigger>
                           <SelectContent className="shadow-lg rounded-lg border-border/30 bg-white/95 dark:bg-card/95 backdrop-blur-lg">
                             <SelectItem value="all_departments" className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">All Departments</SelectItem> 
-                            {departmentData?.data?.map(dept => (
+                            {departmentData?.data?.map((dept:any) => (
                               <SelectItem key={dept._id} value={dept._id} className="cursor-pointer focus:bg-muted hover:bg-muted/50 rounded-md">
                                 {dept.name}
                               </SelectItem>
@@ -633,7 +633,7 @@ const TicketDashboardPage = () => {
                     animate="visible"
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
                   >
-                    {filteredTickets.map((ticket) => (
+                    {filteredTickets.map((ticket:any) => (
                       <motion.div
                         key={ticket._id}
                         variants={itemVariants}

@@ -32,12 +32,13 @@ import { toast } from 'react-toastify';
 const TicketDetailPage = () => {
   const { id } = useParams();
   const router = useRouter();
-  const { user, status } = useUserAuthorised();
+  const { user: authorisedUser, status } = useUserAuthorised();
+  const user = authorisedUser && '_id' in authorisedUser ? authorisedUser as { _id: string; role?: { name?: string } } : undefined;
   const [activeTab, setActiveTab] = useState('overview');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
   // Fetch ticket data
-  const { data: ticketData = {}, isLoading: ticketLoading, refetch: refetchTicket } = useGetTicketsQuery({
+  const { data: ticketData = { data: [] }, isLoading: ticketLoading, refetch: refetchTicket } = useGetTicketsQuery({
     id: id as string
   });
   
@@ -53,7 +54,7 @@ const TicketDetailPage = () => {
   const loading = ticketLoading || status === 'loading' || isUpdating;
   
   // Handle ticket edit submission
-  const handleEditSubmit = async (formData) => {
+  const handleEditSubmit = async (formData:any) => {
     try {
       await updateTicket({
         action: 'update',
@@ -73,13 +74,17 @@ const TicketDetailPage = () => {
   
   // Check if user can edit this ticket
   const canEdit = user && ticket && (
-    user._id === ticket.creator._id || 
-    user._id === ticket.assignee?._id || 
-    user.role?.name?.toUpperCase() === 'ADMIN'
+    (user as any)._id === ticket.creator._id || 
+    (user as any)._id === ticket.assignee?._id || 
+    user?.role?.name?.toUpperCase() === 'ADMIN'
   );
   
   if (loading && !ticket) {
-    return <DashboardLoader loading={true} />;
+    return (
+      <DashboardLoader loading={true}>
+        <div />
+      </DashboardLoader>
+    );
   }
   
   if (!ticket) {
@@ -102,8 +107,8 @@ const TicketDetailPage = () => {
           <TicketDetailComponent 
             ticket={ticket}
             onEditClick={() => setIsEditDialogOpen(true)}
-            userId={user?._id}
-            userRole={user?.role?.name}
+            userId={user?._id || ''}
+            userRole={user?.role?.name || ''}
           />
           
           {/* Edit Ticket Dialog */}
@@ -119,7 +124,7 @@ const TicketDetailPage = () => {
               <TicketFormComponent 
                 onSubmit={handleEditSubmit}
                 initialData={ticket}
-                userId={user?._id}
+                userId={user?._id || ''}
                 isEdit={true}
               />
             </DialogContent>
@@ -131,24 +136,24 @@ const TicketDetailPage = () => {
 };
 
 // Status and priority styling
-const getStatusColor = (status) => {
-  const statusMap = {
+const getStatusColor = (status: string) => {
+  const statusMap: Record<string, string> = {
     NEW: 'bg-blue-100 text-blue-800',
     ASSIGNED: 'bg-indigo-100 text-indigo-800',
     IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
     RESOLVED: 'bg-green-100 text-green-800',
     CLOSED: 'bg-gray-100 text-gray-800',
   };
-  return statusMap[status?.toUpperCase()] || statusMap.NEW;
+  return statusMap[status.toUpperCase()] || statusMap.NEW;
 };
 
-const getPriorityColor = (priority) => {
+const getPriorityColor = (priority:any) => {
   const priorityMap = {
     HIGH: 'bg-red-100 text-red-800',
     MEDIUM: 'bg-orange-100 text-orange-800',
     LOW: 'bg-green-100 text-green-800',
   };
-  return priorityMap[priority?.toUpperCase()] || priorityMap.MEDIUM;
+  return priorityMap[(priority?.toUpperCase() as keyof typeof priorityMap)] || priorityMap.MEDIUM;
 };
 
 export default TicketDetailPage;

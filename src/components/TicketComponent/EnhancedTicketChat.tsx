@@ -73,7 +73,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   const lastViewedMessageIdRef = useRef<string | null>(null);
   
   // RTK Queries
-  const { data: commentsData = {}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
+  const { data: commentsData = {data:[]}, isLoading: commentsLoading, refetch: refetchComments } = useGetTicketCommentsQuery({ 
     ticketId 
   });
   
@@ -81,7 +81,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   const [markAsRead] = useMarkAsReadMutation();
   
   // Fetch all team members for mentions and invites
-  const { data: teamMembersData = {}, isLoading: teamMembersLoading } = useGetMasterQuery({
+  const { data: teamMembersData = {data:[]}, isLoading: teamMembersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
     sort: { firstName: 1 }
@@ -268,7 +268,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   };
   
   // Filter team members for mention suggestions
-  const filteredTeamMembers = teamMembers.filter(user => 
+  const filteredTeamMembers = teamMembers.filter((user:any) => 
     `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase())
   );
   
@@ -312,7 +312,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
     matches.forEach(match => {
       const name = match.substring(1).trim();
       const user = teamMembers.find(
-        u => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
+        (u:any) => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
       );
       if (user) mentions.push(user._id);
     });
@@ -342,10 +342,10 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
       setIsSubmitting(true);
       
       // Upload files first if any
-      const uploadedFiles = await handleFileUpload();
+      const uploadedFiles:any = await handleFileUpload();
       
       // Extract mentions
-      const mentionedUserIds = extractMentions(message);
+      const mentionedUserIds:any = extractMentions(message);
       
       // Send message via Socket.io
       const success = sendMessage(message, uploadedFiles, replyingTo?._id, mentionedUserIds);
@@ -433,7 +433,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   // Extract all file attachments for the files tab
   const allFiles = socketMessages
     .filter(msg => msg.attachments && msg.attachments.length > 0)
-    .flatMap(msg => msg.attachments.map(att => ({
+    .flatMap(msg => msg.attachments.map((att:any) => ({
       ...att,
       uploadedBy: msg.user,
       messageId: msg._id,
@@ -479,7 +479,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
   const typingIndicator = Object.entries(typingUsers)
     .filter(([id, isTyping]) => isTyping && id !== userId)
     .map(([id]) => {
-      const user = teamMembers.find(user => user._id === id);
+      const user = teamMembers.find((user:any) => user._id === id);
       return user ? `${user.firstName} ${user.lastName}` : 'Someone';
     });
   
@@ -504,7 +504,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
             <ConnectionStatus
               isConnected={isConnected}
               isConnecting={isConnecting}
-              connectionError={connectionError}
+              connectionError={connectionError||''}
               onReconnect={reconnect}
               className="ml-2"
             />
@@ -687,7 +687,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                         <CommandInput placeholder="Search team members..." />
                         <CommandList>
                           {filteredTeamMembers.length > 0 ? (
-                            filteredTeamMembers.map(user => (
+                            filteredTeamMembers.map((user:any) => (
                               <CommandItem
                                 key={user._id}
                                 onSelect={() => insertMention(user)}
@@ -893,8 +893,8 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
             
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {teamMembers
-                .filter(user => !participants.some(p => p._id === user._id)) // Only show users not already in the conversation
-                .map(user => (
+                .filter((user:any) => !participants.some(p => p._id === user._id)) // Only show users not already in the conversation
+                .map((user:any) => (
                   <div 
                     key={user._id} 
                     className={cn(

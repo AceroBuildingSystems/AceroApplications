@@ -18,7 +18,7 @@ export const getTicketTasksByTicketId = catchAsync(async (ticketId) => {
       ticket: ticketId,
       isActive: true
     },
-    sort: { createdAt: 1 }
+    sort: { createdAt: 'asc' }
   });
   console.log(`Tasks found: ${result.data ? result.data.length : 0}`);
   return result;
@@ -88,7 +88,7 @@ export const createTicketTask = catchAsync(async (options) => {
     }
     
     return result;
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error in createTicketTask:", error);
     return {
       status: ERROR,
@@ -130,7 +130,7 @@ export const updateTicketTask = catchAsync(async (options) => {
     }
     
     return result;
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error in updateTicketTask:", error);
     return {
       status: ERROR,
@@ -191,7 +191,7 @@ export const changeTaskStatus = catchAsync(async (options) => {
     }
     
     return result;
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error in changeTaskStatus:", error);
     return {
       status: ERROR,

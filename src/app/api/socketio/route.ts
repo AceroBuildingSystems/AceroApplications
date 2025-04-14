@@ -5,6 +5,7 @@ import { dbConnect } from '@/lib/mongoose';
 import { TicketComment, Ticket } from '@/models';
 import { createTicketHistory } from '@/server/services/ticketHistoryServices';
 import { MessageReaction } from '@/types/next';
+import { getSocketIO } from '@/lib/socket';
 
 // Global variable to track the Socket.io server instance
 let io: SocketIOServer;
@@ -16,22 +17,8 @@ const userStatus = new Map<string, string>();
 const ticketRooms = new Map<string, Set<string>>(); // Track rooms and their members
 const messageQueue = new Map<string, any[]>(); // Queue for storing messages when no users are in room
 
-export async function GET(req: NextRequest) {
-  try {
-    await dbConnect();
-    
-    // Return success response
-    return NextResponse.json({
-      status: 'success',
-      message: 'Socket.io server is running'
-    });
-  } catch (error) {
-    console.error('Socket initialization error:', error);
-    return NextResponse.json({
-      status: 'error',
-      message: 'Failed to initialize Socket.io server'
-    }, { status: 500 });
-  }
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  return NextResponse.json({ message: 'Socket.IO API is running' });
 }
 
 // Add a POST handler for client ping
@@ -41,7 +28,7 @@ export async function POST() {
   });
 }
 
-function getSocketIO(server: any): SocketIOServer {
+function initializeSocketIO(server: any): SocketIOServer {
   // If the Socket.io server hasn't been initialized, set it up
   if (!io) {
     // Initialize ticket rooms from database
@@ -455,4 +442,4 @@ function getSocketIO(server: any): SocketIOServer {
   return io;
 }
 
-export { getSocketIO };
+// Do not export `initializeSocketIO` directly

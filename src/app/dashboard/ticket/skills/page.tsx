@@ -20,34 +20,34 @@ import { toast } from 'react-toastify';
 
 const TicketSkillsPage = () => {
   const router = useRouter();
-  const { user, status } = useUserAuthorised();
+  const { user, status }:any = useUserAuthorised();
   
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedRating, setSelectedRating] = useState('3');
-  const [editingSkill, setEditingSkill] = useState(null);
+  const [editingSkill, setEditingSkill]:any = useState(null);
   
   // Get departments
-  const { data: departmentData = {}, isLoading: departmentLoading } = useGetMasterQuery({
+  const { data: departmentData = {data:[]}, isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { name: 1 }
   });
   
   // Get users
-  const { data: userData = {}, isLoading: userLoading } = useGetMasterQuery({
+  const { data: userData = {data:[]}, isLoading: userLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: departmentFilter ? { department: departmentFilter, isActive: true } : { isActive: true },
     sort: { firstName: 1 }
   });
   
   // Get categories
-  const { data: categoryData = {}, isLoading: categoryLoading } = useGetTicketCategoriesQuery({});
+  const { data: categoryData = {data:[]}, isLoading: categoryLoading } = useGetTicketCategoriesQuery({});
   
   // Get skills for selected user
-  const { data: skillsData = {}, isLoading: skillsLoading } = useGetUserSkillsQuery(
+  const { data: skillsData = {data:[]}, isLoading: skillsLoading } = useGetUserSkillsQuery(
     { userId: selectedUser },
     { skip: !selectedUser }
   );
@@ -60,7 +60,7 @@ const TicketSkillsPage = () => {
   // Check if user is admin
   const isAdmin = user?.role?.name?.toUpperCase() === 'ADMIN';
   
-  const handleOpenDialog = (skill = null) => {
+  const handleOpenDialog = (skill:any = null) => {
     if (skill) {
       setEditingSkill(skill);
       setSelectedCategory(skill.category._id);
@@ -111,14 +111,14 @@ const TicketSkillsPage = () => {
   };
   
   // Get categories by department
-  const getCategoriesByDepartment = (departmentId) => {
-    return categoryData?.data?.filter(cat => cat.department._id === departmentId) || [];
+  const getCategoriesByDepartment = (departmentId:any) => {
+    return categoryData?.data?.filter((cat:any) => cat.department._id === departmentId) || [];
   };
   
   // Filter out categories that already have skills assigned
   const getAvailableCategories = () => {
-    const assignedCategoryIds = skillsData?.data?.map(skill => skill.category._id) || [];
-    return categoryData?.data?.filter(cat => !assignedCategoryIds.includes(cat._id)) || [];
+    const assignedCategoryIds = skillsData?.data?.map((skill:any) => skill.category._id) || [];
+    return categoryData?.data?.filter((cat:any) => !assignedCategoryIds.includes(cat._id)) || [];
   };
   
   // Get categories for user's department if skill is being added
@@ -127,7 +127,7 @@ const TicketSkillsPage = () => {
     : categoryData?.data || [];
   
   // Render rating stars
-  const renderRatingStars = (rating) => {
+  const renderRatingStars = (rating:any) => {
     return Array.from({ length: 5 }).map((_, index) => (
       <span key={index}>
         {index < rating ? (
@@ -171,7 +171,7 @@ const TicketSkillsPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                   <SelectItem value="all_departments">All Departments</SelectItem>
-                    {departmentData?.data?.map(dept => (
+                    {departmentData?.data?.map((dept:any) => (
                       <SelectItem key={dept._id} value={dept._id}>
                         {dept.name}
                       </SelectItem>
@@ -189,7 +189,7 @@ const TicketSkillsPage = () => {
                   <SelectContent>
                   <SelectItem value="select_user">Select a user</SelectItem>
                     <SelectItem value="">Select a user</SelectItem>
-                    {userData?.data?.map(user => (
+                    {userData?.data?.map((user:any) => (
                       <SelectItem key={user._id} value={user._id}>
                         {`${user.firstName} ${user.lastName}`}
                       </SelectItem>
@@ -216,7 +216,7 @@ const TicketSkillsPage = () => {
                 
                 {skillsData?.data?.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {skillsData.data.map(skill => (
+                    {skillsData.data.map((skill:any) => (
                       <Card key={skill._id}>
                         <CardHeader className="pb-2">
                           <CardTitle className="text-lg">{skill.category.name}</CardTitle>
@@ -279,7 +279,7 @@ const TicketSkillsPage = () => {
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {availableCategories.map(cat => (
+                      {availableCategories.map((cat:any) => (
                         <SelectItem key={cat._id} value={cat._id}>
                           {cat.name} ({cat.department.name})
                         </SelectItem>

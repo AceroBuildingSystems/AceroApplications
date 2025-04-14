@@ -179,7 +179,7 @@ export const calculateTicketProgress = catchAsync(async (ticketId) => {
   let totalEfforts = 0;
   let completedEfforts = 0;
   
-  tasks.data.forEach(task => {
+  tasks.data.forEach((task:any) => {
     totalEfforts += task.efforts || 0;
     if (task.status === 'COMPLETED') {
       completedEfforts += task.efforts || 0;
@@ -234,14 +234,14 @@ export const autoAssignTicket = catchAsync(async (options) => {
   });
   
   // Calculate score for each user based on skill and current workload
-  const userScores = users.data.map(user => {
+  const userScores = users.data.map((user:any) => {
     // Find skill rating for this category (0-5)
-    const skillRating = userSkills.data.find(skill => 
+    const skillRating = userSkills.data.find((skill:any) => 
       skill.user._id.toString() === user._id.toString()
     )?.rating || 0;
     
     // Count current assigned tickets
-    const workload = assignedTickets.data.filter(ticket => 
+    const workload = assignedTickets.data.filter((ticket:any) => 
       ticket.assignee?._id.toString() === user._id.toString()
     ).length;
     
@@ -257,7 +257,7 @@ export const autoAssignTicket = catchAsync(async (options) => {
   });
   
   // Sort by score (highest first)
-  userScores.sort((a, b) => b.score - a.score);
+  userScores.sort((a:any, b:any) => b.score - a.score);
   
   // Select the best user
   const bestUser = userScores[0];

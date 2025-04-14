@@ -102,7 +102,7 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
   const thirtyDaysAgo = subDays(new Date(), 30);
   const recentTickets = filteredTickets.filter(ticket => new Date(ticket.createdAt) >= thirtyDaysAgo);
   
-  const dailyTicketCounts = {};
+  const dailyTicketCounts:any = {};
   for (let i = 0; i < 30; i++) {
     const date = subDays(new Date(), i);
     const dateStr = format(date, 'yyyy-MM-dd');
@@ -163,7 +163,7 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
   
   // Color configurations - Using our primary and design system colors
   const COLORS = ['#d55959', '#FF8042', '#00C49F', '#0088FE', '#8884D8']; // Primary color first
-  const PRIORITY_COLORS = {
+  const PRIORITY_COLORS:any = {
     'HIGH': '#d55959', // Primary color for high priority
     'MEDIUM': '#FFB547',
     'LOW': '#4ADE80',
@@ -171,7 +171,7 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
     'medium': '#FFB547',
     'low': '#4ADE80'
   };
-  const STATUS_COLORS = {
+  const STATUS_COLORS:any = {
     'NEW': '#3B82F6',
     'ASSIGNED': '#8B5CF6',
     'IN_PROGRESS': '#F59E0B',

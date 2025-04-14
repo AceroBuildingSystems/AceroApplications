@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     );
   } else {
     // Get all online users
-    const response = await userPresenceManager.getOnlineUsers();
+    const response:any = await userPresenceManager.getOnlineUsers();
     
     if (response.status === SUCCESS) {
       return NextResponse.json({ 

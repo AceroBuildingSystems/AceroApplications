@@ -813,7 +813,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
 
                     <DatePicker
                       currentDate={taskDueDate}
-                      handleChange={(selectedDate=>{
+                      handleChange={((selectedDate:any)=>{
                         setTaskDueDate(selectedDate)
                       })}
                       placeholder='Please select date'

@@ -115,7 +115,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerData:[], customerTypeData:[], action: "Add", user, createUser: createMaster, db: "ROLE_MASTER", masterName: "Role" });
+    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ROLE_MASTER", masterName: "Role" });
   };
 
   const exportToExcel = (data: any[]) => {

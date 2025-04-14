@@ -181,10 +181,13 @@ const page = () => {
     doc.save('exported_data.pdf');
   };
 
-  const handleExport = (type: string, data:any) => {
-    type === 'excel' && exportToExcel(data);
-
-  };
+  const handleExport = (type: string, data: any) => {
+    if (type === 'excel') {
+        exportToExcel(data);
+    } else if (type === 'pdf') {
+        exportToPDF(data);
+    }
+};
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
@@ -294,8 +297,8 @@ const page = () => {
       { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
       {
         label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-          { label: "Export to Excel", value: "excel", action: (type: string, data:any) => handleExport(type, data) },
-          { label: "Export to PDF", value: "pdf", action: (type: string,data:any) => handleExport(type, data) },
+          { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+          { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
         ]
       },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },

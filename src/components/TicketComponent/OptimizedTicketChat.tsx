@@ -130,7 +130,7 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
     updateStatus,
     notifyFileUpload,
     reconnect
-  } = useSocketIo({ 
+  }:any = useSocketIo({ 
     ticketId, 
     userId,
     roomId
@@ -172,11 +172,11 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
   // Check for unread messages and mark them as read
   useEffect(() => {
     const unreadMessageIds = messages
-      .filter(msg => 
+      .filter((msg:any) => 
         msg.user._id !== userId && 
         (!msg.readBy || !msg.readBy.includes(userId))
       )
-      .map(msg => msg._id);
+      .map((msg:any) => msg._id);
     
     if (unreadMessageIds.length > 0 && document.visibilityState === 'visible') {
       markMessagesAsRead(unreadMessageIds);
@@ -352,7 +352,7 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
       return;
     }
     
-    const results = messages.filter(msg => 
+    const results = messages.filter((msg:any) => 
       msg.content.toLowerCase().includes(term.toLowerCase())
     );
     
@@ -406,7 +406,7 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
     
     if (!messages || !messages.length) return [];
     
-    messages.forEach(message => {
+    messages.forEach((message:any) => {
       const date = new Date(message.createdAt).toISOString().split('T')[0];
       if (!groups[date]) {
         groups[date] = [];
@@ -464,8 +464,8 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
   
   // Extract all file attachments for the files tab
   const allFiles = messages
-    .filter(msg => msg.attachments && msg.attachments.length > 0)
-    .flatMap(msg => (msg.attachments || []).map(att => ({
+    .filter((msg:any) => msg.attachments && msg.attachments.length > 0)
+    .flatMap((msg:any) => (msg.attachments || []).map((att:any) => ({
       ...att,
       uploadedBy: msg.user,
       messageId: msg._id,
@@ -474,9 +474,9 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
   
   // Extract all participants
   const participants = Array.from(new Set(
-    messages.map(msg => msg.user._id)
-  )).map(userId => {
-    const user = messages.find(msg => msg.user._id === userId)?.user;
+    messages.map((msg:any) => msg.user._id)
+  )).map((userId:any) => {
+    const user = messages.find((msg:any) => msg.user._id === userId)?.user;
     return user ? {
       ...user,
       status: onlineUsers[userId] || 'offline'
@@ -858,7 +858,7 @@ const OptimizedTicketChat: React.FC<TicketChatProps> = ({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {allFiles.map((file, idx) => (
+                  {allFiles.map((file:any, idx:any) => (
                     <div key={idx} className="border rounded-md p-3 hover:bg-gray-50 transition-colors flex flex-col">
                       <div className="flex justify-between items-start mb-2">
                       {file.fileType?.startsWith('image/') ? (

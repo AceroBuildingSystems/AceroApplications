@@ -1,3 +1,5 @@
+
+
 import mongoose from 'mongoose';
 import { MenuItemicons } from '../iconMaps';
 import { MenuItem } from '../types';
@@ -664,7 +666,7 @@ export const generateTicketId = async () => {
       filter: {
         ticketId: { $regex: `^TKT-${dateStr}` }
       },
-      sort: { createdAt: -1 }
+      sort: { createdAt: 'asc' }
     });
     
     // Determine the next sequence number

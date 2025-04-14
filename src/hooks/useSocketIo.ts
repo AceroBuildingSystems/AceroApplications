@@ -103,7 +103,7 @@ export const useSocketIo = ({ ticketId, userId, roomId, currentUser }: UseSocket
       // Find message and add file to attachments
       setMessages(prev => {
         const updatedMessages = JSON.parse(JSON.stringify(prev)); // Deep clone to ensure state update
-        const messageIndex = updatedMessages.findIndex(m => m._id === fileData.messageId);
+        const messageIndex = updatedMessages.findIndex((m:any) => m._id === fileData.messageId);
         
         if (messageIndex !== -1) {
           const message = updatedMessages[messageIndex];

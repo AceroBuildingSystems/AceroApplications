@@ -17,7 +17,7 @@ export const getTicketCommentsByTicketId = catchAsync(async (ticketId) => {
   // Add sort to ensure messages are in chronological order
   const result = await crudManager.mongooose.find('TICKET_COMMENT_MASTER', {
     filter: { ticket: ticketId },
-    sort: { createdAt: 1 }
+    sort: { createdAt: 'asc' }
   });
   
   return result;
@@ -84,7 +84,7 @@ export const markAsRead = catchAsync(async ({ commentIds, userId }) => {
     return { status: ERROR, message: "Missing comment IDs or user ID" };
   }
   
-  const objectCommentIds = commentIds.map(id => 
+  const objectCommentIds = commentIds.map((id:any) => 
     mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null
   ).filter(Boolean);
   
@@ -145,7 +145,7 @@ export const searchMessages = catchAsync(async ({ ticketId, searchTerm }) => {
       ticket: ticketId,
       content: { $regex: searchTerm, $options: 'i' }
     },
-    sort: { createdAt: -1 }
+    sort: { createdAt: 'asc' }
   });
   
   return result;

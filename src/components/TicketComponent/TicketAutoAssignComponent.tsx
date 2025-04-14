@@ -33,7 +33,7 @@ const TicketAutoAssignComponent: React.FC<TicketAutoAssignComponentProps> = ({
   const [autoAssignTicket, { isLoading }] = useAutoAssignTicketMutation();
   
   // Get department users
-  const { data: usersData = {}, isLoading: usersLoading } = useGetMasterQuery({
+  const { data: usersData = {data:[]}, isLoading: usersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { 
       department: ticket.department._id,
@@ -42,12 +42,12 @@ const TicketAutoAssignComponent: React.FC<TicketAutoAssignComponentProps> = ({
   }, { skip: !isOpen || !ticket?.department?._id });
   
   // Get user skills for this category
-  const { data: skillsData = {}, isLoading: skillsLoading } = useGetUserSkillsQuery({
+  const { data: skillsData = {data:[]}, isLoading: skillsLoading } = useGetUserSkillsQuery({
     categoryId: ticket.category._id
   }, { skip: !isOpen || !ticket?.category?._id });
   
   // Get assigned tickets for workload calculation
-  const { data: assignedTicketsData = {}, isLoading: ticketsLoading } = useGetMasterQuery({
+  const { data: assignedTicketsData = {data:[]}, isLoading: ticketsLoading } = useGetMasterQuery({
     db: 'TICKET_MASTER',
     filter: { 
       status: { $in: ['ASSIGNED', 'IN_PROGRESS'] },
@@ -64,14 +64,14 @@ const TicketAutoAssignComponent: React.FC<TicketAutoAssignComponentProps> = ({
       const users = usersData?.data || [];
       
       // Calculate score for each user
-      const userScores = users.map(user => {
+      const userScores = users.map((user:any) => {
         // Find skill rating for this category (0-5)
-        const skillRating = skillsData?.data?.find(skill => 
+        const skillRating = skillsData?.data?.find((skill:any) => 
           skill.user._id.toString() === user._id.toString()
         )?.rating || 0;
         
         // Count current assigned tickets
-        const workload = assignedTicketsData?.data?.filter(t => 
+        const workload = assignedTicketsData?.data?.filter((t:any) => 
           t.assignee?._id.toString() === user._id.toString()
         ).length || 0;
         
@@ -87,7 +87,7 @@ const TicketAutoAssignComponent: React.FC<TicketAutoAssignComponentProps> = ({
       });
       
       // Sort by score (highest first)
-      userScores.sort((a, b) => b.score - a.score);
+      userScores.sort((a:any, b:any) => b.score - a.score);
       
       setAnalyzedUsers(userScores);
       setIsAnalyzing(false);

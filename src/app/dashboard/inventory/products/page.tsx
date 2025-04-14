@@ -184,7 +184,7 @@ const ProductsPage = () => {
     };
 
     const handleImport = () => {
-            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [],categoryData: categoriesResponse,vendorData:[], productData:[], warehouseData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_MASTER", masterName: "Product" });
+            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [],categoryData: categoriesResponse,vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_MASTER", masterName: "Product" });
         };
     
         const handleExport = (type: string) => {

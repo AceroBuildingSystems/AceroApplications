@@ -58,11 +58,11 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   userRole
 }) => {
   const router = useRouter();
-  const { data: tasksData = {}, isLoading: tasksLoading } = useGetTicketTasksQuery({ 
+  const { data: tasksData = {data:[]}, isLoading: tasksLoading } = useGetTicketTasksQuery({ 
     ticketId: ticket._id 
   });
   
-  const { data: historyData = {}, isLoading: historyLoading } = useGetTicketHistoryQuery({ 
+  const { data: historyData = {data:[]}, isLoading: historyLoading } = useGetTicketHistoryQuery({ 
     ticketId: ticket._id 
   });
 
@@ -80,7 +80,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   
   // Check if user can edit this ticket
   const canEdit = userId === ticket.creator._id || 
-                 (ticket.assignees && ticket.assignees.some(a => a._id === userId)) || 
+                 (ticket.assignees && ticket.assignees.some((a:any) => a._id === userId)) || 
                  userId === ticket.assignee?._id || 
                  userRole === 'ADMIN';
   
@@ -95,7 +95,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   };
 
   // Get status badge colors based on status
-  const getStatusBadgeStyles = (status) => {
+  const getStatusBadgeStyles = (status:any) => {
     switch(status.toUpperCase()) {
       case 'NEW':
         return "bg-blue-50 text-blue-700 ring-blue-600/20";
@@ -113,7 +113,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   };
 
   // Get priority badge colors based on priority
-  const getPriorityBadgeStyles = (priority) => {
+  const getPriorityBadgeStyles = (priority:any) => {
     switch(priority.toUpperCase()) {
       case 'HIGH':
         return "bg-red-50 text-red-700 ring-red-600/20";

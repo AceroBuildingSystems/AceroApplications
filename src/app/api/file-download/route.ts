@@ -5,10 +5,10 @@ import mime from 'mime-types';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  context: { params: Promise<{ filename: string }> } // Wrap params in a Promise
 ) {
   try {
-    const { filename } = params;
+    const { filename } = await context.params; // Await the params to resolve the Promise
     
     // Security check to prevent directory traversal
     const sanitizedFilename = path.basename(filename);

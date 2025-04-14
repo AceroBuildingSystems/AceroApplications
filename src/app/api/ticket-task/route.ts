@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       { status: 'ERROR', message: 'Ticket ID is required', data: {} },
       { status: 400 }
     );
-  } catch (error) {
+  } catch (error:any) {
     console.error("Error in GET task API:", error);
     return NextResponse.json(
       { status: 'ERROR', message: error.message, data: {} },
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     console.log("Processed task data:", JSON.stringify(processedData, null, 2));
     console.log("Task action:", action);
 
-    let response;
+    let response:any;
     switch (action) {
       case "create":
         response = await ticketTaskManager.createTicketTask({ data: processedData });
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         status: SUCCESS, 
         message: SUCCESS, 
-        data: response.data 
+        data: response?.data 
       }, { status: 200 });
     }
     
@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
       message: response.message, 
       data: {} 
     }, { status: 500 });
-  } catch (error) {
+  } catch (error:any) {
     console.error("Unhandled error in task API:", error);
     return NextResponse.json({ 
       status: 'ERROR', 

@@ -149,7 +149,7 @@ export default async function handler(
               content,
               attachments: attachments || [],
               replyTo: replyTo ? new mongoose.Types.ObjectId(replyTo) : undefined,
-              mentions: mentions?.map(id => new mongoose.Types.ObjectId(id)) || [],
+              mentions: mentions?.map((id:any) => new mongoose.Types.ObjectId(id)) || [],
               addedBy: userId,
               updatedBy: userId,
               isActive: true,
@@ -203,7 +203,7 @@ export default async function handler(
             
             // Send ACK to sender
             socket.emit('message-ack', { 
-              messageId: savedMessage._id.toString(),
+              messageId: savedMessage._id?.toString(),
               status: 'delivered',
               timestamp: savedMessage.createdAt
             });
@@ -255,7 +255,7 @@ export default async function handler(
             }
             
             // Update message read status in database
-            const objectMessageIds = messageIds.map(id => 
+            const objectMessageIds = messageIds.map((id:any) => 
               new mongoose.Types.ObjectId(id)
             );
             

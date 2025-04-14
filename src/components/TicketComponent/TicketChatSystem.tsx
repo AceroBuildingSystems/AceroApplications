@@ -99,7 +99,7 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
   const [createMessage] = useCreateTicketCommentMutation();
   
   // Fetch all team members for mentions and invites
-  const { data: teamMembersData = {}} = useGetMasterQuery({
+  const { data: teamMembersData = {data:[]}} = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
     sort: { firstName: 1 }
@@ -170,7 +170,7 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
   };
   
   // Filter team members for mention suggestions
-  const filteredTeamMembers = teamMembers.filter(user => 
+  const filteredTeamMembers = teamMembers.filter((user:any) => 
     `${user.firstName} ${user.lastName}`.toLowerCase().includes(mentionQuery.toLowerCase())
   );
   
@@ -228,7 +228,7 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
       matches.forEach(match => {
         const name = match.substring(1).trim();
         const user = teamMembers.find(
-          u => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
+          (u:any) => `${u.firstName} ${u.lastName}`.toLowerCase() === name.toLowerCase()
         );
         if (user) mentionedUserIds.push(user._id);
       });
@@ -264,7 +264,7 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
       }
-    } catch (error) {
+    } catch (error:any) {
       console.error("Message sending error:", error);
       const errorMessage = error?.data?.message || 'Failed to send message';
       toast.error(typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage);
@@ -325,7 +325,7 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
   // Extract all file attachments for the files tab
   const allFiles = messages
     .filter(msg => msg.attachments && msg.attachments.length > 0)
-    .flatMap(msg => msg.attachments.map(att => ({
+    .flatMap(msg => (msg.attachments ?? []).map(att => ({
       ...att,
       uploadedBy: msg.user,
       messageId: msg._id,
@@ -639,7 +639,7 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
                         <CommandInput placeholder="Search team members..." />
                         <CommandList>
                           {filteredTeamMembers.length > 0 ? (
-                            filteredTeamMembers.map(user => (
+                            filteredTeamMembers.map((user:any) => (
                               <CommandItem
                                 key={user._id}
                                 onSelect={() => insertMention(user)}
@@ -777,26 +777,26 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
               ) : (
                 <div className="space-y-2">
                   {participants.map((user) => (
-                    <div key={user._id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
+                    <div key={user?._id} className="flex items-center justify-between p-2 rounded-md hover:bg-gray-50">
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          {user.avatar ? (
+                          {user?.avatar ? (
                             <AvatarImage src={user.avatar} />
                           ) : (
-                            <AvatarFallback>{`${user.firstName[0]}${user.lastName[0]}`}</AvatarFallback>
+                            <AvatarFallback>{`${user?.firstName[0]}${user?.lastName[0]}`}</AvatarFallback>
                           )}
                         </Avatar>
                         <div>
-                          <div className="font-medium">{`${user.firstName} ${user.lastName}`}</div>
+                          <div className="font-medium">{`${user?.firstName} ${user?.lastName}`}</div>
                           <div className="text-sm text-gray-500">
-                            {user.department?.name || 'Team Member'}
+                            {user?.department?.name || 'Team Member'}
                           </div>
                         </div>
                       </div>
                       <Badge variant="outline" className={
-                        user._id === userId ? 'bg-blue-50 text-blue-700' : 'bg-gray-50'
+                        user?._id === userId ? 'bg-blue-50 text-blue-700' : 'bg-gray-50'
                       }>
-                        {user._id === userId ? 'You' : 'Team Member'}
+                        {user?._id === userId ? 'You' : 'Team Member'}
                       </Badge>
                     </div>
                   ))}
@@ -825,13 +825,13 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
             
             <div className="space-y-2 max-h-72 overflow-y-auto">
               {teamMembers
-                .filter(user => !participants.some(p => p._id === user._id)) // Only show users not already in the conversation
-                .map(user => (
+                .filter((user:any) => !participants.some((p:any) => p._id === user._id)) // Only show users not already in the conversation
+                .map((user:any) => (
                   <div 
-                    key={user._id} 
+                    key={user?._id} 
                     className={cn(
                       "flex items-center justify-between p-2 rounded-md cursor-pointer",
-                      selectedUsers.includes(user._id) 
+                      selectedUsers.includes(user?._id) 
                         ? "bg-blue-50 border border-blue-200" 
                         : "hover:bg-gray-50 border border-transparent"
                     )}

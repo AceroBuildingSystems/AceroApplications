@@ -215,7 +215,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
                                                     onClick={() => {
                                                         console.log(option)
-                                                        option.action(option.value); // Execute the action for this dropdown option
+                                                        option.action(option.value, (filteredData !== undefined && filteredData?.length > 0) ? filteredData : filteredData?.length === 0 ? [] : config?.dataTable?.data); // Execute the action for this dropdown option
                                                         setActiveDropdown(null); // Close the dropdown after selection
                                                     }}
                                                 >

@@ -90,21 +90,8 @@ const page = () => {
 
     const response = await createMaster(formattedData);
 
+    return response;
     
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Location added successfully');
-
-    }
-    else{
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Location updated successfully');
-      }
-    }
-
-    if(response?.error?.data?.message?.message){
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
-   
   };
 
 
@@ -123,7 +110,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.LOCATION_MASTER, masterName:"Location" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.LOCATION_MASTER, masterName:"Location" });
   };
 
   const handleExport = () => {

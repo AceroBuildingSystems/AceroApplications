@@ -31,7 +31,6 @@ const page = () => {
     filter: { isActive: true },
     sort: { empId:'asc' },
   });
-
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -50,27 +49,21 @@ const page = () => {
   const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser;
 
   const fieldsToAdd = [
-    { fieldName: 'roleName', path: ['role', 'name'] },
     { fieldName: 'departmentName', path: ['department', 'name'] },
     { fieldName: 'locationName', path: ['organisation', 'name'] }
   ];
-
   const transformedData = transformData(userData?.data, fieldsToAdd);
-
+console.log(transformedData);
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
-  const roleNames = roleData?.data
-    ?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
-    ?.map((role: { _id: any; name: any }) => ({ _id: role.name, name: role.name }));
-  // Extract only the 'name' property
   const depNames = departmentData?.data
-  ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
-  ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
+    ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
+    ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
 
 
-  const orgNames = organisationData?.data
-  ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
-  ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
+    const orgNames = organisationData?.data
+    ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
+    ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
   interface RowData {
     id: string;
@@ -181,8 +174,8 @@ const page = () => {
     doc.save('exported_data.pdf');
   };
 
-  const handleExport = (type: string, data:any) => {
-    type === 'excel' && exportToExcel(data);
+  const handleExport = (type: string) => {
+    type === 'excel' && exportToExcel(userData?.data);
 
   };
 
@@ -192,34 +185,12 @@ const page = () => {
   };
 
   const userColumns = [
-    {
-      id: "select",
-      header: ({ table }: { table: any }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }: { row: any }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
-
+    
     {
       accessorKey: "shortName",
       header: ({ column }: { column: any }) => (
         <button
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 pl-3"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
@@ -227,37 +198,46 @@ const page = () => {
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("shortName")}</div>,
+      cell: ({ row }: { row: any }) => {
+        const firstName = row.getValue("shortName");
+        const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
+      
+        return (
+          <div className="pl-3">
+            <div className="">{firstName}</div>
+            <div className="text-sm text-gray-500">{designation}</div>
+          </div>
+        );
+      },
     },
     {
-          accessorKey: "department",
-          header: ({ column }: { column: any }) => (
-            <button
-              className="flex items-center space-x-2"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    
-            >
-              <span>Department</span> {/* Label */}
-              <ArrowUpDown size={15} /> {/* Sorting Icon */}
-            </button>
-          ),
-          cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
-        },
+      accessorKey: "department",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-        {
-          accessorKey: "designation",
-          header: ({ column }: { column: any }) => (
-            <button
-              className="flex items-center space-x-2"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    
-            >
-              <span>Designation</span> {/* Label */}
-              <ArrowUpDown size={15} /> {/* Sorting Icon */}
-            </button>
-          ),
-          cell: ({ row }: { row: any }) => <div>{row.getValue("designation")?.name}</div>,
-        },
+        >
+          <span>Department</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
+    },
+    {
+      accessorKey: "organisation",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>Location</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div>{row.getValue("organisation")?.name}</div>,
+    },
     {
       accessorKey: "email",
       header: ({ column }: { column: any }) => (
@@ -270,20 +250,76 @@ const page = () => {
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("email")}</div>,
+      cell: ({ row }: { row: any }) => {
+        const email = row.getValue("email");
+        return (
+          <a
+            href={`mailto:${email}`}
+            className="text-blue-600 hover:text-blue-800 "
+          >
+            {email}
+          </a>
+        );
+      },
     },
-    
+    {
+      accessorKey: "extension",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Extension</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => {
+        const extension = row.getValue("extension");
+        return (
+          <a
+            href={`tel:${extension}`}
+            className="text-blue-600 hover:text-blue-800 no-underline"
+          >
+            {extension}
+          </a>
+        );
+      },
+    },
+    {
+      accessorKey: "mobile",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          <span>Mobile</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => {
+        const extension = row.getValue("mobile");
+        return (
+          <a
+            href={`tel:${extension}`}
+            className="text-blue-600 hover:text-blue-800 no-underline"
+          >
+            {extension}
+          </a>
+        );
+      },
+    },
   ];
 
   const userConfig = {
     searchFields: [
-      { key: "name", label: 'fullName', type: "text" as const, placeholder: 'Search by name' },
+      { key: "name", label: 'fullName', type: "text" as const, placeholder: 'Search by Name' },
      
     ],
     filterFields: [
-    
+     
       { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name:'departmentName' },
       { key: "organisation", label: 'locationName', type: "select" as const, data: orgNames, placeholder: 'Search by Location', name:'locationName' },
+
     ],
     dataTable: {
       columns: userColumns,
@@ -291,14 +327,6 @@ const page = () => {
     },
     buttons: [
 
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-          { label: "Export to Excel", value: "excel", action: (type: string, data:any) => handleExport(type, data) },
-          { label: "Export to PDF", value: "pdf", action: (type: string,data:any) => handleExport(type, data) },
-        ]
-      },
-      { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };
 
@@ -307,15 +335,7 @@ const page = () => {
     <>
 
       <MasterComponent config={userConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
-      <DynamicDialog
-        isOpen={isDialogOpen}
-        closeDialog={closeDialog}
-        selectedMaster={selectedMaster}
-        onSave={saveData}
-        fields={fields}
-        initialData={initialData}
-        action={action}
-      />
+      
     </>
 
   )

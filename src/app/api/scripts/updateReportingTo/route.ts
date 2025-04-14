@@ -11,20 +11,21 @@ export async function POST(request: NextRequest) {
   await dbConnect();
 
   try {
-  
-    const masters = await Department.find();
-    console.log(masters);
-    for (const master of masters) {
+    const body = await request.json()
+   
+    for (const user of body?.data) {
       // Update all users with matching string department
-
-
-      const result = await User.updateMany(
-        { department1: master.depId }, // Match current string value
-        { $set: { department: master._id } }   // Set ObjectId
+     
+      const reporting = await User.find({ empId: user?.reportingtoid });
+      
+     if (reporting.length > 0) {
+      const result = await User.updateOne(
+        { empId: user.userid }, // Match current string value
+        { $set: { reportingTo: reporting[0]._id.toString() } }   // Set ObjectId
       );
 
-      
     }
+}
 
     return NextResponse.json({ message: "Users updated successfully" });
   } catch (error: any) {

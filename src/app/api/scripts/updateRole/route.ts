@@ -13,10 +13,9 @@ export async function POST(request: NextRequest) {
   try {
     
     const masters = await Role.find();
-    
+ 
     for (const master of masters) {
       // Update all users with matching string department
-
 
       const result = await User.updateMany(
         { role1: master.name }, // Match current string value

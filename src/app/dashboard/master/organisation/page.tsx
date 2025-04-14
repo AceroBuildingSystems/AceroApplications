@@ -149,20 +149,7 @@ const page = () => {
 
         const response = await createMaster(formattedData);
 
-
-        if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Organisation added successfully');
-
-        }
-        else {
-            if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Organisation updated successfully');
-            }
-        }
-
-        if (response?.error?.data?.message?.message) {
-            toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-        }
+        return response;
 
     };
 
@@ -182,7 +169,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], action: "Add", user, createUser: createMaster, db: "ORGANISATION_MASTER", masterName: "Organisation" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ORGANISATION_MASTER", masterName: "Organisation" });
     };
 
     const handleExport = () => {

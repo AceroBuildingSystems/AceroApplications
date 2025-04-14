@@ -1,5 +1,5 @@
 import { dbConnect } from '@/lib/mongoose';
-import { Department, Designation, User } from '@/models';
+import { Department, Designation, EmployeeType, Role, User,Organisation } from '@/models';
 import { migrationManager } from '@/server/managers/migrationManager'
 
 import { ERROR, SUCCESS } from '@/shared/constants'
@@ -11,16 +11,15 @@ export async function POST(request: NextRequest) {
   await dbConnect();
 
   try {
+    
+    const organisations = await Organisation.find();
   
-    const masters = await Department.find();
-    console.log(masters);
-    for (const master of masters) {
+    for (const master of organisations) {
       // Update all users with matching string department
 
-
       const result = await User.updateMany(
-        { department1: master.depId }, // Match current string value
-        { $set: { department: master._id } }   // Set ObjectId
+        { location: master.name }, // Match current string value
+        { $set: { organisation: master._id } }   // Set ObjectId
       );
 
       

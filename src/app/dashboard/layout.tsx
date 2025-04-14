@@ -50,7 +50,7 @@ const pathContent = pathName.split('/')
               </Breadcrumb>
             </div>
           </header>
-          <div className="flex flex-1 h-full">
+          <div className="h-full w-full overflow-auto">
             {children}
           </div>
           </div>

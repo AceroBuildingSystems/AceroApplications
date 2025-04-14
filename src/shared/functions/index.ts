@@ -650,6 +650,39 @@ export const validate = {
     }
 }
 
+export const generateTicketId = async () => {
+    // Get today's date in format YYYYMMDD
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
+    
+    // Get tickets from today to determine the sequence number
+    const dbEngine = (await import('@/server/Engines/DbEngine')).dbEngine;
+    const result = await dbEngine.mongooose.find('TICKET_MASTER', {
+      filter: {
+        ticketId: { $regex: `^TKT-${dateStr}` }
+      },
+      sort: { createdAt: -1 }
+    });
+    
+    // Determine the next sequence number
+    let sequence = 1;
+    if (result.status === 'SUCCESS' && result.data.length > 0) {
+      // Extract the sequence number from the last ticket ID
+      const lastTicketId = result.data[0].ticketId;
+      const lastSequence = parseInt(lastTicketId.split('-')[2]);
+      sequence = lastSequence + 1;
+    }
+    
+    // Format the sequence number with leading zeros
+    const sequenceStr = String(sequence).padStart(3, '0');
+    
+    // Return the generated ticket ID
+    return `TKT-${dateStr}-${sequenceStr}`;
+  };
+
 
 
 const entityFieldMappings = {

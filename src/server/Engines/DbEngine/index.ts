@@ -24,7 +24,13 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Warehouse,
   Inventory,
   Option,
-  UnitMeasurement
+  UnitMeasurement,
+  Ticket,
+  TicketCategory,
+  TicketComment,
+  TicketTask,
+  TicketHistory,
+  UserSkill
 } from '@/models';
 
 
@@ -75,7 +81,14 @@ function getMongooseAdapter(): MongooseAdapter {
     OPTION_MASTER: Option,
     ASSET_MASTER: Asset,
     VENDOR_MASTER: Vendor,
-    UNIT_MEASUREMENT_MASTER:UnitMeasurement
+    UNIT_MEASUREMENT_MASTER:UnitMeasurement,
+
+    TICKET_MASTER: Ticket,
+    TICKET_CATEGORY_MASTER: TicketCategory,
+    TICKET_COMMENT_MASTER: TicketComment,
+    TICKET_TASK_MASTER: TicketTask, 
+    TICKET_HISTORY_MASTER: TicketHistory,
+    USER_SKILL_MASTER: UserSkill
     });
   }
   return dbEngineInstance;

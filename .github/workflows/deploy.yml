@@ -18,7 +18,6 @@ jobs:
           git pull origin master
 
       - name: Check if Node.js is installed
-        shell: sh
         run: |
           if ! command -v node >/dev/null 2>&1; then
             echo "Node.js is not installed. Installing the latest version..."
@@ -37,6 +36,16 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+
+      - name: Check if any Node.js process is running and kill it
+        run: |
+          PID=$(pgrep -f "node")
+          if [ -n "$PID" ]; then
+            echo "Node.js process is running with PID $PID. Killing it..."
+            kill -9 $PID
+          else
+            echo "No running Node.js process found."
+          fi
 
       - name: Build the application
         run: npm run build

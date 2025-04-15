@@ -39,12 +39,7 @@ jobs:
       - name: Load environment variables from .env file
         shell: bash
         run: |
-          if [ -f ".env" ]; then
-            echo "Loading .env file..."
-            export $(grep -v '^#' .env | xargs)
-          else
-            echo "No .env file found."
-          fi
+          set -a && source /e/AceroApplications/.env && set +a
 
       - name: Check if any Node.js process is running and kill it
         shell: bash
@@ -96,5 +91,5 @@ jobs:
       - name: Tail application logs (Optional)
         shell: bash
         run: |
-          echo "Tailing the app logs..."
-          tail -n 20 app.log
+          echo "Tailing the full app logs..."
+          cat app.log

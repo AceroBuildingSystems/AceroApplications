@@ -1,39 +1,50 @@
-name: Deploy Next.js on Push to Master
+name: Deploy Application
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted  # This tells GitHub Actions to run on your on-premises Windows runner
+  deploy:
+    runs-on: self-hosted
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'  # Adjust this to your project’s required Node.js version
 
-    - name: Install Dependencies
-      run: npm install
+      - name: Check if Node.js is installed
+        run: |
+          if ! command -v node &> /dev/null; then
+            echo "Node.js is not installed. Installing the latest version..."
+            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          else
+            echo "Node.js is already installed."
+          fi
 
-    - name: Build Project
-      run: npm run build
+      - name: Delete node_modules
+        run: |
+          if [ -d "node_modules" ]; then
+            rm -rf node_modules
+          fi
 
-    - name: Deploy Application
-      run: |
-        echo "Stopping current service (if necessary)..."
-        REM Insert command to stop your running Next.js service, for example:
-        REM taskkill /F /IM node.exe
+      - name: Install dependencies
+        run: npm install
 
-        echo "Deploying new build..."
-        REM Optionally, copy or replace build files as needed
-        REM If your deployment consists of moving new files to a specific directory, include those commands here.
+      - name: Check if any Node.js process is running and kill it
+        run: |
+          PID=$(pgrep -f "node")
+          if [ -n "$PID" ]; then
+            echo "Node.js process is running with PID $PID. Killing it..."
+            kill -9 $PID
+          else
+            echo "No running Node.js process found."
+          fi
 
-        echo "Restarting service..."
-        REM Insert command to start your Next.js application. This might be a PM2 command, a Windows service start, or any custom script.
-        REM For example, if using PM2:
-        REM pm2 start npm --name "nextjs-app" -- start
+      - name: Build the application
+        run: npm run build
+
+      - name: Start the application
+        run: npm run start

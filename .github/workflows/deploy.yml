@@ -14,21 +14,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Pull latest changes from master
+        shell: bash
         run: |
           git pull origin master
 
-      - name: Check if Node.js is installed
-        run: |
-          if ! command -v node >/dev/null 2>&1; then
-            echo "Node.js is not installed. Installing the latest version..."
-            curl -fsSL https://deb.nodesource.com/setup_16.x | sh
-            apt-get install -y nodejs
-          else
-            echo "Node.js is already installed."
-          fi
-
       - name: Delete node_modules
-        shell: sh
+        shell: bash
         run: |
           if [ -d "node_modules" ]; then
             rm -rf node_modules
@@ -38,6 +29,7 @@ jobs:
         run: npm install
 
       - name: Check if any Node.js process is running and kill it
+        shell: bash
         run: |
           PID=$(pgrep -f "node")
           if [ -n "$PID" ]; then

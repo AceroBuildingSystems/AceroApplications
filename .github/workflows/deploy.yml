@@ -29,15 +29,12 @@ jobs:
         run: npm install
 
       - name: Check if any Node.js process is running and kill it
-        shell: bash
+        shell: cmd
         run: |
-          PID=$(tasklist | grep "node.exe" | awk '{print $2}')
-          if [ -n "$PID" ]; then
-            echo "Node.js process is running with PID $PID. Killing it..."
-            taskkill /PID $PID /F
-          else
-            echo "No running Node.js process found."
-          fi
+          for /f "tokens=2 delims=," %%i in ('tasklist /fi "imagename eq node.exe" /fo csv /nh') do (
+            echo Node.js process is running with PID %%i. Killing it...
+            taskkill /PID %%i /F
+          ) || echo No running Node.js process found.
 
       - name: Build the application
         run: npm run build

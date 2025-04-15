@@ -31,10 +31,10 @@ jobs:
       - name: Check if any Node.js process is running and kill it
         shell: bash
         run: |
-          PID=$(ps aux | grep "[n]ode" | awk '{print $2}')
+          PID=$(tasklist | grep "node.exe" | awk '{print $2}')
           if [ -n "$PID" ]; then
             echo "Node.js process is running with PID $PID. Killing it..."
-            kill -9 $PID
+            taskkill /PID $PID /F
           else
             echo "No running Node.js process found."
           fi

@@ -13,14 +13,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: change directory
+        shell: bash
+        run: cd E:\AceroApplications
+
       - name: Pull latest changes from master
         shell: bash
-        working-directory: E:/AceroApplications
-        run: git pull origin master
+        run: |
+          git pull origin master
 
       - name: Delete node_modules
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
           if [ -d "node_modules" ]; then
             echo "Removing existing node_modules directory..."
@@ -31,15 +34,13 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        working-directory: E:/AceroApplications
         run: npm install
 
       - name: Load environment variables from .env file
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
           if [ -f ".env" ]; then
-            echo "Loading .env file from E:/AceroApplications/.env..."
+            echo "Loading .env file..."
             export $(grep -v '^#' .env | xargs)
           else
             echo "No .env file found."
@@ -67,35 +68,33 @@ jobs:
 
       - name: Build the application
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
-          export $(grep -v '^#' .env | xargs)
+          export $(grep -v '^#' .env | xargs)  # Load env again in case it's needed here
           npm run build
 
       - name: Start the application in the background
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
-          export $(grep -v '^#' .env | xargs)
+          set -a && source /e/AceroApplications/.env && set +a
 
           echo "Starting the app in the background..."
           nohup npm run start > app.log 2>&1 &
 
+          # Give the app a few seconds to start
           sleep 5
 
+          # Check if node is running
           NODE_RUNNING=$(tasklist | grep "node.exe" || true)
           if [ -n "$NODE_RUNNING" ]; then
             echo "Node.js process is running:"
             echo "$NODE_RUNNING"
           else
             echo "Failed to start Node.js application."
-            tail -n 20 app.log
             exit 1
           fi
 
       - name: Tail application logs (Optional)
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
           echo "Tailing the app logs..."
           tail -n 20 app.log

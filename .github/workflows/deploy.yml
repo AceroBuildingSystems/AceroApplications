@@ -33,6 +33,8 @@ jobs:
           fi
 
       - name: Install dependencies
+        run: npm install
+
       - name: Check if any Node.js process is running and kill it
         shell: bash
         run: |

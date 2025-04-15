@@ -13,6 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: change directory
+        shell: bash
+        run: cd E:\AceroApplications
+
       - name: Pull latest changes from master
         shell: bash
         run: |

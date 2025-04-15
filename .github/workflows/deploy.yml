@@ -13,6 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Pull latest changes from master
+        shell: bash
+        run: |
+          git pull origin master
 
       - name: Check if Node.js is installed
         shell: bash
@@ -24,12 +28,12 @@ jobs:
           else
             echo "Node.js is already installed."
           fi
+
       - name: Delete node_modules
         shell: bash
         run: |
           if [ -d "node_modules" ]; then
             rm -rf node_modules
-          fi
           fi
 
       - name: Install dependencies
@@ -43,8 +47,6 @@ jobs:
             echo "Node.js process is running with PID $PID. Killing it..."
             kill -9 $PID
           else
-            echo "No running Node.js process found."
-          fi
             echo "No running Node.js process found."
           fi
 

@@ -40,6 +40,7 @@ const TicketDetailPage = () => {
   // Fetch ticket data
   const { data: ticketData = { data: [] }, isLoading: ticketLoading, refetch: refetchTicket } = useGetTicketsQuery({
     id: id as string
+    
   });
   
   // Fetch ticket comments, tasks, and history

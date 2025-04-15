@@ -22,22 +22,34 @@ jobs:
         shell: bash
         run: |
           if [ -d "node_modules" ]; then
+            echo "Removing existing node_modules directory..."
             rm -rf node_modules
+          else
+            echo "No node_modules directory to delete."
           fi
 
       - name: Install dependencies
+        shell: bash
         run: npm install
 
       - name: Check if any Node.js process is running and kill it
-        shell: cmd
+        shell: bash
         run: |
-          for /f "tokens=2 delims=," %%i in ('tasklist /fi "imagename eq node.exe" /fo csv /nh') do (
-            echo Node.js process is running with PID %%i. Killing it...
-            taskkill /PID %%i /F
-          ) || echo No running Node.js process found.
+          PIDS=$(tasklist | grep "node.exe" | awk '{print $2}')
+          if [ -n "$PIDS" ]; then
+            echo "Found running Node.js processes: $PIDS"
+            for PID in $PIDS; do
+              echo "Killing Node.js process with PID $PID..."
+              taskkill //PID $PID //F
+            done
+          else
+            echo "No running Node.js process found."
+          fi
 
       - name: Build the application
+        shell: bash
         run: npm run build
 
       - name: Start the application
+        shell: bash
         run: npm run start

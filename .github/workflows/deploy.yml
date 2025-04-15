@@ -15,11 +15,11 @@ jobs:
 
       - name: Set working directory
         shell: bash
-        run: cd /e/AceroApplications  # Optional: GitHub Actions doesn't persist `cd`, use working-directory instead if needed
+        run: cd E:/AceroApplications  # Optional: GitHub Actions doesn't persist `cd`, use working-directory instead if needed
 
       - name: Pull latest changes from master
         shell: bash
-        working-directory: /e/AceroApplications
+        working-directory: E:/AceroApplications
         run: |
           chmod -R u+rw .git || true
           rm -f .git/index.lock || true
@@ -27,20 +27,20 @@ jobs:
 
       - name: Delete node_modules
         shell: bash
-        working-directory: /e/AceroApplications
+        working-directory: E:/AceroApplications
         run: |
           rm -rf node_modules || echo "No node_modules to delete"
 
       - name: Install dependencies
         shell: bash
-        working-directory: /e/AceroApplications
+        working-directory: E:/AceroApplications
         run: npm install
 
       - name: Export environment variables
         shell: bash
         run: |
           set -a
-          source /e/AceroApplications/.env
+          source E:/AceroApplications/.env
           set +a
 
       - name: Install PM2 globally (if not already installed)
@@ -61,7 +61,7 @@ jobs:
 
       - name: Build the application
         shell: bash
-        working-directory: /e/AceroApplications
+        working-directory: E:/AceroApplications
         run: |
           set -a
           source .env
@@ -70,7 +70,7 @@ jobs:
 
       - name: Start the application with PM2
         shell: bash
-        working-directory: /e/AceroApplications
+        working-directory: E:/AceroApplications
         run: |
           set -a
           source .env

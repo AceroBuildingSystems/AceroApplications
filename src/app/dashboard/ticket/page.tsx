@@ -41,6 +41,7 @@ import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Checkbox } from '@radix-ui/react-checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { assign } from 'lodash';
 
 const TicketDashboardPage = () => {
   const { user, status }:any = useUserAuthorised();
@@ -53,17 +54,31 @@ const TicketDashboardPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+ 
+  console.log(user)
+  const isAdmin = user?.role?.name === 'Admin'; // adjust this based on your actual role field
   
+  const filter = !isAdmin
+    ? {
+      $or: [
+        { creator: user._id },
+        { assignee: user._id },
+        { assignees: user._id }
+      ]
+    }
+    : undefined;
+
   // Fetch tickets
   const { data: ticketsData = {data:[]}, isLoading: ticketsLoading, refetch } = useGetTicketsQuery({
-    sort: { createdAt: -1 }
+    ...(filter && { filter }),
+    sort: { createdAt: 'asc'}
   });
-  
+ 
   // Fetch departments
   const { data: departmentData = {data:[]}, isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
-    sort: { name: 1 }
+    sort: { name: 'asc' }
   });
   
   const loading = ticketsLoading || departmentLoading || status === 'loading';
@@ -647,6 +662,7 @@ const TicketDashboardPage = () => {
                         />
                       </motion.div>
                     ))}
+                    
                   </motion.div>
                 ) : (
                   <motion.div 

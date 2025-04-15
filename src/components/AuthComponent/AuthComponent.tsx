@@ -11,6 +11,7 @@ const AuthComponent = ({children, loadingState}:{children:React.ReactNode, loadi
   if (authenticated && pathName === "/") {
     return redirect("/dashboard");
   }
+  
 
   return (
     <Loader loading={status === "loading" || loadingState}>

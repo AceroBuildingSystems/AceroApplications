@@ -1,0 +1,55 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+
+      - name: Check if Node.js is installed
+        shell: bash
+        run: |
+          if ! command -v node &> /dev/null; then
+            echo "Node.js is not installed. Installing the latest version..."
+            curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+            sudo apt-get install -y nodejs
+          else
+            echo "Node.js is already installed."
+          fi
+      - name: Delete node_modules
+        shell: bash
+        run: |
+          if [ -d "node_modules" ]; then
+            rm -rf node_modules
+          fi
+          fi
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check if any Node.js process is running and kill it
+        shell: bash
+        run: |
+          PID=$(pgrep -f "node")
+          if [ -n "$PID" ]; then
+            echo "Node.js process is running with PID $PID. Killing it..."
+            kill -9 $PID
+          else
+            echo "No running Node.js process found."
+          fi
+            echo "No running Node.js process found."
+          fi
+
+      - name: Build the application
+        run: npm run build
+
+      - name: Start the application
+        run: npm run start

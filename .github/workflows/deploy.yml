@@ -13,73 +13,83 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set working directory
+      - name: change directory
         shell: bash
-        run: cd E:/AceroApplications  # Optional: GitHub Actions doesn't persist `cd`, use working-directory instead if needed
+        run: cd E:\AceroApplications
 
       - name: Pull latest changes from master
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
-          chmod -R u+rw .git || true
-          rm -f .git/index.lock || true
           git pull origin master
 
       - name: Delete node_modules
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
-          rm -rf node_modules || echo "No node_modules to delete"
+          if [ -d "node_modules" ]; then
+            echo "Removing existing node_modules directory..."
+            rm -rf node_modules
+          else
+            echo "No node_modules directory to delete."
+          fi
 
       - name: Install dependencies
         shell: bash
-        working-directory: E:/AceroApplications
         run: npm install
 
-      - name: Export environment variables
+      - name: Load environment variables from .env file
         shell: bash
         run: |
-          set -a
-          source E:/AceroApplications/.env
-          set +a
+          set -a && source /e/AceroApplications/.env && set +a
 
-      - name: Install PM2 globally (if not already installed)
+      - name: Check if any Node.js process is running and kill it
         shell: bash
         run: |
-          if ! command -v pm2 &> /dev/null; then
-            echo "PM2 not found. Installing globally..."
-            npm install -g pm2
+          echo "Looking for running node.exe processes..."
+          NODE_PROCESSES=$(tasklist | grep "node.exe" || true)
+
+          if [ -n "$NODE_PROCESSES" ]; then
+            echo "Found Node.js process(es):"
+            echo "$NODE_PROCESSES"
+            echo
+
+            PIDS=$(echo "$NODE_PROCESSES" | awk '{print $2}')
+            for PID in $PIDS; do
+              echo "Attempting to kill Node.js process with PID $PID..."
+              taskkill //PID $PID //F || echo "Failed to kill PID $PID (might already be dead or inaccessible)"
+            done
           else
-            echo "PM2 is already installed."
+            echo "No running Node.js process found."
           fi
-
-      - name: Stop existing PM2 app (if running)
-        shell: bash
-        run: |
-          pm2 stop acero-app || echo "No running PM2 app to stop"
-          pm2 delete acero-app || echo "No PM2 app to delete"
 
       - name: Build the application
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
-          set -a
-          source .env
-          set +a
+          export $(grep -v '^#' .env | xargs)  # Load env again in case it's needed here
           npm run build
 
-      - name: Start the application with PM2
+      - name: Start the application in the background
         shell: bash
-        working-directory: E:/AceroApplications
         run: |
-          set -a
-          source .env
-          set +a
-          pm2 start npm --name "acero-app" -- run start
-          pm2 save
+          set -a && source /e/AceroApplications/.env && set +a
 
-      - name: Show PM2 logs
+          echo "Starting the app in the background..."
+          nohup npm run start > app.log 2>&1 &
+
+          # Give the app a few seconds to start
+          sleep 5
+
+          # Check if node is running
+          NODE_RUNNING=$(tasklist | grep "node.exe" || true)
+          if [ -n "$NODE_RUNNING" ]; then
+            echo "Node.js process is running:"
+            echo "$NODE_RUNNING"
+          else
+            echo "Failed to start Node.js application."
+            exit 1
+          fi
+
+      - name: Tail application logs (Optional)
         shell: bash
         run: |
-          echo "Showing last 50 lines of PM2 logs for acero-app..."
-          pm2 logs acero-app --lines 50
+          echo "Tailing the full app logs..."
+          cat app.log

@@ -38,17 +38,6 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Check if any Node.js process is running and kill it
-        shell: sh
-        run: |
-          PID=$(pgrep -f "node")
-          if [ -n "$PID" ]; then
-            echo "Node.js process is running with PID $PID. Killing it..."
-            kill -9 $PID
-          else
-            echo "No running Node.js process found."
-          fi
-
       - name: Build the application
         run: npm run build
 

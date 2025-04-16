@@ -646,21 +646,21 @@ const TicketChat: React.FC<TicketChatProps> = ({
             connectionAttempts={connectionAttempts}
             onReconnect={reconnect}
           />
-          <Button 
+          {/* <Button 
             variant="outline" 
             size="sm" 
             onClick={testDirectSocketConnection} 
             className="h-7 px-2 text-xs"
           >
             Try Direct Connection
-          </Button>
-          {process.env.NODE_ENV === 'development' && (
+          </Button> */}
+          {/* {process.env.NODE_ENV === 'development' && (
             <ReactionDebugger 
               messages={socketMessages} 
               onTestReaction={testReaction} 
               onSimulate={simulateReactionUpdate} 
             />
-          )}
+          )} */}
         </div>
         
         <div className="flex items-center gap-2">

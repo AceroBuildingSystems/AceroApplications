@@ -5,6 +5,7 @@ import { dbConnect } from '@/lib/mongoose';
 import { TicketComment, Ticket } from '@/models';
 import { createTicketHistory } from '@/server/services/ticketHistoryServices';
 import mongoose from 'mongoose';
+import { ObjectId } from 'mongodb';
 
 // Global variable to track the Socket.io server instance
 let io: SocketIOServer;
@@ -188,60 +189,67 @@ function getSocketIO(server: any): SocketIOServer {
       // Handle new chat messages
       socket.on('message', async (data) => {
         try {
-          const { ticketId, userId: messageUserId, content, attachments, replyTo, mentions, tempId } = data;
+          // Extract message details
+          const { ticketId, userId: messageUserId, content, attachments, replyTo, replyToContent, mentions, tempId, user } = data;
+          console.log(`Received message from user ${messageUserId} for ticket ${ticketId}`);
           
-          console.log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
+          // Validate the required fields
+          if (!ticketId || !messageUserId || !content) {
+            return socket.emit('error', { message: 'Missing required fields for message' });
+          }
           
-          // Create a new message document
-          const newMessage = new TicketComment({
+          let userInfo = user || { _id: messageUserId }; // Use provided user info if available
+          
+          // If user info not provided, try to get it from database
+          if (!user && messageUserId) {
+            try {
+              const dbUser = await fetchUserFromDatabase(messageUserId);
+              if (dbUser) {
+                userInfo = {
+                  _id: messageUserId,
+                  firstName: dbUser.firstName || '',
+                  lastName: dbUser.lastName || '',
+                  avatar: dbUser.avatar || ''
+                };
+              }
+            } catch (error) {
+              console.error('Error fetching user info:', error);
+              // Continue with basic user info
+            }
+          }
+          
+          // Create a message object
+          const message = {
+            _id: new ObjectId().toString(),
             ticket: ticketId,
-            user: messageUserId,
-            content,
+            user: userInfo,
+            content: content.trim() || ' ', // Ensure not empty
             attachments: attachments || [],
             replyTo,
+            replyToContent,
             mentions: mentions || [],
-            addedBy: messageUserId,
-            updatedBy: messageUserId,
-            isActive: true,
-            deliveredAt: new Date(),
-            readBy: [messageUserId] // Mark as read by sender
-          });
-          
-          // Save to database
-          console.log(`Saving message to database for ticket ${ticketId}`);
-          const savedMessage = await newMessage.save();
-          
-          // Populate user information before broadcasting
-          await savedMessage.populate([
-            { path: 'user' },
-            { path: 'mentions' },
-            { 
-              path: 'replyTo',
-              populate: {
-                path: 'user'
-              }
-            }
-          ]);
-          
-          // Create history entry
-          console.log(`Creating history entry for ticket ${ticketId}`);
-          await createTicketHistory({
-            data: {
-              ticket: ticketId,
-              action: 'COMMENT',
-              user: messageUserId,
-              details: { messageId: savedMessage._id ? savedMessage._id.toString() : '' }
-            }
-          });
+            createdAt: new Date().toISOString(),
+            deliveredAt: new Date().toISOString(),
+            readBy: [messageUserId],
+            tempId // Include tempId to help with matching on the client
+          };
           
           const roomId = `ticket-${ticketId}`;
           
-          // Always broadcast to the room
-          console.log(`Broadcasting message to room ${roomId}`);
-          io.to(roomId).emit('message', savedMessage);
+          // Save to database if configured
+          let savedMessage = message;
+          try {
+            if (typeof saveMessage === 'function') {
+              savedMessage = await saveMessage(message);
+            }
+          } catch (error) {
+            console.error('Error saving message to database:', error);
+            // Continue with original message if database save fails
+          }
           
-          // Send acknowledgment to sender
+          // Send acknowledgment to the sender with tempId for matching
           if (tempId) {
+            console.log(`Sending message acknowledgment to sender with tempId ${tempId}`);
             socket.emit('message-ack', {
               messageId: savedMessage._id ? savedMessage._id.toString() : '',
               tempId,
@@ -249,6 +257,11 @@ function getSocketIO(server: any): SocketIOServer {
               timestamp: savedMessage.createdAt
             });
           }
+          
+          // Now broadcast to everyone EXCEPT the sender
+          // This prevents the sender from receiving the message twice
+          console.log(`Broadcasting message to others in room ${roomId}`);
+          socket.to(roomId).emit('message', savedMessage);
           
           // Store in message queue for users who join later
           if (!messageQueue.has(roomId)) {

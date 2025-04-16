@@ -26,6 +26,8 @@ import { toast } from 'react-toastify';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { motion, AnimatePresence } from 'framer-motion';
 import FilePreviewDialog from '@/components/ui/FilePreviewDialog';
+import { Portal } from "@/components/ui/portal";
+import { createPortal } from 'react-dom';
 
 // Common emojis to use for reactions
 const commonEmojis = ['👍', '👎', '❤️', '😄', '😢', '🎉', '😮', '🙏'];
@@ -57,6 +59,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
   const [previewFile, setPreviewFile] = useState<any>(null);
   const [showFilePreview, setShowFilePreview] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messageContentRef = useRef<HTMLDivElement>(null);
+  const messageBubbleRef = useRef<HTMLDivElement>(null);
   
   const isCurrentUser = message.user._id === currentUserId;
   const isPending = message.isPending;
@@ -242,9 +246,92 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
     document.body.removeChild(link);
   };
   
+  // Emoji Picker with absolute positioning
+  const EmojiPickerPopover = () => {
+    if (!showEmojiPicker) return null;
+    
+    const [position, setPosition] = useState({ top: 0, left: 0 });
+    
+    // Calculate position when shown
+    useEffect(() => {
+      if (showEmojiPicker && messageBubbleRef.current) {
+        const rect = messageBubbleRef.current.getBoundingClientRect();
+        const bubbleWidth = rect.width;
+        const pickerWidth = 250; // Width of the emoji picker
+        
+        // For right-aligned messages (current user), align to the right edge of the bubble
+        // For left-aligned messages (other users), align to the left edge of the bubble
+        let leftPos;
+        if (isCurrentUser) {
+          // Right alignment - ensure it doesn't go off-screen to the right
+          leftPos = Math.min(
+            window.innerWidth - pickerWidth - 10, 
+            rect.right - pickerWidth
+          );
+        } else {
+          // Left alignment - ensure it doesn't go off-screen to the left
+          leftPos = Math.max(10, rect.left);
+        }
+        
+        setPosition({
+          top: rect.bottom + window.scrollY + 5, // 5px gap below the message
+          left: leftPos,
+        });
+      }
+    }, [showEmojiPicker, isCurrentUser]);
+    
+    // Handle clicks outside to close the picker
+    useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+        // Close picker if click is outside both the picker and the message bubble
+        if (
+          messageBubbleRef.current && 
+          !messageBubbleRef.current.contains(e.target as Node) &&
+          !(e.target as Element).closest('.emoji-picker-container')
+        ) {
+          setShowEmojiPicker(false);
+        }
+      };
+      
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+    
+    // Create portal directly
+    return createPortal(
+      <div 
+        className="emoji-picker-container fixed shadow-lg rounded-lg z-[9999]"
+        style={{ 
+          top: `${position.top}px`, 
+          left: `${position.left}px`,
+        }}
+      >
+        <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-3 min-w-[250px]">
+          <div className="grid grid-cols-8 gap-2">
+            {commonEmojis.map(emoji => (
+              <button
+                key={emoji}
+                className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReaction(message._id, emoji);
+                  setShowEmojiPicker(false);
+                }}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+  
   return (
     <TooltipProvider>
       <motion.div
+        id={`message-${message._id}`}
         variants={{
           hidden: { opacity: 0, y: 10 },
           visible: { opacity: 1, y: 0 }
@@ -269,10 +356,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
           )}
         </Avatar>
         
-        <div className={cn(
-          "max-w-[80%]",
-          isCurrentUser ? "items-end" : ""
-        )}>
+        <div 
+          ref={messageBubbleRef}
+          className={cn(
+            "max-w-[80%]",
+            isCurrentUser ? "items-end" : ""
+          )}
+        >
           <div className={cn(
             "rounded-lg px-4 py-2 relative shadow-sm",
             isPending ? "opacity-80" : "",
@@ -351,7 +441,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
                     
                     <DropdownMenuItem onSelect={(e) => {
                       e.preventDefault();
-                      setShowEmojiPicker(true);
+                      // Position the emoji picker near the current message
+                      const messageElement = document.getElementById(`message-${message._id}`);
+                      if (messageElement) {
+                        // Wait for next tick to allow dropdown to close first
+                        setTimeout(() => setShowEmojiPicker(true), 100);
+                      } else {
+                        setShowEmojiPicker(true);
+                      }
                     }} className="flex items-center">
                       <Smile className="h-4 w-4 mr-2" />
                       Add Reaction
@@ -482,30 +579,8 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({
             )}
           </AnimatePresence>
           
-          {/* Emoji Picker */}
-          <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-            <PopoverTrigger asChild>
-              <div className="hidden">Trigger</div>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-2" align={isCurrentUser ? 'end' : 'start'} side="top">
-              <div className="grid grid-cols-8 gap-2">
-                {commonEmojis.map(emoji => (
-                  <motion.button
-                    key={emoji}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    className="text-xl hover:bg-gray-100 p-1 rounded-lg cursor-pointer"
-                    onClick={() => {
-                      onReaction(message._id, emoji);
-                      setShowEmojiPicker(false);
-                    }}
-                  >
-                    {emoji}
-                  </motion.button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          {/* Custom emoji picker */}
+          <EmojiPickerPopover />
           
           {/* Display attachments */}
           <AnimatePresence>

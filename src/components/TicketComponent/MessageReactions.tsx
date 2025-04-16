@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Smile, Plus, AlertCircle } from 'lucide-react';
+import { Portal } from '@/components/ui/portal';
 
 interface Reaction {
   emoji: string;
@@ -116,39 +117,42 @@ const MessageReactions: React.FC<MessageReactionsProps> = ({
         );
       })}
       
-      <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-6 w-6 p-0 rounded-full hover:bg-gray-100"
-            ref={triggerRef}
+      <Portal>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-6 w-6 p-0 rounded-full hover:bg-gray-100"
+              ref={triggerRef}
+            >
+              <Plus className="h-3.5 w-3.5 text-gray-500" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-auto p-2 z-[100]" 
+            align={isCurrentUser ? 'end' : 'start'} 
+            side="bottom"
+            sideOffset={5}
+            forceMount
+            avoidCollisions={true}
           >
-            <Plus className="h-3.5 w-3.5 text-gray-500" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-2" 
-          align={isCurrentUser ? 'end' : 'start'} 
-          side="bottom"
-          sideOffset={5}
-          forceMount
-        >
-          <div className="flex flex-wrap gap-2 max-w-[200px]">
-            {commonEmojis.map(emoji => (
-              <Button
-                key={emoji}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => handleAddReaction(emoji)}
-              >
-                {emoji}
-              </Button>
-            ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+            <div className="flex flex-wrap gap-2 max-w-[200px] bg-white rounded-lg shadow-lg p-1 border border-gray-200">
+              {commonEmojis.map(emoji => (
+                <Button
+                  key={emoji}
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => handleAddReaction(emoji)}
+                >
+                  {emoji}
+                </Button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </Portal>
     </div>
   );
 };

@@ -421,8 +421,8 @@ const TicketChatSystem: React.FC<TicketChatSystemProps> = ({
                           </Badge>
                         </div>
                         
-                        {group.messages.map(message => (
-                          <div key={message._id} className="mb-4" id={`message-${message._id}`}>
+                        {group.messages.map((message, index) => (
+                          <div key={`${message._id}-${index}`} className="mb-4" id={`message-${message._id}`}>
                             <div className={cn(
                               "flex gap-3",
                               message.user._id === userId ? "flex-row-reverse" : ""

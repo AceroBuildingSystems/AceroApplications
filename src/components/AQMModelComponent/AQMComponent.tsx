@@ -576,8 +576,8 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           const quoteData = {
             'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
             'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
-            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
-            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.displayName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.displayName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.displayName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.displayName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
             'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
             'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
             'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
@@ -590,7 +590,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
           };
           
-          emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           await sendEmail(emailData);
         };
 
@@ -679,8 +679,8 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             const quoteData = {
               'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
               'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
-              'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
-              'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+              'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.displayName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.displayName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.displayName?.toProperCase(),
+              'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.displayName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
               'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
               'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
               'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
@@ -707,7 +707,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
             };
 
-            emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Deleted`, templateData: quoteData, fileName: "aqmTemplates/quoteDeleted", senderName: user?.shortName?.toProperCase(), approveUrl: ``, rejectUrl: `` };
+            emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Deleted`, templateData: quoteData, fileName: "aqmTemplates/quoteDeleted", senderName: user?.displayName?.toProperCase(), approveUrl: ``, rejectUrl: `` };
             await sendEmail(emailData);
 
             setFormData({});
@@ -818,8 +818,8 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           const quoteData = {
             'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
             'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
-            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
-            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.displayName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.displayName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.displayName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.displayName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
             'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
             'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
             'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
@@ -832,15 +832,15 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
           };
          
-          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           await sendEmail(emailData);
         }
         if (status === 'submitted') {
           const quoteData = {
             'Quote Details': '', 'Country': response?.data?.data?.country?.name, 'Year': response?.data?.data?.year,
             'Option': response?.data?.data?.option, 'Quote Status': response?.data?.data?.quoteStatus?.name, 'Rev No': response?.data?.data?.revNo,
-            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.shortName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.shortName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.shortName?.toProperCase(),
-            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.shortName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
+            'Sales Engineer / Manager': response?.data?.data?.salesEngineer?.user?.displayName?.toProperCase(), 'Sales Support Engineer 1': response?.data?.data?.salesSupportEngineer[0]?.user?.displayName?.toProperCase(), 'Sales Support Engineer 2': response?.data?.data?.customerType?.salesSupportEngineer?.[1] && response?.data?.data?.customerType?.salesSupportEngineer[1]?.user?.displayName?.toProperCase(),
+            'Sales Support Engineer 3': response?.data?.data?.customerType?.salesSupportEngineer?.[2] && response?.data?.data?.salesSupportEngineer[2]?.user?.displayName?.toProperCase(), 'Received Date From Customer': moment(response?.data?.data?.rcvdDateFromCustomer).format("DD-MMM-YYYY hh:mm A"), 'Selling Team': response?.data?.data?.sellingTeam?.name,
             'ResponsibleTeam': response?.data?.data?.responsibleTeam?.name,
             'Customer Details': '', 'Company Name': response?.data?.data?.company?.name,
             'Contact name': response?.data?.data?.contact?.name, 'Contact Email': response?.data?.data?.contact?.email, 'Contact Number': response?.data?.data?.contact?.phone,
@@ -867,7 +867,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
           };
 
-          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Submitted For Approval : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: quoteData, fileName: "aqmTemplates/quoteApprovalRequest", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteApproval?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteApproval?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: `Quote Submitted For Approval : ${response?.data?.data?.country?.countryCode}-${response?.data?.data?.year?.toString().slice(-2)}-${response?.data?.data?.quoteNo}`, templateData: quoteData, fileName: "aqmTemplates/quoteApprovalRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteApproval?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteApproval?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           await sendEmail(emailData);
         }
 
@@ -933,7 +933,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           };
           await onchangeData({ id: response?.data?.data?.customer?._id, fieldName: 'company', name: response?.data?.data?.name })
           handleChange(response?.data?.data?._id, "company", "ObjectId", "select", [], undefined, undefined);
-          emailData = { recipient: sellingTeamData?.email, subject: 'New Customer Added', templateData: companyData, fileName: "aqmTemplates/newCustomerTemplate", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          emailData = { recipient: sellingTeamData?.email, subject: 'New Customer Added', templateData: companyData, fileName: "aqmTemplates/newCustomerTemplate", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
 
           await sendEmail(emailData);
 
@@ -958,7 +958,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           await onchangeData({ id: response?.data?.data?._id, fieldName: 'approvalAuthority', name: response?.data?.data?.code, parentId: response?.data?.data?.location?.state?._id, location: response?.data?.data?.location })
           handleChange(response?.data?.data?._id, "state", "ObjectId", "select", [], undefined, undefined);
 
-          emailData = { recipient: sellingTeamData?.email, subject: 'New Approval Authority Added', templateData: authorityData, fileName: "aqmTemplates/newApprovalAuthority", senderName: user?.shortName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
+          emailData = { recipient: sellingTeamData?.email, subject: 'New Approval Authority Added', templateData: authorityData, fileName: "aqmTemplates/newApprovalAuthority", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=true&_id=${response?.data?.data?._id}&name=${master}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/confirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
           const response1 = await sendEmail(emailData);
           break;
 

@@ -77,7 +77,7 @@ console.log(transformedData);
     { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
     { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
-    { label: 'Short Name', name: "shortName", type: "text", required: true, placeholder: 'Short Name' },
+    { label: 'Display Name', name: "displayName", type: "text", required: true, placeholder: 'Display Name' },
     { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department' },
     { label: 'Email', name: "email", type: "text", required: true, placeholder: 'Email' },
@@ -187,19 +187,19 @@ console.log(transformedData);
   const userColumns = [
     
     {
-      accessorKey: "shortName",
+      accessorKey: "displayName",
       header: ({ column }: { column: any }) => (
         <button
           className="flex items-center space-x-2 pl-3"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Employee Name</span> {/* Label */}
+          <span>Display Name</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
       cell: ({ row }: { row: any }) => {
-        const firstName = row.getValue("shortName");
+        const firstName = row.getValue("displayName");
         const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
       
         return (

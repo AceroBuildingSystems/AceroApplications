@@ -15,7 +15,7 @@ const UserSchema: Schema<UserDocument> = new Schema({
         ref: "Role", // Reference to the Role model
        
     },
-    shortName: { type: String },
+    displayName: { type: String },
     fullName: { type: String },
     designation1: { type: String },
     // designation: { type: String },

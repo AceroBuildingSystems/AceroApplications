@@ -37,14 +37,14 @@ const page = () => {
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
     const loading = teamLoading || userLoading || departmentLoading || isCreatingMaster;
-    const formattedUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
-        label: option?.shortName?.toProperCase(), // Display name
+    const formattedUserData = userData?.data?.map((option: { displayName: string; _id: any; }) => ({
+        label: option?.displayName?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
       }));
 
 // const formattedData = userData?.data?.map(item => ({
 //     _id: item._id,
-//     name: `${item?.shortName?.toProperCase()}`
+//     name: `${item?.displayName?.toProperCase()}`
 //   }));
 
   
@@ -202,7 +202,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("teamHead")[0]?.shortName?.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("teamHead")[0]?.displayName?.toProperCase()}</div>,
         },
         {
             accessorKey: "department",

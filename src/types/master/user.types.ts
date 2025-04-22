@@ -9,7 +9,7 @@ export interface UserDocument {
     password: string,
     role: mongoose.ObjectId,
     fullName: string,
-    shortName: string,
+    displayName: string,
     designation1: string,
     role1: string,
     imageUrl: string,

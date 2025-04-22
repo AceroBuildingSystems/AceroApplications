@@ -40,13 +40,13 @@ const page = () => {
 
     const engData = userData?.data?.filter((data: { department: { name: string; }; }) => data?.department?.name === 'Sales General');
 
-    const formattedData = engData?.map((item: { _id: any; shortName: string; }) => ({
+    const formattedData = engData?.map((item: { _id: any; displayName: string; }) => ({
         _id: item._id,
-        name: `${item.shortName.toProperCase()}`
+        name: `${item.displayName.toProperCase()}`
     }));
 
      const fieldsToAdd = [
-        { fieldName: 'name', path: ['salesEngineer', 'shortName'] }
+        { fieldName: 'name', path: ['salesEngineer', 'displayName'] }
       ];
       const transformedData = transformData(salesEngData?.data, fieldsToAdd);
 
@@ -186,7 +186,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("salesEngineer")?.shortName.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("salesEngineer")?.displayName.toProperCase()}</div>,
         },
         {
             accessorKey: "designation",
@@ -214,7 +214,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("reportingTo")?.shortName.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='' >{row.getValue("reportingTo")?.displayName.toProperCase()}</div>,
         },
         {
             accessorKey: "isActive",

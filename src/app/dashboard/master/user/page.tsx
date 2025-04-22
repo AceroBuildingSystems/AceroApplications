@@ -104,7 +104,7 @@ const page = () => {
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
  
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
-    { label: 'Mobile', name: "mobile", type: "number", placeholder: 'Mobile' },
+    { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
        { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
   ]

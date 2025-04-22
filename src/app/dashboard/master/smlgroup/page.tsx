@@ -71,7 +71,7 @@ const page = () => {
   
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
   
-      { label: 'Group Name', name: "name", type: "text", required: true, placeholder: 'Group Name' },
+      { label: 'Category Name', name: "name", type: "text", required: true, placeholder: 'Group Name' },
       { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
   
     ]
@@ -119,7 +119,7 @@ const page = () => {
     const handleAdd = () => {
       setInitialData({});
       setAction('Add');
-      openDialog("continent");
+      openDialog("category");
   
     };
   
@@ -169,7 +169,7 @@ const page = () => {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
   
           >
-            <span>Group Name</span> {/* Label */}
+            <span>Category Name</span> {/* Label */}
             <ArrowUpDown size={15} /> {/* Sorting Icon */}
           </button>
         ),
@@ -194,7 +194,7 @@ const page = () => {
   
     const groupConfig = {
       searchFields: [
-        { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by continent' },
+        { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by category' },
   
       ],
       filterFields: [

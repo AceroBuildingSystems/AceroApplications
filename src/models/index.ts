@@ -46,6 +46,7 @@ import TicketComment from "./ticket/TicketComment.model";
 import TicketTask from "./ticket/TicketTask.model";
 import TicketHistory from "./ticket/TicketHistory.model";
 import UserSkill from "./ticket/UserSkill.model";
+import TeamRole from "./master/TeamRole.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -62,4 +63,5 @@ export {
     TicketTask,
     TicketHistory,
     UserSkill,
+    TeamRole,
 }

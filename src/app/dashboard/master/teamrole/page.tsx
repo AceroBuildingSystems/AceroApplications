@@ -23,7 +23,7 @@ const page = () => {
 
   const { user, status, authenticated } = useUserAuthorised();
   const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({
-    db: 'ROLE_MASTER',
+    db: 'TEAM_ROLE_MASTER',
     sort: { name: 'asc' },
     filter: { isActive: true },
   });
@@ -73,7 +73,7 @@ const page = () => {
   const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
     const formattedData = {
-      db: 'ROLE_MASTER',
+      db: 'TEAM_ROLE_MASTER',
       action: action === 'Add' ? 'create' : 'update',
       filter: { "_id": formData._id },
       data: formData,
@@ -84,20 +84,20 @@ const page = () => {
     const response = await createMaster(formattedData);
 
 
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Role added successfully');
+    // if (response.data?.status === SUCCESS && action === 'Add') {
+    //   toast.success('Role added successfully');
 
-    }
-    else {
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Role updated successfully');
-      }
-    }
+    // }
+    // else {
+    //   if (response.data?.status === SUCCESS && action === 'Update') {
+    //     toast.success('Role updated successfully');
+    //   }
+    // }
 
-    if (response?.error?.data?.message?.message) {
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
-
+    // if (response?.error?.data?.message?.message) {
+    //   toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
+    // }
+return response
   };
 
 
@@ -116,7 +116,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ROLE_MASTER", masterName: "Role" });
+    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "TEAM_ROLE_MASTER", masterName: "TeamRole" });
   };
 
   const exportToExcel = (data: any[]) => {

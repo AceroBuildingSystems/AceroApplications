@@ -31,4 +31,5 @@ export interface UserDocument {
     addedBy: string,
     updatedBy: string,
     organisation: mongoose.ObjectId,
+    activeLocation: mongoose.ObjectId,
 }

@@ -14,10 +14,12 @@ import DashboardLoader from '@/components/ui/DashboardLoader';
 import debounce from 'lodash/debounce';
 import { toast } from 'react-toastify';
 import { useSocketIo } from '@/hooks/useSocketIo';
+import io from 'socket.io-client';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import MessageBubble from './MessageBubble';
+import ConnectionStatus from './ConnectionStatus';
 
 import {
   Paperclip,
@@ -73,44 +75,6 @@ interface TicketChatProps {
   socketCurrentUser?: any; // Add this prop to pass to useSocketIo
 }
 
-// Memoized ConnectionStatus component to prevent re-renders
-const ConnectionStatusIndicator = memo(({ isConnected, isConnecting, isMinimal, reconnect }: {
-  isConnected: boolean;
-  isConnecting: boolean;
-  isMinimal: boolean;
-  reconnect: () => void;
-}) => {
-  if (isConnected) {
-    return (
-      <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 flex items-center gap-1 animate-fade-in">
-        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-        <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Connected</span>
-      </Badge>
-    );
-  }
-  
-  if (isConnecting) {
-    return (
-      <Badge variant="outline" className="ml-2 bg-yellow-50 text-yellow-700 flex items-center gap-1 animate-pulse">
-        <Clock className="h-3 w-3 animate-spin" />
-        <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Connecting...</span>
-      </Badge>
-    );
-  }
-  
-  return (
-    <div className="flex items-center gap-1 ml-2">
-      <Badge variant="outline" className="bg-red-50 text-red-700 flex items-center gap-1">
-        <WifiOff className="h-3 w-3" />
-        <span className={cn("transition-all", isMinimal ? "hidden" : "hidden sm:inline")}>Offline</span>
-      </Badge>
-      <Button variant="ghost" size="sm" onClick={reconnect} className="h-6 p-0 px-1">
-        <RefreshCw className="h-3 w-3" />
-      </Button>
-    </div>
-  );
-});
-
 const TicketChat: React.FC<TicketChatProps> = ({
   ticketId,
   userId,
@@ -160,9 +124,10 @@ const TicketChat: React.FC<TicketChatProps> = ({
     isConnected, 
     isConnecting,
     connectionError,
+    connectionAttempts,
     messages: socketMessages,
     typingUsers,
-    onlineUsers,
+    getOnlineUsers,
     updateMessages,
     sendMessage,
     editMessage,
@@ -170,7 +135,9 @@ const TicketChat: React.FC<TicketChatProps> = ({
     markMessagesAsRead,
     sendTyping,
     notifyFileUpload,
-    reconnect
+    reconnect,
+    testReaction,
+    simulateReactionUpdate
   } = useSocketIo({ 
     ticketId, 
     userId,
@@ -178,12 +145,83 @@ const TicketChat: React.FC<TicketChatProps> = ({
     currentUser: socketCurrentUser || currentUser
   });
   
+  // Access online users data
+  const onlineUsers = getOnlineUsers();
+  
+  // Track previous connection status to avoid excessive notifications
+  const prevConnectionStatus = useRef({ isConnected, connectionError });
+  
+  // Log connection status changes, but avoid excessive notifications
+  useEffect(() => {
+    // Only show connection error toast for critical errors
+    if (connectionError && 
+        connectionError !== prevConnectionStatus.current.connectionError && 
+        connectionAttempts > 2) {
+      toast.error(`Connection error: ${connectionError}`);
+    }
+    
+    // Update previous status
+    prevConnectionStatus.current = { isConnected, connectionError };
+  }, [isConnected, connectionError, connectionAttempts]);
+  
   // Initialize socket messages with data from API
   useEffect(() => {
     if (commentsData?.data?.length > 0 && updateMessages) {
       updateMessages(commentsData.data);
     }
   }, [commentsData?.data, updateMessages]);
+  
+  // Diagnostic function to test direct socket connection with various transports
+  const testDirectSocketConnection = useCallback(async () => {
+    try {
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || window.location.origin;
+      console.log(`Testing direct socket connection to ${socketUrl}`);
+      
+      toast.info(`Testing socket connection to ${socketUrl}...`);
+      
+      // First try with WebSocket only
+      const wsSocket = io(socketUrl, {
+        transports: ['websocket'],
+        forceNew: true,
+        timeout: 5000
+      });
+      
+      wsSocket.on('connect', () => {
+        console.log(`WS-only socket connected! Transport: ${wsSocket.io.engine.transport.name}`);
+        toast.success('WebSocket connection successful!');
+        setTimeout(() => wsSocket.disconnect(), 5000); // Disconnect after 5s
+      });
+      
+      wsSocket.on('connect_error', (err) => {
+        console.error('WS-only socket error:', err);
+        toast.error(`WebSocket connection failed: ${err.message}`);
+        
+        // Now try with polling only
+        setTimeout(() => {
+          console.log('Trying polling-only connection...');
+          const pollingSocket = io(socketUrl, {
+            transports: ['polling'],
+            forceNew: true,
+            timeout: 5000
+          });
+          
+          pollingSocket.on('connect', () => {
+            console.log(`Polling-only socket connected! Transport: ${pollingSocket.io.engine.transport.name}`);
+            toast.success('Polling connection successful!');
+            setTimeout(() => pollingSocket.disconnect(), 5000); // Disconnect after 5s
+          });
+          
+          pollingSocket.on('connect_error', (pollingErr) => {
+            console.error('Polling-only socket error:', pollingErr);
+            toast.error(`Polling connection failed: ${pollingErr.message}`);
+          });
+        }, 2000);
+      });
+    } catch (error) {
+      console.error('Error in socket test:', error);
+      toast.error(`Socket test error: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }, []);
   
   // Scroll to bottom when component mounts
   useEffect(() => {
@@ -236,20 +274,16 @@ const TicketChat: React.FC<TicketChatProps> = ({
   const handleFileUpload = async () => {
     if (selectedFiles.length === 0) return [];
     
-    console.log("Starting file upload with", selectedFiles.length, "files");
     const uploadedFiles = [];
     
     for (const file of selectedFiles) {
       try {
-        console.log("Uploading file:", file.name);
-        
         // Create form data
         const formData = new FormData();
         formData.append('file', file);
         formData.append('ticketId', ticketId);
         formData.append('userId', userId);
       
-  
         // Use direct fetch API for file upload
         const response = await fetch('/api/file-upload', {
           method: 'POST',
@@ -260,20 +294,15 @@ const TicketChat: React.FC<TicketChatProps> = ({
         if (!response.ok) {
           throw new Error(`Upload failed with status: ${response.status}`);
         }
-
         
         const result = await response.json();
-        // Parse the response
-        console.log("Upload result:", result);
         
         if (result.status === 'success') {
           uploadedFiles.push(result.data);
-          console.log("File uploaded successfully:", result.data);
         } else {
           throw new Error(result.message || 'Upload failed');
         }
       } catch (error) {
-        console.error('File upload error:', file.name, error);
         toast.error(`Failed to upload ${file.name}`);
       }
     }
@@ -286,11 +315,27 @@ const TicketChat: React.FC<TicketChatProps> = ({
     const value = e.target.value;
     setMessage(value);
     
-    // Send typing indicator
-    if (value.length > 0) {
-      debouncedTyping(true);
-    } else {
-      debouncedTyping(false);
+    // Send typing indicator when user is typing
+    const isCurrentlyTyping = value.length > 0;
+    sendTyping(isCurrentlyTyping);
+    
+    // If typing stops, send a "stopped typing" update after 2 seconds
+    if (isCurrentlyTyping) {
+      // Set a timer to clear typing status after 2 seconds of inactivity
+      const timerId = setTimeout(() => {
+        sendTyping(false);
+      }, 2000);
+      
+      // Store the timer ID to clear it if user types again
+      const prevTimerId = textareaRef.current?.dataset.typingTimer;
+      if (prevTimerId) {
+        clearTimeout(parseInt(prevTimerId));
+      }
+      
+      // Store the new timer ID
+      if (textareaRef.current) {
+        textareaRef.current.dataset.typingTimer = timerId.toString();
+      }
     }
     
     // Check for mention patterns
@@ -377,7 +422,6 @@ const TicketChat: React.FC<TicketChatProps> = ({
       // Upload files first if any
       const uploadedFiles:any = await handleFileUpload();
       
-      console.log("Uploaded files:", uploadedFiles);
       // Extract mentions
       const mentionedUserIds:any = extractMentions(message);
       
@@ -398,7 +442,7 @@ const TicketChat: React.FC<TicketChatProps> = ({
             tempId: messageId
           });
         } catch (error) {
-          console.error("API fallback error:", error);
+          // Silent error - will be handled by socket reconnection later
         }
       }
       
@@ -413,7 +457,6 @@ const TicketChat: React.FC<TicketChatProps> = ({
       }, 1000);
       
     } catch (error) {
-      console.error("Message submission error:", error);
       toast.error("Failed to send message");
     } finally {
       setIsSubmitting(false);
@@ -524,6 +567,68 @@ const TicketChat: React.FC<TicketChatProps> = ({
     }
   };
   
+  // Reaction Debugger Component for testing reaction functionality
+  const ReactionDebugger = ({ messages, onTestReaction, onSimulate }: { 
+    messages: any[]; 
+    onTestReaction: (messageId: string, emoji: string) => void;
+    onSimulate: (messageId: string) => void;
+  }) => {
+    const [selectedMessage, setSelectedMessage] = useState('');
+    const [selectedEmoji, setSelectedEmoji] = useState('👍');
+    const commonEmojis = ['👍', '👎', '❤️', '😂', '😮', '😢', '🎉'];
+    
+    return (
+      <div className="bg-yellow-50 border border-yellow-200 p-2 rounded mb-2 text-xs">
+        <div className="font-semibold mb-1">Reaction Debugger</div>
+        <div className="flex flex-col gap-1">
+          <div className="flex gap-1">
+            <select 
+              value={selectedMessage} 
+              onChange={(e) => setSelectedMessage(e.target.value)}
+              className="text-xs p-1 flex-1"
+            >
+              <option value="">Select message</option>
+              {messages.slice(-10).map((msg) => (
+                <option key={msg._id} value={msg._id}>
+                  {msg.content?.substring(0, 20)}... ({msg._id.slice(-6)})
+                </option>
+              ))}
+            </select>
+            <select 
+              value={selectedEmoji} 
+              onChange={(e) => setSelectedEmoji(e.target.value)}
+              className="text-xs p-1 w-16"
+            >
+              {commonEmojis.map(emoji => (
+                <option key={emoji} value={emoji}>{emoji}</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex gap-1">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-6 text-xs flex-1" 
+              disabled={!selectedMessage}
+              onClick={() => onTestReaction(selectedMessage, selectedEmoji)}
+            >
+              Test Reaction
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="h-6 text-xs flex-1" 
+              disabled={!selectedMessage}
+              onClick={() => onSimulate(selectedMessage)}
+            >
+              Simulate Update
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className={cn("flex flex-col h-full overflow-hidden rounded-lg border border-gray-200 shadow-sm bg-white", 
       isMinimal ? "max-h-[500px]" : "")
@@ -534,12 +639,28 @@ const TicketChat: React.FC<TicketChatProps> = ({
           <Badge className="bg-indigo-100 text-indigo-800 font-medium px-2 py-1 h-6">
             Chat
           </Badge>
-          <ConnectionStatusIndicator 
+          <ConnectionStatus 
             isConnected={isConnected}
             isConnecting={isConnecting}
-            isMinimal={isMinimal}
-            reconnect={reconnect}
+            connectionError={connectionError ? connectionError.message : undefined}
+            connectionAttempts={connectionAttempts}
+            onReconnect={reconnect}
           />
+          {/* <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={testDirectSocketConnection} 
+            className="h-7 px-2 text-xs"
+          >
+            Try Direct Connection
+          </Button> */}
+          {/* {process.env.NODE_ENV === 'development' && (
+            <ReactionDebugger 
+              messages={socketMessages} 
+              onTestReaction={testReaction} 
+              onSimulate={simulateReactionUpdate} 
+            />
+          )} */}
         </div>
         
         <div className="flex items-center gap-2">
@@ -629,8 +750,8 @@ const TicketChat: React.FC<TicketChatProps> = ({
                   </div>
                   
                   <div className="space-y-3">
-                    {group.messages.map((message: any) => (
-                      <div key={message._id} id={`message-${message._id}`}>
+                    {group.messages.map((message: any, index: number) => (
+                      <div key={`${message._id}-${index}`} id={`message-${message._id}`}>
                         <MessageBubble
                           message={message}
                           currentUserId={userId}
@@ -877,66 +998,19 @@ const TicketChat: React.FC<TicketChatProps> = ({
             </div>
           )}
         </div>
-        
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={handleFileSelect}
-        />
-        
-        {/* Selected files preview */}
-        <AnimatePresence>
-          {selectedFiles.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="mt-2"
-            >
-              <div className="flex gap-2 p-2 bg-gray-50 rounded-md border overflow-x-auto">
-                {selectedFiles.map((file, index) => (
-                  <motion.div 
-                    key={index}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    className="flex flex-col items-center border rounded-md p-2 bg-white min-w-[80px]"
-                  >
-                    {file.type.startsWith('image/') ? (
-                      <div className="relative w-16 h-16 mb-1 overflow-hidden rounded-md bg-gray-100">
-                        <img 
-                          src={URL.createObjectURL(file)} 
-                          alt={file.name}
-                          className="object-cover w-full h-full"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center w-16 h-16 mb-1 bg-gray-100 rounded-md">
-                        {getFileIcon(file.type)}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 w-full justify-between">
-                      <span className="text-xs max-w-[60px] truncate">{file.name}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-5 w-5 p-0 text-gray-400 hover:text-red-500"
-                        onClick={() => handleRemoveFile(index)}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+      
+      {/* Hidden file upload input */}
+      <Input 
+        type="file" 
+        id="file-upload" 
+        ref={fileInputRef}
+        className="hidden"
+        onChange={handleFileSelect}
+        multiple
+      />
     </div>
   );
 };
 
-export default TicketChat;
+export default memo(TicketChat);

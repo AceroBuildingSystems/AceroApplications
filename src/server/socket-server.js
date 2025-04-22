@@ -12,7 +12,11 @@ const { MongoClient } = require('mongodb');
 
 // Create Express app
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: '*', // Be as permissive as possible for testing
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,15 +28,16 @@ const server = http.createServer(app);
 // Create Socket.IO server
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: '*', // Allow all origins for testing
+    methods: ['GET', 'POST'],
+    credentials: true
   },
   pingTimeout: 60000, // Increased from default to 60 seconds
   pingInterval: 25000,
   connectTimeout: 60000 // 60 seconds connection timeout
 });
 
-// Debug flag
+// Debug flag - turn this on for detailed logging
 const DEBUG = true;
 
 // MongoDB connection from .env
@@ -326,6 +331,8 @@ io.on('connection', (socket) => {
     const { ticketId, userId: joinUserId } = data;
     const roomId = `ticket-${ticketId}`;
     
+    log(`User ${joinUserId} joining room ${roomId}`);
+    
     // Create room if it doesn't exist
     if (!ticketRooms.has(roomId)) {
       ticketRooms.set(roomId, new Set());
@@ -495,7 +502,7 @@ io.on('connection', (socket) => {
   // Handle new chat messages (original handler)
   socket.on('message', async (data) => {
     try {
-      const { ticketId, userId: messageUserId, content, attachments, replyTo, replyToContent, mentions, tempId } = data;
+      const { ticketId, userId: messageUserId, content, attachments, replyTo, replyToContent, mentions, tempId, user } = data;
       
       log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
       
@@ -503,7 +510,7 @@ io.on('connection', (socket) => {
       const message = {
         _id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
         ticket: ticketId,
-        user: { _id: messageUserId },
+        user: user || { _id: messageUserId }, // Use the provided user object if available
         content: content || ' ', // Ensure content is never empty
         attachments: attachments || [],
         replyTo,
@@ -511,7 +518,8 @@ io.on('connection', (socket) => {
         mentions: mentions || [],
         createdAt: new Date().toISOString(),
         deliveredAt: new Date(),
-        readBy: [messageUserId]
+        readBy: [messageUserId],
+        tempId // Include the tempId in the broadcast to help clients match messages
       };
       
       // Save message to database
@@ -531,12 +539,9 @@ io.on('connection', (socket) => {
       const roomSockets = io.sockets.adapter.rooms.get(roomId);
       log(`Room has ${roomSockets?.size || 0} connected sockets`);
       
-      // Always broadcast to the room
-      log(`Broadcasting message to all users in room ${roomId}`);
-      io.to(roomId).emit('message', message);
-      
-      // Send acknowledgment to sender
+      // Send acknowledgment to sender first with the tempId for matching
       if (tempId) {
+        log(`Sending message acknowledgment to sender with tempId ${tempId}`);
         socket.emit('message-ack', {
           messageId: message._id,
           tempId,
@@ -544,6 +549,11 @@ io.on('connection', (socket) => {
           timestamp: message.createdAt
         });
       }
+      
+      // Now broadcast to everyone EXCEPT the sender
+      // This prevents the sender from receiving the message twice
+      log(`Broadcasting message to others in room ${roomId}`);
+      socket.to(roomId).emit('message', message);
       
       // Store in message queue for users who join later
       if (!messageQueue.has(roomId)) {
@@ -627,15 +637,298 @@ io.on('connection', (socket) => {
       }
     }
   });
+
+  // Add handler for reactions
+  socket.on('add-reaction', async (data) => {
+    try {
+      const { messageId, emoji, ticketId, userId } = data;
+      
+      log(`Received reaction ${emoji} for message ${messageId} from user ${userId}`);
+      
+      if (!messageId || !emoji || !ticketId || !userId) {
+        return socket.emit('error', { message: 'Missing required fields for reaction' });
+      }
+      
+      // Get the TicketComment model
+      let TicketComment;
+      try {
+        TicketComment = mongoose.model('TicketComment');
+      } catch (error) {
+        console.error('TicketComment model not found, cannot add reaction');
+        return socket.emit('error', { message: 'Database error' });
+      }
+      
+      // Find the message in the database
+      const objectId = mongoose.Types.ObjectId.isValid(messageId) 
+        ? new mongoose.Types.ObjectId(messageId) 
+        : null;
+        
+      if (!objectId) {
+        return socket.emit('error', { message: 'Invalid message ID' });
+      }
+      
+      const message = await TicketComment.findById(objectId);
+      
+      if (!message) {
+        return socket.emit('error', { message: 'Message not found' });
+      }
+      
+      // Check if user already reacted with this emoji
+      const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
+        ? new mongoose.Types.ObjectId(userId) 
+        : null;
+        
+      if (!userIdObj) {
+        return socket.emit('error', { message: 'Invalid user ID' });
+      }
+      
+      const existingReactionIndex = message.reactions.findIndex(
+        r => r.emoji === emoji && r.userId.toString() === userIdObj.toString()
+      );
+      
+      let updatedMessage;
+      
+      if (existingReactionIndex !== -1) {
+        // Remove existing reaction
+        message.reactions.splice(existingReactionIndex, 1);
+        updatedMessage = await message.save();
+      } else {
+        // Add new reaction
+        message.reactions.push({
+          emoji,
+          userId: userIdObj,
+          createdAt: new Date()
+        });
+        updatedMessage = await message.save();
+      }
+      
+      // Broadcast the updated reactions to all clients in the room
+      const roomId = `ticket-${ticketId}`;
+      io.to(roomId).emit('reaction-updated', { 
+        messageId, 
+        reactions: updatedMessage.reactions.map(r => ({
+          emoji: r.emoji,
+          userId: r.userId.toString(),
+          createdAt: r.createdAt
+        }))
+      });
+      
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+      socket.emit('error', { message: 'Failed to add reaction' });
+    }
+  });
+
+  // Add handler for message-reaction event (client is using this event name)
+  socket.on('message-reaction', async (data) => {
+    try {
+      const { messageId, emoji, ticketId, userId } = data;
+      
+      log(`Received message-reaction ${emoji} for message ${messageId} from user ${userId}`);
+      
+      if (!messageId || !emoji || !ticketId || !userId) {
+        return socket.emit('error', { message: 'Missing required fields for reaction' });
+      }
+      
+      // Get the TicketComment model
+      let TicketComment;
+      try {
+        TicketComment = mongoose.model('TicketComment');
+      } catch (error) {
+        console.error('TicketComment model not found, cannot add reaction');
+        return socket.emit('error', { message: 'Database error' });
+      }
+      
+      // Find the message in the database
+      const objectId = mongoose.Types.ObjectId.isValid(messageId) 
+        ? new mongoose.Types.ObjectId(messageId) 
+        : null;
+        
+      if (!objectId) {
+        return socket.emit('error', { message: 'Invalid message ID' });
+      }
+      
+      const message = await TicketComment.findById(objectId);
+      
+      if (!message) {
+        return socket.emit('error', { message: 'Message not found' });
+      }
+      
+      // Check if user already reacted with this emoji
+      const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
+        ? new mongoose.Types.ObjectId(userId) 
+        : null;
+        
+      if (!userIdObj) {
+        return socket.emit('error', { message: 'Invalid user ID' });
+      }
+      
+      const existingReactionIndex = message.reactions.findIndex(
+        r => r.emoji === emoji && r.userId.toString() === userIdObj.toString()
+      );
+      
+      let updatedMessage;
+      
+      if (existingReactionIndex !== -1) {
+        // Remove existing reaction
+        message.reactions.splice(existingReactionIndex, 1);
+        updatedMessage = await message.save();
+      } else {
+        // Add new reaction
+        message.reactions.push({
+          emoji,
+          userId: userIdObj,
+          createdAt: new Date()
+        });
+        updatedMessage = await message.save();
+      }
+      
+      // Broadcast the updated reactions to all clients in the room
+      const roomId = `ticket-${ticketId}`;
+      io.to(roomId).emit('reaction-updated', { 
+        messageId, 
+        reactions: updatedMessage.reactions.map(r => ({
+          emoji: r.emoji,
+          userId: r.userId.toString(),
+          createdAt: r.createdAt
+        }))
+      });
+      
+    } catch (error) {
+      console.error('Error handling reaction:', error);
+      socket.emit('error', { message: 'Failed to add reaction' });
+    }
+  });
+
+  // Add handler for marking messages as read
+  socket.on('mark-as-read', async (data) => {
+    try {
+      const { messageIds, userId } = data;
+      
+      log(`Marking messages as read: ${messageIds.join(', ')} by user ${userId}`);
+      
+      if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0 || !userId) {
+        return socket.emit('error', { message: 'Missing required fields for marking messages as read' });
+      }
+      
+      // Get the TicketComment model
+      let TicketComment;
+      try {
+        TicketComment = mongoose.model('TicketComment');
+      } catch (error) {
+        console.error('TicketComment model not found, cannot mark messages as read');
+        return socket.emit('error', { message: 'Database error' });
+      }
+      
+      const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
+        ? new mongoose.Types.ObjectId(userId) 
+        : null;
+        
+      if (!userIdObj) {
+        return socket.emit('error', { message: 'Invalid user ID' });
+      }
+      
+      // Find messages and update readBy field
+      for (const messageId of messageIds) {
+        const objectId = mongoose.Types.ObjectId.isValid(messageId) 
+          ? new mongoose.Types.ObjectId(messageId) 
+          : null;
+          
+        if (!objectId) {
+          log(`Invalid message ID: ${messageId}`);
+          continue;
+        }
+        
+        await TicketComment.findByIdAndUpdate(
+          objectId,
+          { 
+            $addToSet: { readBy: userIdObj },
+            $set: { isRead: true, readAt: new Date() }
+          }
+        );
+      }
+      
+      // Broadcast read status to all clients
+      const message = await TicketComment.findById(messageIds[0]);
+      if (message) {
+        const roomId = `ticket-${message.ticket}`;
+        io.to(roomId).emit('messages-read', { 
+          messageIds, 
+          userId 
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+      socket.emit('error', { message: 'Failed to mark messages as read' });
+    }
+  });
+
+  // Add handler for updating user status
+  socket.on('update-status', (data) => {
+    const { status, userId } = data;
+    
+    if (!userId || !status) {
+      return socket.emit('error', { message: 'Missing required fields for status update' });
+    }
+    
+    // Update user status
+    userStatus.set(userId, status);
+    
+    // Broadcast to all clients
+    io.emit('user-status', { userId, status });
+    
+    log(`User ${userId} status updated to ${status}`);
+  });
+
+  // Add handler for file upload notifications
+  socket.on('file-uploaded', (data) => {
+    const { ticketId, messageId, userId, ...fileData } = data;
+    
+    if (!ticketId || !messageId || !userId) {
+      return socket.emit('error', { message: 'Missing required fields for file upload notification' });
+    }
+    
+    // Broadcast to all clients in the room
+    const roomId = `ticket-${ticketId}`;
+    io.to(roomId).emit('file_uploaded', {
+      ...fileData,
+      messageId,
+      uploadedBy: userId,
+      uploadedAt: new Date()
+    });
+    
+    log(`File upload notification sent for message ${messageId} in room ${roomId}`);
+  });
 });
 
 // API routes
 app.get('/api/ping', (req, res) => {
-  res.json({ timestamp: Date.now() });
+  console.log('Ping received from', req.ip);
+  res.json({ 
+    timestamp: Date.now(),
+    status: 'ok',
+    server: 'socket-server',
+    version: '1.0.0',
+    env: process.env.NODE_ENV
+  });
 });
 
 app.post('/api/ping', (req, res) => {
-  res.json({ timestamp: Date.now() });
+  console.log('POST ping received from', req.ip);
+  res.json({ 
+    timestamp: Date.now(),
+    status: 'ok',
+    server: 'socket-server',
+    version: '1.0.0',
+    method: 'POST',
+    body: req.body
+  });
+});
+
+// Add a root route for simple server verification
+app.get('/', (req, res) => {
+  res.send('Socket server is running. Use /api/ping to test API connectivity.');
 });
 
 // File upload endpoint

@@ -575,8 +575,8 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
                           </Badge>
                         </div>
                         
-                        {group.messages.map(message => (
-                          <div key={message._id} className="mb-4" id={`message-${message._id}`}>
+                        {group.messages.map((message, index) => (
+                          <div key={`${message._id}-${index}`} className="mb-4" id={`message-${message._id}`}>
                             <MessageBubble
                               message={message}
                               currentUserId={userId}

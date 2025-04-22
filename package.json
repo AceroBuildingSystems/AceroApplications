@@ -5,9 +5,9 @@
   "scripts": {
     "dev": "npx next dev -H 0.0.0.0 --turbo",
     "build": "next build",
-    "dev:socket": "rmdir .next /q /s && concurrently --kill-others \"npm run dev\" \"npm run socket\"",
+    "dev:socket": "rmdir .next /q /s && concurrently --kill-others \"npm run dev -H 0.0.0.0\" \"npm run socket\"",
     "socket": "node ./src/server/socket-server.js",
-    "start": "concurrently --kill-others \"next start\" \"npm run socket\"",
+    "start": "concurrently --kill-others \"next start -H 0.0.0.0\" \"npm run socket\"",
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",

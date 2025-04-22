@@ -10,6 +10,7 @@ import { employeeType } from "./master/employeeType.types";
 import { team } from "./master/team.types";
 import { teamMember } from "./master/teamMember.types";
 import { unitMeasurement } from "./master/unitMeasurement.types";
+import { group } from "./sml/group.types";
 
 export type {
   UserDocument,
@@ -23,5 +24,6 @@ export type {
   employeeType,
   team,
   teamMember,
-  unitMeasurement
+  unitMeasurement,
+  group
 };

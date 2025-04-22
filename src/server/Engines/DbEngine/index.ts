@@ -30,7 +30,7 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   TicketComment,
   TicketTask,
   TicketHistory,
-  UserSkill, TeamRole
+  UserSkill, TeamRole, SmlGroup
 } from '@/models';
 
 
@@ -89,7 +89,8 @@ function getMongooseAdapter(): MongooseAdapter {
     TICKET_TASK_MASTER: TicketTask, 
     TICKET_HISTORY_MASTER: TicketHistory,
     USER_SKILL_MASTER: UserSkill,
-    TEAM_ROLE_MASTER: TeamRole
+    TEAM_ROLE_MASTER: TeamRole,
+    SML_GROUP_MASTER: SmlGroup,
     });
   }
   return dbEngineInstance;

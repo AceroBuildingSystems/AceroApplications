@@ -6,7 +6,6 @@ import { SignupForm } from "@/components/ui/SignUpForm";
 import AuthComponent from "@/components/AuthComponent/AuthComponent";
 
 
-
 const LoginPage: FC = () => {
   const [customLoadingState, setCustomLoadingState] = useState(false);
 

@@ -44,18 +44,18 @@ const page = () => {
         value: option?._id, // Unique ID as value
     }));
 
-    const formattedUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
-        label: option?.shortName?.toProperCase(), // Display name
+    const formattedUserData = userData?.data?.map((option: { displayName: string; _id: any; }) => ({
+        label: option?.displayName?.toProperCase(), // Display name
         value: option?._id, // Unique ID as value
     }));
 
-    const transformUserData = userData?.data?.map((option: { shortName: string; _id: any; }) => ({
-        name: option?.shortName?.toProperCase(), // Display name
+    const transformUserData = userData?.data?.map((option: { displayName: string; _id: any; }) => ({
+        name: option?.displayName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
     }));
 
     const fieldsToAdd = [
-        { fieldName: 'name', path: ['user', 'shortName'] }
+        { fieldName: 'name', path: ['user', 'displayName'] }
     ];
     const transformedData = transformData(teamMemberData?.data, fieldsToAdd);
 
@@ -168,9 +168,9 @@ const page = () => {
            console.log(teamMemberData?.data);
         const formattedData = teamMemberData?.data.map((data: any) => {
             return {
-                User: data?.user?.shortName,
+                User: data?.user?.displayName,
                 'Team Role': data?.teamRole[0]?.name,
-                'Reporting To':data?.teamReportingTo[0]?.shortName,
+                'Reporting To':data?.teamReportingTo[0]?.displayName,
                 Team:data?.team?.name,
 
             };
@@ -220,7 +220,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("user")?.shortName?.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("user")?.displayName?.toProperCase()}</div>,
         },
         {
             accessorKey: "teamRole",
@@ -248,7 +248,7 @@ const page = () => {
                     <ArrowUpDown size={15} /> {/* Sorting Icon */}
                 </button>
             ),
-            cell: ({ row }: { row: any }) => <div className='' >{row?.getValue("teamReportingTo")?.[0]?.shortName?.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div className='' >{row?.getValue("teamReportingTo")?.[0]?.displayName?.toProperCase()}</div>,
         },
         {
             accessorKey: "team",

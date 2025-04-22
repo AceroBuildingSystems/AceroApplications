@@ -26,7 +26,7 @@ export const createSidebarMenuData = (data: any) => {
     }
 
     const user = {
-        name: data.shortName,
+        name: data.displayName,
         email: data.email,
         avatar: data.imageUrl || "",
     };
@@ -449,7 +449,7 @@ const fieldMappingConfig: { [key: string]: any } = {
         employeeType: { source: "employeeTypeData", key: "name", value: "_id" },
         organisation: { source: "locationData", key: "name", value: "_id" },
         activeLocation: { source: "locationData", key: "name", value: "_id" },
-        reportingTo: { source: "userData", key: "shortName", value: "_id" },
+        reportingTo: { source: "userData", key: "displayName", value: "_id" },
 
     },
     Region: {
@@ -466,48 +466,48 @@ const fieldMappingConfig: { [key: string]: any } = {
         quoteStatus: { source: "quoteStatusData", key: "name", value: "_id" },
         salesEngineer: {
             source: "teamMemberData",
-            key: "user.shortName", // Accessing shortName from the User table via TeamMember
+            key: "user.displayName", // Accessing displayName from the User table via TeamMember
             value: "_id",
             transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
-                    return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
+                    return member.user?.displayName?.trim().toLowerCase() === name.trim().toLowerCase();
                 });
                 return found ? found._id : null;
             }
         },
         salesSupportEngineer1: {
             source: "teamMemberData",
-            key: "user.shortName", // Accessing shortName from the User table via TeamMember
+            key: "user.displayName", // Accessing displayName from the User table via TeamMember
             value: "_id",
             transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
-                    return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
+                    return member.user?.displayName?.trim().toLowerCase() === name.trim().toLowerCase();
                 });
                 return found ? found._id : null;
             }
         },
         salesSupportEngineer2: {
             source: "teamMemberData",
-            key: "user.shortName", // Accessing shortName from the User table via TeamMember
+            key: "user.displayName", // Accessing displayName from the User table via TeamMember
             value: "_id",
             transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
-                    return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
+                    return member.user?.displayName?.trim().toLowerCase() === name.trim().toLowerCase();
                 });
                 return found ? found._id : null;
             }
         },
         salesSupportEngineer3: {
             source: "teamMemberData",
-            key: "user.shortName", // Accessing shortName from the User table via TeamMember
+            key: "user.displayName", // Accessing displayName from the User table via TeamMember
             value: "_id",
             transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
-                    return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
+                    return member.user?.displayName?.trim().toLowerCase() === name.trim().toLowerCase();
                 });
                 return found ? found._id : null;
             }
@@ -528,12 +528,12 @@ const fieldMappingConfig: { [key: string]: any } = {
         incoterm: { source: "incotermData", key: "name", value: "_id" },
         handleBy: {
             source: "teamMemberData",
-            key: "user.shortName", // Accessing shortName from the User table via TeamMember
+            key: "user.displayName", // Accessing displayName from the User table via TeamMember
             value: "_id",
             transform: (name: string, teamMemberData: any[]) => {
                 if (!name || !Array.isArray(teamMemberData)) return null;
                 const found = teamMemberData.find(member => {
-                    return member.user?.shortName?.trim().toLowerCase() === name.trim().toLowerCase();
+                    return member.user?.displayName?.trim().toLowerCase() === name.trim().toLowerCase();
                 });
                 return found ? found._id : null;
             }
@@ -713,7 +713,7 @@ const entityFieldMappings = {
         "First Name": "firstName",
         "Last Name": "lastName",
         "Email": "email",
-        "Display Name": "shortName",
+        "Display Name": "displayName",
         "Department": "department",
         "Designation": "designation",
         "Employee Type": "employeeType",

@@ -34,10 +34,10 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                     role="combobox"
                     aria-expanded={open}
                     className={`w-full justify-between ${(field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name || selectedValue ||
-                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.shortName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
+                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.displayName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
                 >
                     {field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.shortName || selectedValue ||
+                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName || selectedValue ||
                         placeholder}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
@@ -74,7 +74,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                 All
                             </CommandItem>
 
-                            {field?.data?.map((data: { _id: React.Key | null | undefined; name: string | undefined; shortName: any }) => (
+                            {field?.data?.map((data: { _id: React.Key | null | undefined; name: string | undefined; displayName: any }) => (
                                 <CommandItem
                                     className="cursor-pointer"
                                     key={data._id}
@@ -103,7 +103,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                             (formData[field.name] === data._id || selectedValue === data._id) ? "opacity-100" : "opacity-0"
                                         )}
                                     />
-                                    {data.name || data.shortName}
+                                    {data.name || data.displayName}
                                 </CommandItem>
                             ))}
                         </CommandGroup>

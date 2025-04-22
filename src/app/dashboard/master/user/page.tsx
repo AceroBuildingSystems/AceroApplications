@@ -89,7 +89,7 @@ const page = () => {
     { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
     { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
-    { label: 'Display Name', name: "shortName", type: "text", required: true, placeholder: 'Display Name' },
+    { label: 'Display Name', name: "displayName", type: "text", required: true, placeholder: 'Display Name' },
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department' },
 
     { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
@@ -230,18 +230,18 @@ const page = () => {
     },
 
     {
-      accessorKey: "shortName",
+      accessorKey: "displayName",
       header: ({ column }: { column: any }) => (
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Employee Name</span> {/* Label */}
+          <span>Display Name</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("shortName")}</div>,
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("displayName")}</div>,
     },
     {
       accessorKey: "department",

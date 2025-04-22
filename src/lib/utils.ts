@@ -46,7 +46,7 @@ export const transformQuoteData = (data: any[], user: { _id: any; role: { name: 
   }
   const transformData = data.reduce((acc, obj) => {
     
-        acc.push({...obj, region: obj?.country?.region?.continent?.name, area:obj?.country?.region?.name, salesEngineerName:obj?.salesEngineer?.user?.shortName,salesSupportEngineerName:obj?.salesSupportEngineer[0]?.user?.shortName});
+        acc.push({...obj, region: obj?.country?.region?.continent?.name, area:obj?.country?.region?.name, salesEngineerName:obj?.salesEngineer?.user?.displayName,salesSupportEngineerName:obj?.salesSupportEngineer[0]?.user?.displayName});
     return acc;
 }, []);
   const userId = user?._id;
@@ -100,10 +100,10 @@ export const transformDataForExcel = (data: any[]) => {
     "Quote Rev": item.revNo.toString(),
     "Quote Status": item.quoteStatus?.name || '',
     "Date Received From Customer": item.rcvdDateFromCustomer ? moment(item.rcvdDateFromCustomer).format("DD-MMM-YYYY") : '',
-    "Sales Eng/Mng": item.salesEngineer?.user?.shortName?.toProperCase() || '',
-    "Sales Support 1": item.salesSupportEngineer?.[0]?.user?.shortName?.toProperCase() || '',
-    "Sales Support 2": item.salesSupportEngineer?.[1]?.user?.shortName?.toProperCase() || '',
-    "Sales Support 3": item.salesSupportEngineer?.[2]?.user?.shortName?.toProperCase() || '',
+    "Sales Eng/Mng": item.salesEngineer?.user?.displayName?.toProperCase() || '',
+    "Sales Support 1": item.salesSupportEngineer?.[0]?.user?.displayName?.toProperCase() || '',
+    "Sales Support 2": item.salesSupportEngineer?.[1]?.user?.displayName?.toProperCase() || '',
+    "Sales Support 3": item.salesSupportEngineer?.[2]?.user?.displayName?.toProperCase() || '',
     "Customer Name": item.company?.name || '',
     "Contact Name": item.contact?.name || '',
     "Contact Email": item.contact?.email || '',

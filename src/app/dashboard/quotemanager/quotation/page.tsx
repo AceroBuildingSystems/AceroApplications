@@ -169,32 +169,32 @@ const page = () => {
         return acc;
     }, []);
 
-    const salesEngineerNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { salesEngineer: { _id: string; user: { shortName: string } } }) => {
+    const salesEngineerNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { salesEngineer: { _id: string; user: { displayName: string } } }) => {
         const { _id, user } = quotation?.salesEngineer;
-        const shortName = user?.shortName?.toProperCase();
+        const displayName = user?.displayName?.toProperCase();
         // Check if the sales engineer's id is not already in the accumulator
         if (_id && user) {
             // Use a Set to track seen _id values
             if (!acc.seen.has(_id)) {
                 acc.seen.add(_id); // Add the _id to the Set
-                acc.result.push(shortName); // Add the country object to the result
+                acc.result.push(displayName); // Add the country object to the result
             }
         }
 
         return acc;
     }, { seen: new Set(), result: [] }).result;
 
-    const salesSupportEngineerNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { salesSupportEngineer: Array<{ _id: string; user: { shortName: string } }> }) => {
+    const salesSupportEngineerNames = quotationDataNew?.reduce((acc: { seen: Set<string>; result: any[] }, quotation: { salesSupportEngineer: Array<{ _id: string; user: { displayName: string } }> }) => {
         // Ensure we're accessing the first element of the salesSupportEngineer array
         const { _id, user } = quotation?.salesSupportEngineer[0] || {};
-        const shortName = user?.shortName?.toProperCase();
+        const displayName = user?.displayName?.toProperCase();
 
-        // Check if _id and shortName are valid
-        if (_id && shortName) {
+        // Check if _id and displayName are valid
+        if (_id && displayName) {
             // Check if the _id is not already in the accumulator (via Set for uniqueness)
             if (!acc.seen.has(_id)) {
                 acc.seen.add(_id); // Add _id to the Set
-                acc.result.push(shortName); // Add the proper shortName to the result
+                acc.result.push(displayName); // Add the proper displayName to the result
             }
         }
 
@@ -302,30 +302,30 @@ const page = () => {
     const teamId = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.team?._id;
     const teamRole = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
 
-    let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; teamRole: { name: string }[]; }) => data?.team?._id === teamId && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
-        name: option?.user?.shortName?.toProperCase(), // Display name
+    let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; teamRole: { name: string }[]; }) => data?.team?._id === teamId && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { displayName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
+        name: option?.user?.displayName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
         team: option?.team?._id,
-        teamHead: option?.team?.teamHead[0]?.shortName.toProperCase(),
+        teamHead: option?.team?.teamHead[0]?.displayName.toProperCase(),
         email: option?.team?.teamHead[0]?.email
     }));
 
     if (teamRole === 'Engineer') {
-        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; teamRole: { name: string }[]; }) => data?.user?._id === user?._id && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
-            name: option?.user?.shortName?.toProperCase(), // Display name
+        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; teamRole: { name: string }[]; }) => data?.user?._id === user?._id && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { displayName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
+            name: option?.user?.displayName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
-            teamHead: option?.team?.teamHead[0]?.shortName.toProperCase(),
+            teamHead: option?.team?.teamHead[0]?.displayName.toProperCase(),
             email: option?.team?.teamHead[0]?.email
         }));
     }
 
     if (user?.role?.name === 'Admin') {
-        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; teamRole: { name: string }[]; }) => data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { shortName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
-            name: option?.user?.shortName?.toProperCase(), // Display name
+        salesEngData = teamMemberData?.data?.filter((data: { user: { _id: any; }; teamRole: { name: string }[]; }) => data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { displayName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
+            name: option?.user?.displayName?.toProperCase(), // Display name
             _id: option?._id, // Unique ID as value
             team: option?.team?._id,
-            teamHead: option?.team?.teamHead[0]?.shortName.toProperCase(),
+            teamHead: option?.team?.teamHead[0]?.displayName.toProperCase(),
             email: option?.team?.teamHead[0]?.email
         }));
     }
@@ -443,8 +443,8 @@ const page = () => {
 
             case "salesEngineer":
                 const teamId1 = teamMemberData?.data?.filter((data: { _id: any; }) => data?._id === id)?.[0]?.team?._id;
-                const formattedTeamMemberData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === teamId1)?.map((option: { user: { shortName: string; }; _id: any; }) => ({
-                    label: option?.user?.shortName?.toProperCase(), // Display name
+                const formattedTeamMemberData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === teamId1)?.map((option: { user: { displayName: string; }; _id: any; }) => ({
+                    label: option?.user?.displayName?.toProperCase(), // Display name
                     value: option?._id, // Unique ID as value
                 }));
 
@@ -656,8 +656,8 @@ const page = () => {
         setStateData(stateData1);
 
 
-        const formattedTeamMemberData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === rowData?.sellingTeam?._id)?.map((option: { user: { shortName: string; }; _id: any; }) => ({
-            label: option?.user?.shortName?.toProperCase(), // Display name
+        const formattedTeamMemberData = teamMemberData?.data?.filter((data: { team: { _id: any; }; }) => data?.team?._id === rowData?.sellingTeam?._id)?.map((option: { user: { displayName: string; }; _id: any; }) => ({
+            label: option?.user?.displayName?.toProperCase(), // Display name
             value: option?._id, // Unique ID as value
         }));
 
@@ -888,7 +888,7 @@ const page = () => {
                         <ArrowUpDown size={15} /> {/* Sorting Icon */}
                     </button>
                 ),
-                cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find((data: { _id: any; }) => data._id === row.getValue("salesEngineer")?._id)?.user?.shortName.toProperCase()}</div>,
+                cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find((data: { _id: any; }) => data._id === row.getValue("salesEngineer")?._id)?.user?.displayName.toProperCase()}</div>,
             },)
         };
         columns.push({

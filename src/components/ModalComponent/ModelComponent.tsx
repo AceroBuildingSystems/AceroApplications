@@ -189,7 +189,7 @@ function DynamicDialog<T extends BaseFormData>({
 
   // Handle form submission
   const handleSubmit = async (status:string) => {
-    if (!validateForm()) {
+    if (!validateForm() && action === "Add") {
       toast.error("Please fix the form errors before submitting");
       return;
     }

@@ -32,7 +32,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 
 const Access = () => {
-  const { data: accessData = [], isLoading: accessDataLoading }: any = useGetMasterQuery({ db: "ACCESS_MASTER", sort: { name: 'asc' }, });
+  const { data: accessData = [], isLoading: accessDataLoading }: any = useGetMasterQuery({ db: "ACCESS_MASTER",filter: { isActive: true }, sort: { name: 'asc' }, });
   const [updateUser, { isLoading: updateUserAccessLoading }]: any = useUserOperationsMutation();
   const { data: userData = [], isLoading: userDataLoading, refetch: refetchUsers }: any = useGetUsersQuery();
   const [distinctParentData, setDistinctParentData] = useState([]);

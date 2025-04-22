@@ -105,7 +105,6 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
             return matchesSearch && matchesFilter;
         });
-
         setFilteredData(filtered); // Update filtered data state
     };
 

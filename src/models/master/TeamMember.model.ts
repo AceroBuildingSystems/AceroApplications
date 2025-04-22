@@ -10,7 +10,7 @@ const TeamMemberSchema: Schema<teamMember> = new Schema({
     },
     teamRole:[{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Role",
+        ref: "TeamRole",
         autopopulate: true, // Automatically populate this field
     }],
     teamReportingTo:[{

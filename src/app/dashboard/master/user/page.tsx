@@ -29,7 +29,7 @@ const page = () => {
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
-    sort: { empId:'asc' },
+    sort: { empId: 'asc' },
   });
 
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
@@ -40,7 +40,12 @@ const page = () => {
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
     db: 'DESIGNATION_MASTER',
   });
-  const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER" });
+  const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({
+      db: 'ROLE_MASTER',
+      sort: { name: 'asc' },
+      filter: { isActive: true },
+    });
+  // const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER", filter: { isActive: true }, sort: { name: 'asc' } });
   const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER' });
   const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({ db: "ORGANISATION_MASTER" });
   const [createUser, { isLoading: isCreatingUser }]: any = useUserOperationsMutation();
@@ -64,13 +69,13 @@ const page = () => {
     ?.map((role: { _id: any; name: any }) => ({ _id: role.name, name: role.name }));
   // Extract only the 'name' property
   const depNames = departmentData?.data
-  ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
-  ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
+    ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
+    ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
 
 
   const orgNames = organisationData?.data
-  ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
-  ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
+    ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
+    ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
   interface RowData {
     id: string;
@@ -80,22 +85,27 @@ const page = () => {
   }
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-    { label: 'Employee ID', name: "empId", type: "text", required: true, placeholder: 'Employee ID' },
+    { label: 'Employee ID', name: "empId", type: "number", required: true, placeholder: 'Employee ID' },
     { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
     { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
-    { label: 'Short Name', name: "shortName", type: "text", required: true, placeholder: 'Short Name' },
-    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
+    { label: 'Display Name', name: "shortName", type: "text", required: true, placeholder: 'Display Name' },
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department' },
-    { label: 'Email', name: "email", type: "text", required: true, placeholder: 'Email' },
+
+    { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
     { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data, required: true, placeholder: 'Select Reporting To' },
-    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
-    { label: 'Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
-    { label: 'Extension', name: "extension", type: "text", placeholder: 'Extension' },
-    { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+    { label: 'Email', name: "email", type: "email", required: true, placeholder: 'Email' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
-    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
+   
+     { label: 'Reporting Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Active Location', name: "activeLocation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
+   
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+ 
+    { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
+    { label: 'Mobile', name: "mobile", type: "number", placeholder: 'Mobile' },
+       { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
   ]
 
@@ -145,6 +155,7 @@ const page = () => {
 
   const editUser = (rowData: RowData) => {
     setAction('Update');
+    
     setInitialData(rowData);
     openDialog("employee");
     // Your add logic for user page
@@ -157,7 +168,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: organisationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [],designationData:designationData, departmentData:departmentData, employeeTypeData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
   };
 
   const exportToExcel = (data: any[]) => {
@@ -183,11 +194,11 @@ const page = () => {
 
   const handleExport = (type: string, data: any) => {
     if (type === 'excel') {
-        exportToExcel(data);
+      exportToExcel(data);
     } else if (type === 'pdf') {
-        exportToPDF(data);
+      exportToPDF(data);
     }
-};
+  };
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
@@ -233,34 +244,34 @@ const page = () => {
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("shortName")}</div>,
     },
     {
-          accessorKey: "department",
-          header: ({ column }: { column: any }) => (
-            <button
-              className="flex items-center space-x-2"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    
-            >
-              <span>Department</span> {/* Label */}
-              <ArrowUpDown size={15} /> {/* Sorting Icon */}
-            </button>
-          ),
-          cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
-        },
+      accessorKey: "department",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-        {
-          accessorKey: "designation",
-          header: ({ column }: { column: any }) => (
-            <button
-              className="flex items-center space-x-2"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    
-            >
-              <span>Designation</span> {/* Label */}
-              <ArrowUpDown size={15} /> {/* Sorting Icon */}
-            </button>
-          ),
-          cell: ({ row }: { row: any }) => <div>{row.getValue("designation")?.name}</div>,
-        },
+        >
+          <span>Department</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
+    },
+
+    {
+      accessorKey: "designation",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>Designation</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div>{row.getValue("designation")?.name}</div>,
+    },
     {
       accessorKey: "email",
       header: ({ column }: { column: any }) => (
@@ -275,18 +286,18 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{row.getValue("email")}</div>,
     },
-    
+
   ];
 
   const userConfig = {
     searchFields: [
       { key: "name", label: 'fullName', type: "text" as const, placeholder: 'Search by name' },
-     
+
     ],
     filterFields: [
-    
-      { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name:'departmentName' },
-      { key: "organisation", label: 'locationName', type: "select" as const, data: orgNames, placeholder: 'Search by Location', name:'locationName' },
+
+      { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name: 'departmentName' },
+      { key: "organisation", label: 'locationName', type: "select" as const, data: orgNames, placeholder: 'Search by Location', name: 'locationName' },
     ],
     dataTable: {
       columns: userColumns,

@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 import { toast } from 'react-toastify';
 import { SUCCESS } from '@/shared/constants';
 import moment from 'moment';
+import { Department, Organisation } from '@/models';
 
 
 export const createMongooseObjectId = (id: any) => {
@@ -88,9 +89,12 @@ interface BulkImportParams {
     createUser: (data: any) => Promise<any>;
     db: string;
     masterName: string;
+    designationData: any;
+    departmentData: any;
+    employeeTypeData: any;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData,userData,teamData, action, user, createUser, db, masterName }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData,userData,teamData,designationData, departmentData, employeeTypeData, action, user, createUser, db, masterName }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -119,7 +123,12 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 productData: productData?.data || [],
                 warehouseData: warehouseData?.data || [],
                 customerTypeData: customerTypeData?.data || [],
-                customerData: customerData?.data || []
+                customerData: customerData?.data || [],
+                userData: userData?.data || [],
+                designationData: designationData?.data || [],
+                departmentData: departmentData?.data || [],
+                employeeTypeData: employeeTypeData?.data || [],
+                teamData: teamData?.data || [],
             };
 
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
@@ -164,7 +173,11 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
             // Send the transformed data for bulk insert
             try {
+console.log(enrichedData);
 
+console.log(enrichedData, "data")
+
+return;
                 const formattedData = {
                     action: action === 'Add' ? 'create' : 'update',
                     db: db,
@@ -431,6 +444,13 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
 const fieldMappingConfig: { [key: string]: any } = {
     User: {
         role: { source: "roleData", key: "name", value: "_id" },
+        department: { source: "departmentData", key: "name", value: "_id" },
+        designation: { source: "designationData", key: "name", value: "_id" },
+        employeeType: { source: "employeeTypeData", key: "name", value: "_id" },
+        organisation: { source: "locationData", key: "name", value: "_id" },
+        activeLocation: { source: "locationData", key: "name", value: "_id" },
+        reportingTo: { source: "userData", key: "shortName", value: "_id" },
+
     },
     Region: {
         continent: { source: "continentData", key: "name", value: "_id" },
@@ -693,7 +713,18 @@ const entityFieldMappings = {
         "First Name": "firstName",
         "Last Name": "lastName",
         "Email": "email",
+        "Display Name": "shortName",
+        "Department": "department",
+        "Designation": "designation",
+        "Employee Type": "employeeType",
+        "Reporting To": "reportingTo",
+        "Reporting Location": "organisation",
+        "Active Location": "activeLocation",
         "Role": "role",
+        "Extension": "extension",
+        "Mobile": "mobile",
+        "Joining Date": "joiningDate",
+        "Relieving Date": "relievingDate",
         // Add more mappings for users
     },
     Department: {

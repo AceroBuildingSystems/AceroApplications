@@ -29,7 +29,7 @@ const page = () => {
     });
     const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.USER_MASTER, sort: { name: 'asc' }, });
 
-    const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.ROLE_MASTER, sort: { name: 'asc' }, });
+    const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.TEAM_ROLE_MASTER, sort: { name: 'asc' }, });
 
     const { data: teamData = [], isLoading: teamLoading }: any = useGetMasterQuery({ db: MONGO_MODELS.TEAM_MASTER, sort: { name: 'asc' }, });
 
@@ -69,7 +69,7 @@ const page = () => {
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
         { label: 'Team Member', name: "user", type: "select", required: true, placeholder: 'Select Team Member', format: 'ObjectId', data: transformUserData },
-        { label: 'Role', name: "teamRole", type: "multiselect", required: true, placeholder: 'Select Role', data: formattedRoleData },
+        { label: 'Team Role', name: "teamRole", type: "multiselect", required: true, placeholder: 'Select Role', data: formattedRoleData },
         { label: 'Reporting To', name: "teamReportingTo", type: "multiselect", required: true, placeholder: 'Select Reporting To', data: formattedUserData },
         { label: 'Team', name: "team", type: "select", required: true, placeholder: 'Select Team', format: 'ObjectId', data: teamData?.data },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },

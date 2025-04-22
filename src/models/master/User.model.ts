@@ -68,6 +68,11 @@ const UserSchema: Schema<UserDocument> = new Schema({
         ref: "Organisation", // Reference to the Organisation model
         
     },
+    activeLocation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Organisation", // Reference to the Organisation model
+        
+    },
 }, { timestamps: true })
 
 UserSchema.pre('save', async function (next) {

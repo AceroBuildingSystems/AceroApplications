@@ -48,6 +48,7 @@ import TicketHistory from "./ticket/TicketHistory.model";
 import UserSkill from "./ticket/UserSkill.model";
 import TeamRole from "./master/TeamRole.model";
 import SmlGroup from "./sml/Group.model";
+import SmlSubGroup from "./sml/SmlSubGroup.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -66,4 +67,5 @@ export {
     UserSkill,
     TeamRole,
     SmlGroup,
+    SmlSubGroup
 }

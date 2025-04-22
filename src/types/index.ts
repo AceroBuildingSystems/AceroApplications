@@ -11,6 +11,8 @@ import { team } from "./master/team.types";
 import { teamMember } from "./master/teamMember.types";
 import { unitMeasurement } from "./master/unitMeasurement.types";
 import { group } from "./sml/group.types";
+import { smlsubgroup } from "./sml/subgroup.types";
+import { smlfile } from "./sml/smlfile.types";
 
 export type {
   UserDocument,
@@ -25,5 +27,7 @@ export type {
   team,
   teamMember,
   unitMeasurement,
-  group
+  group,
+  smlsubgroup,
+  smlfile
 };

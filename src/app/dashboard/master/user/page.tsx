@@ -20,7 +20,7 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-
+import moment from 'moment';
 
 
 const page = () => {
@@ -109,7 +109,6 @@ const page = () => {
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
   ]
 
-
   const [isDialogOpen, setDialogOpen] = useState(false);
   const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
   const [initialData, setInitialData] = useState({});
@@ -171,34 +170,67 @@ const page = () => {
     bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: organisationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
   };
 
-  const exportToExcel = (data: any[]) => {
-    // Convert JSON data to a worksheet
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    // Create a new workbook
-    const workbook = XLSX.utils.book_new();
-    // Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    // Write the workbook and trigger a download
-    XLSX.writeFile(workbook, 'exported_data.xlsx');
-  };
+  const handleExport = (type: string) => {
+   let formattedData: any[] = [];
+ 
+   if (transformedData?.length > 0) {
+     formattedData = transformedData?.map((data: any) => ({
+       'Employee ID': data?.empId,
+       'First Name': data?.firstName,
+       'Last Name': data?.lastName,
+       'Full Name': data?.fullName,
+        'Display Name': data?.displayName,
+        'Email': data?.email,
+        'Department': data?.department?.name,
+        'Designation': data?.designation?.name,
+        'Reporting To': transformedData.find((user: any) => user.reportingTo === data?.reportingTo)?.displayName,
+        'Employee Type': data?.employeeType?.name,
+        
+        'Role': data?.role?.name,
+        'Reporting Location': data?.organisation?.name,
+        'Active Location': data?.activeLocation?.name,
+        'Extension': data?.extension,
+        'Mobile': data?.mobile,
+        'Joining Date': moment(data?.joiningDate).format('DD/MM/YYYY'),
 
-  const exportToPDF = (data: any[]) => {
-    const doc = new jsPDF();
-    doc.text('Exported Data', 14, 10);
-
-    const tableColumns = Object.keys(data[0] || {});
-    const tableRows = data.map((item) => tableColumns.map((key) => item[key]));
-
-    doc.save('exported_data.pdf');
-  };
-
-  const handleExport = (type: string, data: any) => {
-    if (type === 'excel') {
-      exportToExcel(data);
-    } else if (type === 'pdf') {
-      exportToPDF(data);
-    }
-  };
+     }));
+   } else {
+     // Create a single empty row with keys only (for header export)
+     formattedData = [{
+       'Employee ID': '',
+       'First Name': '',
+       'Last Name': '',
+       'Full Name': '',
+        'Display Name': '',
+        'Email': '',
+        'Department': '',
+        'Designation': '',
+        'Reporting To': '',
+        'Employee Type': '',
+        
+        'Role': '',
+        'Reporting Location': '',
+        'Active Location': '',
+        'Extension': '',
+        'Mobile': '',
+        'Joining Date': '',
+     }];
+   }
+ 
+         type === 'excel' && exportToExcel(formattedData);
+ 
+     };
+ 
+     const exportToExcel = (data: any[]) => {
+         // Convert JSON data to a worksheet
+         const worksheet = XLSX.utils.json_to_sheet(data);
+         // Create a new workbook
+         const workbook = XLSX.utils.book_new();
+         // Append the worksheet to the workbook
+         XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+         // Write the workbook and trigger a download
+         XLSX.writeFile(workbook, 'exported_data.xlsx');
+     };
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');

@@ -22,45 +22,25 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
 
 const page = () => {
-    // const [basePath, setBasePath] = useState('//ABSSRVAPP01/Test');
-    // const [files, setFiles] = useState([]);
-  
-    // const loadFiles = async () => {
-    //   const res = await fetch('/api/sml', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ basePath }),
-    //   });
-    //   const data = await res.json();
-    // console.log(res)
-    //   if (res.ok) {
-    //     setFiles(data.files);
-    //   } else {
-    //     alert(data.error);
-    //   }
-    // };
-
-    // useEffect(() => {
-    //     console.log(basePath)
-    //     if (basePath) {
-    //       loadFiles();
-    //     }
-    //   }, [basePath]);
-
-    //   console.log(files)
-
+   
     const { user, status, authenticated } = useUserAuthorised();
     const { data: groupData = [], isLoading: groupLoading }: any = useGetMasterQuery({
       db: MONGO_MODELS.SML_GROUP_MASTER,
       sort: { name: 'asc' },
       filter: { isActive: true }
     });
+
+    const { data: subGroupData = [], isLoading: subGroupLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.SML_SUB_GROUP_MASTER,
+        sort: { name: 'asc' },
+        filter: { isActive: true }
+      });
   
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
   
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
   
-    const loading = groupLoading;
+    const loading = groupLoading|| subGroupLoading;
   
     interface RowData {
       id: string;
@@ -71,7 +51,8 @@ const page = () => {
   
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
   
-      { label: 'Category Name', name: "name", type: "text", required: true, placeholder: 'Group Name' },
+      { label: 'Sub Category Name', name: "name", type: "text", required: true, placeholder: 'Sub Category Name' },
+      { label: 'Category', name: "group", type: "select",required: true, data: groupData?.data, placeholder:'Select Category' },
       { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
   
     ]
@@ -98,7 +79,7 @@ const page = () => {
     const saveData = async ({ formData, action }: { formData: any; action: string }) => {
   
       const formattedData = {
-        db: MONGO_MODELS.SML_GROUP_MASTER,
+        db: MONGO_MODELS.SML_SUB_GROUP_MASTER,
         action: action === 'Add' ? 'create' : 'update',
         filter: { "_id": formData._id },
         data: formData,
@@ -112,14 +93,14 @@ const page = () => {
     const editUser = (rowData: RowData) => {
       setAction('Update');
       setInitialData(rowData);
-      openDialog("category");
+      openDialog("Sub Category");
       // Your add logic for user page
     };
   
     const handleAdd = () => {
       setInitialData({});
       setAction('Add');
-      openDialog("category");
+      openDialog("Sub Category");
   
     };
   
@@ -169,11 +150,25 @@ const page = () => {
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
   
           >
-            <span>Category Name</span> {/* Label */}
+            <span>Sub Group Name</span> {/* Label */}
             <ArrowUpDown size={15} /> {/* Sorting Icon */}
           </button>
         ),
         cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+      },
+      {
+        accessorKey: "group",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  
+          >
+            <span>Group Name</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("group")?.name}</div>,
       },
       {
         accessorKey: "isActive",
@@ -194,7 +189,7 @@ const page = () => {
   
     const groupConfig = {
       searchFields: [
-        { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by category' },
+        { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by sub category' },
   
       ],
       filterFields: [
@@ -203,7 +198,7 @@ const page = () => {
       ],
       dataTable: {
         columns: groupColumns,
-        data: groupData?.data,
+        data: subGroupData?.data,
       },
       buttons: [
   

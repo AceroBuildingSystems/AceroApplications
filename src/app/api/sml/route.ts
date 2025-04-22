@@ -1,45 +1,66 @@
-// src/app/api/sml/route.ts
-import fs from 'fs';
-import path from 'path';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { Readable } from 'stream';
+import mongoose from 'mongoose';
+import SmlFile from '@/models/sml/SMLFile.model';
+import { createMongooseObjectId } from '@/shared/functions';
+import connectToDatabase from '@/lib/db';
+import { applicationdataManager } from '@/server/managers/applicationManager';
+import { SUCCESS, ERROR, INVALID_REQUEST } from '@/shared/constants';
 
-export async function POST(req: NextRequest) {
-  try {
-    const { basePath } = await req.json();
+const mongoURI = process.env.MONGODB_URI!;
+const conn = mongoose.createConnection(mongoURI);
 
-    const groupDirs = fs.readdirSync(basePath, { withFileTypes: true }).filter(d => d.isDirectory());
+export const POST = async (req: NextRequest) => {
+  await dbConnect();
 
-    const filesData:any = [];
+  const formData = await req.formData();
+  const subGroup = formData.get('subGroup')?.toString();
+  const revNo = parseInt(formData.get('revNo')?.toString() ?? '1');
+  const db = formData.get('db')?.toString();
+  const addedBy = formData.get('addedBy')?.toString();
+  const updatedBy = formData.get('updatedBy')?.toString();
 
-    groupDirs.forEach(group => {
-      const groupPath = path.join(basePath, group.name);
-      const subGroupDirs = fs.readdirSync(groupPath, { withFileTypes: true }).filter(d => d.isDirectory());
+  const files = formData.getAll('files') as File[];
 
-      subGroupDirs.forEach(subGroup => {
-        const subGroupPath = path.join(groupPath, subGroup.name);
-        const files = fs.readdirSync(subGroupPath);
-
-        files.forEach(file => {
-          const filePath = path.join(subGroupPath, file);
-          const stats = fs.statSync(filePath);
-
-          filesData.push({
-            fileName: file,
-            fileGroup: group.name,
-            fileSubGroup: subGroup.name,
-            fileSize: stats.size,
-            fileDate: stats.mtime,
-          });
-        });
-      });
-    });
-
-    return Response.json({ files: filesData });
-
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+  if (!db || !subGroup || !files.length || !addedBy || !updatedBy) {
+    return NextResponse.json({ status: ERROR, message: INVALID_REQUEST, data: {} }, { status: 400 });
   }
-}
+
+  const bucket = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: 'smlUploads' });
+  const results = [];
+
+  for (const file of files) {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const stream = Readable.from(buffer);
+    const uploadStream = bucket.openUploadStream(file.name, { contentType: file.type });
+
+    const uploadFinished = new Promise((resolve, reject) => {
+      stream.pipe(uploadStream)
+        .on('finish', async () => {
+          const fileData = {
+            fileName: file.name,
+            fileSize: file.size,
+            revNo,
+            subGroup,
+            fileId: uploadStream.id,
+            addedBy: createMongooseObjectId(addedBy),
+            updatedBy: createMongooseObjectId(updatedBy),
+          };
+
+          const result = await applicationdataManager.createApplicationData({
+            db,
+            action: "create",
+            data: fileData,
+          });
+
+          results.push(result);
+          resolve(true);
+        })
+        .on('error', reject);
+    });
+
+    await uploadFinished;
+  }
+
+  return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: results }, { status: 200 });
+};

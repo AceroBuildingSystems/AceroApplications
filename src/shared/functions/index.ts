@@ -5,10 +5,10 @@ import { MenuItemicons } from '../iconMaps';
 import { MenuItem } from '../types';
 import * as XLSX from "xlsx";
 import { toast } from 'react-toastify';
-import { SUCCESS } from '@/shared/constants';
+import { SUCCESS, ERROR } from '@/shared/constants';
 import moment from 'moment';
 import { Department, Organisation } from '@/models';
-
+import { copyToClipboard } from '@/utils/copyToClipboard';
 
 export const createMongooseObjectId = (id: any) => {
     if (mongoose.Types.ObjectId.isValid(id) && new mongoose.Types.ObjectId(id).toString() === id.toString()) {
@@ -95,7 +95,7 @@ interface BulkImportParams {
     organisationData: any;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData,userData,teamData,designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, teamData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -111,8 +111,31 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
             const sheetName = workbook.SheetNames[0];
             const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
+            if (!sheetData || sheetData.length === 0) {
+                toast.error("The uploaded Excel sheet is empty.");
+                return;
+            }
+
+            const expectedHeaders = Object.keys(entityFieldMappings[masterName as keyof typeof entityFieldMappings] || {});
+            const actualHeaders = Object.keys(sheetData[0] as Record<string, any>);
+
+            // ✅ Find missing columns
+            const missingHeaders = expectedHeaders.filter(header => !actualHeaders.includes(header));
+
+            if (missingHeaders.length > 0) {
+                toast.error(`Missing required columns in Excel: ${missingHeaders.join(", ")}`);
+                return;
+            }
+            if (missingHeaders.length > 0) {
+                toast.error(`Missing required columns: ${missingHeaders.join(', ')}`);
+                return;
+            }
+
             // Transform the sheet data based on the entity
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
+            const successful: any[] = [];
+            const skipped: any[] = [];
+
             const referenceData = {
                 roleData: roleData?.data || [],
                 continentData: continentData?.data || [],
@@ -182,29 +205,48 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
             // Send the transformed data for bulk insert
             try {
-
-
-                const formattedData = {
-                    action: action === 'Add' ? 'create' : 'update',
-                    db: db,
-                    bulkInsert: true,
-                    data: enrichedData,
-                };
-                const response = await createUser(formattedData);
-
-                if (response.data?.status === SUCCESS && action === 'Add') {
-                    toast.success(`${masterName} imported successfully`);
-
-                }
-                else {
-                    if (response.data?.status === SUCCESS && action === 'Update') {
-                        toast.success(`${masterName} updated successfully`);
+                for (const row of enrichedData) {
+                    try {
+                        const formattedData = {
+                            action: action === 'Add' ? 'create' : 'update',
+                            db: db,
+                            bulkInsert: false,
+                            data: row,
+                        };
+                        const response = await createUser(formattedData);// Replace this with your actual insert logic
+                        
+                        if (response?.error?.data?.status === ERROR) {
+                            skipped.push(row);
+                        }
+                        else{
+                            successful.push(row);
+                            
+                        }
+                        
+                    } catch (err: any) {
+                        
+                        const isDuplicate = err?.response?.status === 409 || err?.message?.toLowerCase().includes("duplicate");
+                        if (isDuplicate) {
+                            skipped.push(row);
+                        } else {
+                            console.error("Unexpected error:", err);
+                            toast.error("An unexpected error occurred during import.");
+                            return;
+                        }
                     }
                 }
 
-                if (response?.error?.data?.message?.message) {
-                    toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
+                if (successful.length > 0) {
+                    toast.success(`${successful.length} records imported successfully.`);
                 }
+               
+                if (skipped.length > 0) {
+                    const skippedCSV = convertToCSV(skipped);
+                    copyToClipboard(skippedCSV);
+                    toast.warning(`${skipped.length} duplicates were skipped and copied to clipboard.`);
+                }
+
+
             } catch (err: any) {
                 const errorMessage = err instanceof Error ? err.message : 'Unknown error';
                 toast.error(`Error during import: ${errorMessage}`);
@@ -214,6 +256,15 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
     };
     input.click();
 };
+
+function convertToCSV(data: any[]): string {
+    if (!data.length) return "";
+    const headers = Object.keys(data[0]);
+    const rows = data.map(row =>
+      headers.map(field => `${(row[field] ?? '').toString().replace(/\t/g, ' ')}`).join("\t")
+    );
+    return [headers.join("\t"), ...rows].join("\n");
+}
 
 interface BulkImportQuotationParams {
     roleData: any;
@@ -421,7 +472,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 });
                 // Proceed with bulk insert only if there are new records
                 console.log(uniqueDataToImport);
-                
+
                 if (uniqueDataToImport.length > 0) {
 
                     const quotationResponse = await createUser({
@@ -689,31 +740,31 @@ export const generateTicketId = async () => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}${month}${day}`;
-    
+
     // Get tickets from today to determine the sequence number
     const dbEngine = (await import('@/server/Engines/DbEngine')).dbEngine;
     const result = await dbEngine.mongooose.find('TICKET_MASTER', {
-      filter: {
-        ticketId: { $regex: `^TKT-${dateStr}` }
-      },
-      sort: { createdAt: 'asc' }
+        filter: {
+            ticketId: { $regex: `^TKT-${dateStr}` }
+        },
+        sort: { createdAt: 'asc' }
     });
-    
+
     // Determine the next sequence number
     let sequence = 1;
     if (result.status === 'SUCCESS' && result.data.length > 0) {
-      // Extract the sequence number from the last ticket ID
-      const lastTicketId = result.data[0].ticketId;
-      const lastSequence = parseInt(lastTicketId.split('-')[2]);
-      sequence = lastSequence + 1;
+        // Extract the sequence number from the last ticket ID
+        const lastTicketId = result.data[0].ticketId;
+        const lastSequence = parseInt(lastTicketId.split('-')[2]);
+        sequence = lastSequence + 1;
     }
-    
+
     // Format the sequence number with leading zeros
     const sequenceStr = String(sequence).padStart(3, '0');
-    
+
     // Return the generated ticket ID
     return `TKT-${dateStr}-${sequenceStr}`;
-  };
+};
 
 
 
@@ -736,7 +787,7 @@ const entityFieldMappings = {
         "Extension": "extension",
         "Mobile": "mobile",
         "Joining Date": "joiningDate",
-        "Relieving Date": "relievingDate",
+        // "Relieving Date": "relievingDate",
         // Add more mappings for users
     },
     Department: {

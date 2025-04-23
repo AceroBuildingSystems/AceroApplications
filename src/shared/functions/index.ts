@@ -244,10 +244,9 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                
                 if (skipped.length > 0) {
                     
-                    const skippedCSV:any = convertToCSV(skipped);
-                    console.log(skippedCSV, "skippedCSV")
+                    
                     exportToExcel(skipped);
-                    console.log("hhh")
+                    
                     toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
                 }
 

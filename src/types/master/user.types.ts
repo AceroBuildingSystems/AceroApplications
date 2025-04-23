@@ -19,7 +19,7 @@ export interface UserDocument {
     employeeType: mongoose.ObjectId,
     department: mongoose.ObjectId,
     location: string,
-    reportingTo: string,
+    reportingTo: mongoose.ObjectId,
     isActive: boolean,
     status: string,
     availability: string,

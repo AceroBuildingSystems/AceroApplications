@@ -37,7 +37,11 @@ const UserSchema: Schema<UserDocument> = new Schema({
        
     },
     location: { type: String },
-    reportingTo: { type: String },
+    reportingTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // Reference to the Organisation model
+        
+    },
     isActive: { type: Boolean, default:true },
     status: { type: String },
     availability: { type: String },

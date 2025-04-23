@@ -82,6 +82,10 @@ const page = () => {
     ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
     ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
+    const reportingToData = userData?.data
+    ?.filter((user: undefined) => user !== undefined)  // Remove undefined entries
+    ?.map((user: { _id: any; displayName: any }) => ({ _id: user?._id, name: user?.displayName }));
+
   interface RowData {
     id: string;
     name: string;
@@ -98,7 +102,7 @@ const page = () => {
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department' },
 
     { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
-    { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data, required: true, placeholder: 'Select Reporting To' },
+    { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To' },
     { label: 'Email', name: "email", type: "email", required: true, placeholder: 'Email' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
     { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
@@ -141,20 +145,7 @@ const page = () => {
     const response = await createUser(formattedData);
 
 
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('User added successfully');
-
-    }
-    else {
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('User updated successfully');
-      }
-    }
-
-    if (response?.error?.data?.message?.message) {
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
-
+  return response;
   };
 
   const editUser = (rowData: RowData) => {

@@ -62,7 +62,7 @@ const page = () => {
   const fieldsToAdd = [
     { fieldName: 'roleName', path: ['role', 'name'] },
     { fieldName: 'departmentName', path: ['department', 'name'] },
-    { fieldName: 'locationName', path: ['organisation', 'name'] }
+    { fieldName: 'organisationName', path: ['organisation', 'name'] }
   ];
 
   const transformedData = transformData(userData?.data, fieldsToAdd);
@@ -327,7 +327,7 @@ const page = () => {
     filterFields: [
 
       { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name: 'departmentName' },
-      { key: "organisation", label: 'locationName', type: "select" as const, data: orgNames, placeholder: 'Search by Location', name: 'locationName' },
+      { key: "organisation", label: 'organisationName', type: "select" as const, data: orgNames, placeholder: 'Search by Organisation', name: 'organisationName' },
     ],
     dataTable: {
       columns: userColumns,

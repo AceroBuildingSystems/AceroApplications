@@ -132,6 +132,30 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 return;
             }
 
+            const requiredFields = ['Employee ID', 'First Name', 'Display Name', 'Email', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role',];
+
+            const rowsWithMissingData = sheetData
+                .map((row: any, index: number) => {
+                    const missingFields = requiredFields.filter(field => {
+                        const value = row[field];
+                        console.log(value, "value")
+                        return value === undefined || value === null || String(value).trim() === "";
+                    });
+
+                    return missingFields.length > 0 ? { index: index + 2, missingFields } : null; // +2 for Excel-like indexing
+                })
+                .filter(Boolean); // Remove nulls
+
+            if (rowsWithMissingData.length > 0) {
+                const rowNumbers = rowsWithMissingData.map((_, i) => i + 2).join(', '); // +2 to match Excel rows (header + 1-based index)
+                const errorMessage = rowsWithMissingData
+                    .map(({ index, missingFields }: any) => `Row ${index}: ${missingFields.join(", ")}`)
+                    .join(" | ");
+
+                toast.error(`Missing required fields - ${errorMessage}`);
+                return;
+            }
+
             // Transform the sheet data based on the entity
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
             const successful: any[] = [];
@@ -215,18 +239,18 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                             data: row,
                         };
                         const response = await createUser(formattedData);// Replace this with your actual insert logic
-                        
+
                         if (response?.error?.data?.status === ERROR) {
                             skipped.push(row);
                         }
-                        else{
+                        else {
                             successful.push(row);
-                            
+
                         }
                         console.log(skipped, "skipped", successful, "successful", response, "response")
                         console.log(successful)
                     } catch (err: any) {
-                        
+
                         const isDuplicate = err?.response?.status === 409 || err?.message?.toLowerCase().includes("duplicate");
                         if (isDuplicate) {
                             skipped.push(row);
@@ -241,12 +265,12 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 if (successful.length > 0) {
                     toast.success(`${successful.length} records imported successfully.`);
                 }
-               
+
                 if (skipped.length > 0) {
-                    
-                    
+
+
                     exportToExcel(skipped);
-                    
+
                     toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
                 }
 
@@ -265,7 +289,7 @@ function convertToCSV(data: any[]): string {
     if (!data.length) return "";
     const headers = Object.keys(data[0]);
     const rows = data.map(row =>
-      headers.map(field => `${(row[field] ?? '').toString().replace(/\t/g, ' ')}`).join("\t")
+        headers.map(field => `${(row[field] ?? '').toString().replace(/\t/g, ' ')}`).join("\t")
     );
     return [headers.join("\t"), ...rows].join("\n");
 }
@@ -511,7 +535,7 @@ const fieldMappingConfig: { [key: string]: any } = {
         organisation: { source: "organisationData", key: "name", value: "_id" },
         activeLocation: { source: "locationData", key: "name", value: "_id" },
         reportingLocation: { source: "locationData", key: "name", value: "_id" },
-        reportingTo: { source: "userData", key: "displayName", value: "_id" },
+        reportingTo: { source: "userData", key: "fullName", value: "_id" },
 
     },
     Designation: {

@@ -103,7 +103,7 @@ const page = () => {
 
     { label: 'Designation', name: "designation", type: "select", data: designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
     { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To' },
-    { label: 'Email', name: "email", type: "email", required: true, placeholder: 'Email' },
+    { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
     { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
     { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },

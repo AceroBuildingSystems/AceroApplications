@@ -3,10 +3,10 @@ import { UserDocument } from "@/types";
 import { Query } from "mongoose";
 
 const UserSchema: Schema<UserDocument> = new Schema({
-    empId: { type: String, required: true, unique: true },
+    empId: { type: String, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    email: { type: String, unique: true,required: true },
+    email: { type: String, unique: true },
     password: { type: String, },
     role1: { type: String },
     imageUrl: { type: String ,default:""},

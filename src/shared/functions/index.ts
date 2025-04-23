@@ -132,13 +132,13 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 return;
             }
 
-            const requiredFields = ['Employee ID', 'First Name', 'Display Name', 'Email', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role',];
+            const requiredFields = ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role',];
 
             const rowsWithMissingData = sheetData
                 .map((row: any, index: number) => {
                     const missingFields = requiredFields.filter(field => {
                         const value = row[field];
-                        console.log(value, "value")
+                        
                         return value === undefined || value === null || String(value).trim() === "";
                     });
 

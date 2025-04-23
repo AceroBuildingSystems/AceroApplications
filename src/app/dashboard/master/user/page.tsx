@@ -260,18 +260,18 @@ const page = () => {
     },
 
     {
-      accessorKey: "displayName",
+      accessorKey: "fullName",
       header: ({ column }: { column: any }) => (
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Display Name</span> {/* Label */}
+          <span>Employee Name</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("displayName")}</div>,
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("fullName")}</div>,
     },
     {
       accessorKey: "department",

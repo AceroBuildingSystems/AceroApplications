@@ -194,7 +194,7 @@ console.log(transformedData);
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
         >
-          <span>Display Name</span> {/* Label */}
+          <span>Employee Name</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),

@@ -215,6 +215,7 @@ const page = () => {
         'Employee Type': '',
         
         'Role': '',
+        'Organisation': '',
         'Reporting Location': '',
         'Active Location': '',
         'Extension': '',

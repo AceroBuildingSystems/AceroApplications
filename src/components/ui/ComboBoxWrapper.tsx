@@ -25,7 +25,7 @@ import {
 export function Combobox({ field, formData, handleChange, placeholder, selectedRegion, setSelectedRegion, selectedArea, setSelectedArea, setSelectedYear, setSelectedMonth }: any) {
     const [open, setOpen] = useState(false)
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
-    console.log(field);
+   
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
@@ -34,7 +34,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                     role="combobox"
                     aria-expanded={open}
                     className={`w-full justify-between ${(field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name || selectedValue ||
-                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.displayName)) ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
+                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.displayName))  ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
                 >
                     {field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
                         field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName || selectedValue ||

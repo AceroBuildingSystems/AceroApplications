@@ -41,10 +41,10 @@ const page = () => {
     db: 'DESIGNATION_MASTER',
   });
   const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({
-      db: 'ROLE_MASTER',
-      sort: { name: 'asc' },
-      filter: { isActive: true },
-    });
+    db: 'ROLE_MASTER',
+    sort: { name: 'asc' },
+    filter: { isActive: true },
+  });
   // const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER", filter: { isActive: true }, sort: { name: 'asc' } });
   const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER' });
   const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({ db: "ORGANISATION_MASTER" });
@@ -96,16 +96,16 @@ const page = () => {
     { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data, required: true, placeholder: 'Select Reporting To' },
     { label: 'Email', name: "email", type: "email", required: true, placeholder: 'Email' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
-   
-     { label: 'Reporting Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+
+    { label: 'Reporting Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
     { label: 'Active Location', name: "activeLocation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
     { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
-   
+
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
- 
+
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
-    { label: 'Mobile', name: "mobile", type: "number", placeholder: 'Mobile' },
-       { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
+    { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
+    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
   ]
 
@@ -155,7 +155,7 @@ const page = () => {
 
   const editUser = (rowData: RowData) => {
     setAction('Update');
-    
+
     setInitialData(rowData);
     openDialog("employee");
     // Your add logic for user page
@@ -168,7 +168,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: organisationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [],designationData:designationData, departmentData:departmentData, employeeTypeData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: organisationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
   };
 
   const exportToExcel = (data: any[]) => {

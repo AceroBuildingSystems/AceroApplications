@@ -149,6 +149,13 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 }));
             };
 
+            if (masterName === 'User') {
+                enrichedData = finalData.map((item: any) => ({
+                    ...item,
+                    joiningDate: parseExcelDate(item?.joiningDate),
+                }));
+            };
+
             if (masterName === 'Category') {
                 enrichedData = finalData.map((item: any) => ({
                     name: item?.name,
@@ -173,11 +180,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
             // Send the transformed data for bulk insert
             try {
-console.log(enrichedData);
 
-console.log(enrichedData, "data")
 
-return;
                 const formattedData = {
                     action: action === 'Add' ? 'create' : 'update',
                     db: db,
@@ -712,6 +716,7 @@ const entityFieldMappings = {
         "Employee ID": "empId",
         "First Name": "firstName",
         "Last Name": "lastName",
+        "Full Name": "fullName",
         "Email": "email",
         "Display Name": "displayName",
         "Department": "department",
@@ -948,6 +953,35 @@ const mapExcelToEntity = (excelData: any[], entityType: keyof typeof entityField
         }, {} as Record<string, any>)
     );
 };
+
+
+function parseExcelDate(value: any): Date | null {
+    if (value instanceof Date && !isNaN(value.getTime())) {
+        return value; // Already a valid JS Date
+    }
+
+    if (typeof value === 'number') {
+        const excelEpoch = new Date(1899, 11, 30);
+        return new Date(excelEpoch.getTime() + value * 86400000);
+    }
+
+    if (typeof value === 'string') {
+        // Try DD/MM/YYYY
+        const parsed = moment(value, "DD/MM/YYYY", true);
+        if (parsed.isValid()) {
+            return parsed.toDate();
+        }
+
+        // Try MM/DD/YYYY as fallback
+        const fallbackParsed = moment(value, "MM/DD/YYYY", true);
+        if (fallbackParsed.isValid()) {
+            return fallbackParsed.toDate();
+        }
+    }
+
+    return null;
+}
+
 
 
 

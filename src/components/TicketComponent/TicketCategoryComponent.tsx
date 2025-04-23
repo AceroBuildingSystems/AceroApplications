@@ -227,7 +227,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                       variant="outline" 
                       className="mt-1 px-2 py-0 text-xs bg-accent/30 text-muted-foreground border-0"
                     >
-                      {category.department.name}
+                      {category?.department?.name}
                     </Badge>
                   </div>
                   
@@ -256,7 +256,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                 </div>
                 
                 <div className="mt-2 text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
-                  {category.description || 'No description provided'}
+                  {category?.description || 'No description provided'}
                 </div>
               </CardContent>
             </Card>

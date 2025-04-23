@@ -1,66 +1,123 @@
-import { NextRequest, NextResponse } from 'next/server';
+// app/api/file/route.ts
+import { fileManager } from "@/server/managers/smlFileManager";
+import { NextResponse } from "next/server";
+import { v4 as uuidv4 } from "uuid";
+import { promises as fs } from "fs";
+import path from "path";
+import { createMongooseObjectId } from "@/shared/functions";
+import { SUCCESS, ERROR, INSUFFIENT_DATA } from "@/shared/constants";
+import { IncomingForm } from 'formidable';
+import formidable from 'formidable';
 import { Readable } from 'stream';
-import mongoose from 'mongoose';
-import SmlFile from '@/models/sml/SMLFile.model';
-import { createMongooseObjectId } from '@/shared/functions';
-import connectToDatabase from '@/lib/db';
-import { applicationdataManager } from '@/server/managers/applicationManager';
-import { SUCCESS, ERROR, INVALID_REQUEST } from '@/shared/constants';
+import { writeFile } from 'fs/promises';
+// Removed invalid import as 'fromReadableStream' is not a valid export
+// Disable Next.js default body parsing
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
-const mongoURI = process.env.MONGODB_URI!;
-const conn = mongoose.createConnection(mongoURI);
+// Convert Web Request to Node Readable Stream
+function getNodeReadableStream(req: Request): Readable {
+  const reader = req.body?.getReader();
+  return new Readable({
+    read() {
+      if (!reader) {
+        this.push(null);
+        return;
+      }
+      reader.read().then(({ done, value }) => {
+        if (done) {
+          this.push(null);
+        } else {
+          this.push(value);
+        }
+      }).catch(err => {
+        this.destroy(err);
+      });
+    },
+  });
+}
 
-export const POST = async (req: NextRequest) => {
-  await dbConnect();
-
-  const formData = await req.formData();
-  const subGroup = formData.get('subGroup')?.toString();
-  const revNo = parseInt(formData.get('revNo')?.toString() ?? '1');
-  const db = formData.get('db')?.toString();
-  const addedBy = formData.get('addedBy')?.toString();
-  const updatedBy = formData.get('updatedBy')?.toString();
-
-  const files = formData.getAll('files') as File[];
-
-  if (!db || !subGroup || !files.length || !addedBy || !updatedBy) {
-    return NextResponse.json({ status: ERROR, message: INVALID_REQUEST, data: {} }, { status: 400 });
-  }
-
-  const bucket = new mongoose.mongo.GridFSBucket(conn.db, { bucketName: 'smlUploads' });
-  const results = [];
-
-  for (const file of files) {
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const stream = Readable.from(buffer);
-    const uploadStream = bucket.openUploadStream(file.name, { contentType: file.type });
-
-    const uploadFinished = new Promise((resolve, reject) => {
-      stream.pipe(uploadStream)
-        .on('finish', async () => {
-          const fileData = {
-            fileName: file.name,
-            fileSize: file.size,
-            revNo,
-            subGroup,
-            fileId: uploadStream.id,
-            addedBy: createMongooseObjectId(addedBy),
-            updatedBy: createMongooseObjectId(updatedBy),
-          };
-
-          const result = await applicationdataManager.createApplicationData({
-            db,
-            action: "create",
-            data: fileData,
-          });
-
-          results.push(result);
-          resolve(true);
-        })
-        .on('error', reject);
+export async function POST(req: Request) {
+  try {
+    console.log("here");
+    const nodeStream = Readable.from(req.body as any); // Use Readable.from for converting streams
+    const form = formidable({ multiples: true });
+    console.log("formidable", form);
+    const stream = getNodeReadableStream(req);
+    console.log("stream", stream);
+    const mockReq = new Readable({
+      read() {
+        stream.on("data", (chunk) => this.push(chunk));
+        stream.on("end", () => this.push(null));
+        stream.on("error", (err) => this.destroy(err));
+      },
     });
 
-    await uploadFinished;
-  }
+    Object.assign(mockReq, {
+      headers: req.headers,
+      method: req.method,
+      url: req.url,
+    });
 
-  return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: results }, { status: 200 });
-};
+    const { fields, files } = await new Promise<{ fields: any; files: any }>((resolve, reject) => {
+      form.parse(mockReq as any, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
+
+    console.log("Fields:", fields);
+    console.log("Files:", files);
+
+    const db = fields.db?.[0] || fields.db;
+    const addedBy = fields.addedBy?.[0] || fields.addedBy;
+    const updatedBy = fields.updatedBy?.[0] || fields.updatedBy;
+
+    if (!db || !files?.files) {
+      return NextResponse.json({ status: ERROR, message: INSUFFIENT_DATA }, { status: 400 });
+    }
+
+    const uploadedFiles = Array.isArray(files.files) ? files.files : [files.files];
+
+    const fileMetas = await Promise.all(
+      uploadedFiles.map(async (file: any) => {
+        const filePath = path.join(process.cwd(), "public/uploads", file.originalFilename);
+        const data = await fs.readFile(file.filepath); // file.filepath is where formidable stores it
+        await fs.writeFile(filePath, data); // Optional re-write if you need it elsewhere
+
+        return {
+          fileName: file.originalFilename,
+          fileSize: file.size,
+          description: "",
+          revNo: 1,
+          subGroup: null,
+          fileId: createMongooseObjectId(uuidv4()),
+          isActive: true,
+          addedBy: createMongooseObjectId(addedBy),
+          updatedBy: createMongooseObjectId(updatedBy),
+        };
+      })
+    );
+
+    const options = {
+      db,
+      action: "create",
+      data: fileMetas,
+    };
+
+    const response: any = await fileManager.createFileData(options);
+
+    if (response.status === SUCCESS) {
+      return NextResponse.json({ status: SUCCESS, data: response.data }, { status: 200 });
+    }
+
+    return NextResponse.json({ status: ERROR, message: response.message }, { status: 500 });
+
+  } catch (err) {
+    console.error("❌ Upload Error:", err);
+    return NextResponse.json({ status: ERROR, message: 'Upload Failed', error: String(err) }, { status: 500 });
+  }
+}

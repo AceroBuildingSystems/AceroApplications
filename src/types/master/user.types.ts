@@ -32,4 +32,5 @@ export interface UserDocument {
     updatedBy: string,
     organisation: mongoose.ObjectId,
     activeLocation: mongoose.ObjectId,
+    reportingLocation: mongoose.ObjectId,
 }

@@ -92,9 +92,10 @@ interface BulkImportParams {
     designationData: any;
     departmentData: any;
     employeeTypeData: any;
+    organisationData: any;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData,userData,teamData,designationData, departmentData, employeeTypeData, action, user, createUser, db, masterName }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData,userData,teamData,designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -129,6 +130,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 departmentData: departmentData?.data || [],
                 employeeTypeData: employeeTypeData?.data || [],
                 teamData: teamData?.data || [],
+                organisationData: organisationData?.data || [],
             };
 
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
@@ -451,10 +453,14 @@ const fieldMappingConfig: { [key: string]: any } = {
         department: { source: "departmentData", key: "name", value: "_id" },
         designation: { source: "designationData", key: "name", value: "_id" },
         employeeType: { source: "employeeTypeData", key: "name", value: "_id" },
-        organisation: { source: "locationData", key: "name", value: "_id" },
+        organisation: { source: "organisationData", key: "name", value: "_id" },
         activeLocation: { source: "locationData", key: "name", value: "_id" },
+        reportingLocation: { source: "locationData", key: "name", value: "_id" },
         reportingTo: { source: "userData", key: "displayName", value: "_id" },
 
+    },
+    Designation: {
+        department: { source: "departmentData", key: "name", value: "_id" },
     },
     Region: {
         continent: { source: "continentData", key: "name", value: "_id" },
@@ -723,7 +729,8 @@ const entityFieldMappings = {
         "Designation": "designation",
         "Employee Type": "employeeType",
         "Reporting To": "reportingTo",
-        "Reporting Location": "organisation",
+        "Organisation": "organisation",
+        "Reporting Location": "reportingLocation",
         "Active Location": "activeLocation",
         "Role": "role",
         "Extension": "extension",
@@ -749,6 +756,7 @@ const entityFieldMappings = {
     },
     Designation: {
         "Designation": "name",
+        "Department": "department",
 
         // Add more mappings for Designation
     },

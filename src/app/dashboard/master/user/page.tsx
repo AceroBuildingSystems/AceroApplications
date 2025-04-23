@@ -46,13 +46,18 @@ const page = () => {
     filter: { isActive: true },
   });
   // const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER", filter: { isActive: true }, sort: { name: 'asc' } });
-  const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER' });
-  const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({ db: "ORGANISATION_MASTER" });
+  const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER',filter: { isActive: true },
+    sort: { empId: 'asc' }, });
+  const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({ db: "LOCATION_MASTER" ,filter: { isActive: true },
+    sort: { empId: 'asc' }});
+  const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({ db: "ORGANISATION_MASTER" ,filter: { isActive: true },
+    sort: { empId: 'asc' }});
+
   const [createUser, { isLoading: isCreatingUser }]: any = useUserOperationsMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser;
+  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser || locationLoading;
 
   const fieldsToAdd = [
     { fieldName: 'roleName', path: ['role', 'name'] },
@@ -96,17 +101,17 @@ const page = () => {
     { label: 'Reporting To', name: "reportingTo", type: "select", data: userData?.data, required: true, placeholder: 'Select Reporting To' },
     { label: 'Email', name: "email", type: "email", required: true, placeholder: 'Email' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
-
-    { label: 'Reporting Location', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
-    { label: 'Active Location', name: "activeLocation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
+    { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Active Location', name: "activeLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
     { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
-
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
     { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
+   
     { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
   ]
 
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -167,14 +172,14 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: organisationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: locationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, organisationData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
   };
 
-  const handleExport = (type: string) => {
+  const handleExport = (type: string, data:any) => {
    let formattedData: any[] = [];
  
-   if (transformedData?.length > 0) {
-     formattedData = transformedData?.map((data: any) => ({
+   if (data?.length > 0) {
+     formattedData = data?.map((data: any) => ({
        'Employee ID': data?.empId,
        'First Name': data?.firstName,
        'Last Name': data?.lastName,
@@ -187,7 +192,8 @@ const page = () => {
         'Employee Type': data?.employeeType?.name,
         
         'Role': data?.role?.name,
-        'Reporting Location': data?.organisation?.name,
+        'Organisation': data?.organisation?.name,
+        'Reporting Location': data?.reportingLocation?.name,
         'Active Location': data?.activeLocation?.name,
         'Extension': data?.extension,
         'Mobile': data?.mobile,

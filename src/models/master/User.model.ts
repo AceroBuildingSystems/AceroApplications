@@ -70,7 +70,12 @@ const UserSchema: Schema<UserDocument> = new Schema({
     },
     activeLocation: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Organisation", // Reference to the Organisation model
+        ref: "Location", // Reference to the Organisation model
+        
+    },
+    reportingLocation: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Location", // Reference to the Organisation model
         
     },
 }, { timestamps: true })
@@ -89,6 +94,8 @@ UserSchema.pre<Query<any, UserDocument>>(/^find/, function (next) {
       { path: "employeeType" },
       { path: "department" },
       { path: "organisation" },
+      { path: "activeLocation" },
+      { path: "reportingLocation" },
       { path: "access.accessId" },
     ]);
 

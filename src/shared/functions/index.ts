@@ -8,7 +8,8 @@ import { toast } from 'react-toastify';
 import { SUCCESS, ERROR } from '@/shared/constants';
 import moment from 'moment';
 import { Department, Organisation } from '@/models';
-import { copyToClipboard } from '@/utils/copyToClipboard';
+import { exportToExcel } from '@/utils/copyToClipboard';
+import { skip } from 'node:test';
 
 export const createMongooseObjectId = (id: any) => {
     if (mongoose.Types.ObjectId.isValid(id) && new mongoose.Types.ObjectId(id).toString() === id.toString()) {
@@ -222,7 +223,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                             successful.push(row);
                             
                         }
-                        
+                        console.log(skipped, "skipped", successful, "successful", response, "response")
+                        console.log(successful)
                     } catch (err: any) {
                         
                         const isDuplicate = err?.response?.status === 409 || err?.message?.toLowerCase().includes("duplicate");
@@ -241,9 +243,12 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 }
                
                 if (skipped.length > 0) {
-                    const skippedCSV = convertToCSV(skipped);
-                    copyToClipboard(skippedCSV);
-                    toast.warning(`${skipped.length} duplicates were skipped and copied to clipboard.`);
+                    
+                    const skippedCSV:any = convertToCSV(skipped);
+                    console.log(skippedCSV, "skippedCSV")
+                    exportToExcel(skipped);
+                    console.log("hhh")
+                    toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
                 }
 
 

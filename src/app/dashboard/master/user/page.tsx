@@ -35,7 +35,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
-    sort: { createdAt: -1 },
+    sort: { name: 'asc' },
   });
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
     db: 'DESIGNATION_MASTER',
@@ -52,11 +52,11 @@ const [designationDataNew, setDesignationdata] = useState([]);
   });
   const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
     db: "LOCATION_MASTER", filter: { isActive: true },
-    sort: { empId: 'asc' }
+    sort: { name: 'asc' }
   });
   const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({
     db: "ORGANISATION_MASTER", filter: { isActive: true },
-    sort: { empId: 'asc' }
+    sort: { name: 'asc' }
   });
 
   const [createUser, { isLoading: isCreatingUser }]: any = useUserOperationsMutation();

@@ -125,6 +125,8 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
     { label: 'Employee ID', name: "empId", type: "number", required: true, placeholder: 'Employee ID' },
+    { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email' },
+   
     { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
     { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
@@ -133,19 +135,20 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
     { label: 'Designation', name: "designation", type: "select", data: designationDataNew?.length > 0 ? designationDataNew : designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
     { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To' },
-    { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
-    { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
-    { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+      { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
     { label: 'Active Location', name: "activeLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
+  
     { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
 
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
     { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
-
+    { label: 'Personal Number', name: "personalNumber", type: "text", placeholder: 'Personal Number' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
     { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+    
   ]
 
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -219,6 +222,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
         'Extension': data?.extension,
         'Mobile': data?.mobile,
         'Joining Date': moment(data?.joiningDate).format('DD/MM/YYYY'),
+        'Personal Number': data?.personalNumber,
 
       }));
     } else {
@@ -242,6 +246,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
         'Extension': '',
         'Mobile': '',
         'Joining Date': '',
+        'Personal Number':''
       }];
     }
 

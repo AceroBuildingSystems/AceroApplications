@@ -33,4 +33,5 @@ export interface UserDocument {
     organisation: mongoose.ObjectId,
     activeLocation: mongoose.ObjectId,
     reportingLocation: mongoose.ObjectId,
+    personalNumber: string,
 }

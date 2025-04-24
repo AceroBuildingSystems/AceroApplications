@@ -809,6 +809,7 @@ const entityFieldMappings = {
         "Extension": "extension",
         "Mobile": "mobile",
         "Joining Date": "joiningDate",
+        "Personal Number": "personalNumber",
         // "Relieving Date": "relievingDate",
         // Add more mappings for users
     },

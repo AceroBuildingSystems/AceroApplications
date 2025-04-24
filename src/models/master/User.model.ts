@@ -82,6 +82,7 @@ const UserSchema: Schema<UserDocument> = new Schema({
         ref: "Location", // Reference to the Organisation model
         
     },
+    personalNumber: { type: String },
 }, { timestamps: true })
 
 UserSchema.pre('save', async function (next) {

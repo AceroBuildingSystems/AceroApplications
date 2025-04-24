@@ -34,15 +34,16 @@ const page = () => {
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
-    sort: { createdAt: -1 },
+    sort: { name: 'asc' },
   });
 
    const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
       db: "LOCATION_MASTER", filter: { isActive: true },
-      sort: { empId: 'asc' }
+      sort: { name: 'asc' }
     });
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
-    db: 'DESIGNATION_MASTER',
+    db: "DESIGNATION_MASTER", filter: { isActive: true },
+      sort: { name: 'asc' }
   });
   const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER" });
   const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER' });

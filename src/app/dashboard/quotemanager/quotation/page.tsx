@@ -1009,6 +1009,7 @@ const page = () => {
                 action={action}
                 height={'auto'}
                 quoteStatusData={quoteStatusData?.data}
+                onchangeData={onchangeData}
 
             />
         </>

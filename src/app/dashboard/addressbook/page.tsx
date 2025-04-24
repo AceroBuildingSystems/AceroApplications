@@ -29,7 +29,7 @@ const page = () => {
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
-    sort: { firstName:'asc' },
+    sort: { displayName:'asc' },
   });
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',

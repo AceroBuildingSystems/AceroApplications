@@ -58,6 +58,7 @@ interface DynamicDialogProps<T extends BaseFormData> {
   width?: string;
   isSubmitting?: boolean;
   quoteStatusData?: any;
+  onchangeData: (data: any) => void;
 }
 
 function DynamicDialog<T extends BaseFormData>({
@@ -71,7 +72,8 @@ function DynamicDialog<T extends BaseFormData>({
   height,
   width,
   isSubmitting = false,
-  quoteStatusData
+  quoteStatusData,
+  onchangeData
 }: DynamicDialogProps<T>) {
   const { user }: any = useUserAuthorised();
   const [formData, setFormData] = useState<Partial<T>>({});
@@ -101,6 +103,8 @@ function DynamicDialog<T extends BaseFormData>({
     field?: Field,
     customFunction = (dateValue: any) => { }) => {
     let value: any = "";
+
+    (fieldName === "department") && onchangeData({ id: e, fieldName });
 
     ////////// Needs refactoring cant hardcode
     fieldName === 'quoteStatus' && setSelectedStatus(field?.data?.find((data) => data._id === e)?.name);

@@ -117,9 +117,17 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 return;
             }
 
+            const masterRequiredFields: Record<string, string[]> = {
+                User: ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role'],
+                Asset: ['Asset ID', 'Name', 'Category'], // example
+                Vendor: ['name', 'email', 'phone'], // example
+                Category: ['name', 'description', 'specsRequired'], // example
+                Department: ['Department Id', 'Department'],
+                Designation: ['Designation', 'Department'],
+                // Add other masters as needed
+            };
 
-            const requiredFields = ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role',];
-
+            const requiredFields = masterRequiredFields[masterName] || [];
             const rowsWithMissingData = sheetData
                 .map((row: any, index: number) => {
                     const missingFields = requiredFields.filter(field => {
@@ -226,7 +234,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         };
                         const response = await createUser(formattedData);// Replace this with your actual insert logic
 
-                        if (response?.error?.data?.status === ERROR) {
+                        if (response?.error?.data?.status === ERROR || response?.error?.data?.status === "ERROR") {
                             skipped.push(row);
                         }
                         else {

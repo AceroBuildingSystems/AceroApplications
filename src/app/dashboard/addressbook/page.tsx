@@ -36,6 +36,11 @@ const page = () => {
     filter: { isActive: true },
     sort: { createdAt: -1 },
   });
+
+   const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
+      db: "LOCATION_MASTER", filter: { isActive: true },
+      sort: { empId: 'asc' }
+    });
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
     db: 'DESIGNATION_MASTER',
   });
@@ -46,14 +51,14 @@ const page = () => {
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser;
+  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser || locationLoading;
 
   const fieldsToAdd = [
     { fieldName: 'departmentName', path: ['department', 'name'] },
-    { fieldName: 'locationName', path: ['organisation', 'name'] }
+    { fieldName: 'locationName', path: ['activeLocation', 'name'] }
   ];
   const transformedData = transformData(userData?.data, fieldsToAdd);
-console.log(transformedData);
+
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
   const depNames = departmentData?.data
@@ -62,6 +67,10 @@ console.log(transformedData);
 
 
     const orgNames = organisationData?.data
+    ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
+    ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
+
+    const locNames = locationData?.data
     ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
     ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
@@ -225,7 +234,7 @@ console.log(transformedData);
       cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
     },
     {
-      accessorKey: "organisation",
+      accessorKey: "activeLocation",
       header: ({ column }: { column: any }) => (
         <button
           className="flex items-center space-x-2"
@@ -236,7 +245,7 @@ console.log(transformedData);
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("organisation")?.name}</div>,
+      cell: ({ row }: { row: any }) => <div>{row.getValue("activeLocation")?.name}</div>,
     },
     {
       accessorKey: "email",
@@ -318,7 +327,7 @@ console.log(transformedData);
     filterFields: [
      
       { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name:'departmentName' },
-      { key: "organisation", label: 'locationName', type: "select" as const, data: orgNames, placeholder: 'Search by Location', name:'locationName' },
+      { key: "activeLocation", label: 'locationName', type: "select" as const, data: locNames, placeholder: 'Search by Location', name:'locationName' },
 
     ],
     dataTable: {

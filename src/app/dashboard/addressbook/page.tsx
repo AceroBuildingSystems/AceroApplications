@@ -29,7 +29,7 @@ const page = () => {
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
-    sort: { empId:'asc' },
+    sort: { firstName:'asc' },
   });
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
@@ -67,6 +67,13 @@ const page = () => {
     return (!emailMissing || !extensionMissing || !mobileMissing) && !isManagement;
   });
   const orgTransformedData = organisationTransformData(organisationData?.data);
+  
+  const sortedData = transformedData?.sort((a: any, b: any) => {
+    const nameA = a?.department?.name?.toLowerCase();
+    const nameB = b?.department?.name?.toLowerCase();
+  
+    return nameA?.localeCompare(nameB);
+  });
 
   const depNames = departmentData?.data
     ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
@@ -339,7 +346,7 @@ const page = () => {
     ],
     dataTable: {
       columns: userColumns,
-      data: transformedData,
+      data: sortedData,
     },
     buttons: [
 

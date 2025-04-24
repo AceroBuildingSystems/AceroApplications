@@ -57,8 +57,15 @@ const page = () => {
     { fieldName: 'departmentName', path: ['department', 'name'] },
     { fieldName: 'locationName', path: ['activeLocation', 'name'] }
   ];
-  const transformedData = transformData(userData?.data, fieldsToAdd);
-
+  const transformedData1 = transformData(userData?.data, fieldsToAdd);
+  const transformedData = transformedData1?.filter((item: any) => {
+    const emailMissing = !item.email || String(item.email).trim() === "";
+    const extensionMissing = !item.extension || String(item.extension).trim() === "";
+    const mobileMissing = !item.mobile || String(item.mobile).trim() === "";
+    const isManagement = item?.department?.name === "Management";
+  
+    return (!emailMissing || !extensionMissing || !mobileMissing) && !isManagement;
+  });
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
   const depNames = departmentData?.data

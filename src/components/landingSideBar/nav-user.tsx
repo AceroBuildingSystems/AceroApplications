@@ -61,7 +61,7 @@ export function NavUser({
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user?.avatar} alt={user?.displayName} />
                 <AvatarFallback className="rounded-lg">
-                  {user?.displayName?.split(" ")[0][0] + (user?.displayName?.split(" ")[1]?.[0] || "")}
+                  {user?.displayName?.toProperCase()?.split(" ")[0][0] + (user?.displayName?.toProperCase()?.split(" ")[1]?.[0] || "")}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -82,7 +82,7 @@ export function NavUser({
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user?.avatar} alt={user?.displayName?.toProperCase()} />
                   <AvatarFallback className="rounded-lg">
-                  {user?.displayName?.split(" ")[0][0] + (user?.displayName?.split(" ")[1]?.[0] || "")}
+                  {user?.displayName?.toProperCase()?.split(" ")[0][0] + (user?.displayName?.toProperCase()?.split(" ")[1]?.[0] || "")}
                 </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
@@ -92,22 +92,13 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
+       
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
+             
               <DropdownMenuItem>
                 <Bell />
                 Notifications

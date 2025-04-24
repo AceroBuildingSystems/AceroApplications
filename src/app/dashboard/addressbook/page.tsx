@@ -25,11 +25,11 @@ import 'jspdf-autotable';
 
 const page = () => {
 
-  const { user, status, authenticated } = useUserAuthorised();
+  const { user, status, authenticated }: any = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: { isActive: true },
-    sort: { displayName:'asc' },
+    sort: { displayName: 'asc' },
   });
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
@@ -37,13 +37,13 @@ const page = () => {
     sort: { name: 'asc' },
   });
 
-   const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
-      db: "LOCATION_MASTER", filter: { isActive: true },
-      sort: { name: 'asc' }
-    });
+  const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
+    db: "LOCATION_MASTER", filter: { isActive: true },
+    sort: { name: 'asc' }
+  });
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
     db: "DESIGNATION_MASTER", filter: { isActive: true },
-      sort: { name: 'asc' }
+    sort: { name: 'asc' }
   });
   const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({ db: "ROLE_MASTER" });
   const { data: employeeTypeData = [], isLoading: employeeTypeLoading }: any = useGetMasterQuery({ db: 'EMPLOYEE_TYPE_MASTER' });
@@ -64,15 +64,15 @@ const page = () => {
     const extensionMissing = !item.extension || String(item.extension).trim() === "";
     const mobileMissing = !item.mobile || String(item.mobile).trim() === "";
     const isManagement = item?.department?.name === "Management";
-  
+
     return (!emailMissing || !extensionMissing || !mobileMissing) && !isManagement;
   });
   const orgTransformedData = organisationTransformData(organisationData?.data);
-  
+
   const sortedData = transformedData?.sort((a: any, b: any) => {
     const nameA = a?.department?.name?.toLowerCase();
     const nameB = b?.department?.name?.toLowerCase();
-  
+
     return nameA?.localeCompare(nameB);
   });
 
@@ -81,11 +81,11 @@ const page = () => {
     ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
 
 
-    const orgNames = organisationData?.data
+  const orgNames = organisationData?.data
     ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
     ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
-    const locNames = locationData?.data
+  const locNames = locationData?.data
     ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
     ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
@@ -173,9 +173,9 @@ const page = () => {
     openDialog("employee");
   };
 
-  const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
-  };
+  // const handleImport = () => {
+  //   bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+  // };
 
   const exportToExcel = (data: any[]) => {
     // Convert JSON data to a worksheet
@@ -208,145 +208,179 @@ const page = () => {
     // Your delete logic for user page
   };
 
-  const userColumns = [
+  const getUserColumns = (role: string) => {
+    const userColumns = [
+
+      {
+        accessorKey: "displayName",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2 pl-3"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+          >
+            <span>Employee Name</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => {
+          const firstName = row.getValue("displayName");
+          const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
+
+          return (
+            <div className="pl-3">
+              <div className="">{firstName}</div>
+              <div className="text-sm text-gray-500">{designation}</div>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "department",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+          >
+            <span>Department</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
+      },
+      {
+        accessorKey: "activeLocation",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+          >
+            <span>Location</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => <div>{row.getValue("activeLocation")?.name}</div>,
+      },
+      {
+        accessorKey: "email",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+          >
+            <span>Email</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => {
+          const email = row.getValue("email");
+          return (
+            <a
+              href={`mailto:${email}`}
+              className="text-blue-600 hover:text-blue-800 "
+            >
+              {email}
+            </a>
+          );
+        },
+      },
+      {
+        accessorKey: "extension",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            <span>Extension</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => {
+          const extension = row.getValue("extension");
+          return (
+            <a
+              href={`tel:${extension}`}
+              className="text-blue-600 hover:text-blue-800 no-underline"
+            >
+              {extension}
+            </a>
+          );
+        },
+      },
+      {
+        accessorKey: "mobile",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          >
+            <span>Mobile</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => {
+          const extension = row.getValue("mobile");
+          return (
+            <a
+              href={`tel:${extension}`}
+              className="text-blue-600 hover:text-blue-800 no-underline"
+            >
+              {extension}
+            </a>
+          );
+        },
+      },
+    ];
+    if (role === 'Admin') {
+      userColumns.push({
+        accessorKey: "personalNumber",
+        header: ({ column }: { column: any }) => (
+          <button
+            className="flex items-center space-x-2"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+          >
+            <span>Personal Number</span> {/* Label */}
+            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+          </button>
+        ),
+        cell: ({ row }: { row: any }) => {
+          const extension = row.getValue("personalNumber");
+          return (
+            <a
+              href={`tel:${extension}`}
+              className="text-blue-600 hover:text-blue-800 no-underline"
+            >
+              {extension}
+            </a>
+          );
+        },
+      });
+    };
     
-    {
-      accessorKey: "displayName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2 pl-3"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    return userColumns;
+  };
 
-        >
-          <span>Employee Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => {
-        const firstName = row.getValue("displayName");
-        const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
-      
-        return (
-          <div className="pl-3">
-            <div className="">{firstName}</div>
-            <div className="text-sm text-gray-500">{designation}</div>
-          </div>
-        );
-      },
-    },
-    {
-      accessorKey: "department",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+  const quotationColumns = getUserColumns(user?.role?.name);
 
-        >
-          <span>Department</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
-    },
-    {
-      accessorKey: "activeLocation",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-        >
-          <span>Location</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("activeLocation")?.name}</div>,
-    },
-    {
-      accessorKey: "email",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Email</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => {
-        const email = row.getValue("email");
-        return (
-          <a
-            href={`mailto:${email}`}
-            className="text-blue-600 hover:text-blue-800 "
-          >
-            {email}
-          </a>
-        );
-      },
-    },
-    {
-      accessorKey: "extension",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Extension</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => {
-        const extension = row.getValue("extension");
-        return (
-          <a
-            href={`tel:${extension}`}
-            className="text-blue-600 hover:text-blue-800 no-underline"
-          >
-            {extension}
-          </a>
-        );
-      },
-    },
-    {
-      accessorKey: "mobile",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Mobile</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
-      cell: ({ row }: { row: any }) => {
-        const extension = row.getValue("mobile");
-        return (
-          <a
-            href={`tel:${extension}`}
-            className="text-blue-600 hover:text-blue-800 no-underline"
-          >
-            {extension}
-          </a>
-        );
-      },
-    },
-  ];
 
   const userConfig = {
     searchFields: [
       { key: "name", label: 'fullName', type: "text" as const, placeholder: 'Search by Name' },
-     
+
     ],
     filterFields: [
-     
-      { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name:'departmentName' },
-      { key: "activeLocation", label: 'locationName', type: "select" as const, data: locNames, placeholder: 'Search by Location', name:'locationName' },
+
+      { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name: 'departmentName' },
+      { key: "activeLocation", label: 'locationName', type: "select" as const, data: locNames, placeholder: 'Search by Location', name: 'locationName' },
 
     ],
     dataTable: {
-      columns: userColumns,
+      columns: quotationColumns,
       data: sortedData,
     },
     buttons: [
@@ -359,7 +393,7 @@ const page = () => {
     <>
 
       <MasterComponent config={userConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
-      
+
     </>
 
   )

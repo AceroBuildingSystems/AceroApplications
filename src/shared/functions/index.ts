@@ -117,20 +117,6 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 return;
             }
 
-            const expectedHeaders = Object.keys(entityFieldMappings[masterName as keyof typeof entityFieldMappings] || {});
-            const actualHeaders = Object.keys(sheetData[0] as Record<string, any>);
-
-            // ✅ Find missing columns
-            const missingHeaders = expectedHeaders.filter(header => !actualHeaders.includes(header));
-
-            if (missingHeaders.length > 0) {
-                toast.error(`Missing required columns in Excel: ${missingHeaders.join(", ")}`);
-                return;
-            }
-            if (missingHeaders.length > 0) {
-                toast.error(`Missing required columns: ${missingHeaders.join(', ')}`);
-                return;
-            }
 
             const requiredFields = ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role',];
 

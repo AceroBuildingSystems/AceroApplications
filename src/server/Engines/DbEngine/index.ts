@@ -30,7 +30,7 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   TicketComment,
   TicketTask,
   TicketHistory,
-  UserSkill, TeamRole, SmlGroup, SmlSubGroup, SmlFile
+  UserSkill, TeamRole, SmlGroup, SmlSubGroup, SmlFile, VisaType
 } from '@/models';
 
 
@@ -93,6 +93,7 @@ function getMongooseAdapter(): MongooseAdapter {
     SML_GROUP_MASTER: SmlGroup,
     SML_SUB_GROUP_MASTER: SmlSubGroup,
     SML_FILE_MASTER: SmlFile,
+    VISA_TYPE_MASTER: VisaType,
     });
   }
   return dbEngineInstance;

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState } from 'react'
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, ChevronDown } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -25,25 +25,38 @@ import {
 export function Combobox({ field, formData, handleChange, placeholder, selectedRegion, setSelectedRegion, selectedArea, setSelectedArea, setSelectedYear, setSelectedMonth }: any) {
     const [open, setOpen] = useState(false)
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
-   
+
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                    className={`w-full justify-between ${(field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name || selectedValue ||
-                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name]?.displayName))  ? ' bg-zinc-50' : 'text-gray-400 bg-zinc-50'}`}
-                >
-                    {field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-                        field && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName || selectedValue ||
-                        placeholder}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
+            <Button
+  variant="outline"
+  role="combobox"
+  aria-expanded={open}
+  className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${
+    (field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+     selectedValue ||
+     field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName)
+      ? "text-black"
+      : "text-gray-400"
+  }`}
+>
+  <span className="text-sm truncate whitespace-nowrap overflow-hidden max-w-[calc(100%-1.5rem)]">
+    {
+      field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+      field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName ||
+      selectedValue ||
+      placeholder
+    }
+  </span>
+  <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-1" />
+</Button>
+
+
+
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 pointer-events-auto">
-                <Command>
+            <PopoverContent className="w-full p-0 pointer-events-auto ">
+                <Command className="bg-white">
                     <CommandInput className="pointer-events-auto" placeholder={`Search ${field?.label}`} />
 
                     <CommandList className="overflow-y-scroll">

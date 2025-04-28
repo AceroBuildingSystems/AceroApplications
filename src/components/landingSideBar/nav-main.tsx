@@ -76,7 +76,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{label}</SidebarGroupLabel>
+      {/* <SidebarGroupLabel>{label}</SidebarGroupLabel> */}
       <SidebarMenu>
         {items?.map((item, index) => ( <CreateSideBarItems key={index} item={item} />))}
       </SidebarMenu>

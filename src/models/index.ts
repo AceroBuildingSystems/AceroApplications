@@ -50,6 +50,7 @@ import TeamRole from "./master/TeamRole.model";
 import SmlGroup from "./sml/Group.model";
 import SmlSubGroup from "./sml/SmlSubGroup.model";
 import SmlFile from "./sml/SMLFile.model"
+import VisaType from "./master/VisaType.model"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -69,5 +70,6 @@ export {
     TeamRole,
     SmlGroup,
     SmlSubGroup,
-    SmlFile
+    SmlFile,
+    VisaType
 }

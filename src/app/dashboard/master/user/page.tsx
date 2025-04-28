@@ -37,6 +37,16 @@ const [designationDataNew, setDesignationdata] = useState([]);
     filter: { isActive: true },
     sort: { name: 'asc' },
   });
+  const { data: visTypeData = [], isLoading: visaTypeLoading }: any = useGetMasterQuery({
+    db: 'VISA_TYPE_MASTER',
+    filter: { isActive: true },
+    sort: { name: 'asc' },
+  });
+  const { data: nationalityData = [], isLoading: nationalityLoading }: any = useGetMasterQuery({
+    db: 'COUNTRY_MASTER',
+    filter: { isActive: true },
+    sort: { name: 'asc' },
+  });
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
     db: 'DESIGNATION_MASTER',
   });
@@ -63,7 +73,11 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading = userLoading || departmentLoading || designationLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser || locationLoading;
+  const genderData = [{ _id: 'Male', name: 'Male' }, { _id: 'Female', name: 'Female' }];
+
+  const maritalStatusData = [{ _id: 'Single', name: 'Single' }, { _id: 'Married', name: 'Married' }, { _id: 'Divorced', name: 'Divorced' }];
+
+  const loading = userLoading || departmentLoading || designationLoading ||nationalityLoading||visaTypeLoading|| roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser || locationLoading;
 
   const fieldsToAdd = [
     { fieldName: 'roleName', path: ['role', 'name'] },
@@ -143,12 +157,30 @@ const [designationDataNew, setDesignationdata] = useState([]);
     { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
 
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
-    { label: 'Mobile', name: "mobile", type: "text", placeholder: 'Mobile' },
+    { label: 'Company Number', name: "mobile", type: "text", placeholder: 'Mobile' },
     { label: 'Personal Number', name: "personalNumber", type: "text", placeholder: 'Personal Number' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
-    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Pick Joining Date' },
-    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Pick Leaving Date' },
-    
+    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Select Joining Date' },
+    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Select Leaving Date' },
+    { label: 'Nationality', name: "nationality", type: "select", data: nationalityData?.data, format: 'ObjectId', required: true, placeholder: 'Select Nationality' },
+    { label: 'Gender', name: "gender", type: "select", data: genderData, format: 'ObjectId', required: true, placeholder: 'Select Gender' },
+    { label: 'Marital Status', name: "maritalStatus", type: "select", data: maritalStatusData, format: 'ObjectId', required: true, placeholder: 'Select Marital Status' },
+    { label: 'Date Of Birth', name: "dateOfBirth", type: "date", format: 'Date', placeholder: 'Select Birth Date' },
+    { label: 'Visa File No', name: "visaFileNo", type: "text", placeholder: 'Visa File No' },
+    { label: 'Visa Issue Date', name: "visaIssueDate", type: "date", format: 'Date', placeholder: 'Select Visa Issue Date' },
+    { label: 'Visa Expiry Date', name: "visaExpiryDate", type: "date", format: 'Date', placeholder: 'Select Visa Expiry Date' },
+    { label: 'Passport Number', name: "passportNumber", type: "text", placeholder: 'Passport Number' },
+    { label: 'Passport Issue Date', name: "passportIssueDate", type: "date",format: 'Date', placeholder: 'Select Passport Issue Date' },
+    { label: 'Passport Expiry Date', name: "passportExpiryDate", type: "date", format: 'Date', placeholder: 'Select Passport Expiry Date' },
+    { label: 'Emirates ID', name: "emiratesId", type: "text", placeholder: 'Emirates ID' },
+    { label: 'Emirates ID Issue Date', name: "emiratesIdIssueDate", type: "date",format: 'Date', placeholder: 'Select Emirates ID Issue Date' },
+    { label: 'Emirates ID Expiry Date', name: "emiratesIdExpiryDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Expiry Date' },
+    { label: 'Work Permit', name: "workPermit", type: "text", placeholder: 'Work Permit' },
+    { label: 'Labour Card Expiry Date', name: "labourCardExpiryDate", type: "date", format: 'Date', placeholder: 'Select Labour Card Expiry Date' },
+    { label: 'Person Code', name: "personCode", type: "text", placeholder: 'Person Code' },
+    { label: 'Visa Type', name: "visatype", type: "select", data: visTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Visa Type' },
+    { label: 'Medical Insurance', name: "medicalInsurance", type: "text", placeholder: 'Medical Insurance' },
+    { label: 'ILOE Expiry Date', name: "iloeExpiryDate", type: "date", format: 'Date', placeholder: 'Select ILOE Expiry Date' },
   ]
 
   const [isDialogOpen, setDialogOpen] = useState(false);

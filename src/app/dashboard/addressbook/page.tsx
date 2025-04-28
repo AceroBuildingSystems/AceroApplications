@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, ChevronsUpDown } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,7 +20,6 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-
 
 
 const page = () => {
@@ -208,165 +207,193 @@ const page = () => {
     // Your delete logic for user page
   };
 
-  const getUserColumns = (role: string) => {
-    const userColumns = [
+  const userColumns = [
 
-      {
-        accessorKey: "displayName",
-        header: ({ column }: { column: any }) => (
+    {
+      accessorKey: "displayName",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
+
+        return (
           <button
-            className="flex items-center space-x-2 pl-3"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
+            className="group  flex items-center space-x-2 pl-3"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Employee Name</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            <span>Employee Name</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
           </button>
-        ),
-        cell: ({ row }: { row: any }) => {
-          const firstName = row.getValue("displayName");
-          const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
-
-          return (
-            <div className="pl-3">
-              <div className="">{firstName}</div>
-              <div className="text-sm text-gray-500">{designation}</div>
-            </div>
-          );
-        },
+        );
       },
-      {
-        accessorKey: "department",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      cell: ({ row }: { row: any }) => {
+        const firstName = row.getValue("displayName");
+        const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
 
-          >
-            <span>Department</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
+        return (
+          <div className="pl-3">
+            <div className="">{firstName}</div>
+            <div className="text-sm text-gray-500">{designation}</div>
+          </div>
+        );
       },
-      {
-        accessorKey: "activeLocation",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    },
+    {
+      accessorKey: "department",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
+        return (
+          <button
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Location</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            <span>Department</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
           </button>
-        ),
-        cell: ({ row }: { row: any }) => <div>{row.getValue("activeLocation")?.name}</div>,
+        );
       },
-      {
-        accessorKey: "email",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
+    },
+    {
+      accessorKey: "activeLocation",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
+        return (
+          <button
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Email</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            <span>Location</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
           </button>
-        ),
-        cell: ({ row }: { row: any }) => {
-          const email = row.getValue("email");
-          return (
-            <a
-              href={`mailto:${email}`}
-              className="text-blue-600 hover:text-blue-800 "
-            >
-              {email}
-            </a>
-          );
-        },
+        );
       },
-      {
-        accessorKey: "extension",
-        header: ({ column }: { column: any }) => (
+      cell: ({ row }: { row: any }) => <div>{row.getValue("activeLocation")?.name}</div>,
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
+
+        return (
           <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Extension</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            <span>Email</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
           </button>
-        ),
-        cell: ({ row }: { row: any }) => {
-          const extension = row.getValue("extension");
-          return (
-            <a
-              href={`tel:${extension}`}
-              className="text-blue-600 hover:text-blue-800 no-underline"
-            >
-              {extension}
-            </a>
-          );
-        },
+        );
       },
-      {
-        accessorKey: "mobile",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      cell: ({ row }: { row: any }) => {
+        const email = row.getValue("email");
+        return (
+          <a
+            href={`mailto:${email}`}
+            className="text-blue-600 hover:text-blue-800 "
           >
-            <span>Mobile</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => {
-          const extension = row.getValue("mobile");
-          return (
-            <a
-              href={`tel:${extension}`}
-              className="text-blue-600 hover:text-blue-800 no-underline"
-            >
-              {extension}
-            </a>
-          );
-        },
+            {email}
+          </a>
+        );
       },
-    ];
-    if (role === 'Admin') {
-      userColumns.push({
-        accessorKey: "personalNumber",
-        header: ({ column }: { column: any }) => (
+    },
+    {
+      accessorKey: "extension",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
+
+        return (
           <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Personal Number</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
+            <span>Extension</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
           </button>
-        ),
-        cell: ({ row }: { row: any }) => {
-          const extension = row.getValue("personalNumber");
-          return (
-            <a
-              href={`tel:${extension}`}
-              className="text-blue-600 hover:text-blue-800 no-underline"
-            >
-              {extension}
-            </a>
-          );
-        },
-      });
-    };
-    
-    return userColumns;
-  };
+        );
+      },
+      cell: ({ row }: { row: any }) => {
+        const extension = row.getValue("extension");
+        return (
+          <a
+            href={`tel:${extension}`}
+            className="text-blue-600 hover:text-blue-800 no-underline"
+          >
+            {extension}
+          </a>
+        );
+      },
+    },
+    {
+      accessorKey: "mobile",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-  const quotationColumns = getUserColumns(user?.role?.name);
+        return (
+          <button
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Mobile</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
+      cell: ({ row }: { row: any }) => {
+        const original = row.original;
+        const mobile = original.mobile;
+        const personal = original.personalNumber;
+        const department = original?.department?.name?.toLowerCase();
+        const userDepartment = user?.department?.name?.toLowerCase();
+        const userRole = user?.role?.name?.toLowerCase();
 
+        let displayNumber: string | null = null;
 
+        if (mobile) {
+          displayNumber = mobile;
+        } else if (userRole === 'admin' || userDepartment === 'hr & admin') {
+          displayNumber = personal;
+        } else if (department === userDepartment) {
+          displayNumber = personal;
+        }
+
+        return displayNumber ? (
+          <a
+            href={`tel:${displayNumber}`}
+            className="text-blue-600 hover:text-blue-800 no-underline"
+          >
+            {displayNumber}
+          </a>
+        ) : (
+          <span className="text-gray-500 italic"></span>
+        );
+      },
+    },
+  ];
 
   const userConfig = {
     searchFields: [
@@ -380,7 +407,7 @@ const page = () => {
 
     ],
     dataTable: {
-      columns: quotationColumns,
+      columns: userColumns,
       data: sortedData,
     },
     buttons: [

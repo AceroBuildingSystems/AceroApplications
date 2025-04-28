@@ -228,7 +228,7 @@ function DynamicDialog<T extends BaseFormData>({
 
     <Dialog open={isOpen} onOpenChange={closeDialog}>
       <DialogContent
-        className={`max-w-full max-h-[90%] pointer-events-auto mx-2  ${height === 'auto' ? 'h-auto' : 'h-[75%]'} ${width === 'full' ? 'w-[95%] h-[90%]' : 'sm:max-w-md lg:max-w-3xl'}`}>
+        className={`max-w-full max-h-[90%] pointer-events-auto mx-2  ${height === 'auto' ? 'h-auto' : 'h-[75%]'} ${width === 'full' ? 'w-[95%] h-[90%]' : 'sm:max-w-md lg:max-w-4xl'}`}>
         <DialogTitle className="pl-1">{`${action} ${selectedMaster?.toProperCase()}`}
           {selectedMaster === 'quote status' && <div>
             <div className="text-sm font-medium pt-2">Quote No# : {initialData?.country?.countryCode}-{initialData?.year?.toString().slice(-2)}-{formData?.quoteNo}</div>

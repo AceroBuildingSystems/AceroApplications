@@ -51,6 +51,8 @@ import SmlGroup from "./sml/Group.model";
 import SmlSubGroup from "./sml/SmlSubGroup.model";
 import SmlFile from "./sml/SMLFile.model"
 import VisaType from "./master/VisaType.model"
+import ProductType from "./master/ProductType.model";
+
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -72,4 +74,5 @@ export {
     SmlSubGroup,
     SmlFile,
     VisaType
+    ProductType
 }

@@ -79,6 +79,7 @@ export const MONGO_MODELS = {
     SML_FILE_MASTER:"SML_FILE_MASTER",
     // Employee Extra Details Models
     VISA_TYPE_MASTER:"VISA_TYPE_MASTER",
+    PRODUCT_TYPE_MASTER:"PRODUCT_TYPE_MASTER",
 }
 
 

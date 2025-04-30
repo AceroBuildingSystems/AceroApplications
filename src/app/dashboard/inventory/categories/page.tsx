@@ -20,15 +20,18 @@ interface CategoryFormData {
     _id?: string;
     name: string;
     description?: string;
+    productType: string;
     specsRequired: Record<string, "string" | "number" | "boolean">;
     isActive: boolean;
 }
+
 
 const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Record<string, "string" | "number" | "boolean">; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
     const [specs, setSpecs]: any = useState<Record<string, "string" | "number" | "boolean">>(accessData || {});
     const [newSpecName, setNewSpecName] = useState('');
     const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
     const [unitMeasurement, setUnitMeasurement] = useState<string>('');
+
    
 
     const { data: unitMeasurementData = [], isLoading: unitMeasurementLoading }: any = useGetMasterQuery({
@@ -133,11 +136,17 @@ const ProductCategoriesPage = () => {
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<CategoryFormData | null>(null);
     const { user, status, authenticated } = useUserAuthorised();
+    const { data: productTypeData = [], isLoading: productTypeLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.PRODUCT_TYPE_MASTER,
+        filter: { isActive: true }
+    });
+
     // API hooks
     const { data: categoriesResponse, isLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
         filter: { isActive: true }
     });
+    console.log(productTypeData,categoriesResponse)
 
     const [createMaster] = useCreateMasterMutation();
 
@@ -173,6 +182,14 @@ const ProductCategoriesPage = () => {
             validate: validate.specification
         },
         {
+            name: "productType",
+            label: "Product Type",
+            placeholder: "Select product type",
+            type: "select",
+            data: productTypeData?.data || [],
+            required: true
+        },
+        {
             name: "isActive",
             label: "Status",
             placeholder: "Select the status",
@@ -199,7 +216,13 @@ const ProductCategoriesPage = () => {
                 </div>
             )
         },
-
+        {
+            accessorKey: "productType",
+            header: "Product Type",
+            cell: ({ row }: any) => (
+                <Badge variant="outline">{row?.original?.productType?.name || "N/A"}</Badge>
+            )
+        },
         {
             accessorKey: "description",
             header: "Description",
@@ -221,6 +244,7 @@ const ProductCategoriesPage = () => {
                 );
             }
         },
+
         {
             accessorKey: "isActive",
             header: "Status",

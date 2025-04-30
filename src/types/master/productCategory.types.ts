@@ -11,6 +11,7 @@ export interface productCategory {
     name: string;
     description?: string;
     specsRequired: SpecificationSchema; // JSON object defining required specs
+    productType: mongoose.ObjectId;
     isActive: boolean;
     addedBy: string;
     updatedBy: string;

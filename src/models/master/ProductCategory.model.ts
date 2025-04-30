@@ -5,6 +5,7 @@ const ProductCategorySchema: Schema<productCategory> = new Schema({
     name: { type: String, required: true, unique: true },
     description: { type: String },
     specsRequired: { type: mongoose.Schema.Types.Mixed, required: true }, // Stores the JSON object of required specs
+    productType: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductType', required: true },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String }

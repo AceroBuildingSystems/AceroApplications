@@ -13,6 +13,8 @@ import { unitMeasurement } from "./master/unitMeasurement.types";
 import { group } from "./sml/group.types";
 import { smlsubgroup } from "./sml/subgroup.types";
 import { smlfile } from "./sml/smlfile.types";
+import { paintType } from "./master/paintType.types";
+import { productType } from "./master/productType.types";
 
 export type {
   UserDocument,
@@ -29,5 +31,7 @@ export type {
   unitMeasurement,
   group,
   smlsubgroup,
-  smlfile
+  smlfile,
+  paintType,
+  productType
 };

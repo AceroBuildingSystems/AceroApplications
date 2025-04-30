@@ -16,7 +16,7 @@ const VendorSchema: Schema<vendor> = new Schema({
     website: { type: String },
     location: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Location",
+        ref: "State",
         required: true,
         autopopulate: true
     },

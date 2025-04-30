@@ -73,6 +73,6 @@ export {
     SmlGroup,
     SmlSubGroup,
     SmlFile,
-    VisaType
+    VisaType,
     ProductType
 }

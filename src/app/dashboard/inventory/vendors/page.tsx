@@ -81,7 +81,7 @@ const ContactPersonsComponent = ({ accessData, handleChange }: { accessData: Con
                             placeholder="Email"
                         />
                         <Input
-                            type="text"
+                            type="number"
                             value={contact.phone}
                             onChange={(e) => {
                                 const newContacts = [...contacts];
@@ -138,12 +138,12 @@ const { user, status, authenticated } = useUserAuthorised();
         populate: ['location']
     });
 
-    const { data: locationsResponse, isLoading: locationLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.LOCATION_MASTER,
+    const { data: stateresponse, isLoading: locationLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.STATE_MASTER,
         filter: { isActive: true }
     });
 
-    const location = locationsResponse?.data?.filter((location: undefined) => location !== undefined)  // Remove undefined entries
+    const location = stateresponse?.data?.filter((location: undefined) => location !== undefined)  // Remove undefined entries
         ?.map((location: any) => ({
             _id: location?.name,
             name: location?.name
@@ -183,7 +183,7 @@ const { user, status, authenticated } = useUserAuthorised();
         {
             name: "phone",
             label: "Phone",
-            type: "text",
+            type: "number",
             required: true,
             placeholder: "Enter phone number",
             validate: validate.phone
@@ -196,11 +196,11 @@ const { user, status, authenticated } = useUserAuthorised();
         },
         {
             name: "location",
-            label: "Location",
+            label: "State/City",
             type: "select",
             required: true,
-            placeholder: "Select location",
-            data: locationsResponse?.data?.map((loc: any) => ({
+            placeholder: "Select State/City",
+            data: stateresponse?.data?.map((loc: any) => ({
                 name: loc.name,
                 _id: loc._id
             })) || []
@@ -295,7 +295,7 @@ const { user, status, authenticated } = useUserAuthorised();
     };
 
     const handleImport = () => {
-            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
+            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: stateresponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
         };
     
         const handleExport = (type: string) => {

@@ -814,7 +814,7 @@ const handleSubmit = async (e:any) => {
                 {errors.quantity && <span className="text-sm text-destructive">{errors.quantity}</span>}
               </div>
               
-              <div>
+              {/* <div>
                 <Label>Purchase Price</Label>
                 <Input
                   type="number"
@@ -826,7 +826,7 @@ const handleSubmit = async (e:any) => {
                   className={errors.purchasePrice ? "border-destructive" : ""}
                 />
                 {errors.purchasePrice && <span className="text-sm text-destructive">{errors.purchasePrice}</span>}
-              </div>
+              </div> */}
               
               <div>
                 <Label>Warranty Start Date</Label>
@@ -1072,7 +1072,7 @@ const handleSubmit = async (e:any) => {
                               <Badge>Quantity: {item.quantity}</Badge>
                             </div>
                             
-                            <div className="grid grid-cols-2 gap-2">
+                            {/* <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <span className="font-medium">Purchase Price:</span> {item.purchasePrice}
                               </div>
@@ -1081,7 +1081,7 @@ const handleSubmit = async (e:any) => {
                                 {new Date(item.warrantyStartDate).toLocaleDateString()} to{" "}
                                 {new Date(item.warrantyEndDate).toLocaleDateString()}
                               </div>
-                            </div>
+                            </div> */}
                             
                             <Separator />
                             

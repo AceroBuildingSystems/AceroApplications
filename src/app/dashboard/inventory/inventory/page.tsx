@@ -25,7 +25,7 @@ interface AssetFormData {
     warehouse: string;
     status: 'available' | 'assigned' | 'maintenance' | 'retired';
     purchaseDate: string;
-    purchasePrice: number;
+    // purchasePrice: number;
     vendor: string;
     poNumber: string;
     prNumber?: string;
@@ -228,13 +228,13 @@ const AssetsPage = () => {
             required: true,
             validate: validate.notFutureDate
         },
-        {
-            name: "purchasePrice",
-            label: "Purchase Price",
-            type: "number",
-            placeholder: "Enter purchase price",
+        // {
+        //     name: "purchasePrice",
+        //     label: "Purchase Price",
+        //     type: "number",
+        //     placeholder: "Enter purchase price",
 
-        },
+        // },
         {
             name: "vendor",
             label: "Vendor",

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import MasterComponentAQM from '@/components/MasterComponentAQM/MasterComponentAQM'
-import { ArrowUpDown, Plus, Download, Upload } from 'lucide-react';
+import { ArrowUpDown, ChevronsUpDown, Plus, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { transformDataForExcel, transformQuoteData } from '@/lib/utils';
@@ -40,26 +40,26 @@ const page = () => {
     const { data: quotationData = [], isLoading: quotationLoading }: any = useGetApplicationQuery({
         db: MONGO_MODELS.QUOTATION_MASTER,
         filter: { isActive: true },
-        sort: { year:'desc', quoteNo: 'desc' },
+        sort: { year: 'desc', quoteNo: 'desc' },
     });
 
     const sortedQuotations = Array.isArray(quotationData?.data)
-  ? [...quotationData?.data].sort((a, b) => {
-    const aEmpty = a.quoteNo === null || a.quoteNo === undefined;
-      const bEmpty = b.quoteNo === null || b.quoteNo === undefined;
+        ? [...quotationData?.data].sort((a, b) => {
+            const aEmpty = a.quoteNo === null || a.quoteNo === undefined;
+            const bEmpty = b.quoteNo === null || b.quoteNo === undefined;
 
-      // Step 1: Put empty quoteNo values at the top
-      if (aEmpty && !bEmpty) return -1;
-      if (!aEmpty && bEmpty) return 1;
+            // Step 1: Put empty quoteNo values at the top
+            if (aEmpty && !bEmpty) return -1;
+            if (!aEmpty && bEmpty) return 1;
 
-      // Step 2: Sort by year descending
-      if (b.year !== a.year) return b.year - a.year;
+            // Step 2: Sort by year descending
+            if (b.year !== a.year) return b.year - a.year;
 
-      // Step 3: Sort by quoteNo descending (numeric)
-      return (b.quoteNo ?? 0) - (a.quoteNo ?? 0);
-    })
-  : [];
-    
+            // Step 3: Sort by quoteNo descending (numeric)
+            return (b.quoteNo ?? 0) - (a.quoteNo ?? 0);
+        })
+        : [];
+
     const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
         filter: { isActive: true },
@@ -67,7 +67,7 @@ const page = () => {
     });
 
     const quotationDataNew = transformQuoteData(sortedQuotations, user, teamMemberData?.data);
-  
+
     const { data: countryData = [], isLoading: countryLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.COUNTRY_MASTER,
         filter: { isActive: true },
@@ -676,7 +676,7 @@ const page = () => {
             salesSupportEngineer: rowData?.salesSupportEngineer.map((eng: { _id: any; }) => eng._id), // Map `location` to just the `_id`s
 
         };
-       
+
         setInitialData(transformedData);
         !['draft', 'quoterequested'].includes(rowData?.status) && openStausDialog("quote status");
         // Your add logic for user page
@@ -702,7 +702,7 @@ const page = () => {
             sectorData,
             industryData,
             buildingData,
-            stateData,
+            stateData:fullstateData,
             approvalAuthorityData,
             projectTypeData,
             paintTypeData,
@@ -711,20 +711,95 @@ const page = () => {
         });
     };
 
-    const handleExport = (type: string, quotationDataNew: any[]) => {
+    const EMPTY_EXPORT_ROW = {
+        "Region": '',
+        "Area": '',
+        "Country": '',
+        "Year": '',
+        "Quote No": '',
+        "Option": '',
+        "SO": '',
+        "RO": '',
+        "Quote Rev": '',
+        "Quote Status": '',
+        "Date Received From Customer": '',
+        "Sales Eng/Mng": '',
+        "Sales Support 1": '',
+        "Sales Support 2": '',
+        "Sales Support 3": '',
+        "Customer Name": '',
+        "Contact Name": '',
+        "Contact Email": '',
+        "Contact Number": '',
+        "Position": '',
+        "Customer Type": '',
+        "End Client": '',
+        "Project Management": '',
+        "Consultant": '',
+        "Main Contractor": '',
+        "Erector": '',
+        "Project Name": '',
+        "Sectors": '',
+        "Industry Type": '',
+        "Other Industry": '',
+        "Building Type": '',
+        "Other Building Type": '',
+        "Building Usage": '',
+        "City": '',
+        "Approval Authority": '',
+        "Plot No": '',
+        "Date Sent To Estimation": '',
+        "Date Received From Estimation": '',
+        "Cycle Time (Days)": '',
+        "Date Sent To Customer": '',
+        "No Of Buildings": '',
+        "Project Type": '',
+        "Paint Type": '',
+        "Other Paint Type": '',
+        "Projected Area (Sq. Mtr)": '',
+        "Total Weight (Tons)": '',
+        "Mezzanine Area (Sq. Mtr)": '',
+        "Mezzanine Weight (Tons)": '',
+        "Currency": '',
+        "Total Estimated Price": '',
+        "Q22 Value (AED)": '',
+        "Sp. BuyOut Price": '',
+        "Freight Price": '',
+        "Incoterm": '',
+        "Incoterm Description": '',
+        "Booking Probability": '',
+        "Job No": '',
+        "Job Date": '',
+        "Forecast Month": '',
+        "Payment Term": '',
+        "Remarks": '',
+        "Lost To": '',
+        "Lost To Others": '',
+        "Lost Date": '',
+        "Reason": '',
+        "Initial Ship Date": '',
+        "Final Ship Date": '',
+        "Status": '',
+        "Handle By": '',
+      };
 
+      
+      const handleExport = (type: string, quotationDataNew: any[]) => {
+        let formattedData = [];
+    
         if (!quotationDataNew || quotationDataNew.length === 0) {
-            toast.error("No data to export");
-            return;
+            // Export 1 row with empty fields
+            formattedData = [EMPTY_EXPORT_ROW];
+        } else {
+            // Transform actual data
+            formattedData = transformDataForExcel(quotationDataNew);
         }
-
-        const formattedData = transformDataForExcel(quotationDataNew);
-
+    
         if (type === 'excel') {
             exportToExcel(formattedData);
         }
     };
-
+    
     const exportToExcel = (data: any[]) => {
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
@@ -775,101 +850,150 @@ const page = () => {
             },
             {
                 accessorKey: "quoteNo",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
 
-                    >
-                        <span>Quote No</span>
-                        <ArrowUpDown size={15} />
-                    </button>
-                ),
+                    return (
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Quote No</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
+                    );
+                },
                 cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editQuotation(row.original)}>{row.getValue("quoteNo") && `${row.getValue("country")?.countryCode}-${row.getValue("year")?.toString().slice(-2)}-${row.getValue("quoteNo")}` || "Add Quote No"}</div>,
             },
             {
                 accessorKey: "revNo",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
                         <span>Rev No</span>
-                        <ArrowUpDown size={15} />
-                    </button>
-                ),
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div >{row.getValue("revNo")}</div>,
             },
             {
                 accessorKey: "option",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
                         <span>Option</span>
-                        <ArrowUpDown size={15} />
-                    </button>
-                ),
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div>{row.getValue("option")}</div>,
             },
             {
                 accessorKey: "quoteStatus",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
-                        <span>Quote Status</span> {/* Label */}
-                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                    </button>
-                ),
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Quote Status</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div className="w-28 p-2 border rounded-md flex items-center justify-center text-center" onClick={() => editQuoteStatus(row.original)}>
                     {quoteStatusData?.data.find((data: { _id: any; }) => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
             },
             {
                 accessorKey: "bookingProbability",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
-                        <span>Probability</span> {/* Label */}
-                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                    </button>
-                ),
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Probability</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div>{row.getValue("bookingProbability")}</div>,
             },
             {
                 accessorKey: "region",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
-                        <span>Region</span> {/* Label */}
-                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                    </button>
-                ),
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Region</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div>{countryData?.data.find((data: { _id: any; }) => data._id === row.getValue("country")?._id)?.region?.continent?.name}</div>,
             },
             {
                 accessorKey: "country",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
-                        <span>Country</span> {/* Label */}
-                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                    </button>
-                ),
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Country</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div>{countryData?.data.find((data: { _id: any; }) => data._id === row.getValue("country")?._id)?.name}</div>,
             },
 
@@ -878,45 +1002,66 @@ const page = () => {
         if (teamRole !== 'Engineer') {
             columns.push({
                 accessorKey: "salesEngineer",
-                header: ({ column }: { column: any }) => (
-                    <button
-                        className="flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                    >
-                        <span>Sales Engineer</span> {/* Label */}
-                        <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                    </button>
-                ),
+                header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Sales Engineer</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
                 cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find((data: { _id: any; }) => data._id === row.getValue("salesEngineer")?._id)?.user?.displayName.toProperCase()}</div>,
             },)
         };
         columns.push({
             accessorKey: "company",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Customer Name</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Company</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div>{customerData?.data.find((data: { _id: any; }) => data._id === row.getValue("company")?._id)?.name}</div>,
         },)
         columns.push({
             accessorKey: "projectName",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Project Name</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Project Name</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div>{row.getValue("projectName")}</div>,
         },)
         return columns;
@@ -930,7 +1075,7 @@ const page = () => {
 
     const quotationConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search anything..' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search the quote..' },
 
         ],
         filterFields: [
@@ -971,7 +1116,7 @@ const page = () => {
         incomplete: 'bg-blue-100',
         submitted: 'bg-orange-200',
         rejected: 'bg-red-200',
-        approved: 'bg-green-100'
+        approved: 'bg-green-200'
 
     };
 

@@ -29,28 +29,27 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
-            <Button
-  variant="outline"
-  role="combobox"
-  aria-expanded={open}
-  className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${
-    (field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-     selectedValue ||
-     field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName)
-      ? "text-black"
-      : "text-gray-400"
-  }`}
->
-  <span className="text-sm truncate whitespace-nowrap overflow-hidden max-w-[calc(100%-1.5rem)]">
-    {
-      field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-      field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName ||
-      selectedValue ||
-      placeholder
-    }
-  </span>
-  <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-1" />
-</Button>
+                <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                    className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${(field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+                            selectedValue ||
+                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName)
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                >
+                    <span className="text-sm truncate whitespace-nowrap overflow-hidden max-w-[calc(100%-1.5rem)]">
+                        {
+                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName ||
+                            selectedValue ||
+                            placeholder
+                        }
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-1" />
+                </Button>
 
 
 

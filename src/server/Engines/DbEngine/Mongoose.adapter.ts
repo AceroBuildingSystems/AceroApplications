@@ -189,26 +189,51 @@ export class MongooseAdapter implements DatabaseAdapter {
       return { status: ERROR, message: `Model ${modelName} not found` };
 
     let doc = null;
-    console.debug(options)
+
     if (options.bulkInsert) {
-      doc = await model.insertMany(options.data);
+      const inserted: any[] = [];
+      const skipped: any[] = [];
+      for (const item of options.data) {
+        try {
+          // Optional: Hash password if present
+          if (item.password) {
+            const saltRounds = 10;
+            item.password = await bcrypt.hash(item.password, saltRounds);
+          }
+
+          doc = await model.create(item);
+         
+          inserted.push(doc);
+        } catch (err: any) {
+        
+          const reason = err.code === 11000
+            ? "Duplicate entry"
+            : err.message || "Unknown error";
+
+          skipped.push({
+            ...item,
+            reason,
+          });
+        }
+      }
+      return { status: SUCCESS, data: {doc, skipped, inserted} };
+      // doc = await model.insertMany(options.data);
     } else {
       if (options.data.password) {
         const saltRounds = 10;
         options.data.password = await bcrypt.hash(options.data.password, saltRounds);
       }
-     
+
       doc = await model.create(options.data);
+      return { status: SUCCESS, data: doc };
     }
 
     if (!doc) return { status: ERROR, message: "Failed to create document" };
 
-    return { status: SUCCESS, data: doc };
+    
   }
 
 
-
-  
 
   /**
    * Update documents matching a filter
@@ -246,7 +271,7 @@ export class MongooseAdapter implements DatabaseAdapter {
       doc.push(result); // result will contain update details, not documents
     } else {
       // Perform single document update (findOneAndUpdate)
-    
+
       doc = await model.findOneAndUpdate(options.filter || {}, options.data, {
         new: true,
         upsert: options.upsert ?? false,
@@ -258,13 +283,13 @@ export class MongooseAdapter implements DatabaseAdapter {
     return { status: SUCCESS, data: doc };
   }
 
-// {
-//   id: 'user123',
-//   arrayProperty: 'access',
-//   arrayFilter: { accessId: '64ef3f3e...' },
-//   data: { hasAccess: true, permissions: { view: true, create: true } },
-//   addIfNotFound: true,
-// });
+  // {
+  //   id: 'user123',
+  //   arrayProperty: 'access',
+  //   arrayFilter: { accessId: '64ef3f3e...' },
+  //   data: { hasAccess: true, permissions: { view: true, create: true } },
+  //   addIfNotFound: true,
+  // });
   async updateInArray(
     modelName: string,
     options: UpdateInArrayOptions
@@ -273,33 +298,33 @@ export class MongooseAdapter implements DatabaseAdapter {
     const model = this.models[modelName];
     if (!model)
       return { status: ERROR, message: `Model ${modelName} not found` };
-  
-    const { id, arrayProperty, arrayFilter, data, addIfNotFound = true,itemMatcher,replaceAll=false } = options;
-  
+
+    const { id, arrayProperty, arrayFilter, data, addIfNotFound = true, itemMatcher, replaceAll = false } = options;
+
     // Find the document by ID                                                                                                                                                           
     const document = await model.findById(id);
     if (!document) return { status: ERROR, message: "Document not found" };
 
 
-  
+
     // Check if the array property exists
     let array = (document as any)[arrayProperty];
-    if(replaceAll){
+    if (replaceAll) {
       array = data
-    }else{
+    } else {
       if (!Array.isArray(array)) {
         return {
           status: ERROR,
           message: `${arrayProperty} is not an array or does not exist`,
         };
       }
-  
-      if(arrayFilter){
+
+      if (arrayFilter) {
         // Helper function to access nested keys
         const getNestedValue = (obj: any, path: string) => {
           return path.split('.').reduce((o, key) => (o ? o[key] : undefined), obj);
         };
-      
+
         // Find the index of the array item matching the filter
         const itemIndex = array.findIndex((item: any) =>
           Object.entries(arrayFilter).every(([key, value]) => {
@@ -310,7 +335,7 @@ export class MongooseAdapter implements DatabaseAdapter {
             return itemValue === value;
           })
         );
-      
+
         // Add or update logic
         if (itemIndex === -1) {
           if (!addIfNotFound) {
@@ -324,29 +349,29 @@ export class MongooseAdapter implements DatabaseAdapter {
             ...data,
           };
         }
-      }else{
-        if(Array.isArray(data)){
-          if(itemMatcher){
-            data.forEach(d=>{
-              const matchIndex = array.findIndex((doc: { [x: string]: any; })=>doc[itemMatcher] === d[itemMatcher])
-              if(matchIndex !== -1){
+      } else {
+        if (Array.isArray(data)) {
+          if (itemMatcher) {
+            data.forEach(d => {
+              const matchIndex = array.findIndex((doc: { [x: string]: any; }) => doc[itemMatcher] === d[itemMatcher])
+              if (matchIndex !== -1) {
                 array[matchIndex][itemMatcher] = d
-              }else{
+              } else {
                 array.push(d);
               }
             })
           }
-        }else{
+        } else {
           array.push(data)
         }
       }
-    
+
     }
 
     // Save the updated document
     (document as any)[arrayProperty] = array;
     await document.save();
-  
+
     return { status: SUCCESS, data: document };
   }
 

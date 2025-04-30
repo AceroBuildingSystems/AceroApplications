@@ -10,7 +10,6 @@ const BuildingTypeSchema: Schema<buildingType> = new Schema({
    
 }, { timestamps: true })
 
-
 const BuildingType: Model<buildingType> = mongoose.models.BuildingType || mongoose.model<buildingType>("BuildingType", BuildingTypeSchema)
 
 export default BuildingType

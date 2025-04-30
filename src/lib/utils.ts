@@ -55,13 +55,14 @@ export const transformQuoteData = (data: any[], user: { _id: any; role: { name: 
     const handledBy = quote?.handleBy;
 
     if (!handledBy || !userId) return false; // Skip if there's no handledBy data or userId
-
+ 
     switch (user?.role?.name) {
       case "Admin":
+        console.log(teamRole)
         return true; // Admin gets all data
 
       default:
-
+      
         switch (teamRole) {
           case "Director":
             return (
@@ -75,7 +76,7 @@ export const transformQuoteData = (data: any[], user: { _id: any; role: { name: 
               handledBy?.teamReportingTo?.[0]?._id === userId // Reports to the user
             );
 
-          case "Engineer":
+          case "Sales Engineer":
             return handledBy?.user?._id === userId; // Only data handled by the user
 
           default:
@@ -93,7 +94,7 @@ export const transformDataForExcel = (data: any[]) => {
     "Area": item.country?.region?.name || '',
     "Country": item.country?.name || '',
     "Year": item.year || '',
-    "QuoteNo": item.quoteNo ? `${item.country?.countryCode}-${item.year?.toString().slice(-2)}-${item.quoteNo}` : '',
+    "Quote No": item.quoteNo ? `${item.country?.countryCode}-${item.year?.toString().slice(-2)}-${item.quoteNo}` : '',
     "Option": item.option || '',
     "SO": item.sellingTeam?.name || '',
     "RO": item.responsibleTeam?.name || '',
@@ -154,9 +155,12 @@ export const transformDataForExcel = (data: any[]) => {
     "Remarks": item.remarks || '',
     "Lost To": item.lostTo || '',
     "Lost To Others": item.lostToOthers || '',
+    "Lost Date": item.lostDate ? moment(item.lostDate).format("DD-MMM-YYYY") : '',
     "Reason": item.reason || '',
     "Initial Ship Date": item.initialShipDate ? moment(item.initialShipDate).format("DD-MMM-YYYY") : '',
-    "Final Ship Date": item.finalShipDate ? moment(item.finalShipDate).format("DD-MMM-YYYY") : ''
+    "Final Ship Date": item.finalShipDate ? moment(item.finalShipDate).format("DD-MMM-YYYY") : '',
+    "Status": item.status || '',
+    "Handle By": item.handleBy?.user?.displayName?.toProperCase()|| '',
   }));
 };
 

@@ -150,10 +150,10 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                     {/* Filter Section */}
                     <div className='flex flex-row items-center justify-between'>
-                        <div className="flex flex-row items-center gap-2">
+                        <div className="flex flex-row items-center gap-2 w-full">
                             {/* Render search fields */}
                             <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
-                                <div key={index}>
+                                <div key={index} className='w-full'>
 
                                     <Input
                                         type={field.type}
@@ -170,6 +170,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                 {config.filterFields?.map((field: FieldObject, index: number) => {
 
                                     return (
+                                        <div key={index} className='w-full'>
                                         <Combobox
                                             key={field.key || index}
                                             field={field}
@@ -178,6 +179,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                             placeholder={field.placeholder || ""}
 
                                         />
+                                        </div>
                                     );
                                 })}
                             </div>

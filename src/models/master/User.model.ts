@@ -9,12 +9,15 @@ const UserSchema: Schema<UserDocument> = new Schema({
     email: { type: String, unique: true,sparse: true },
     password: { type: String, },
     role1: { type: String },
+
     imageUrl: { type: String ,default:""},
+
     role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Role", // Reference to the Role model
        
     },
+    
     displayName: { type: String },
     fullName: { type: String },
     designation1: { type: String },
@@ -82,40 +85,6 @@ const UserSchema: Schema<UserDocument> = new Schema({
         ref: "Location", // Reference to the Organisation model
         
     },
-    personalNumber: { type: String },
-    nationality: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Country", // Reference to the Organisation model
-        
-    },
-    gender: {
-        type: String,
-        enum: ['Male', 'Female'], // Enum values for the status
-    },
-    maritalStatus: {
-        type: String,
-        enum: ['Single', 'Married', 'Divorced'], // Enum values for the status
-    },
-    dateOfBirth: { type: Date, default:null },
-    visaFileNo: { type: String },
-    visaIssueDate: { type: Date, default:null },
-    visaExpiryDate: { type: Date, default:null },
-    visaType: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "VisaType", // Reference to the Organisation model
-        
-    },
-    passportNumber: { type: String },
-    passportIssueDate: { type: Date, default:null },
-    passportExpiryDate: { type: Date, default:null },
-    emiratesId: { type: String },
-    emiratesIdIssueDate: { type: Date, default:null },
-    emiratesIdExpiryDate: { type: Date, default:null },
-    workPermit: { type: String },
-    labourCardExpiryDate: { type: Date, default:null },
-    personCode: { type: String },
-    medicalInsurance: { type: String },
-    iloeExpiryDate: { type: Date, default:null },
 }, { timestamps: true })
 
 UserSchema.pre('save', async function (next) {
@@ -134,7 +103,6 @@ UserSchema.pre<Query<any, UserDocument>>(/^find/, function (next) {
       { path: "organisation" },
       { path: "activeLocation" },
       { path: "reportingLocation" },
-     
       { path: "access.accessId" },
     ]);
 

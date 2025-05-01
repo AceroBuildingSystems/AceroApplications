@@ -260,9 +260,9 @@ console.log('vendorsResponse', vendorsResponse?.data, vendorsLoading, cityLoadin
                 if (contacts.length === 0) return '-';
                 return (
                     <div className="max-w-[300px] overflow-hidden text-ellipsis">
-                        {contacts.map((contact: ContactPerson) =>
-                            `${contact.name} (${contact.designation})`
-                        ).join(", ")}
+                        {contacts?.map((contact: ContactPerson) =>
+                            `${contact?.name ?? " "} ${contact?.designation ? `(${contact?.designation})` : ""}`
+                        ).join(", ") ?? '-'}
                     </div>
                 );
             }

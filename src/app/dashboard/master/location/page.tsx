@@ -17,26 +17,26 @@ import { createMasterData } from '@/server/services/masterDataServices';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-
+import * as XLSX from "xlsx";
 
 const page = () => {
-   
+  const [importing, setImporting] = useState(false);
   const { user, status, authenticated } = useUserAuthorised();
-  const { data: locationData = [], isLoading: locationLoading }:any = useGetMasterQuery({
-      db: MONGO_MODELS.LOCATION_MASTER,
-      sort: { name: -1 },
-    });
+  const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
+    db: MONGO_MODELS.LOCATION_MASTER,
+    sort: { name: -1 },
+  });
 
-    const { data: stateData = [], isLoading: stateLoading }:any = useGetMasterQuery({
-      db: MONGO_MODELS.STATE_MASTER,
-      sort: { name: -1 },
-    });
-  
-  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
+  const { data: stateData = [], isLoading: stateLoading }: any = useGetMasterQuery({
+    db: MONGO_MODELS.STATE_MASTER,
+    sort: { name: -1 },
+  });
+
+  const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  locationLoading || stateLoading|| isCreatingMaster;
+  const loading = locationLoading || stateLoading || isCreatingMaster;
 
 
   interface RowData {
@@ -48,13 +48,13 @@ const page = () => {
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-   
-    { label: 'Location', name: "name", type: "text",required: true, placeholder:'Location' },
-    { label: 'Address', name: "address", type: "text", placeholder:'Address' },
-    { label: 'Pin Code', name: "pincode", type: "text", placeholder:'Pin Code' },
+
+    { label: 'Location', name: "name", type: "text", required: true, placeholder: 'Location' },
+    { label: 'Address', name: "address", type: "text", placeholder: 'Address' },
+    { label: 'Pin Code', name: "pincode", type: "text", placeholder: 'Pin Code' },
     { label: 'State / City', name: "state", type: "select", required: true, placeholder: 'Select State / City', format: 'ObjectId', data: stateData?.data },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
-   
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
   ]
 
 
@@ -78,11 +78,11 @@ const page = () => {
 
   // Save function to send data to an API or database
   const saveData = async ({ formData, action }: { formData: any; action: string }) => {
-   
+
     const formattedData = {
-        db: MONGO_MODELS.LOCATION_MASTER,
+      db: MONGO_MODELS.LOCATION_MASTER,
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
 
@@ -91,7 +91,7 @@ const page = () => {
     const response = await createMaster(formattedData);
 
     return response;
-    
+
   };
 
 
@@ -109,13 +109,51 @@ const page = () => {
 
   };
 
-  const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.LOCATION_MASTER, masterName:"Location" });
+
+  const handleImport = async () => {
+    await bulkImport({
+      roleData: [], continentData: [], regionData: [], countryData: [], locationData: stateData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.LOCATION_MASTER, masterName: "Location", onStart: () => setImporting(true),
+      onFinish: () => setImporting(false)
+    });
   };
 
-  const handleExport = () => {
-    console.log('UserPage Update button clicked');
-    // Your update logic for user page
+  const exportToExcel = (data: any[]) => {
+
+    // Convert JSON data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    // Write the workbook and trigger a download
+    XLSX.writeFile(workbook, 'exported_data.xlsx');
+  };
+
+
+  const handleExport = (type: string, data: any) => {
+    let formattedData: any[] = [];
+
+    if (data?.length > 0) {
+      formattedData = data?.map((data: any) => ({
+        'Location': data?.name,
+        'Address': data?.address,
+        'Pin Code': data?.pincode,
+        'City': data?.state?.name,
+
+      }));
+    } else {
+      // Create a single empty row with keys only (for header export)
+      formattedData = [{
+        'Location': '',
+        'Address': '',
+        'Pin Code': '',
+        'City': '',
+
+      }];
+    }
+
+    type === 'excel' && exportToExcel(formattedData);
+
   };
 
   const handleDelete = () => {
@@ -123,7 +161,7 @@ const page = () => {
     // Your delete logic for user page
   };
 
- 
+
 
   const locationColumns = [
     {
@@ -178,19 +216,19 @@ const page = () => {
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("address")}</div>,
     },
     {
-        accessorKey: "state",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  
-          >
-            <span>State / City</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("state")?.name}</div>,
-      },
+      accessorKey: "state",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>State / City</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("state")?.name}</div>,
+    },
     {
       accessorKey: "isActive",
       header: ({ column }: { column: any }) => (
@@ -205,7 +243,7 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
-    
+
 
 
   ];
@@ -213,7 +251,7 @@ const page = () => {
   const locationConfig = {
     searchFields: [
       { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
-      
+
     ],
     filterFields: [
       // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
@@ -225,8 +263,13 @@ const page = () => {
     },
     buttons: [
 
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      {
+        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+          { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+          { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
+        ]
+      },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };
@@ -244,7 +287,8 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
-        height = 'auto'
+        height='auto'
+        onchangeData={() => { }}
       />
     </>
 

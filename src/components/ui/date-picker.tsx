@@ -87,14 +87,14 @@ export function DatePicker({
               variant={"outline"}
               className={cn(
                 "w-full flex justify-start  font-normal",
-                !date && "text-muted-foreground bg-zinc-50 text-gray-400"
+                !date && "text-muted-foreground bg-white text-gray-400"
               )}
             >
               <CalendarIcon className=" h-4 w-4" />
               {date ? format(date, "PPP") : <span>{placeholder}</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0 pointer-events-auto">
+          <PopoverContent className="w-full p-0 pointer-events-auto bg-white">
             <div className="w-full flex p-2">
               <Select
                 onValueChange={handleMonthChange}

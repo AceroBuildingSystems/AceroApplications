@@ -94,16 +94,22 @@ interface BulkImportParams {
     departmentData: any;
     employeeTypeData: any;
     organisationData: any;
+    onStart: () => void;
+     onFinish: () => void;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, teamData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, teamData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName,onStart, onFinish }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".xlsx, .xls";
     input.onchange = async (event) => {
+        onStart?.();
         const file = (event.target as HTMLInputElement)?.files?.[0];
-        if (!file) return;
+        if (!file){
+            onFinish?.();
+            return;
+        };
 
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -120,19 +126,27 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
             const masterRequiredFields: Record<string, string[]> = {
                 User: ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role'],
                 Asset: ['Asset ID', 'Name', 'Category'], // example
-                Vendor: ['name', 'email', 'phone'], // example
+                Vendor: ['Name'], // example
                 Category: ['name', 'description', 'specsRequired'], // example
                 Department: ['Department Id', 'Department'],
                 Designation: ['Designation', 'Department'],
+                Customer: ['Name', 'Customer Type'],
+                CustomerContact: ['Name', 'Customer Name'],
+                IndustryType: ['Industry Type'],
+                BuildingType: ['Building Type'],
+                State: ['City', 'Country'],
+                ProjectType: ['Project Type'],
+                Location: ['Location', 'City'],
                 // Add other masters as needed
             };
 
             const requiredFields = masterRequiredFields[masterName] || [];
+         
             const rowsWithMissingData = sheetData
                 .map((row: any, index: number) => {
                     const missingFields = requiredFields.filter(field => {
                         const value = row[field];
-                        
+
                         return value === undefined || value === null || String(value).trim() === "";
                     });
 
@@ -140,6 +154,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 })
                 .filter(Boolean); // Remove nulls
 
+               
             if (rowsWithMissingData.length > 0) {
                 const rowNumbers = rowsWithMissingData.map((_, i) => i + 2).join(', '); // +2 to match Excel rows (header + 1-based index)
                 const errorMessage = rowsWithMissingData
@@ -150,6 +165,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 return;
             }
 
+           
             // Transform the sheet data based on the entity
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
             const successful: any[] = [];
@@ -222,57 +238,24 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 }));
             };
 
-            // Send the transformed data for bulk insert
-            try {
-                for (const row of enrichedData) {
-                    try {
-                        const formattedData = {
-                            action: action === 'Add' ? 'create' : 'update',
-                            db: db,
-                            bulkInsert: false,
-                            data: row,
-                        };
-                        const response = await createUser(formattedData);// Replace this with your actual insert logic
+            const formattedData = {
+                action: action === 'Add' ? 'create' : 'update',
+                db: db,
+                bulkInsert: true,
+                data: enrichedData,
+            };
+            const response = await createUser(formattedData);
 
-                        if (response?.error?.data?.status === ERROR || response?.error?.data?.status === "ERROR") {
-                            skipped.push(row);
-                        }
-                        else {
-                            successful.push(row);
-
-                        }
-                        console.log(skipped, "skipped", successful, "successful", response, "response")
-                        console.log(successful)
-                    } catch (err: any) {
-
-                        const isDuplicate = err?.response?.status === 409 || err?.message?.toLowerCase().includes("duplicate");
-                        if (isDuplicate) {
-                            skipped.push(row);
-                        } else {
-                            console.error("Unexpected error:", err);
-                            toast.error("An unexpected error occurred during import.");
-                            return;
-                        }
-                    }
-                }
-
-                if (successful.length > 0) {
-                    toast.success(`${successful.length} records imported successfully.`);
-                }
-
-                if (skipped.length > 0) {
-
-
-                    exportToExcel(skipped);
-
-                    toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
-                }
-
-
-            } catch (err: any) {
-                const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                toast.error(`Error during import: ${errorMessage}`);
+            if (response?.data?.data?.inserted.length > 0) {
+                toast.success(`${response?.data?.data?.inserted.length} records imported successfully.`);
             }
+
+            if (response?.data?.data?.skipped.length > 0) {
+                exportToExcel(response?.data?.data?.skipped);
+                toast.warning(`${response?.data?.data?.skipped.length} duplicates were skipped and exported to Excel.`);
+            }
+
+            onFinish?.();
         };
         reader.readAsBinaryString(file);
     };
@@ -348,8 +331,46 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
             const sheetName = workbook.SheetNames[0];
             const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
+            if (!sheetData || sheetData.length === 0) {
+                toast.error("The uploaded Excel sheet is empty.");
+                return;
+            }
+
+            const masterRequiredFields: Record<string, string[]> = {
+                Quotation: ['Region', 'Area', 'Country', 'Year', 'Option', 'SO', 'RO', 'Quote Status', 'Date Received From Customer', 'Quote Rev', 'Sales Eng/Mng', 'Handle By', 'Status'],
+
+                // Add other masters as needed
+            };
+
+            const requiredFields = masterRequiredFields[masterName] || [];
+            const rowsWithMissingData = sheetData
+                .map((row: any, index: number) => {
+                    const missingFields = requiredFields.filter(field => {
+                        const value = row[field];
+
+                        return value === undefined || value === null || String(value).trim() === "";
+                    });
+
+                    return missingFields.length > 0 ? { index: index + 2, missingFields } : null; // +2 for Excel-like indexing
+                })
+                .filter(Boolean); // Remove nulls
+
+            if (rowsWithMissingData.length > 0) {
+                const rowNumbers = rowsWithMissingData.map((_, i) => i + 2).join(', '); // +2 to match Excel rows (header + 1-based index)
+                const errorMessage = rowsWithMissingData
+                    .map(({ index, missingFields }: any) => `Row ${index}: ${missingFields.join(", ")}`)
+                    .join(" | ");
+
+                toast.error(`Missing required fields - ${errorMessage}`);
+                return;
+            }
+
             // Transform the sheet data based on the entity
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
+            const successful: any[] = [];
+            const skipped: any[] = [];
+            // Transform the sheet data based on the entity
+
             const referenceData = {
                 roleData: roleData?.data || [],
                 continentData: continentData?.data || [],
@@ -377,11 +398,38 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 addedBy: user?._id,
                 updatedBy: user?._id,
             }));
-            console.log(enrichedData);
+
+
             // Send the transformed data for bulk insert
             try {
+                const existingSet = new Set(
+                    quotationData?.data?.map((record: { year: any; quoteNo: any; option: any; }) =>
+                        `${record.year}-${record.quoteNo}-${record.option}`
+                    )
+                );
+                const uniqueSet = new Set();
+
+                const uniqueEnrichedData = enrichedData.filter((item: { year: any; quoteNo: any; option: any; }) => {
+                    const key = `${item.year}-${item.quoteNo}-${item.option}`;
+                    if (existingSet.has(key) || uniqueSet.has(key)) {
+                        skipped.push(item); // Store duplicates
+                        return false;
+                    }
+                    uniqueSet.add(key);
+                    return true;
+                });
+
+                if (uniqueEnrichedData.length === 0) {
+                    if (skipped.length > 0) {
+                        exportToExcel(skipped);
+                        toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
+                    } else {
+                        toast.warning("No unique records found for import.");
+                    }
+                    return;
+                }
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
-                const revisionData = enrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
+                const revisionData = uniqueEnrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
                     {
                         revNo: item.revNo,
                         sentToEstimation: item.sentToEstimation,
@@ -421,7 +469,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 }
 
                 // Step 2: Insert Proposal Entries
-                const proposalData = enrichedData.map((item: { addedBy: any; updatedBy: any; }, index: number) => [
+                const proposalData = uniqueEnrichedData.map((item: { addedBy: any; updatedBy: any; }, index: number) => [
                     {
                         revisions: [insertedRevisions[index * 2]], // ProposalOffer revision ID
                         type: "ProposalOffer",
@@ -453,7 +501,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 }
 
                 // Step 3: Insert Quotation Entries
-                const quotationDataImport = enrichedData.map((item: { country: any; year: any; option: any; revNo: any; quoteNo: any; quoteStatus: any; salesEngineer: any; salesSupportEngineer1: any; salesSupportEngineer2: any; salesSupportEngineer3: any; rcvdDateFromCustomer: any; sellingTeam: any; responsibleTeam: any; forecastMonth: string | number; status: any; handleBy: any; addedBy: any; updatedBy: any; }, index: number) => ({
+                const quotationDataImport = uniqueEnrichedData.map((item: { country: any; year: any; option: any; revNo: any; quoteNo: any; quoteStatus: any; salesEngineer: any; salesSupportEngineer1: any; salesSupportEngineer2: any; salesSupportEngineer3: any; rcvdDateFromCustomer: any; sellingTeam: any; responsibleTeam: any; forecastMonth: string | number; status: any; handleBy: any; addedBy: any; updatedBy: any; }, index: number) => ({
                     ...item,
                     country: item.country,
                     year: item.year,
@@ -474,39 +522,55 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     updatedBy: item.updatedBy,
                 }));
 
-                const existingSet = new Set(
-                    quotationData?.data?.map((record: { year: any; quoteNo: any; option: any; }) => `${record.year}-${record.quoteNo}-${record.option}`)
-                );
 
-                // Filter out duplicates from dataToImport before inserting
-                const filteredDataToImport = quotationDataImport.filter((item: { year: any; quoteNo: any; option: any; }) =>
-                    !existingSet.has(`${item.year}-${item.quoteNo}-${item.option}`)
-                );
 
-                const uniqueSet = new Set();
-                const uniqueDataToImport = filteredDataToImport?.filter((item: { year: any; quoteNo: any; option: any; }) => {
-                    const key = `${item.year}-${item.quoteNo}-${item.option}`;
-                    if (uniqueSet.has(key)) {
-                        return false; // Duplicate found, exclude it
+                try {
+                    for (const row of quotationDataImport) {
+                        try {
+                            const formattedData = {
+                                action: action === 'Add' ? 'create' : 'update',
+                                db: db,
+                                bulkInsert: false,
+                                data: row,
+                            };
+                            const response = await createUser(formattedData);// Replace this with your actual insert logic
+
+                            if (response?.error?.data?.status === ERROR || response?.error?.data?.status === "ERROR") {
+                                skipped.push(row);
+                            }
+                            else {
+                                successful.push(row);
+
+                            }
+                           
+                        } catch (err: any) {
+
+                            const isDuplicate = err?.response?.status === 409 || err?.message?.toLowerCase().includes("duplicate");
+                            if (isDuplicate) {
+                                skipped.push(row);
+                            } else {
+                                console.error("Unexpected error:", err);
+                                toast.error("An unexpected error occurred during import.");
+                                return;
+                            }
+                        }
                     }
-                    uniqueSet.add(key);
-                    return true; // Unique entry, keep it
-                });
-                // Proceed with bulk insert only if there are new records
-                console.log(uniqueDataToImport);
 
-                if (uniqueDataToImport.length > 0) {
+                    if (successful.length > 0) {
+                        toast.success(`${successful.length} records imported successfully.`);
+                    }
 
-                    const quotationResponse = await createUser({
-                        action: "create",
-                        db: "QUOTATION_MASTER",
-                        bulkInsert: true,
-                        data: uniqueDataToImport,
-                    });
+                    if (skipped.length > 0) {
 
-                    toast.success(`${masterName} imported successfully`);
-                } else {
-                    toast.error("No data imported. All data already exist.");
+                        exportToExcel(skipped);
+
+                        toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
+                    }
+
+
+                } catch (err: any) {
+                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                    toast.error(`Error during import: ${errorMessage}`);
                 }
 
 
@@ -645,6 +709,7 @@ const fieldMappingConfig: { [key: string]: any } = {
     Role: {
         role: { source: "roleData", key: "name", value: "_id" },
     },
+   
     // Add more entity mappings if needed
 };
 
@@ -855,7 +920,7 @@ const entityFieldMappings = {
     },
 
     State: {
-        "State": "name",
+        "City": "name",
         "Country": "country",
 
         // Add more mappings for State

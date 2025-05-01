@@ -172,7 +172,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className="flex flex-col gap-1 w-full h-full px-4">
+                <div className="flex flex-col gap-1 w-full h-full px-4 pt-0.5">
 
                     {/* Filter Section */}
                     <div className="flex flex-row justify-between gap-2">
@@ -197,7 +197,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                     </div>
                                 </PopoverTrigger>
                                 {/* Popover Content */}
-                                <PopoverContent className="fixed top-1/2 w-[600px] mt-2 ">
+                                <PopoverContent className="fixed top-1/2 w-[600px] mt-2 left-[-15]">
 
                                     <div className="flex items-center gap-2 flex-wrap ">
                                         {/* Render Filter Buttons */}

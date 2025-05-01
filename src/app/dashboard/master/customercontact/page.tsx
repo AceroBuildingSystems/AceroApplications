@@ -133,11 +133,11 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER, masterName: "CustomerContact" });
+    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:customerData, userData:[], teamData:[],designationData: [], departmentData: [], employeeTypeData:[], organisationData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_CONTACT_MASTER, masterName: "CustomerContact" });
   };
 
   const exportToExcel = (data: any[]) => {
-    const formattedData = data.map(data => ({
+    const formattedData = data?.map(data => ({
       "Name": data?.name,
       "Email": data?.email,
       "Phone": data?.phone,
@@ -319,6 +319,7 @@ const page = () => {
         initialData={initialData}
         action={action}
         height='auto'
+        onchangeData={()=>{}}
       />
     </>
 

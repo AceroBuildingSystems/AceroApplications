@@ -71,7 +71,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
-  console.log("data", summaryTotal)
+ 
   const table = useReactTable({
     data,
     columns,
@@ -156,7 +156,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
                   .map((column) => {
-                    console.log("column", column)
+                   
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}

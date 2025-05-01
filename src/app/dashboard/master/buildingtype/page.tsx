@@ -15,21 +15,21 @@ import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-
+import * as XLSX from "xlsx";
 
 const page = () => {
-   
-    const { user, status, authenticated } = useUserAuthorised();
-  const { data: buildingTypeData = [], isLoading: buildingTypeLoading }:any = useGetMasterQuery({
-      db: MONGO_MODELS.BUILDING_TYPE_MASTER,
-      sort: { name: 'asc' },
-    });
-  
+  const [importing, setImporting] = useState(false);
+  const { user, status, authenticated } = useUserAuthorised();
+  const { data: buildingTypeData = [], isLoading: buildingTypeLoading }: any = useGetMasterQuery({
+    db: MONGO_MODELS.BUILDING_TYPE_MASTER,
+    sort: { name: 'asc' },
+  });
+
   const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-  const loading =  buildingTypeLoading;
+  const loading = buildingTypeLoading;
 
 
   interface RowData {
@@ -41,10 +41,10 @@ const page = () => {
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-   
-    { label: 'Building Type', name: "name", type: "text", required: true, placeholder:'Building Type' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder:'Select Status' },
-   
+
+    { label: 'Building Type', name: "name", type: "text", required: true, placeholder: 'Building Type' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
   ]
 
 
@@ -67,36 +67,22 @@ const page = () => {
   };
 
   // Save function to send data to an API or database
-  const saveData = async ({formData, action}: { formData: any, action: string }) => {
-   
+  const saveData = async ({ formData, action }: { formData: any, action: string }) => {
+
     const formattedData = {
-        db: MONGO_MODELS.BUILDING_TYPE_MASTER,
+      db: MONGO_MODELS.BUILDING_TYPE_MASTER,
       action: action === 'Add' ? 'create' : 'update',
-      filter : {"_id": formData._id},
+      filter: { "_id": formData._id },
       data: formData,
     };
 
 
 
-    const response:any = await createMaster(formattedData);
+    const response: any = await createMaster(formattedData);
 
-    
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      
-      toast.success('Building type added successfully');
+    return response;
 
-    }
-    else{
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        
-        toast.success('Building type updated successfully');
-      }
-    }
 
-    if(response?.error?.data?.message?.message){
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
-   
   };
 
 
@@ -114,21 +100,50 @@ const page = () => {
 
   };
 
-  const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser:createMaster,db: MONGO_MODELS.BUILDING_TYPE_MASTER, masterName:"BuildingType" });
-    };
-
-  const handleExport = () => {
-    console.log('UserPage Update button clicked');
-    // Your update logic for user page
+  const handleImport = async() => {
+   
+    await bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.BUILDING_TYPE_MASTER, masterName: "BuildingType",onStart: () => setImporting(true),
+      onFinish: () => setImporting(false) });
+    
   };
 
+  const exportToExcel = (data: any[]) => {
+
+    // Convert JSON data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    // Write the workbook and trigger a download
+    XLSX.writeFile(workbook, 'exported_data.xlsx');
+  };
+
+  const handleExport = (type: string, data: any) => {
+    let formattedData: any[] = [];
+    console.log('data', data, data?.length);
+    if (data?.length > 0) {
+      formattedData = data?.map((data: any) => ({
+        'Building Type': data?.name,
+
+      }));
+    } else {
+      // Create a single empty row with keys only (for header export)
+      formattedData = [{
+        'Building Type': '',
+
+      }];
+    }
+
+    type === 'excel' && exportToExcel(formattedData);
+
+  };
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
     // Your delete logic for user page
   };
 
- 
+
 
   const buildingTypeColumns = [
     {
@@ -182,14 +197,14 @@ const page = () => {
       ),
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
-    
+
 
   ];
 
   const buildingTypeConfig = {
     searchFields: [
       { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by building type' },
-      
+
     ],
     filterFields: [
       // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
@@ -199,11 +214,16 @@ const page = () => {
       columns: buildingTypeColumns,
       data: buildingTypeData?.data,
     },
-    
+
     buttons: [
 
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      {
+        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+          { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+          { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
+        ]
+      },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };
@@ -211,7 +231,7 @@ const page = () => {
 
   return (
     <>
-
+     
       <MasterComponent config={buildingTypeConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
       <DynamicDialog
         isOpen={isDialogOpen}
@@ -221,7 +241,8 @@ const page = () => {
         fields={fields}
         initialData={initialData}
         action={action}
-        height = 'auto'
+        height='auto'
+        onchangeData={() => { }}
       />
     </>
 

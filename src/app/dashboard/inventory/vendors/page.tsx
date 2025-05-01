@@ -139,26 +139,15 @@ const VendorsPage = () => {
         populate: ['city']
     });
 
-<<<<<<< HEAD
-    const { data: stateresponse, isLoading: locationLoading } = useGetMasterQuery({
-=======
     const { data: cityResponse, isLoading: cityLoading } = useGetMasterQuery({
->>>>>>> fix/shortname
         db: MONGO_MODELS.STATE_MASTER,
         filter: { isActive: true }
     });
 
-<<<<<<< HEAD
-    const location = stateresponse?.data?.filter((location: undefined) => location !== undefined)  // Remove undefined entries
-        ?.map((location: any) => ({
-            _id: location?.name,
-            name: location?.name
-=======
     const city = cityResponse?.data?.filter((city: undefined) => city !== undefined)  // Remove undefined entries
         ?.map((city: any) => ({
             _id: city?.name,
             name: city?.name
->>>>>>> fix/shortname
         }));
 
 console.log('city', city, cityResponse?.data);
@@ -208,16 +197,6 @@ console.log('vendorsResponse', vendorsResponse?.data, vendorsLoading, cityLoadin
             placeholder: "Enter website URL"
         },
         {
-<<<<<<< HEAD
-            name: "location",
-            label: "State/City",
-            type: "select",
-            required: true,
-            placeholder: "Select State/City",
-            data: stateresponse?.data?.map((loc: any) => ({
-                name: loc.name,
-                _id: loc._id
-=======
             name: "city",
             label: "City",
             type: "select",
@@ -226,7 +205,6 @@ console.log('vendorsResponse', vendorsResponse?.data, vendorsLoading, cityLoadin
             data: cityResponse?.data?.map((city: any) => ({
                 name: city.name,
                 _id: city._id
->>>>>>> fix/shortname
             })) || []
         },
         {
@@ -318,31 +296,12 @@ console.log('vendorsResponse', vendorsResponse?.data, vendorsLoading, cityLoadin
         }
     };
 
-<<<<<<< HEAD
-    const handleImport = () => {
-            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: stateresponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
-        };
-    
-        const handleExport = (type: string) => {
-           
-            const formattedData = vendorsResponse?.data.map((data: any) => {
-                return {
-                    Name: data.name,
-                    Email: data?.email,
-                    'Contact Number': data?.phone,
-                    Location:data?.location?.name,
-                    'Contact Person': data?.contactPersons[0]?.name,
-                    Designation:data?.contactPersons[0]?.designation,
-                    'Contact Email': data?.contactPersons[0]?.email,
-                    'Phone':data?.contactPersons[0]?.phone,
-=======
     const handleImport = async () => {
         await bulkImport({
             roleData: [], continentData: [], regionData: [], countryData: [], locationData: cityResponse, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.VENDOR_MASTER, masterName: "Vendor", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
     };
->>>>>>> fix/shortname
 
     const handleExport = (type: string, data: any) => {
         let formattedData: any[] = [];

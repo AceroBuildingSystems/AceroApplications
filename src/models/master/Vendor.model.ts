@@ -2,7 +2,7 @@ import mongoose, { Model, Schema } from "mongoose";
 import { vendor, ContactPerson } from "@/types/master/vendor.types";
 
 const ContactPersonSchema = new Schema<ContactPerson>({
-    name: { type: String, required: true },
+    name: { type: String },
     designation: { type: String, required: false },
     email: { type: String, required: false },
     phone: { type: String, required: false }
@@ -11,13 +11,13 @@ const ContactPersonSchema = new Schema<ContactPerson>({
 
 const VendorSchema: Schema<vendor> = new Schema({
     name: { type: String, required: true, unique: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
+    email: { type: String },
+    phone: { type: String },
     website: { type: String },
     city: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "State",
-        required: true,
+        
         autopopulate: true
     },
     contactPersons: [ContactPersonSchema],

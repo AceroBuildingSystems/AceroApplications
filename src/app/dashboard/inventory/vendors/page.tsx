@@ -30,7 +30,7 @@ interface VendorFormData {
     website?: string;
     location: string;
     contactPersons: ContactPerson[];
-   isActive:boolean
+    isActive: boolean
 }
 
 const ContactPersonsComponent = ({ accessData, handleChange }: { accessData: ContactPerson[]; handleChange: (e: { target: { value: any } }, fieldName: string) => void }) => {
@@ -126,36 +126,38 @@ const ContactPersonsComponent = ({ accessData, handleChange }: { accessData: Con
 };
 
 const VendorsPage = () => {
+    const [importing, setImporting] = useState(false);
     const router = useRouter();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<VendorFormData | null>(null);
-const { user, status, authenticated } = useUserAuthorised();
+    const { user, status, authenticated } = useUserAuthorised();
     // API hooks
     const { data: vendorsResponse, isLoading: vendorsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true },
-        populate: ['location']
+        populate: ['city']
     });
 
-    const { data: locationsResponse, isLoading: locationLoading } = useGetMasterQuery({
-        db: MONGO_MODELS.LOCATION_MASTER,
+    const { data: cityResponse, isLoading: cityLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.STATE_MASTER,
         filter: { isActive: true }
     });
 
-    const location = locationsResponse?.data?.filter((location: undefined) => location !== undefined)  // Remove undefined entries
-        ?.map((location: any) => ({
-            _id: location?.name,
-            name: location?.name
+    const city = cityResponse?.data?.filter((city: undefined) => city !== undefined)  // Remove undefined entries
+        ?.map((city: any) => ({
+            _id: city?.name,
+            name: city?.name
         }));
 
-
+console.log('city', city, cityResponse?.data);
+console.log('vendorsResponse', vendorsResponse?.data, vendorsLoading, cityLoading);
     const fieldsToAdd = [
-        { fieldName: 'locationName', path: ['location', 'name'] }
+        { fieldName: 'cityName', path: ['city', 'name'] }
     ];
     const transformedData = transformData(vendorsResponse?.data, fieldsToAdd);
 
-    const loading = vendorsLoading || locationLoading;
+    const loading = vendorsLoading || cityLoading;
 
     const [createMaster] = useCreateMasterMutation();
     const statusData = [
@@ -195,14 +197,14 @@ const { user, status, authenticated } = useUserAuthorised();
             placeholder: "Enter website URL"
         },
         {
-            name: "location",
-            label: "Location",
+            name: "city",
+            label: "City",
             type: "select",
             required: true,
-            placeholder: "Select location",
-            data: locationsResponse?.data?.map((loc: any) => ({
-                name: loc.name,
-                _id: loc._id
+            placeholder: "Select city",
+            data: cityResponse?.data?.map((city: any) => ({
+                name: city.name,
+                _id: city._id
             })) || []
         },
         {
@@ -246,9 +248,9 @@ const { user, status, authenticated } = useUserAuthorised();
             header: "Phone",
         },
         {
-            accessorKey: "location",
-            header: "Location",
-            cell: ({ row }: any) => row.original.location?.name || ''
+            accessorKey: "city",
+            header: "City",
+            cell: ({ row }: any) => row.original.city?.name || ''
         },
         {
             accessorKey: "contactPersons",
@@ -279,8 +281,8 @@ const { user, status, authenticated } = useUserAuthorised();
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: VendorFormData; action: string }): Promise<void> => {
         try {
-           
-            const reponse:any = await createMaster({
+
+            const reponse: any = await createMaster({
                 db: MONGO_MODELS.VENDOR_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
                 filter: formData._id ? { _id: formData._id } : undefined,
@@ -294,39 +296,56 @@ const { user, status, authenticated } = useUserAuthorised();
         }
     };
 
-    const handleImport = () => {
-            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "VENDOR_MASTER", masterName: "Vendor" });
-        };
-    
-        const handleExport = (type: string) => {
-           
-            const formattedData = vendorsResponse?.data.map((data: any) => {
-                return {
-                    Name: data.name,
-                    Email: data?.email,
-                    'Contact Number': data?.phone,
-                    Location:data?.location?.name,
-                    'Contact Person': data?.contactPersons[0]?.name,
-                    Designation:data?.contactPersons[0]?.designation,
-                    'Contact Email': data?.contactPersons[0]?.email,
-                    'Phone':data?.contactPersons[0]?.phone,
+    const handleImport = async () => {
+        await bulkImport({
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: cityResponse, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.VENDOR_MASTER, masterName: "Vendor", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
+    };
 
-                };
-            })
-            type === 'excel' && exportToExcel(formattedData);
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+        console.log('data', data, data?.length);
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                Name: data.name,
+                Email: data?.email,
+                'Contact Number': data?.phone,
+                Location: data?.location?.name,
+                'Contact Person': data?.contactPersons[0]?.name,
+                Designation: data?.contactPersons[0]?.designation,
+                'Contact Email': data?.contactPersons[0]?.email,
+                'Phone': data?.contactPersons[0]?.phone,
+
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                Name: '',
+                Email: '',
+                'Contact Number': '',
+                Location: '',
+                'Contact Person': '',
+                Designation: '',
+                'Contact Email': '',
+                'Phone': '',
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
     
-        };
-    
-        const exportToExcel = (data: any[]) => {
-            // Convert JSON data to a worksheet
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            // Create a new workbook
-            const workbook = XLSX.utils.book_new();
-            // Append the worksheet to the workbook
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-            // Write the workbook and trigger a download
-            XLSX.writeFile(workbook, 'exported_data.xlsx');
-        };
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
+    };
 
     // Configure page layout
     const pageConfig = {
@@ -340,12 +359,12 @@ const { user, status, authenticated } = useUserAuthorised();
         ],
         filterFields: [
             {
-                key: "location",
-                label: "locationName",
+                key: "city",
+                label: "cityName",
                 type: "select" as const,
-                placeholder: "Filter by location",
-                data: location,
-                name: "locationName"
+                placeholder: "Filter by city",
+                data: city,
+                name: "cityName"
             },
 
         ],
@@ -363,12 +382,11 @@ const { user, status, authenticated } = useUserAuthorised();
             }
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
                 label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
                 ]
             },
             {
@@ -381,7 +399,7 @@ const { user, status, authenticated } = useUserAuthorised();
                         phone: '',
                         location: '',
                         contactPersons: [],
-                       isActive: true
+                        isActive: true
                     });
                     setIsDialogOpen(true);
                 },
@@ -408,6 +426,7 @@ const { user, status, authenticated } = useUserAuthorised();
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
+                onchangeData={() => { }}
             />
         </div>
     );

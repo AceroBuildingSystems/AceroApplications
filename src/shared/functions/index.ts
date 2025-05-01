@@ -170,7 +170,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
             const successful: any[] = [];
             const skipped: any[] = [];
-
+console.log(formData, "formData")
             const referenceData = {
                 roleData: roleData?.data || [],
                 continentData: continentData?.data || [],
@@ -231,7 +231,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     name: item?.name,
                     email: item?.email,
                     phone: item?.phone,
-                    location: item?.location,
+                    city: item?.city,
                     contactPersons: [{ name: item?.contactName, designation: item?.designation, email: item?.contactEmail, phone: item?.contactPhone }],
                     addedBy: user?._id,
                     updatedBy: user?._id,
@@ -690,7 +690,7 @@ const fieldMappingConfig: { [key: string]: any } = {
         location: { source: "locationData", key: "name", value: "_id" },
     },
     Vendor: {
-        location: { source: "locationData", key: "name", value: "_id" },
+        city: { source: "locationData", key: "name", value: "_id" },
     },
     Product: {
         category: { source: "categoryData", key: "name", value: "_id" },
@@ -1033,7 +1033,7 @@ const entityFieldMappings = {
         "Name": "name",
         "Email": "email",
         "Contact Number": "phone",
-        "Location": "location",
+        "City": "city",
         "Contact Person": "contactName",
         "Designation": "designation",
         "Contact Email": "contactEmail",

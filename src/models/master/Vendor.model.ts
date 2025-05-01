@@ -14,7 +14,7 @@ const VendorSchema: Schema<vendor> = new Schema({
     email: { type: String, required: true },
     phone: { type: String, required: true },
     website: { type: String },
-    location: {
+    city: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "State",
         required: true,

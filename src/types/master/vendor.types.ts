@@ -12,7 +12,7 @@ export interface vendor {
     email: string;
     phone: string;
     website?: string;
-    location: mongoose.ObjectId; // Reference to Location model
+    city: mongoose.ObjectId; // Reference to Location model
     contactPersons: ContactPerson[];
     isActive: boolean;
     addedBy: string;

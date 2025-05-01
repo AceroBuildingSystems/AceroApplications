@@ -196,14 +196,14 @@ const VendorsPage = () => {
             placeholder: "Enter website URL"
         },
         {
-            name: "location",
-            label: "State/City",
+            name: "city",
+            label: "City",
             type: "select",
             required: true,
-            placeholder: "Select State/City",
-            data: cityResponse?.data?.map((loc: any) => ({
-                name: loc.name,
-                _id: loc._id
+            placeholder: "Select city",
+            data: cityResponse?.data?.map((city: any) => ({
+                name: city.name,
+                _id: city._id
             })) || []
         },
         {

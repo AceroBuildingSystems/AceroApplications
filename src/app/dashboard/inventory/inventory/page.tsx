@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Box, Download, Import, Plus } from 'lucide-react';
+import { Box, ChevronsUpDown, Download, Import, Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -111,6 +111,7 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem: selec
 };
 
 const AssetsPage = () => {
+     const [importing, setImporting] = useState(false);
     const router = useRouter();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
@@ -323,7 +324,23 @@ const AssetsPage = () => {
     const columns = [
         {
             accessorKey: "serialNumber",
-            header: "Serial Number",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Serial No</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: any) => (
                 <div className='text-red-700' onClick={() => editAsset(row.original)}>
                     {row.original.serialNumber}
@@ -332,7 +349,23 @@ const AssetsPage = () => {
         },
         {
             accessorKey: "product",
-            header: "Product",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Product</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
             cell: ({ row }: any) => (
                 <Badge variant="outline">
                     {`${row.original.product?.name}`}
@@ -341,7 +374,23 @@ const AssetsPage = () => {
         },
         {
             accessorKey: "warehouse",
-            header: "Warehouse",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Warehouse</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
             cell: ({ row }: any) => (
                 <Badge variant="secondary">
                     {row.original.warehouse?.name || ''}
@@ -350,7 +399,23 @@ const AssetsPage = () => {
         },
         {
             accessorKey: "status",
-            header: "Status",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Status</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
             cell: ({ row }: any) => {
                 const status = row.original.status;
                 const variant =
@@ -368,7 +433,23 @@ const AssetsPage = () => {
         },
         {
             accessorKey: "vendor",
-            header: "Vendor",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Vendor</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
             cell: ({ row }: any) => (
                 <Badge variant="outline">
                     {row.original.vendor?.name || ''}
@@ -377,11 +458,43 @@ const AssetsPage = () => {
         },
         {
             accessorKey: "poNumber",
-            header: "PO Number",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>PO Number</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
         },
         {
             accessorKey: "warrantyEndDate",
-            header: "Warranty Until",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Warranty Untill</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
             cell: ({ row }: any) => {
                 const endDate = new Date(row.original.warrantyEndDate);
                 const today = new Date();
@@ -436,31 +549,54 @@ const AssetsPage = () => {
         }
     };
 
-    const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse,customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ASSET_MASTER", masterName: "Asset" });
-    };
-
-    const handleExport = (type: string) => {
-        const formattedData = assetsResponse?.data.map((data: any) => {
-            return {
-                'Vendor Name': data.vendor?.name,
-                'Invoice No': data?.invoiceNumber,
-                'PO Number': data?.poNumber,
-                'PR Number': data?.prNumber,
-                'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
-                'Warehouse': data?.warehouse?.name,
-                'Product Name': data?.product?.name,
-                'Serial No': data?.serialNumber,
-                'Specifications': JSON.stringify(data.specifications),
-                'Status': data?.status,
-                'Warranty Details': data?.warrantyDetails,
-                'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
-                'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
-            };
-        })
-        type === 'excel' && exportToExcel(formattedData);
-
-    };
+     const handleImport = async () => {
+            await bulkImport({
+                roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse, customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ASSET_MASTER, masterName: "Asset", onStart: () => setImporting(true),
+                onFinish: () => setImporting(false)
+            });
+        };
+    
+        const handleExport = (type: string, data: any) => {
+            let formattedData: any[] = [];
+    
+            if (data?.length > 0) {
+                formattedData = data?.map((data: any) => ({
+                    'Vendor Name': data.vendor?.name,
+                    'Invoice No': data?.invoiceNumber,
+                    'PO Number': data?.poNumber,
+                    'PR Number': data?.prNumber,
+                    'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
+                    'Warehouse': data?.warehouse?.name,
+                    'Product Name': data?.product?.name,
+                    'Serial No': data?.serialNumber,
+                    'Specifications': JSON.stringify(data.specifications),
+                    'Status': data?.status,
+                    'Warranty Details': data?.warrantyDetails,
+                    'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
+                    'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
+                }));
+            } else {
+                // Create a single empty row with keys only (for header export)
+                formattedData = [{
+                    'Vendor Name': data.vendor?.name,
+                    'Invoice No': data?.invoiceNumber,
+                    'PO Number': data?.poNumber,
+                    'PR Number': data?.prNumber,
+                    'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
+                    'Warehouse': data?.warehouse?.name,
+                    'Product Name': data?.product?.name,
+                    'Serial No': data?.serialNumber,
+                    'Specifications': JSON.stringify(data.specifications),
+                    'Status': data?.status,
+                    'Warranty Details': data?.warrantyDetails,
+                    'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
+                    'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
+                }];
+            }
+    
+            type === 'excel' && exportToExcel(formattedData);
+    
+        };
 
     const exportToExcel = (data: any[]) => {
         // Convert JSON data to a worksheet
@@ -525,12 +661,11 @@ const AssetsPage = () => {
             }
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
                 ]
             },
             {

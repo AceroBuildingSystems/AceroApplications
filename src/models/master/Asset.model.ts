@@ -1,5 +1,6 @@
 import mongoose, { Document, Model } from 'mongoose';
 import Inventory, { IInventoryModel } from './Inventory.model';
+import { unique } from 'next/dist/build/utils';
 
 interface IMaintenanceRecord {
     date: Date;
@@ -61,7 +62,7 @@ const AssetSchema = new mongoose.Schema({
     // Basic Information
     serialNumber: {
         type: String,
-        required: true,
+        
         unique: true,
         sparse:true
     },
@@ -98,22 +99,23 @@ const AssetSchema = new mongoose.Schema({
     },
     poNumber: {
         type: String,
-        required: true
+       
     },
     prNumber: String,
     invoiceNumber: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
     },
 
     // Warranty Information
     warrantyStartDate: {
         type: Date,
-        required: true
+        
     },
     warrantyEndDate: {
         type: Date,
-        required: true
+        
     },
     warrantyDetails: String,
 
@@ -121,7 +123,7 @@ const AssetSchema = new mongoose.Schema({
     specifications: {
         type: Map,
         of: mongoose.Schema.Types.Mixed,
-        required: true
+        
     },
 
     // Assignment Information

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import MasterComponentAQM from '@/components/MasterComponentAQM/MasterComponentAQM'
-import { ArrowUpDown, ChevronsUpDown, Plus, Download, Upload } from 'lucide-react';
+import { ArrowUpDown, ChevronsUpDown, Plus, Download, Import, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState } from 'react';
 import { transformDataForExcel, transformQuoteData } from '@/lib/utils';
@@ -21,7 +21,7 @@ const page = () => {
     const proposalDrawing: any[] = []
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
-
+const [importing, setImporting] = useState(false);
     const [year, setYear] = useState(currentYear);
     const [option, setOption] = useState('A');
 
@@ -707,7 +707,8 @@ const page = () => {
             projectTypeData,
             paintTypeData,
             currencyData,
-            incotermData, quotationData, locationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation"
+            incotermData, quotationData, locationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation",onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
         });
     };
 
@@ -1100,11 +1101,12 @@ const page = () => {
 
         buttons: [
 
-            { label: 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: handleExport }
-                ]
+              label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+                
+              ]
             },
 
             { label: 'Add', action: handleAdd, icon: Plus, },

@@ -1,9 +1,11 @@
 import mongoose from 'mongoose';
+import { unique } from 'next/dist/build/utils';
 
 const ProductSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true
+        required: true,
+        unique: true,
     },
     category: {
         type: mongoose.Schema.Types.ObjectId,

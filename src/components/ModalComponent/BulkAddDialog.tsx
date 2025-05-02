@@ -291,9 +291,9 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
       newErrors.quantity = "Quantity must be at least 1";
     }
     
-    if (currentProductItem.purchasePrice <= 0) {
-      newErrors.purchasePrice = "Purchase price must be greater than 0";
-    }
+    // if (currentProductItem.purchasePrice <= 0) {
+    //   newErrors.purchasePrice = "Purchase price must be greater than 0";
+    // }
     
     // Validate warranty dates
     if (!currentProductItem.warrantyStartDate) {
@@ -395,6 +395,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   // Add current product item to list
   const addProductItem = () => {
     if (!validateProductItem()) {
+      
       return;
     }
     

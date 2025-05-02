@@ -143,19 +143,7 @@ const page = () => {
     const response = await createUser(formattedData);
 
 
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('User added successfully');
-
-    }
-    else {
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('User updated successfully');
-      }
-    }
-
-    if (response?.error?.data?.message?.message) {
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
+   return response;
 
   };
 

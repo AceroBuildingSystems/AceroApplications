@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Download, Import, Plus } from 'lucide-react';
+import { ChevronsUpDown, Download, Import, Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -32,7 +32,7 @@ const SpecificationsComponent = ({ accessData, handleChange }: { accessData: Rec
     const [newSpecType, setNewSpecType] = useState<"string" | "number" | "boolean">("string");
     const [unitMeasurement, setUnitMeasurement] = useState<string>('');
 
-   
+
 
     const { data: unitMeasurementData = [], isLoading: unitMeasurementLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.UNIT_MEASUREMENT_MASTER,
@@ -146,7 +146,7 @@ const ProductCategoriesPage = () => {
         db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
         filter: { isActive: true }
     });
-    console.log(productTypeData,categoriesResponse)
+    console.log(productTypeData, categoriesResponse)
 
     const [createMaster] = useCreateMasterMutation();
 
@@ -209,7 +209,23 @@ const ProductCategoriesPage = () => {
     const columns = [
         {
             accessorKey: "name",
-            header: "Name",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Name</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: any) => (
                 <div className='text-red-700' onClick={() => editCategories(row.original)}>
                     {row.original.name}
@@ -218,14 +234,46 @@ const ProductCategoriesPage = () => {
         },
         {
             accessorKey: "productType",
-            header: "Product Type",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Product Type</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: any) => (
                 <Badge variant="outline">{row?.original?.productType?.name || "N/A"}</Badge>
             )
         },
         {
             accessorKey: "description",
-            header: "Description",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Description</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
         },
         {
             accessorKey: "specsRequired",
@@ -259,7 +307,7 @@ const ProductCategoriesPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: CategoryFormData; action: string }): Promise<any> => {
         try {
-            
+
             const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_CATEGORY_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
@@ -276,33 +324,43 @@ const ProductCategoriesPage = () => {
         }
     };
 
-    const handleImport = () => {
-                bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData:[],categoryData:[],vendorData:[], productData:[], warehouseData:[], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_CATEGORY_MASTER", masterName: "Category" });
-            };
-        
-            const handleExport = (type: string) => {
-               
-                const formattedData = categoriesResponse?.data.map((data: any) => {
-                    return {
-                        Name: data.name,
-                        Description: data.description,
-                        "Required Specification": JSON.stringify(data.specsRequired)
-                    };
-                })
-                type === 'excel' && exportToExcel(formattedData);
-        
-            };
-        
-            const exportToExcel = (data: any[]) => {
-                // Convert JSON data to a worksheet
-                const worksheet = XLSX.utils.json_to_sheet(data);
-                // Create a new workbook
-                const workbook = XLSX.utils.book_new();
-                // Append the worksheet to the workbook
-                XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-                // Write the workbook and trigger a download
-                XLSX.writeFile(workbook, 'exported_data.xlsx');
-            };
+
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                Name: data.name,
+                Description: data.description,
+                'Product Type': data.productType?.name,
+                "Required Specification": Object.keys(data.specsRequired || {}).join(', ')
+
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                Name: '',
+                Description: '',
+                'Product Type': '',
+                "Required Specification": ''
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
+
+
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
+    };
 
     // Configure page layout
     const pageConfig = {
@@ -330,24 +388,19 @@ const ProductCategoriesPage = () => {
             }
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            // { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
 
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
                 ]
             },
             {
                 label: "Add",
                 action: () => {
                     setDialogAction("Add");
-                    setSelectedItem({
-                        name: '',
-                        description: '',
-                        specsRequired: {},
-                        isActive: true
-                    });
+
                     setIsDialogOpen(true);
                 },
                 icon: Plus,
@@ -372,6 +425,7 @@ const ProductCategoriesPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
+                onchangeData={() => { }}
             />
         </div>
     );

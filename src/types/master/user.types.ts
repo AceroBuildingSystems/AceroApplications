@@ -1,56 +1,48 @@
 import mongoose from "mongoose";
+import { UserPersonalDetailsDocument } from "@/models/master/UserPersonalDetails.model";
+import { UserEmploymentDetailsDocument } from "@/models/master/UserEmploymentDetails.model";
+import { UserVisaDetailsDocument } from "@/models/master/UserVisaDetails.model";
+import { UserIdentificationDocument } from "@/models/master/UserIdentification.model";
+import { UserBenefitsDocument } from "@/models/master/UserBenefits.model";
 
 export interface UserDocument {
-    _id?: mongoose.ObjectId,
-    empId: string,
-    firstName: string,
-    lastName: string,
-    email: string,
-    password: string,
-    role: mongoose.ObjectId,
-    fullName: string,
-    displayName: string,
-    designation1: string,
-    role1: string,
-    imageUrl: string,
-    employeeType1: string,
-    department1: string,
-    designation: mongoose.ObjectId,
-    employeeType: mongoose.ObjectId,
-    department: mongoose.ObjectId,
-    location: string,
-    reportingTo: mongoose.ObjectId,
-    isActive: boolean,
-    status: string,
-    availability: string,
-    extension: string,
-    mobile: string,
-    joiningDate: Date,
-    relievingDate: Date,
-    access: mongoose.ObjectId,
-    addedBy: string,
-    updatedBy: string,
-    organisation: mongoose.ObjectId,
-    activeLocation: mongoose.ObjectId,
-    reportingLocation: mongoose.ObjectId,
-    personalNumber: string,
-    nationality: mongoose.ObjectId,
-    gender: string,
-    maritalStatus: string,
-    dateOfBirth: Date,
-    visaFileNo: string,
-    visaType: mongoose.ObjectId,
-    visaIssueDate: Date,
-    visaExpiryDate: Date,
-    passportNumber: string,
-    passportIssueDate: Date,
-    passportExpiryDate: Date,
-    emiratesId: string,
-    emiratesIdIssueDate: Date,
-    emiratesIdExpiryDate: Date,
-    workPermit: string,
-    labourCardExpiryDate: Date,
-    personCode: string,
-    medicalInsurance: string,
-    iloeExpiryDate: Date,
+    _id?: mongoose.ObjectId;
+    
+    // Core user information
+    employeeId: string;
+    firstName: string;
+    lastName: string;
+    fullName: string;
+    displayName: string;
+    email: string;
+    password: string;
+    imageUrl: string;
+    isActive: boolean;
+    
+    // References to related user data categories
+    personalDetails: mongoose.ObjectId | UserPersonalDetailsDocument;
+    employmentDetails: mongoose.ObjectId | UserEmploymentDetailsDocument;
+    visaDetails: mongoose.ObjectId | UserVisaDetailsDocument;
+    identification: mongoose.ObjectId | UserIdentificationDocument;
+    benefits: mongoose.ObjectId | UserBenefitsDocument;
+    
+    // Access and security
+    access: [{
+        accessId: mongoose.ObjectId;
+        hasAccess: boolean;
+        permissions: {
+            view: boolean;
+            create: boolean;
+            update: boolean;
+            delete: boolean;
+            import: boolean;
+            export: boolean;
+        };
+    }];
+    
+    // Audit fields
+    addedBy: string;
+    updatedBy: string;
+    createdAt: Date;
+    updatedAt: Date;
 }

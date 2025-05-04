@@ -21,7 +21,7 @@ import { bulkImport } from '@/shared/functions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import moment from 'moment';
-
+import UserFormDialog from '@/components/ModalComponent/UserFormDialog';
 
 const page = () => {
 const [designationDataNew, setDesignationdata] = useState([]);
@@ -115,10 +115,19 @@ const [designationDataNew, setDesignationdata] = useState([]);
   
 
   interface RowData {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
+    _id: string;
+    id?: string;
+    name?: string;
+    email?: string;
+    role?: string;
+    department?: any;
+    designation?: any;
+    displayName?: string;
+    fullName?: string;
+    firstName?: string;
+    lastName?: string;
+    reportingTo?: string;
+    mobile?: string;
   }
 
   const onchangeData = async ({ id, fieldName}: { id: string; fieldName: string;}) => {
@@ -137,50 +146,58 @@ const [designationDataNew, setDesignationdata] = useState([]);
 }
 
 
-  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
-    { label: 'Employee ID', name: "empId", type: "number", required: true, placeholder: 'Employee ID' },
-    { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email' },
-   
-    { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
-    { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
-    { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
-    { label: 'Display Name', name: "displayName", type: "text", required: true, placeholder: 'Display Name' },
-    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department' },
-
-    { label: 'Designation', name: "designation", type: "select", data: designationDataNew?.length > 0 ? designationDataNew : designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
-    { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To' },
-    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
-      { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
-    { label: 'Active Location', name: "activeLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
-    { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
-  
-    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
-
-    { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
-    { label: 'Company Number', name: "mobile", type: "text", placeholder: 'Mobile' },
-    { label: 'Personal Number', name: "personalNumber", type: "text", placeholder: 'Personal Number' },
-    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
-    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Select Joining Date' },
-    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Select Leaving Date' },
-    { label: 'Nationality', name: "nationality", type: "select", data: nationalityData?.data, format: 'ObjectId', required: true, placeholder: 'Select Nationality' },
-    { label: 'Gender', name: "gender", type: "select", data: genderData, format: 'ObjectId', required: false, placeholder: 'Select Gender' },
-    { label: 'Marital Status', name: "maritalStatus", type: "select", data: maritalStatusData, format: 'ObjectId', required: false, placeholder: 'Select Marital Status' },
-    { label: 'Date Of Birth', name: "dateOfBirth", type: "date", format: 'Date', placeholder: 'Select Birth Date' },
-    { label: 'Visa File No', name: "visaFileNo", type: "text", placeholder: 'Visa File No' },
-    { label: 'Visa Issue Date', name: "visaIssueDate", type: "date", format: 'Date', placeholder: 'Select Visa Issue Date' },
-    { label: 'Visa Expiry Date', name: "visaExpiryDate", type: "date", format: 'Date', placeholder: 'Select Visa Expiry Date' },
-    { label: 'Passport Number', name: "passportNumber", type: "text", placeholder: 'Passport Number' },
-    { label: 'Passport Issue Date', name: "passportIssueDate", type: "date",format: 'Date', placeholder: 'Select Passport Issue Date' },
-    { label: 'Passport Expiry Date', name: "passportExpiryDate", type: "date", format: 'Date', placeholder: 'Select Passport Expiry Date' },
-    { label: 'Emirates ID', name: "emiratesId", type: "text", placeholder: 'Emirates ID' },
-    { label: 'Emirates ID Issue Date', name: "emiratesIdIssueDate", type: "date",format: 'Date', placeholder: 'Select Emirates ID Issue Date' },
-    { label: 'Emirates ID Expiry Date', name: "emiratesIdExpiryDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Expiry Date' },
-    { label: 'Work Permit', name: "workPermit", type: "text", placeholder: 'Work Permit' },
-    { label: 'Labour Card Expiry Date', name: "labourCardExpiryDate", type: "date", format: 'Date', placeholder: 'Select Labour Card Expiry Date' },
-    { label: 'Person Code', name: "personCode", type: "text", placeholder: 'Person Code' },
-    { label: 'Visa Type', name: "visatype", type: "select", data: visTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Visa Type' },
-    { label: 'Medical Insurance', name: "medicalInsurance", type: "text", placeholder: 'Medical Insurance' },
-    { label: 'ILOE Expiry Date', name: "iloeExpiryDate", type: "date", format: 'Date', placeholder: 'Select ILOE Expiry Date' },
+  // Reorganize fields to match new database model structure
+  const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; category?: string }> = [
+    // Core user fields
+    { label: 'Employee ID', name: "employeeId", type: "number", required: true, placeholder: 'Employee ID', category: 'core' },
+    { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email', category: 'core' },
+    { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name', category: 'core' },
+    { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name', category: 'core' },
+    { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name', category: 'core' },
+    { label: 'Display Name', name: "displayName", type: "text", required: true, placeholder: 'Display Name', category: 'core' },
+    { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status', category: 'core' },
+    
+    // Personal details fields
+    { label: 'Gender', name: "gender", type: "select", data: genderData, required: false, placeholder: 'Select Gender', category: 'personal' },
+    { label: 'Date Of Birth', name: "dateOfBirth", type: "date", format: 'Date', placeholder: 'Select Birth Date', category: 'personal' },
+    { label: 'Marital Status', name: "maritalStatus", type: "select", data: maritalStatusData, required: false, placeholder: 'Select Marital Status', category: 'personal' },
+    { label: 'Nationality', name: "nationality", type: "select", data: nationalityData?.data, format: 'ObjectId', required: true, placeholder: 'Select Nationality', category: 'personal' },
+    { label: 'Personal Number', name: "personalMobileNo", type: "text", placeholder: 'Personal Number', category: 'personal' },
+    
+    // Employment details fields
+    { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department', category: 'employment' },
+    { label: 'Designation', name: "designation", type: "select", data: designationDataNew?.length > 0 ? designationDataNew : designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation', category: 'employment' },
+    { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To', category: 'employment' },
+    { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type', category: 'employment' },
+    { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role', category: 'employment' },
+    { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location', category: 'employment' },
+    { label: 'Active Location', name: "activeLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location', category: 'employment' },
+    { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation', category: 'employment' },
+    { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension', category: 'employment' },
+    { label: 'Company Number', name: "workMobile", type: "text", placeholder: 'Mobile', category: 'employment' },
+    { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Select Joining Date', category: 'employment' },
+    { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Select Leaving Date', category: 'employment' },
+    { label: 'Person Code', name: "personCode", type: "text", placeholder: 'Person Code', category: 'employment' },
+    
+    // Visa details fields
+    { label: 'Visa Type', name: "visaType", type: "select", data: visTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Visa Type', category: 'visa' },
+    { label: 'Visa File No', name: "visaFileNo", type: "text", placeholder: 'Visa File No', category: 'visa' },
+    { label: 'Visa Issue Date', name: "visaIssueDate", type: "date", format: 'Date', placeholder: 'Select Visa Issue Date', category: 'visa' },
+    { label: 'Visa Expiry Date', name: "visaExpiryDate", type: "date", format: 'Date', placeholder: 'Select Visa Expiry Date', category: 'visa' },
+    { label: 'Work Permit', name: "workPermit", type: "text", placeholder: 'Work Permit', category: 'visa' },
+    { label: 'Labour Card Expiry Date', name: "labourCardExpiryDate", type: "date", format: 'Date', placeholder: 'Select Labour Card Expiry Date', category: 'visa' },
+    { label: 'ILOE Expiry Date', name: "iloeExpiryDate", type: "date", format: 'Date', placeholder: 'Select ILOE Expiry Date', category: 'visa' },
+    
+    // Identification fields
+    { label: 'Passport Number', name: "passportNumber", type: "text", placeholder: 'Passport Number', category: 'identification' },
+    { label: 'Passport Issue Date', name: "passportIssueDate", type: "date", format: 'Date', placeholder: 'Select Passport Issue Date', category: 'identification' },
+    { label: 'Passport Expiry Date', name: "passportExpiryDate", type: "date", format: 'Date', placeholder: 'Select Passport Expiry Date', category: 'identification' },
+    { label: 'Emirates ID', name: "emiratesId", type: "text", placeholder: 'Emirates ID', category: 'identification' },
+    { label: 'Emirates ID Issue Date', name: "emiratesIdIssueDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Issue Date', category: 'identification' },
+    { label: 'Emirates ID Expiry Date', name: "emiratesIdExpiryDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Expiry Date', category: 'identification' },
+    
+    // Benefits fields
+    { label: 'Medical Insurance', name: "medicalInsurance", type: "text", placeholder: 'Medical Insurance', category: 'benefits' },
   ]
 
   const [isDialogOpen, setDialogOpen] = useState(false);
@@ -202,23 +219,67 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
   // Save function to send data to an API or database
   const saveData = async ({ formData, action }: { formData: any; action: string }) => {
-    const formattedData = {
-      action: action === 'Add' ? 'create' : 'update',
-      filter: { "_id": formData._id },
-      data: formData,
-    };
-    const response = await createUser(formattedData);
+    try {
+      let response;
 
+      if (action === 'Add') {
+        // Use fetch to call the API instead of direct database call
+        response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        });
+      } else {
+        // Use fetch for updates too
+        response = await fetch('/api/users', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: formData._id,
+            ...formData
+          }),
+        });
+      }
 
-    return response;
+      const result = await response.json();
+      
+      if (response.ok) {
+        toast.success(`User ${action === 'Add' ? 'created' : 'updated'} successfully`);
+        return { data: { status: "success" } };
+      } else {
+        throw new Error(result.error || `Failed to ${action.toLowerCase()} user`);
+      }
+    } catch (error) {
+      console.error('Error saving user:', error);
+      toast.error(`Failed to ${action.toLowerCase()} user`);
+      return { error };
+    }
   };
 
-  const editUser = (rowData: RowData) => {
+  const editUser = async (rowData: RowData) => {
     setAction('Update');
-
-    setInitialData(rowData);
+    
+    try {
+      // Use fetch to get user data instead of direct database call
+      const response = await fetch(`/api/users/${rowData._id}`);
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setInitialData(userData);
+      } else {
+        // Fallback to using the row data if API call fails
+        setInitialData(rowData);
+      }
+    } catch (error) {
+      console.error("Error fetching complete user data:", error);
+      setInitialData(rowData);
+    }
+    
     openDialog("employee");
-    // Your add logic for user page
   };
 
   const handleAdd = () => {
@@ -228,7 +289,32 @@ const [designationDataNew, setDesignationdata] = useState([]);
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: locationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, organisationData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+    bulkImport({ 
+      roleData, 
+      continentData: [], 
+      regionData: [], 
+      countryData: [], 
+      locationData, 
+      categoryData: [], 
+      vendorData: [], 
+      productData: [], 
+      warehouseData: [], 
+      customerTypeData: [], 
+      customerData: [], 
+      userData, 
+      teamData: [], 
+      designationData, 
+      departmentData, 
+      employeeTypeData, 
+      organisationData, 
+      action: "Add", 
+      user, 
+      createUser, 
+      db: 'USER_DB', 
+      masterName: "User",
+      onStart: () => { console.log('Import started'); }, 
+      onFinish: () => { console.log('Import finished'); }
+    });
   };
 
   const handleExport = (type: string, data: any) => {
@@ -333,7 +419,6 @@ const [designationDataNew, setDesignationdata] = useState([]);
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
         >
           <span>Employee Name</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
@@ -347,13 +432,21 @@ const [designationDataNew, setDesignationdata] = useState([]);
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
         >
           <span>Department</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
+      cell: ({ row }: { row: any }) => {
+        const department = row.getValue("department");
+        // Handle both old direct department value and new employmentDetails.department value
+        if (department?.name) {
+          return <div>{department.name}</div>;
+        } else if (row.original.employmentDetails?.department?.name) {
+          return <div>{row.original.employmentDetails.department.name}</div>;
+        }
+        return <div>-</div>;
+      },
     },
 
     {
@@ -362,13 +455,21 @@ const [designationDataNew, setDesignationdata] = useState([]);
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
         >
           <span>Designation</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
         </button>
       ),
-      cell: ({ row }: { row: any }) => <div>{row.getValue("designation")?.name}</div>,
+      cell: ({ row }: { row: any }) => {
+        const designation = row.getValue("designation");
+        // Handle both old direct designation value and new employmentDetails.designation value
+        if (designation?.name) {
+          return <div>{designation.name}</div>;
+        } else if (row.original.employmentDetails?.designation?.name) {
+          return <div>{row.original.employmentDetails.designation.name}</div>;
+        }
+        return <div>-</div>;
+      },
     },
     {
       accessorKey: "email",
@@ -376,7 +477,6 @@ const [designationDataNew, setDesignationdata] = useState([]);
         <button
           className="flex items-center space-x-2"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
         >
           <span>Email</span> {/* Label */}
           <ArrowUpDown size={15} /> {/* Sorting Icon */}
@@ -419,16 +519,32 @@ const [designationDataNew, setDesignationdata] = useState([]);
     <>
 
       <MasterComponent config={userConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
-      <DynamicDialog
-        isOpen={isDialogOpen}
-        closeDialog={closeDialog}
-        selectedMaster={selectedMaster}
-        onSave={saveData}
-        fields={fields}
-        initialData={initialData}
-        action={action}
-        onchangeData={onchangeData}
-      />
+      {isDialogOpen && (
+        <UserFormDialog
+          isOpen={isDialogOpen}
+          closeDialog={closeDialog}
+          onSave={saveData}
+          initialData={initialData}
+          action={action}
+          fields={fields}
+          masterData={{
+            departments: departmentData?.data || [],
+            designations: designationDataNew?.length > 0 ? designationDataNew : designationData?.data || [],
+            roles: roleData?.data || [],
+            employeeTypes: employeeTypeData?.data || [],
+            locations: locationData?.data || [],
+            organisations: orgTransformedData || [],
+            countries: nationalityData?.data || [],
+            visaTypes: visTypeData?.data || [],
+            reportingTo: reportingToData || [],
+            statusOptions: statusData || [],
+            genderOptions: genderData || [],
+            maritalStatusOptions: maritalStatusData || [],
+          }}
+          isSubmitting={loading}
+          onFieldChange={onchangeData}
+        />
+      )}
     </>
 
   )

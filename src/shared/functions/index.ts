@@ -476,6 +476,8 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     onFinish?.();
                     return;
                 }
+
+                console.log("uniqueEnrichedData", uniqueEnrichedData);
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
                 const revisionData = uniqueEnrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
                     {

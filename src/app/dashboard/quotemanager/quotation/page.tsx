@@ -21,7 +21,7 @@ const page = () => {
     const proposalDrawing: any[] = []
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1;
-const [importing, setImporting] = useState(false);
+    const [importing, setImporting] = useState(false);
     const [year, setYear] = useState(currentYear);
     const [option, setOption] = useState('A');
 
@@ -702,12 +702,12 @@ const [importing, setImporting] = useState(false);
             sectorData,
             industryData,
             buildingData,
-            stateData:fullstateData,
+            stateData: fullstateData,
             approvalAuthorityData,
             projectTypeData,
             paintTypeData,
             currencyData,
-            incotermData, quotationData, locationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation",onStart: () => setImporting(true),
+            incotermData, quotationData, locationData, action: "Add", user, createUser: createApplication, db: MONGO_MODELS.QUOTATION_MASTER, masterName: "Quotation", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
     };
@@ -782,12 +782,12 @@ const [importing, setImporting] = useState(false);
         "Final Ship Date": '',
         "Status": '',
         "Handle By": '',
-      };
+    };
 
-      
-      const handleExport = (type: string, quotationDataNew: any[]) => {
+
+    const handleExport = (type: string, quotationDataNew: any[]) => {
         let formattedData = [];
-    
+
         if (!quotationDataNew || quotationDataNew.length === 0) {
             // Export 1 row with empty fields
             formattedData = [EMPTY_EXPORT_ROW];
@@ -795,12 +795,12 @@ const [importing, setImporting] = useState(false);
             // Transform actual data
             formattedData = transformDataForExcel(quotationDataNew);
         }
-    
+
         if (type === 'excel') {
             exportToExcel(formattedData);
         }
     };
-    
+
     const exportToExcel = (data: any[]) => {
         const worksheet = XLSX.utils.json_to_sheet(data);
         const workbook = XLSX.utils.book_new();
@@ -874,63 +874,63 @@ const [importing, setImporting] = useState(false);
                 accessorKey: "revNo",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Rev No</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Rev No</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div >{row.getValue("revNo")}</div>,
             },
             {
                 accessorKey: "option",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Option</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Option</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div>{row.getValue("option")}</div>,
             },
             {
                 accessorKey: "quoteStatus",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Quote Status</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Quote Status</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div className="w-28 p-2 border rounded-md flex items-center justify-center text-center" onClick={() => editQuoteStatus(row.original)}>
                     {quoteStatusData?.data.find((data: { _id: any; }) => data._id === row.getValue("quoteStatus")?._id)?.name}</div>,
             },
@@ -938,63 +938,63 @@ const [importing, setImporting] = useState(false);
                 accessorKey: "bookingProbability",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Probability</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Probability</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div>{row.getValue("bookingProbability")}</div>,
             },
             {
                 accessorKey: "region",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Region</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Region</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div>{countryData?.data.find((data: { _id: any; }) => data._id === row.getValue("country")?._id)?.region?.continent?.name}</div>,
             },
             {
                 accessorKey: "country",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Country</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Country</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div>{countryData?.data.find((data: { _id: any; }) => data._id === row.getValue("country")?._id)?.name}</div>,
             },
 
@@ -1005,21 +1005,21 @@ const [importing, setImporting] = useState(false);
                 accessorKey: "salesEngineer",
                 header: ({ column }: { column: any }) => {
                     const isSorted = column.getIsSorted();
-            
+
                     return (
-                      <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                      >
-                        <span>Sales Engineer</span>
-                        <ChevronsUpDown
-                          size={15}
-                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                            }`}
-                        />
-                      </button>
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Sales Engineer</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
                     );
-                  },
+                },
                 cell: ({ row }: { row: any }) => <div>{teamMemberData?.data.find((data: { _id: any; }) => data._id === row.getValue("salesEngineer")?._id)?.user?.displayName.toProperCase()}</div>,
             },)
         };
@@ -1027,42 +1027,45 @@ const [importing, setImporting] = useState(false);
             accessorKey: "company",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
-        
+
                 return (
-                  <button
-                    className="group  flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(isSorted === "asc")}
-                  >
-                    <span>Company</span>
-                    <ChevronsUpDown
-                      size={15}
-                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                    />
-                  </button>
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Company</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
                 );
-              },
+            },
             cell: ({ row }: { row: any }) => <div>{customerData?.data.find((data: { _id: any; }) => data._id === row.getValue("company")?._id)?.name}</div>,
         },)
         columns.push({
             accessorKey: "projectName",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
-        
+
                 return (
-                  <button
-                    className="group  flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(isSorted === "asc")}
-                  >
-                    <span>Project Name</span>
-                    <ChevronsUpDown
-                      size={15}
-                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                    />
-                  </button>
+                    <div className="w-40">
+                        <button
+                            className="group  flex items-center space-x-2"
+                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                        >
+                            <span>Project Name</span>
+                            <ChevronsUpDown
+                                size={15}
+                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                            />
+                        </button>
+                    </div>
+
                 );
-              },
+            },
             cell: ({ row }: { row: any }) => <div>{row.getValue("projectName")}</div>,
         },)
         return columns;
@@ -1070,7 +1073,7 @@ const [importing, setImporting] = useState(false);
 
     const quotationColumns = getQuotationColumns(teamRole);
 
-    const statusNames = ['draft', 'quoterequested', 'incomplete', 'submitted', 'rejected', 'approved'];
+    const statusNames = [{ _id: 'draft', name: 'Draft', color: 'bg-white' }, { _id: 'quoterequested', name: 'QuoteNo Requested', color: 'bg-yellow-100' }, { _id: 'incomplete', name: 'Incomplete', color: 'bg-blue-100' }, { _id: 'submitted', name: 'Submitted (Pending Approval)', color: 'bg-orange-200' }, { _id: 'rejected', name: 'Rejected', color: 'bg-red-200' }, { _id: 'approved', name: 'Approved', color: 'bg-green-200' }];
 
     const bookingProbabilityNames = ['Low', 'Medium', 'High'];
 
@@ -1080,7 +1083,7 @@ const [importing, setImporting] = useState(false);
 
         ],
         filterFields: [
-            { key: "status", label: 'status', type: "select" as const, options: statusNames, placeholder: 'Select Status', filterBy: "name", name: 'Status By Color' },
+            { key: "status", label: 'status', type: "select" as const, options: statusNames, placeholder: 'Select Status', filterBy: "id", name: 'Status By Color' },
             { key: "quoteStatus", label: 'quoteStatus', type: "select" as const, options: quoteStatusNames, placeholder: 'Select Quote Status', filterBy: "id", name: 'Quote Status' },
             { key: "region", label: 'region', type: "select" as const, options: regionNames, placeholder: 'Select Region', filterBy: "name", name: 'Region' },
             { key: "area", label: 'area', type: "select" as const, options: areaNames, placeholder: 'Select Area', filterBy: "name", name: 'Area' },
@@ -1103,10 +1106,10 @@ const [importing, setImporting] = useState(false);
 
             { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-              label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
-                
-              ]
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+                ]
             },
 
             { label: 'Add', action: handleAdd, icon: Plus, },

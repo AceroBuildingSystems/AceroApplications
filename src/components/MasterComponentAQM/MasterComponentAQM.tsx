@@ -236,7 +236,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                                         </Button>
                                                     </PopoverTrigger>
                                                     <PopoverContent className="w-[200px] p-0">
-                                                        <Command>
+                                                        <Command className='bg-white'>
                                                             <CommandInput placeholder={`Search ${field.label}`} />
                                                             <CommandList>
                                                                 <CommandEmpty>No {field.label} found.</CommandEmpty>
@@ -244,6 +244,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                                                     {field.options?.map((option: any) => (
                                                                         field.filterBy === 'id' ?
                                                                             <CommandItem
+                                                                            className={option?.color}
                                                                                 key={option?.id}
                                                                                 onSelect={() => {
                                                                                     handleFilterChange(option?.name, field.label);
@@ -260,6 +261,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                                                             </CommandItem>
                                                                             :
                                                                             <CommandItem
+                                                                            className=''
                                                                                 key={option}
                                                                                 onSelect={() => {
                                                                                     handleFilterChange(option, field.label);

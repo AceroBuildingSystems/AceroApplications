@@ -20,11 +20,9 @@ import * as XLSX from "xlsx";
 
 interface ProductFormData {
     _id?: string;
-    name: string;
     category: string;
     brand: string;
     model: string;
-    description?: string;
     unitOfMeasure?: string;
     isActive: boolean;
     vendor?: string;
@@ -63,14 +61,6 @@ const ProductsPage = () => {
     ];
     // Form fields configuration with validation
     const formFields = [
-        {
-            name: "name",
-            label: "Name",
-            type: "text",
-            required: true,
-            placeholder: "Enter product name",
-            validate: validate.text
-        },
 
         {
             name: "category",
@@ -100,13 +90,6 @@ const ProductsPage = () => {
             validate: validate.textSmall
         },
         {
-            name: "description",
-            label: "Description",
-            type: "textarea",
-            placeholder: "Enter product description",
-            validate: validate.desription
-        },
-        {
             name: "isActive",
             label: "Status",
             type: "select",
@@ -124,51 +107,6 @@ const ProductsPage = () => {
 
     // Configure table columns
     const columns = [
-        {
-            accessorKey: "name",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-        
-                return (
-                  <button
-                    className="group  flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(isSorted === "asc")}
-                  >
-                    <span>Name</span>
-                    <ChevronsUpDown
-                      size={15}
-                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                    />
-                  </button>
-                );
-              },
-            cell: ({ row }: any) => (
-                <div className='text-red-700' onClick={() => editProducts(row.original)}>
-                    {row.original.name}
-                </div>
-            )
-        },
-        {
-            accessorKey: "description",
-            header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>Description</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
-        },
         {
             accessorKey: "category",
             header: ({ column }: { column: any }) => {
@@ -189,7 +127,7 @@ const ProductsPage = () => {
                                         );
                                       },
             cell: ({ row }: any) => (
-                <Badge variant="outline">
+                <Badge variant="default"  onClick={() => editProducts(row.original)}>
                     {row.original.category?.name || ''}
                 </Badge>
             )
@@ -277,8 +215,7 @@ const ProductsPage = () => {
 
         if (data?.length > 0) {
             formattedData = data?.map((data: any) => ({
-                'Name': data.name,
-                'Description': data?.description,
+
                 'Category': data?.category?.name,
                 'Brand': data?.brand,
                 'Model': data?.model
@@ -286,8 +223,6 @@ const ProductsPage = () => {
         } else {
             // Create a single empty row with keys only (for header export)
             formattedData = [{
-                'Name': '',
-                'Description': '',
                 'Category': '',
                 'Brand': '',
                 'Model': ''
@@ -312,14 +247,6 @@ const ProductsPage = () => {
 
     // Configure page layout
     const pageConfig = {
-        searchFields: [
-            {
-                key: "name",
-                label: "name",
-                type: "text" as const,
-                placeholder: "Search by name..."
-            }
-        ],
         filterFields: [
             {
                 key: "category",
@@ -363,7 +290,7 @@ const ProductsPage = () => {
                 action: () => {
                     setDialogAction("Add");
                     setSelectedItem({
-                        name: '',
+                     
                         category: '',
                         brand: '',
                         model: '',

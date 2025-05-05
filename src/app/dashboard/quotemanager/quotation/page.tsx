@@ -1050,9 +1050,9 @@ const page = () => {
                 const isSorted = column.getIsSorted();
 
                 return (
-                    <div className="w-40">
+                    
                         <button
-                            className="group  flex items-center space-x-2"
+                            className="group  flex items-center space-x-2 w-40"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
                         >
                             <span>Project Name</span>
@@ -1062,7 +1062,7 @@ const page = () => {
                                     }`}
                             />
                         </button>
-                    </div>
+                  
 
                 );
             },

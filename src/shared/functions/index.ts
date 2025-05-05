@@ -140,6 +140,14 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 Region: ['Region', 'Continent'],
                 Product: ['Name', 'Category'],
                 ProductType: ['Product Type'],
+                Team: ['Team Name', 'Team Head', 'Department'],
+                TeamRole: ['Name'],
+                TeamMember: ['Name', 'Team Role', 'Reporting To', 'Team'],
+                CustomerType: ['Customer Type'],
+                Sector: ['Sector'],
+                PaintType: ['Paint Type'],
+                Incoterm: ['Name', 'Description'],
+               
                 
                 // Add other masters as needed
             };
@@ -217,6 +225,28 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 enrichedData = finalData.map((item: any) => ({
                     ...item,
                     joiningDate: parseExcelDate(item?.joiningDate),
+                }));
+            };
+
+            if (masterName === 'Team') {
+                enrichedData = finalData.map((item: any) => ({
+                    name: item?.name,
+                    teamHead: [item?.teamHead],
+                    department: item?.department,
+                    
+                    addedBy: user?._id,
+                    updatedBy: user?._id,
+                }));
+            };
+
+            if (masterName === 'TeamMember') {
+                enrichedData = finalData.map((item: any) => ({
+                    user: item?.user,
+                    teamRole: [item?.teamRole],
+                    teamReportingTo: [item?.teamReportingTo],
+                    team: item?.team,
+                    addedBy: user?._id,
+                    updatedBy: user?._id,
                 }));
             };
 
@@ -703,6 +733,20 @@ const fieldMappingConfig: { [key: string]: any } = {
     Role: {
         role: { source: "roleData", key: "name", value: "_id" },
     },
+    Team: {
+        teamHead: { source: "userData", key: "displayName", value: "_id" },
+        department: { source: "departmentData", key: "name", value: "_id" },
+    },
+    TeamMember: {
+        user: { source: "userData", key: "displayName", value: "_id" },
+        teamRole: { source: "roleData", key: "name", value: "_id" },
+        teamReportingTo: { source: "userData", key: "displayName", value: "_id" },
+        team: { source: "teamData", key: "name", value: "_id" },
+    },
+    Location: {
+        state: { source: "locationData", key: "name", value: "_id" },
+       
+    },
 
     // Add more entity mappings if needed
 };
@@ -942,6 +986,43 @@ const entityFieldMappings = {
         "Product Type": "name",
 
     },
+    Team: {
+        "Team Name": "name",
+        "Team Head": "teamHead",
+        "Department": "department",
+
+    },
+    TeamRole: {
+        "Name": "name",
+      
+    },
+    TeamMember: {
+        "Name": "user",
+        "Team Role": "teamRole",
+        "Reporting To": "teamReportingTo",
+        "Team": "team",
+      
+    },
+    CustomerType: {
+        "Customer Type": "name",
+
+    },
+    Sector: {
+        "Sector": "name",
+
+    },
+    Incoterm: {
+        "Name": "name",
+        "Description": "description",
+
+    },
+    Location: {
+        "Location": "name",
+        "Address": "address",
+        "Pin Code": "pincode",
+        "City": "state",
+
+    },
     // Add mappings for other entities
 };
 
@@ -970,8 +1051,14 @@ const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: st
                     transformedItem[field] = transform(item[field], referenceArray);
                 } else {
                     // Default mapping lookup
-                    const reference = referenceArray.find((ref) => ref[key] === item[field]);
-                    transformedItem[field] = reference ? reference[value] : undefined;
+                    const reference = referenceArray.find((ref) => ref[key]?.toLowerCase() === item[field]?.toLowerCase());
+                    // const reference = referenceArray.find((ref) => {
+                    //     const refValue = ref[key];
+                        
+                    //     const itemValue = item[field];
+                    //     return refValue?.toLowerCase() === itemValue?.toLowerCase();
+                    // });
+                   transformedItem[field] = reference ? reference[value] : undefined;
                 }
 
                 if (!transformedItem[field]) {

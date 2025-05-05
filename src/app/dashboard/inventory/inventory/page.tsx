@@ -111,7 +111,7 @@ const SpecificationsComponent = ({ accessData, handleChange, selectedItem: selec
 };
 
 const AssetsPage = () => {
-     const [importing, setImporting] = useState(false);
+    const [importing, setImporting] = useState(false);
     const router = useRouter();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
@@ -326,21 +326,21 @@ const AssetsPage = () => {
             accessorKey: "serialNumber",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
-        
+
                 return (
-                  <button
-                    className="group  flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(isSorted === "asc")}
-                  >
-                    <span>Serial No</span>
-                    <ChevronsUpDown
-                      size={15}
-                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                    />
-                  </button>
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Serial No</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
                 );
-              },
+            },
             cell: ({ row }: any) => (
                 <div className='text-red-700' onClick={() => editAsset(row.original)}>
                     {row.original.serialNumber}
@@ -350,22 +350,22 @@ const AssetsPage = () => {
         {
             accessorKey: "product",
             header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>Product</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Product</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => (
                 <Badge variant="outline">
                     {`${row.original.product?.name}`}
@@ -375,22 +375,22 @@ const AssetsPage = () => {
         {
             accessorKey: "warehouse",
             header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>Warehouse</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Warehouse</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => (
                 <Badge variant="secondary">
                     {row.original.warehouse?.name || ''}
@@ -400,22 +400,22 @@ const AssetsPage = () => {
         {
             accessorKey: "status",
             header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>Status</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Status</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => {
                 const status = row.original.status;
                 const variant =
@@ -434,22 +434,22 @@ const AssetsPage = () => {
         {
             accessorKey: "vendor",
             header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>Vendor</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Vendor</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => (
                 <Badge variant="outline">
                     {row.original.vendor?.name || ''}
@@ -459,42 +459,42 @@ const AssetsPage = () => {
         {
             accessorKey: "poNumber",
             header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>PO Number</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>PO Number</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
         },
         {
             accessorKey: "warrantyEndDate",
             header: ({ column }: { column: any }) => {
-                                        const isSorted = column.getIsSorted();
-                                
-                                        return (
-                                          <button
-                                            className="group  flex items-center space-x-2"
-                                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                                          >
-                                            <span>Warranty Untill</span>
-                                            <ChevronsUpDown
-                                              size={15}
-                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                                }`}
-                                            />
-                                          </button>
-                                        );
-                                      },
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Warranty Untill</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => {
                 const endDate = new Date(row.original.warrantyEndDate);
                 const today = new Date();
@@ -520,7 +520,7 @@ const AssetsPage = () => {
 
     const handleSave = async ({ formData, action }: { formData: AssetFormData; action: string }) => {
         console.log("handle save called with:", action, formData.serialNumber);
-      
+
         try {
             // Wrap in Promise to ensure only one call is made
             return await new Promise(async (resolve, reject) => {
@@ -549,54 +549,54 @@ const AssetsPage = () => {
         }
     };
 
-     const handleImport = async () => {
-            await bulkImport({
-                roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse, customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ASSET_MASTER, masterName: "Asset", onStart: () => setImporting(true),
-                onFinish: () => setImporting(false)
-            });
-        };
-    
-        const handleExport = (type: string, data: any) => {
-            let formattedData: any[] = [];
-    
-            if (data?.length > 0) {
-                formattedData = data?.map((data: any) => ({
-                    'Vendor Name': data.vendor?.name,
-                    'Invoice No': data?.invoiceNumber,
-                    'PO Number': data?.poNumber,
-                    'PR Number': data?.prNumber,
-                    'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
-                    'Warehouse': data?.warehouse?.name,
-                    'Product Name': data?.product?.name,
-                    'Serial No': data?.serialNumber,
-                    'Specifications': JSON.stringify(data.specifications),
-                    'Status': data?.status,
-                    'Warranty Details': data?.warrantyDetails,
-                    'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
-                    'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
-                }));
-            } else {
-                // Create a single empty row with keys only (for header export)
-                formattedData = [{
-                    'Vendor Name': data.vendor?.name,
-                    'Invoice No': data?.invoiceNumber,
-                    'PO Number': data?.poNumber,
-                    'PR Number': data?.prNumber,
-                    'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
-                    'Warehouse': data?.warehouse?.name,
-                    'Product Name': data?.product?.name,
-                    'Serial No': data?.serialNumber,
-                    'Specifications': JSON.stringify(data.specifications),
-                    'Status': data?.status,
-                    'Warranty Details': data?.warrantyDetails,
-                    'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
-                    'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
-                }];
-            }
-    
-            type === 'excel' && exportToExcel(formattedData);
-    
-        };
+    const handleImport = async () => {
+        await bulkImport({
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse, customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ASSET_MASTER, masterName: "Asset", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
+    };
+
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                'Vendor Name': data.vendor?.name,
+                'Invoice No': data?.invoiceNumber,
+                'PO Number': data?.poNumber,
+                'PR Number': data?.prNumber,
+                'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
+                'Warehouse': data?.warehouse?.name,
+                'Product Name': data?.product?.name,
+                'Serial No': data?.serialNumber,
+                'Specifications': JSON.stringify(data.specifications),
+                'Status': data?.status,
+                'Warranty Details': data?.warrantyDetails,
+                'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
+                'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                'Vendor Name': data.vendor?.name,
+                'Invoice No': data?.invoiceNumber,
+                'PO Number': data?.poNumber,
+                'PR Number': data?.prNumber,
+                'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
+                'Warehouse': data?.warehouse?.name,
+                'Product Name': data?.product?.name,
+                'Serial No': data?.serialNumber,
+                'Specifications': JSON.stringify(data.specifications),
+                'Status': data?.status,
+                'Warranty Details': data?.warrantyDetails,
+                'Warranty Start Date': moment(data?.warrantyStartDate).format("DD-MM-YYYY"),
+                'Warranty End Date': moment(data?.warrnatyEndDate).format("DD-MM-YYYY")
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
 
     const exportToExcel = (data: any[]) => {
         // Convert JSON data to a worksheet

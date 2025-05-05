@@ -91,22 +91,7 @@ const page = () => {
 
         const response = await createMaster(formattedData);
 
-
-        if (response.data?.status === SUCCESS && action === 'Add') {
-
-            toast.success('Approval authority added successfully');
-
-        }
-        else {
-            if (response.data?.status === SUCCESS && action === 'Update') {
-
-                toast.success('Approval authority updated successfully');
-            }
-        }
-
-        if (response?.error?.data?.message?.message) {
-            toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-        }
+return response;
 
     };
 
@@ -129,9 +114,9 @@ const page = () => {
 
     };
 
-    const handleImport = () => {
-        bulkImport({ roleData: [],continentData:[],regionData:[],countryData:[],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
-    };
+    // const handleImport = () => {
+    //     bulkImport({ roleData: [],continentData:[],regionData:[],countryData:[],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.APPROVAL_AUTHORITY_MASTER, masterName: "ApprovalAuthority" });
+    // };
 
     const handleExport = () => {
         console.log('UserPage Update button clicked');
@@ -228,7 +213,7 @@ const page = () => {
 
         buttons: [
 
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            // { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
@@ -248,6 +233,7 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height='auto'
+                onchangeData={() => { }}
             />
         </>
 

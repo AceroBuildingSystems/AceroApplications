@@ -24,6 +24,7 @@ import moment from 'moment';
 
 
 const page = () => {
+  const [importing, setImporting] = useState(false);
 const [designationDataNew, setDesignationdata] = useState([]);
   const { user, status, authenticated } = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
@@ -228,7 +229,8 @@ const [designationDataNew, setDesignationdata] = useState([]);
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: locationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, organisationData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User" });
+    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: locationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, organisationData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User",onStart: () => setImporting(true),
+      onFinish: () => setImporting(false) });
   };
 
   const handleExport = (type: string, data: any) => {
@@ -403,13 +405,13 @@ const [designationDataNew, setDesignationdata] = useState([]);
     },
     buttons: [
 
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-          { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
-          { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
-        ]
-      },
+       { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+                 {
+                   label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                     { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+                     
+                   ]
+                 },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };

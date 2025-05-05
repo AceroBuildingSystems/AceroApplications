@@ -21,7 +21,7 @@ import { bulkImport } from '@/shared/functions';
 import * as XLSX from "xlsx";
 
 const page = () => {
-
+    const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
     const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
@@ -75,7 +75,6 @@ const page = () => {
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
-
 
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
@@ -149,8 +148,37 @@ const page = () => {
 
     };
 
+
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
+        bulkImport({
+            roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: teamData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
+    };
+
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                'Name': data?.displayName?.toPropercase(),
+                'Team Role': data?.teamRole?.[0]?.name?.toProperCase(),
+                'Reporting To': data?.teamReportingTo?.[0]?.displayName?.toProperCase(),
+                'Team': data?.team?.name?.toProperCase(),
+
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                'Name': '',
+                'Team Role': '',
+                'Reporting To': '',
+                'Team': '',
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
     };
 
     const exportToExcel = (data: any[]) => {
@@ -164,20 +192,6 @@ const page = () => {
         XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
-    const handleExport = (type: string) => {
-           console.log(teamMemberData?.data);
-        const formattedData = teamMemberData?.data.map((data: any) => {
-            return {
-                User: data?.user?.displayName,
-                'Team Role': data?.teamRole[0]?.name,
-                'Reporting To':data?.teamReportingTo[0]?.displayName,
-                Team:data?.team?.name,
-
-            };
-        })
-        type === 'excel' && exportToExcel(formattedData);
-
-    };
 
     const handleDelete = () => {
         console.log('UserPage Delete button clicked');
@@ -297,11 +311,11 @@ const page = () => {
             data: transformedData,
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
                 ]
             },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
@@ -322,6 +336,7 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height='auto'
+                onchangeData={() => { }}
             />
         </>
 

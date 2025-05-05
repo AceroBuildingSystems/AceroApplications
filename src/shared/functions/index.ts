@@ -147,7 +147,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 Sector: ['Sector'],
                 PaintType: ['Paint Type'],
                 Incoterm: ['Name', 'Description'],
-               
+                QuoteStatus: ['Quote Status'],
+                Currency: ['Currency'],
                 
                 // Add other masters as needed
             };
@@ -1023,6 +1024,8 @@ const entityFieldMappings = {
         "City": "state",
 
     },
+   
+   
     // Add mappings for other entities
 };
 

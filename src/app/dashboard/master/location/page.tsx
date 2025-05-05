@@ -263,9 +263,9 @@ const page = () => {
     },
     buttons: [
 
-      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
       {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+        label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
           { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
           { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
         ]

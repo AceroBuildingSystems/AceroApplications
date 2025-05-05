@@ -20,7 +20,7 @@ import { bulkImport } from '@/shared/functions';
 import * as XLSX from "xlsx";
 
 const page = () => {
-
+const [importing, setImporting] = useState(false);
   const { user, status, authenticated } = useUserAuthorised();
   const { data: roleData = [], isLoading: roleLoading }: any = useGetMasterQuery({
     db: 'TEAM_ROLE_MASTER',
@@ -84,19 +84,6 @@ const page = () => {
     const response = await createMaster(formattedData);
 
 
-    // if (response.data?.status === SUCCESS && action === 'Add') {
-    //   toast.success('Role added successfully');
-
-    // }
-    // else {
-    //   if (response.data?.status === SUCCESS && action === 'Update') {
-    //     toast.success('Role updated successfully');
-    //   }
-    // }
-
-    // if (response?.error?.data?.message?.message) {
-    //   toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    // }
 return response
   };
 
@@ -116,30 +103,40 @@ return response
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "TEAM_ROLE_MASTER", masterName: "TeamRole" });
+    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData: [], designationData: [], departmentData: [], employeeTypeData:[], organisationData:[], action: "Add", user, createUser: createMaster, db: "TEAM_ROLE_MASTER", masterName: "TeamRole",onStart: () => setImporting(true),
+      onFinish: () => setImporting(false) });
   };
 
-  const exportToExcel = (data: any[]) => {
-    // Convert JSON data to a worksheet
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    // Create a new workbook
-    const workbook = XLSX.utils.book_new();
-    // Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-    // Write the workbook and trigger a download
-    XLSX.writeFile(workbook, 'exported_data.xlsx');
-  };
-
-  const handleExport = (type: string) => {
-    
-    const formattedData = roleData?.data.map((data: any) => {
-      return {
-        Role: data?.name,
-      };
-    })
-    type === 'excel' && exportToExcel(formattedData);
-
-  };
+  const handleExport = (type: string, data: any) => {
+     let formattedData: any[] = [];
+ 
+     if (data?.length > 0) {
+       formattedData = data?.map((data: any) => ({
+         'Name': data?.name,
+         
+       }));
+     } else {
+       // Create a single empty row with keys only (for header export)
+       formattedData = [{
+         'Name': '',
+       }];
+     }
+ 
+     type === 'excel' && exportToExcel(formattedData);
+ 
+   };
+ 
+   const exportToExcel = (data: any[]) => {
+     // Convert JSON data to a worksheet
+     const worksheet = XLSX.utils.json_to_sheet(data);
+     // Create a new workbook
+     const workbook = XLSX.utils.book_new();
+     // Append the worksheet to the workbook
+     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+     // Write the workbook and trigger a download
+     XLSX.writeFile(workbook, 'exported_data.xlsx');
+   };
+ 
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
@@ -218,13 +215,13 @@ return response
       data: roleData?.data,
     },
     buttons: [
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-      {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-          { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-          { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
-        ]
-      },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+                       {
+                         label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                           { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+                           
+                         ]
+                       },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };
@@ -243,6 +240,7 @@ return response
         initialData={initialData}
         action={action}
         height='auto'
+        onchangeData={() => { }}
       />
     </>
 

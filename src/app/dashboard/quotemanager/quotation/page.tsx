@@ -856,7 +856,7 @@ const page = () => {
 
                     return (
                         <button
-                            className="group  flex items-center space-x-2"
+                            className="group  flex items-center space-x-2 w-[100px]"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
                         >
                             <span>Quote No</span>
@@ -877,7 +877,7 @@ const page = () => {
 
                     return (
                         <button
-                            className="group  flex items-center space-x-2"
+                            className="group  flex items-center space-x-2 w-[70px]"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
                         >
                             <span>Rev No</span>
@@ -1008,7 +1008,7 @@ const page = () => {
 
                     return (
                         <button
-                            className="group  flex items-center space-x-2"
+                            className="group  flex items-center space-x-2 w-[120px]"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
                         >
                             <span>Sales Engineer</span>
@@ -1050,7 +1050,7 @@ const page = () => {
                 const isSorted = column.getIsSorted();
 
                 return (
-                    <div className="w-40">
+                   
                         <button
                             className="group  flex items-center space-x-2"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
@@ -1062,7 +1062,7 @@ const page = () => {
                                     }`}
                             />
                         </button>
-                    </div>
+                 
 
                 );
             },

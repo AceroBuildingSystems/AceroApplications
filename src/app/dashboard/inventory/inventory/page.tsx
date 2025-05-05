@@ -141,13 +141,13 @@ const AssetsPage = () => {
         db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true }
     });
-
+//  `${prod.category.name} (${prod.model})`
     const fieldsToAdd = [
-        { fieldName: 'productName', path: ['product', 'name'] },
+        { fieldName: 'productName', path: ['product', ''] },
         { fieldName: 'warehouseName', path: ['warehouse', 'name'] }
     ];
     const transformedData = transformData(assetsResponse?.data, fieldsToAdd);
-
+console.log(transformedData)
     const loading = productLoading || assetsLoading || warehouseLoading || vendorLoading;
 
     const [createMaster] = useCreateMasterMutation();
@@ -171,7 +171,7 @@ const AssetsPage = () => {
         { _id: true, name: "True" },
         { _id: false, name: "False" },
     ];
-
+console.log(productsResponse)
     const formFields = [
         {
             name: "product",
@@ -180,7 +180,7 @@ const AssetsPage = () => {
             placeholder: "select product",
             required: true,
             data: productsResponse?.data?.map((prod: any) => ({
-                name: `${prod.category.name} (${prod.name}-${prod.model})`,
+                name: `${prod.category.name} (${prod.model})`,
                 _id: prod._id
             })) || [],
             onChange: handleProductChange
@@ -368,7 +368,7 @@ const AssetsPage = () => {
             },
             cell: ({ row }: any) => (
                 <Badge variant="outline">
-                    {`${row.original.product?.name}`}
+                    {`${row?.original?.product?.category?.name} (${row?.original?.product?.model})`}
                 </Badge>
             )
         },
@@ -625,8 +625,8 @@ const AssetsPage = () => {
                 type: "select" as const,
                 placeholder: "Filter by product",
                 data: productsResponse?.data?.map((prod: any) => ({
-                    _id: prod?.name,
-                    name: prod?.name
+                    _id: `${prod.category.name} (${prod.model})`,
+                    name:  `${prod.category.name} (${prod.model})`
                 })),
                 name: "productName",
             },

@@ -791,7 +791,7 @@ const handleSubmit = async (e:any) => {
                     name: "product",
                     type: "select",
                     data: products?.map((prod: any) => ({
-                      name: `${prod.category.name} (${prod.name}-${prod.model})`,
+                      name: `${prod.category.name} (${prod.brand}-${prod.model})`,
                       _id: prod._id
                     })) || []
                   }}

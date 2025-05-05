@@ -284,7 +284,7 @@ const AssetManagementPage = () => {
         {
             accessorKey: "product",
             header: "Product",
-            cell: ({ row }: any) => `${row.original.product?.name} (${row.original.product?.model})`
+            cell: ({ row }: any) => `${row.original.product?.category?.name} (${row.original.product?.model})`
         },
         {
             accessorKey: "warehouse",

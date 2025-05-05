@@ -250,7 +250,7 @@ const page = () => {
 
   const locationConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by location' },
 
     ],
     filterFields: [

@@ -8,7 +8,10 @@ const DepartmentSchema: Schema<department> = new Schema({
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
     updatedBy: { type: String },
-   
+    manager: { 
+      type: Schema.Types.ObjectId, 
+      ref: 'User'
+    },
 }, { timestamps: true })
 
 

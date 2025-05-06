@@ -188,7 +188,7 @@ const TicketSkillsPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                   <SelectItem value="select_user">Select a user</SelectItem>
-                    <SelectItem value="">Select a user</SelectItem>
+                    <SelectItem value="all">Select a user</SelectItem>
                     {userData?.data?.map((user:any) => (
                       <SelectItem key={user._id} value={user._id}>
                         {`${user.firstName} ${user.lastName}`}

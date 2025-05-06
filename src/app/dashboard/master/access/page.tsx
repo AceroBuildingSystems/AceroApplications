@@ -157,7 +157,7 @@ const Access = () => {
   const [selectedMaster, setSelectedMaster] = useState("");
   const [initialData, setInitialData] = useState({});
   const [action, setAction] = useState("Add");
-  
+
   // User Access Tab State
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSidebarOpen, setUserSidebarOpen] = useState(false);
@@ -242,9 +242,9 @@ const Access = () => {
     // Process Access Data to create distinct options
     if (accessData?.data) {
       const processedAccess = accessData.data.map((access) => ({
-        _id: access._id,
-        name: access.name,
-        category: access.category,
+            _id: access._id,
+            name: access.name,
+            category: access.category,
       }));
       
       setDistinctAccessOptions(processedAccess);
@@ -267,10 +267,10 @@ const Access = () => {
       
       const processedUsers = userData.data.map((user) => {
         const accessMap = user.access?.map((access) => ({
-          name: access?.accessId?.name,
-          _id: access?.accessId?._id,
-          permissions: access?.permissions,
-          hasAccess: access?.hasAccess,
+              name: access?.accessId?.name,
+              _id: access?.accessId?._id,
+              permissions: access?.permissions,
+              hasAccess: access?.hasAccess,
         })) ?? [];
         
         return {
@@ -381,7 +381,7 @@ const Access = () => {
       } else {
         toast.error(`Failed to ${action.toLowerCase()} access`);
       }
-      return response;
+    return response;
     } catch (error) {
       const errorMessage = error.message || "An error occurred";
       toast.error(`Error: ${errorMessage}`);
@@ -608,8 +608,8 @@ const Access = () => {
         <div className="flex gap-2 flex-wrap">
           {row.getValue("access")?.map((data, index) => (
             <div key={index} className="bg-slate-700 rounded-md p-1 px-2 text-white text-xs">
-              {data.name}
-            </div>
+                {data.name}
+              </div>
           ))}
         </div>
       ),
@@ -667,19 +667,19 @@ const Access = () => {
     if (!accessToAdd) return;
     
     setUserAccessList(prev => [
-      {
+            {
         ...accessToAdd,
-        hasAccess: true,
-        permissions: {
-          view: true,
-          create: true,
-          update: true,
-          delete: true,
-          import: true,
-          export: true,
-        },
-      },
-      ...prev,
+              hasAccess: true,
+              permissions: {
+                view: true,
+                create: true,
+                update: true,
+                delete: true,
+                import: true,
+                export: true,
+              },
+            },
+            ...prev,
     ]);
     setIsDirty(true);
   };
@@ -720,7 +720,7 @@ const Access = () => {
       .map(access => ({
         ...access,
         hasAccess: true,
-        permissions: {
+          permissions: {
           view: true,
           create: true,
           update: true,
@@ -735,7 +735,7 @@ const Access = () => {
     setUserAccessList(prev => [...newAccessItems, ...prev]);
     setIsDirty(true);
     toast.success(`Added ${newAccessItems.length} access permissions`);
-  };
+    };
 
   const handlePermissionToggle = (accessId, permissionKey) => {
     setUserAccessList(prev => 
@@ -757,7 +757,7 @@ const Access = () => {
   const handleRemoveAccess = (accessId) => {
     setUserAccessList(prev => prev.filter(access => access._id !== accessId));
     setIsDirty(true);
-  };
+    };
 
   const saveUserAccess = async () => {
     if (!selectedUser || !selectedUser._id) {
@@ -852,7 +852,7 @@ const Access = () => {
                   onSelect={handleMultiSelectAccess}
                   placeholder="Select multiple access permissions..."
                   buttonText="Add Selected Access"
-                />
+          />
                 
                 <Button
                   variant="secondary"
@@ -863,7 +863,7 @@ const Access = () => {
                   <Plus className="h-4 w-4 mr-1" />
                   Add All Access ({getAvailableAccess.length})
                 </Button>
-              </div>
+        </div>
             </div>
             
             {/* List of current access */}
@@ -876,13 +876,13 @@ const Access = () => {
                 </div>
               ) : (
                 userAccessList.map((access, index) => (
-                  <div
-                    key={index}
+            <div
+              key={index}
                     className="bg-white rounded-md border p-3 shadow-sm"
-                  >
+            >
                     <div className="flex justify-between items-center mb-2">
                       <div className="font-medium">{access.name}</div>
-                      <Button
+              <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => handleRemoveAccess(access._id)}
@@ -895,25 +895,25 @@ const Access = () => {
                     
                     <div className="grid grid-cols-3 gap-2 mt-3">
                       {Object.entries(access?.permissions || {}).map(([key, value]) => (
-                        <div
+                  <div
                           key={`${key}_${access._id}`}
                           className="flex flex-col gap-1 items-center rounded-md p-2 bg-slate-50"
-                        >
-                          <Label
+                  >
+                    <Label
                             className="font-medium text-sm text-slate-700 mb-1"
                             htmlFor={`${key}_${access._id}`}
-                          >
-                            {key}
-                          </Label>
-                          <Switch
+                    >
+                      {key}
+                    </Label>
+                    <Switch
                             id={`${key}_${access._id}`}
-                            checked={Boolean(value)}
+                      checked={Boolean(value)}
                             onCheckedChange={() => handlePermissionToggle(access._id, key)}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    />
                   </div>
+                ))}
+              </div>
+            </div>
                 ))
               )}
             </div>
@@ -1035,15 +1035,15 @@ const Access = () => {
 
       {/* Access Tab Dialog */}
       {selectedMaster === "Access" && (
-        <DynamicDialog
-          isOpen={isDialogOpen}
-          closeDialog={closeDialog}
-          selectedMaster={selectedMaster}
+            <DynamicDialog
+              isOpen={isDialogOpen}
+              closeDialog={closeDialog}
+              selectedMaster={selectedMaster}
           onSave={saveAccessData}
           fields={accessFields}
-          initialData={initialData}
-          action={action}
-        />
+              initialData={initialData}
+              action={action}
+            />
       )}
     </div>
   );

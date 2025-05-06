@@ -5,6 +5,7 @@ export interface department {
     name: string,
     addedBy: string,
     updatedBy: string,
-    isActive:boolean,
+    isActive: boolean,
+    manager?: mongoose.ObjectId,
 }
   

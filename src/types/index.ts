@@ -16,6 +16,51 @@ import { smlfile } from "./sml/smlfile.types";
 import { paintType } from "./master/paintType.types";
 import { productType } from "./master/productType.types";
 
+export interface UserDocument extends Document {
+  // Core user information
+  employeeId?: string;
+  firstName: string;
+  lastName: string;
+  fullName?: string;
+  displayName?: string;
+  email?: string;
+  password?: string;
+  imageUrl?: string;
+  isActive?: boolean;
+  
+  // References to related user data categories
+  personalDetails?: mongoose.Types.ObjectId;
+  employmentDetails?: mongoose.Types.ObjectId;
+  visaDetails?: mongoose.Types.ObjectId;
+  identification?: mongoose.Types.ObjectId;
+  benefits?: mongoose.Types.ObjectId;
+  
+  // Access and security
+  access?: {
+    accessId: mongoose.Types.ObjectId;
+    hasAccess: boolean;
+    permissions: {
+      view: boolean;
+      create: boolean;
+      update: boolean;
+      delete: boolean;
+      import: boolean;
+      export: boolean;
+    };
+  }[];
+  
+  // Audit fields
+  addedBy?: string;
+  updatedBy?: string;
+  
+  // Department role
+  departmentRole?: 'admin' | 'manager' | 'normal';
+  
+  // Timestamps
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 export type {
   UserDocument,
   access,

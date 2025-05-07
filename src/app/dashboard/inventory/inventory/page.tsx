@@ -22,14 +22,14 @@ interface AssetFormData {
     _id?: string;
     serialNumber: string;
     product: string;
-    warehouse: string;
+    // warehouse: string;
     status: 'available' | 'assigned' | 'maintenance' | 'retired';
-    purchaseDate: string;
+    // purchaseDate: string;
     // purchasePrice: number;
     vendor: string;
-    poNumber: string;
-    prNumber?: string;
-    invoiceNumber: string;
+    // poNumber: string;
+    // prNumber?: string;
+    // invoiceNumber: string;
     warrantyStartDate: string;
     warrantyEndDate: string;
     warrantyDetails?: string;
@@ -144,10 +144,14 @@ const AssetsPage = () => {
 //  `${prod.category.name} (${prod.model})`
     const fieldsToAdd = [
         { fieldName: 'productName', path: ['product', ''] },
-        { fieldName: 'warehouseName', path: ['warehouse', 'name'] }
+        { fieldName: 'warehouseName', path: ['warehouse', 'name'] },
+        { fieldName: 'vendor', path: ['vendor', '_id'] },
+        { fieldName: 'warehouse', path: ['warehouse', '_id'] }
+        
     ];
     const transformedData = transformData(assetsResponse?.data, fieldsToAdd);
-console.log(transformedData)
+
+console.log("transformedData", transformedData)
     const loading = productLoading || assetsLoading || warehouseLoading || vendorLoading;
 
     const [createMaster] = useCreateMasterMutation();
@@ -171,7 +175,7 @@ console.log(transformedData)
         { _id: true, name: "True" },
         { _id: false, name: "False" },
     ];
-console.log(productsResponse)
+
     const formFields = [
         {
             name: "product",

@@ -62,7 +62,6 @@ const AssetSchema = new mongoose.Schema({
     // Basic Information
     serialNumber: {
         type: String,
-        
         unique: true,
         sparse:true
     },
@@ -73,44 +72,13 @@ const AssetSchema = new mongoose.Schema({
         autopopulate:true
     },
     warehouse: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Warehouse',
-        required: true
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Warehouse',
+            required: true,
     },
-    status: {
-        type: String,
-        enum: ['available', 'assigned', 'maintenance', 'retired'],
-        default: 'available'
-    },
-
-    // Purchase Information
-    purchaseDate: {
-        type: Date,
-        required: true
-    },
-    purchasePrice: {
-        type: Number,
-    
-    },
-    vendor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Vendor',
-        required: true
-    },
-    poNumber: {
-        type: String,
-       
-    },
-    prNumber: String,
-    invoiceNumber: {
-        type: String,
-        required: true,
-    },
-
     // Warranty Information
     warrantyStartDate: {
         type: Date,
-        
     },
     warrantyEndDate: {
         type: Date,

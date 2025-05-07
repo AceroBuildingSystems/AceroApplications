@@ -1,5 +1,6 @@
 import mongoose, { Document, Model } from 'mongoose';
 
+
 interface IInventory extends Document {
     warehouse: mongoose.Types.ObjectId;
     totalQuantity: number;
@@ -25,6 +26,35 @@ const InventorySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Warehouse',
         required: true
+    },
+    status: {
+        type: String,
+        enum: ['available', 'assigned', 'maintenance', 'retired'],
+        default: 'available'
+    },
+    // Purchase Information
+    purchaseDate: {
+        type: Date,
+        required: true
+    },
+    purchasePrice: {
+        type: Number,
+    
+    },
+    vendor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vendor',
+        required: true
+    },
+    poNumber: {
+        type: String,
+        
+    },
+    prNumber: String,
+    invoiceNumber: {
+        type: String,
+        required: true,
+        unique: true,
     },
     totalQuantity: {
         type: Number,

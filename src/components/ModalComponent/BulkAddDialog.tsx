@@ -114,7 +114,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   const [countCalls,setCountCalls] = useState(0);
   
   // Common data for all items
-  const [commonData, setCommonData] = useState<CommonData>({
+  const [commonData, setCommonData]:any = useState<CommonData>({
     vendor: '',
     poNumber: '',
     prNumber: '',
@@ -169,6 +169,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
       setErrors({});
       setSaveResults([]);
     }
+    setCommonData(initialData);
   }, [isOpen]);
 
   // Handle common data changes
@@ -191,6 +192,9 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     }
   };
 
+  console.log("Common Data:", commonData);
+  console.log("initial data:", initialData);
+  
   // Handle product selection
   const handleProductChange = (productId: string) => {
     const product = products.find((p: any) => p._id === productId);
@@ -675,6 +679,7 @@ const handleSubmit = async (e:any) => {
                   }}
                   formData={commonData}
                   handleChange={(value: any) => {
+                    console.log("Vendor selected:", value);
                     setCommonData({
                       ...commonData,
                       vendor: value
@@ -688,7 +693,7 @@ const handleSubmit = async (e:any) => {
                     }
                   }}
                   placeholder="Select vendor"
-                  initialValue={initialData?.vendor || ""}
+                  initialValue={commonData?.vendor?._id || ""}
                 />
                 {errors.vendor && <span className="text-sm text-destructive">{errors.vendor}</span>}
               </div>
@@ -706,6 +711,7 @@ const handleSubmit = async (e:any) => {
                   }}
                   formData={commonData}
                   handleChange={(value: any) => {
+                    console.log("Warehouse selected:", initialData);
                     setCommonData({
                       ...commonData,
                       warehouse: value
@@ -727,7 +733,7 @@ const handleSubmit = async (e:any) => {
                 <Label>PO Number</Label>
                 <Input
                   type="text"
-                  value={commonData.poNumber}
+                  value={commonData?.poNumber}
                   onChange={(e) => handleCommonDataChange(e, "poNumber")}
                   placeholder="Enter PO number"
                   className={errors.poNumber ? "border-destructive" : ""}
@@ -739,7 +745,7 @@ const handleSubmit = async (e:any) => {
                 <Label>PR Number</Label>
                 <Input
                   type="text"
-                  value={commonData.prNumber}
+                  value={commonData?.prNumber}
                   onChange={(e) => handleCommonDataChange(e, "prNumber")}
                   placeholder="Enter PR number"
                 />
@@ -749,7 +755,7 @@ const handleSubmit = async (e:any) => {
                 <Label>Invoice Number</Label>
                 <Input
                   type="text"
-                  value={commonData.invoiceNumber}
+                  value={commonData?.invoiceNumber}
                   onChange={(e) => handleCommonDataChange(e, "invoiceNumber")}
                   placeholder="Enter invoice number"
                   className={errors.invoiceNumber ? "border-destructive" : ""}
@@ -760,7 +766,7 @@ const handleSubmit = async (e:any) => {
               <div>
                 <Label>Purchase Date</Label>
                 <DatePicker
-                  currentDate={commonData.purchaseDate}
+                  currentDate={commonData?.purchaseDate}
                   handleChange={(selectedDate: Date | null) => {
                     setCommonData({
                       ...commonData,
@@ -783,6 +789,7 @@ const handleSubmit = async (e:any) => {
         );
         
       case 2:
+        console.log(currentProductItem)
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Step 2: Product Selection</h3>

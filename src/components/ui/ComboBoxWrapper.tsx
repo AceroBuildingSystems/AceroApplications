@@ -26,40 +26,38 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
     const [open, setOpen] = useState(false)
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
 
+    // Ensure field.data is always an array and has the correct structure
+    const options = Array.isArray(field?.data) ? field.data.map((item: any) => ({
+        _id: item._id || item.id,
+        name: item.name || item.displayName || item.label,
+        displayName: item.displayName || item.name || item.label
+    })) : [];
+
+    // Find the selected option
+    const selectedOption = options.find((option: any) => option._id === formData?.[field?.name]);
+
     return (
-        <Popover modal={true} open={open} onOpenChange={setOpen} >
+        <Popover modal={true} open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
                 <Button
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${(field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-                            selectedValue ||
-                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName)
-                            ? "text-black"
-                            : "text-gray-400"
-                        }`}
+                    className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${
+                        selectedOption?.name || selectedValue ? "text-black" : "text-gray-400"
+                    }`}
                 >
                     <span className="text-sm truncate whitespace-nowrap overflow-hidden max-w-[calc(100%-1.5rem)]">
-                        {
-                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName ||
-                            selectedValue ||
-                            placeholder
-                        }
+                        {selectedOption?.name || selectedValue || placeholder || "Select an option"}
                     </span>
                     <ChevronDown className="h-4 w-4 shrink-0 opacity-50 ml-1" />
                 </Button>
-
-
-
             </PopoverTrigger>
-            <PopoverContent className="w-full p-0 pointer-events-auto ">
+            <PopoverContent className="w-full p-0 pointer-events-auto">
                 <Command className="bg-white">
-                    <CommandInput className="pointer-events-auto" placeholder={`Search ${field?.label}`} />
-
+                    <CommandInput className="pointer-events-auto" placeholder={`Search ${field?.label || 'options'}`} />
                     <CommandList className="overflow-y-scroll">
-                        <CommandEmpty>No {field?.label?.toLowerCase()} found.</CommandEmpty>
+                        <CommandEmpty>No {field?.label?.toLowerCase() || 'options'} found.</CommandEmpty>
                         <CommandGroup>
                             {/* Add "All" option */}
                             <CommandItem
@@ -67,12 +65,12 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                 value=""
                                 onSelect={() => {
                                     setSelectedValue(null);
-                                    handleChange(null, field.name, field?.format, field?.type, field?.data, field); // Set the value to null for "All"
+                                    handleChange(null);
                                     if (field?.key === "year") {
-                                        setSelectedYear(0); // Update region
+                                        setSelectedYear?.(0);
                                     }
                                     if (field?.key === "month") {
-                                        setSelectedMonth(0); // Update region
+                                        setSelectedMonth?.(0);
                                     }
                                     setOpen(false);
                                 }}
@@ -80,31 +78,31 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                 <Check
                                     className={cn(
                                         "mr-2 h-4 w-4",
-                                        (formData[field.name] === null || selectedValue === null) ? "opacity-100" : "opacity-0"
+                                        (!formData?.[field?.name] && !selectedValue) ? "opacity-100" : "opacity-0"
                                     )}
                                 />
                                 All
                             </CommandItem>
 
-                            {field?.data?.map((data: { _id: React.Key | null | undefined; name: string | undefined; displayName: any }) => (
+                            {options.map((option: any) => (
                                 <CommandItem
                                     className="cursor-pointer"
-                                    key={data._id}
-                                    value={data.name}
+                                    key={option._id}
+                                    value={option.name}
                                     onSelect={(value) => {
                                         setSelectedValue(value);
-                                        handleChange(data._id, field.name, field?.format, field?.type, field?.data, field);
+                                        handleChange(option._id);
                                         if (field?.key === "region") {
-                                            setSelectedRegion(data._id); // Update region
+                                            setSelectedRegion?.(option._id);
                                         }
                                         if (field?.key === "area") {
-                                            setSelectedArea(data._id); // Update region
+                                            setSelectedArea?.(option._id);
                                         }
                                         if (field?.key === "year") {
-                                            setSelectedYear(data._id); // Update region
+                                            setSelectedYear?.(option._id);
                                         }
                                         if (field?.key === "month") {
-                                            setSelectedMonth(data._id); // Update region
+                                            setSelectedMonth?.(option._id);
                                         }
                                         setOpen(false);
                                     }}
@@ -112,10 +110,10 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            (formData[field.name] === data._id || selectedValue === data._id) ? "opacity-100" : "opacity-0"
+                                            (formData?.[field?.name] === option._id || selectedValue === option.name) ? "opacity-100" : "opacity-0"
                                         )}
                                     />
-                                    {data.name || data.displayName}
+                                    {option.name}
                                 </CommandItem>
                             ))}
                         </CommandGroup>

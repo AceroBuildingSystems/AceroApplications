@@ -46,3 +46,25 @@ export interface UserDocument {
     createdAt: Date;
     updatedAt: Date;
 }
+
+export interface UserEmploymentDetailsDocument extends mongoose.Document {
+  department: mongoose.Types.ObjectId;
+  designation: mongoose.Types.ObjectId;
+  reportingTo?: mongoose.Types.ObjectId;
+  employeeType: mongoose.Types.ObjectId;
+  role: mongoose.Types.ObjectId;
+  reportingLocation: mongoose.Types.ObjectId;
+  activeLocation: mongoose.Types.ObjectId;
+  extension?: string;
+  mobile: string;
+  joiningDate: Date;
+  relievingDate?: Date;
+  organisation: mongoose.Types.ObjectId;
+  personCode: string;
+  status: string;
+  availability: string;
+  addedBy: string;
+  updatedBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

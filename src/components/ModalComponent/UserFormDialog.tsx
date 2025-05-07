@@ -57,6 +57,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState("core");
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [selectedEmployeeType, setSelectedEmployeeType] = useState<string>("");
 
   // Tabs configuration
   const tabs = [
@@ -80,7 +81,8 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     employment: [
       "department", "designation", "reportingTo", "employeeType", "role", 
       "reportingLocation", "activeLocation", "extension", "mobile", 
-      "joiningDate", "relievingDate", "organisation", "personCode", "status", "availability"
+      "joiningDate", "relievingDate", "organisation", "personCode", "status", "availability",
+      "isDepartmentManager", "managedDepartment"
     ],
     visa: [
       "visaType", "visaIssueDate", "visaExpiryDate", "visaFileNo", 
@@ -104,52 +106,18 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     }
   }, [initialData, isOpen]);
 
-  // Handle form field changes
-  const handleChange = (e: any, fieldName: string, format?: string, fieldType?: string, data?: any[], field?: any) => {
-    let value;
-
-    if (e?.target?.value !== undefined) {
-      value = e.target.value;
-    } else if (e !== undefined) {
-      value = e;
-    } else {
-      value = null;
+  // Handle field changes
+  const handleFieldChange = (fieldName: string, value: any) => {
+    if (fieldName === "employeeType") {
+      const selectedType = masterData.employeeTypes?.find((type: any) => type._id === value);
+      setSelectedEmployeeType(selectedType?.name || "");
+      
+      // If not a manager, clear managed department
+      if (selectedType?.name !== "Manager") {
+        setFormData(prev => ({ ...prev, managedDepartment: null }));
+      }
     }
-
-    // Special handling for certain types
-    if (format === "Date" && value) {
-      value = new Date(value);
-    } else if (format === "ObjectId" && value) {
-      // If it's an ObjectId reference, we handle it differently
-      const dataItem = data?.find((item) => item._id === value);
-      value = dataItem?._id || value;
-    }
-
-    // Handle special case for department changes
-    if (fieldName === "department" && onFieldChange) {
-      onFieldChange({ id: value, fieldName });
-    }
-
-    // Auto-generate fullName if first or last name changes
-    if (fieldName === "firstName" || fieldName === "lastName") {
-      const firstName = fieldName === "firstName" ? value : formData.firstName || "";
-      const lastName = fieldName === "lastName" ? value : formData.lastName || "";
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: value,
-        fullName: `${firstName} ${lastName}`.trim(),
-      }));
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: value,
-      }));
-    }
-
-    // Clear error when field is changed
-    if (errors[fieldName]) {
-      setErrors({ ...errors, [fieldName]: "" });
-    }
+    setFormData(prev => ({ ...prev, [fieldName]: value }));
   };
 
   // Validate form fields
@@ -250,156 +218,79 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     }
   };
 
-  // Render form fields for the current tab
-  const renderTabFields = (tabId: string) => {
-    // First check for fields with matching category, then fall back to using the fieldsByCategory array
-    const tabFields = fields.filter((field: any) => 
-      (field.category === tabId) || 
-      (fieldsByCategory[tabId as keyof typeof fieldsByCategory]?.includes(field.name))
-    );
-
-    return (
-      <div className="grid grid-cols-2 gap-x-4 gap-y-3 max-h-[60vh] overflow-y-auto p-1">
-        {tabFields.map((field: any, index: number) => (
-          <div key={index} className="flex flex-col gap-1">
-            <Label htmlFor={field.name} className="text-sm font-medium">
-              {field.label} {field.required && <span className="text-red-500">*</span>}
-            </Label>
-            {renderField(field)}
-            {errors[field.name] && (
-              <p className="text-xs text-red-500">{errors[field.name]}</p>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Render appropriate input field based on type
-  const renderField = (field: any) => {
-    const { type, name, readOnly, placeholder, data } = field;
-
-    switch (type) {
-      case "text":
-      case "email":
-      case "number":
-        return (
-          <Input
-            id={name}
-            name={name}
-            type={type}
-            placeholder={placeholder || `Enter ${field.label}`}
-            value={formData[name as keyof CompleteUserData] || ""}
-            onChange={(e) => handleChange(e, name, field.format, field.type, field.data, field)}
-            readOnly={readOnly}
-            className={errors[name] ? "border-red-500" : ""}
-          />
-        );
-      case "select":
-        return (
-          <Combobox
-            field={field}
-            formData={formData}
-            handleChange={(value) => handleChange(value, name, field.format, field.type, field.data, field)}
-            placeholder={placeholder || `Select ${field.label}`}
-          />
-        );
-      case "date":
-        return (
-          <DatePicker
-            field={field}
-            formData={formData}
-            handleChange={(value) => handleChange(value, name, field.format, field.type, field.data, field)}
-          />
-        );
-      default:
-        return (
-          <Input
-            id={name}
-            name={name}
-            type="text"
-            placeholder={placeholder || `Enter ${field.label}`}
-            value={formData[name as keyof CompleteUserData] || ""}
-            onChange={(e) => handleChange(e, name, field.format, field.type, field.data, field)}
-            readOnly={readOnly}
-            className={errors[name] ? "border-red-500" : ""}
-          />
-        );
-    }
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && closeDialog()}>
-      <DialogContent className="sm:max-w-4xl">
+    <Dialog open={isOpen} onOpenChange={closeDialog}>
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle className="text-xl">
-            {action === "Add" ? "Add New User" : "Update User"}
-          </DialogTitle>
+          <DialogTitle>{action} User</DialogTitle>
         </DialogHeader>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-flow-col auto-cols-auto w-full">
-            {tabs.map((tab) => (
-              <TabsTrigger 
-                key={tab.id} 
-                value={tab.id}
-                className="flex items-center gap-1"
-              >
-                <span className="mr-1">{tab.icon}</span>
-                {tab.label}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid grid-cols-6 gap-4">
+            {tabs.map(tab => (
+              <TabsTrigger key={tab.id} value={tab.id}>
+                {tab.icon} {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
-
-          {tabs.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-4">
-              {renderTabFields(tab.id)}
+          {tabs.map(tab => (
+            <TabsContent key={tab.id} value={tab.id}>
+              <div className="grid grid-cols-2 gap-4">
+                {fields
+                  .filter(field => fieldsByCategory[tab.id as keyof typeof fieldsByCategory]?.includes(field.name))
+                  .map(field => {
+                    // Skip managed department field if not a manager
+                    if (field.name === "managedDepartment" && selectedEmployeeType !== "Manager") {
+                      return null;
+                    }
+                    return (
+                      <div key={field.name} className="space-y-2">
+                        <Label htmlFor={field.name}>{field.label}</Label>
+                        {field.type === "select" ? (
+                          <Combobox
+                            field={{
+                              ...field,
+                              data: field.data || masterData[field.name.toLowerCase() + 's'] || []
+                            }}
+                            formData={formData}
+                            handleChange={(value: any) => handleFieldChange(field.name, value)}
+                            placeholder={field.placeholder}
+                          />
+                        ) : field.type === "date" ? (
+                          <DatePicker
+                            id={field.name}
+                            value={formData[field.name as keyof CompleteUserData]}
+                            onChange={(value) => handleFieldChange(field.name, value)}
+                            disabled={field.readOnly}
+                            required={field.required}
+                          />
+                        ) : (
+                          <Input
+                            id={field.name}
+                            type={field.type}
+                            value={formData[field.name as keyof CompleteUserData]}
+                            onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                            placeholder={field.placeholder}
+                            disabled={field.readOnly}
+                            required={field.required}
+                          />
+                        )}
+                        {errors[field.name] && (
+                          <p className="text-sm text-red-500">{errors[field.name]}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
             </TabsContent>
           ))}
         </Tabs>
-
-        <DialogFooter className="flex justify-between items-center mt-6 sm:justify-between">
-          <div>
-            {activeTab !== tabs[0].id && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePreviousTab}
-                className="mr-2"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </Button>
-            )}
-            {activeTab !== tabs[tabs.length - 1].id && (
-              <Button
-                type="button"
-                onClick={handleNextTab}
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={closeDialog}
-            >
-              <X className="w-4 h-4 mr-1" />
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Save className="w-4 h-4 mr-1" />
-              {isSubmitting ? "Saving..." : "Save User"}
-            </Button>
-          </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={closeDialog}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? "Saving..." : "Save"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

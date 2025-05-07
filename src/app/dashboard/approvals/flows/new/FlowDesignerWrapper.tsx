@@ -7,6 +7,7 @@ import { Edge, Node } from 'reactflow';
 import { ApproverNodeData } from '@/components/approval-flow/FlowDesigner';
 import { toast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
+import { useCreateApprovalFlowMutation } from '@/services/endpoints/approvalFlowsApi';
 
 interface FlowDesignerWrapperProps {
   entityData: {
@@ -20,7 +21,7 @@ interface FlowDesignerWrapperProps {
 
 export default function FlowDesignerWrapper({ entityData, userId }: FlowDesignerWrapperProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [createApprovalFlow, { isLoading }] = useCreateApprovalFlowMutation();
 
   const handleSaveFlow = async (
     nodes: Node<ApproverNodeData>[], 
@@ -28,8 +29,6 @@ export default function FlowDesignerWrapper({ entityData, userId }: FlowDesigner
     flowData: { name: string; description: string; }
   ) => {
     try {
-      setIsLoading(true);
-
       // Create the flow template object with the correct data types
       const flowTemplate = {
         name: flowData.name,
@@ -58,22 +57,8 @@ export default function FlowDesignerWrapper({ entityData, userId }: FlowDesigner
       console.log('Saving flow with userId:', userId);
       console.log('Flow template data:', JSON.stringify(flowTemplate, null, 2));
 
-      // Save to the database
-      const response = await fetch('/api/approvals/flows', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(flowTemplate),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server response:', errorData);
-        throw new Error(errorData.message || 'Failed to create approval flow');
-      }
-
-      const result = await response.json();
+      // Save using RTK Query mutation
+      await createApprovalFlow(flowTemplate).unwrap();
 
       toast({
         title: 'Flow Created',
@@ -90,8 +75,6 @@ export default function FlowDesignerWrapper({ entityData, userId }: FlowDesigner
         description: error instanceof Error ? error.message : 'Failed to create approval flow',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

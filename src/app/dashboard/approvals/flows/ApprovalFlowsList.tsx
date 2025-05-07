@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,78 +15,23 @@ import { PlusCircle, Eye, Edit, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
 import PageTitle from '@/components/PageTitle';
+import { useGetApprovalFlowsQuery, useDeleteApprovalFlowMutation } from '@/services/endpoints/approvalFlowsApi';
 
 export function ApprovalFlowsList() {
   const router = useRouter();
-  const [flows, setFlows] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Fetch flows when component mounts
-  useEffect(() => {
-    const fetchFlows = async () => {
-      try {
-        const response = await fetch('/api/approvals/flows');
-        const data = await response.json();
-        
-        if (response.ok) {
-          // The API returns a flowTemplates property
-          if (data.flowTemplates && Array.isArray(data.flowTemplates)) {
-            setFlows(data.flowTemplates);
-            console.log('Flows data:', data.flowTemplates);
-          } else {
-            console.error('Unexpected API response format:', data);
-            setFlows([]);
-            toast({
-              title: 'Error',
-              description: 'Unexpected data format from the server',
-              variant: 'destructive',
-            });
-          }
-        } else {
-          toast({
-            title: 'Error',
-            description: data.message || 'Failed to fetch approval flows',
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
-        console.error('Error fetching flows:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch approval flows',
-          variant: 'destructive',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFlows();
-  }, []);
+  const { data, isLoading, error, refetch } = useGetApprovalFlowsQuery();
+  const [deleteApprovalFlow, { isLoading: isDeleting }] = useDeleteApprovalFlowMutation();
 
   // Handle flow deletion
-  const handleDeleteFlow = async (flowId) => {
+  const handleDeleteFlow = async (flowId: string) => {
     // Show confirmation dialog
     if (!confirm('Are you sure you want to delete this flow template? This action cannot be undone.')) {
       return;
     }
 
     try {
-      setIsDeleting(true);
-
-      const response = await fetch(`/api/approvals/flows/${flowId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete approval flow');
-      }
-
-      // Remove the deleted flow from the state
-      setFlows(flows.filter(flow => flow._id !== flowId));
-
+      await deleteApprovalFlow(flowId).unwrap();
+      
       toast({
         title: 'Flow Deleted',
         description: 'The approval flow template has been deleted successfully',
@@ -98,8 +43,6 @@ export function ApprovalFlowsList() {
         description: error instanceof Error ? error.message : 'Failed to delete approval flow',
         variant: 'destructive',
       });
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -120,6 +63,26 @@ export function ApprovalFlowsList() {
       </div>
     );
   }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <PageTitle title="Approval Flow Templates" />
+        </div>
+        <Card>
+          <CardContent className="py-10">
+            <div className="flex flex-col items-center justify-center text-center">
+              <p className="text-red-500 mb-4">Error loading approval flows</p>
+              <Button onClick={() => refetch()}>Retry</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const flows = data?.flowTemplates || [];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -142,7 +105,7 @@ export function ApprovalFlowsList() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {flows.length === 0 && !isLoading ? (
+          {flows.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <h3 className="text-lg font-medium">No approval flows found</h3>
               <p className="text-muted-foreground mt-2">

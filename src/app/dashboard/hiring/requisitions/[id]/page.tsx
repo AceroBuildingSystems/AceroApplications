@@ -126,8 +126,8 @@ export default function RequisitionDetailPage({ params }: { params: { id: string
   
   // Function to determine if user can take action
   const canTakeAction = (status: string): { canApprove: boolean, canReject: boolean, actionName: string } => {
-    // This is a simplified example - in a real app, you'd check user roles against required roles for each step
-    const userRole = user?.role?.name?.toUpperCase();
+    // Add proper null check for user role
+    const userRole = user?.role?.name?.toUpperCase() || "";
     
     switch(status) {
       case "Draft": 
@@ -230,11 +230,11 @@ export default function RequisitionDetailPage({ params }: { params: { id: string
               <BreadcrumbLink>{requisition.requestedPosition}</BreadcrumbLink>
             </BreadcrumbItem>
           </Breadcrumb>
-          <PageTitle title={`${requisition.requestedPosition} - ${requisition.department.name}`} />
+          <PageTitle title={`${requisition.requestedPosition} - ${requisition.department?.name || 'Unknown Department'}`} />
         </div>
         <div className="flex gap-2">
           {requisition.status === 'Draft' && (
-            <Link href={`/dashboard/hiring/requisitions/${params.id}/edit`}>
+            <Link href={`/dashboard/hiring/requisitions/${unwrappedParams.id}/edit`}>
               <Button>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Requisition
@@ -252,7 +252,7 @@ export default function RequisitionDetailPage({ params }: { params: { id: string
       
       {/* Add the Approval Actions component */}
       <RequisitionApprovalActions 
-        requisitionId={params.id} 
+        requisitionId={unwrappedParams.id} 
         status={requisition.status} 
       />
       

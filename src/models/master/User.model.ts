@@ -62,13 +62,6 @@ const UserSchema: Schema<UserDocument> = new Schema({
     // Audit fields
     addedBy: { type: String },
     updatedBy: { type: String },
-
-    // Add departmentRole field
-    departmentRole: { 
-        type: String,
-        enum: ['admin', 'manager', 'normal'],
-        default: 'normal'
-    },
 }, { 
     timestamps: true 
 });

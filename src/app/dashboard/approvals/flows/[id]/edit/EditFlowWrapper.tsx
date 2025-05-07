@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { useUpdateApprovalFlowMutation, useDeleteApprovalFlowMutation } from '@/services/endpoints/approvalFlowsApi';
 
 interface EditFlowWrapperProps {
   initialNodes: Node<ApproverNodeData>[];
@@ -31,8 +32,12 @@ export default function EditFlowWrapper({
   userId,
 }: EditFlowWrapperProps) {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [isActive, setIsActive] = useState(flowTemplate.isActive);
+  
+  const [updateApprovalFlow, { isLoading: isUpdating }] = useUpdateApprovalFlowMutation();
+  const [deleteApprovalFlow, { isLoading: isDeleting }] = useDeleteApprovalFlowMutation();
+  
+  const isLoading = isUpdating || isDeleting;
 
   const handleUpdateFlow = async (
     nodes: Node<ApproverNodeData>[], 
@@ -40,8 +45,6 @@ export default function EditFlowWrapper({
     flowData: { name: string; description: string; }
   ) => {
     try {
-      setIsLoading(true);
-
       // Create the updated flow template object
       const updatedFlowTemplate = {
         name: flowData.name,
@@ -65,19 +68,11 @@ export default function EditFlowWrapper({
         updatedBy: userId,
       };
 
-      // Update the flow template in the database
-      const response = await fetch(`/api/approvals/flows/${flowTemplate._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedFlowTemplate),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update approval flow');
-      }
+      // Update the flow template using RTK Query
+      await updateApprovalFlow({
+        id: flowTemplate._id,
+        data: updatedFlowTemplate
+      }).unwrap();
 
       toast({
         title: 'Flow Updated',
@@ -94,8 +89,6 @@ export default function EditFlowWrapper({
         description: error instanceof Error ? error.message : 'Failed to update approval flow',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -105,16 +98,8 @@ export default function EditFlowWrapper({
     }
 
     try {
-      setIsLoading(true);
-
-      const response = await fetch(`/api/approvals/flows/${flowTemplate._id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete approval flow');
-      }
+      // Delete the flow template using RTK Query
+      await deleteApprovalFlow(flowTemplate._id).unwrap();
 
       toast({
         title: 'Flow Deleted',
@@ -131,8 +116,6 @@ export default function EditFlowWrapper({
         description: error instanceof Error ? error.message : 'Failed to delete approval flow',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

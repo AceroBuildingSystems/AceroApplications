@@ -59,8 +59,8 @@ export default function RequisitionsPage() {
       queryParams.append("page", page.toString());
       queryParams.append("limit", limit.toString());
       
-      if (filters.status) queryParams.append("status", filters.status);
-      if (filters.department) queryParams.append("department", filters.department);
+      if (filters.status && filters.status !== 'all') queryParams.append("status", filters.status);
+      if (filters.department && filters.department !== 'all') queryParams.append("department", filters.department);
 
       // Call API
       const response = await fetch(`/api/hiring/requisitions?${queryParams.toString()}`);
@@ -131,6 +131,30 @@ export default function RequisitionsPage() {
   // Edit requisition
   const handleEdit = (requisitionId: string) => {
     router.push(`/dashboard/hiring/requisitions/${requisitionId}/edit`);
+  };
+
+  // Delete requisition
+  const handleDelete = async (requisitionId: string) => {
+    if (window.confirm("Are you sure you want to delete this requisition? This action cannot be undone.")) {
+      try {
+        const response = await fetch(`/api/hiring/requisitions/${requisitionId}`, {
+          method: "DELETE",
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          toast.success(result.message || "Requisition deleted successfully");
+          // Refresh the list
+          fetchRequisitions();
+        } else {
+          throw new Error(result.error || "Failed to delete requisition");
+        }
+      } catch (error: any) {
+        console.error("Error deleting requisition:", error);
+        toast.error(error.message || "An error occurred while deleting the requisition");
+      }
+    }
   };
 
   // Run on initial load and when filters/pagination change
@@ -204,11 +228,25 @@ export default function RequisitionsPage() {
           <FileEdit className="h-4 w-4" />
         </Button>
       );
+      
+      // Delete button only for drafts
+      actions.push(
+        <Button 
+          key="delete" 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => handleDelete(requisition._id)}
+          title="Delete"
+          className="text-red-600 hover:text-red-800"
+        >
+          <XCircle className="h-4 w-4" />
+        </Button>
+      );
     }
 
     // Approval actions based on status and user role
     // This is a simplified example - in a real app, you'd check user roles
-    if (requisition.status === "Pending Department Head" && user.role === "Department Head") {
+    if (requisition.status === "Pending Department Head") {
       actions.push(
         <Button 
           key="approve" 
@@ -292,7 +330,7 @@ export default function RequisitionsPage() {
             <Button 
               variant="outline" 
               onClick={() => {
-                setFilters({ status: "", department: "" });
+                setFilters({ status: "all", department: "all" });
                 setPage(1);
               }}
               className="ml-auto"
@@ -305,7 +343,9 @@ export default function RequisitionsPage() {
       </Card>
 
       {loading ? (
-        <DashboardLoader />
+        <div className="flex justify-center items-center py-10">
+          <div className="h-20 w-full rounded-lg bg-neutral-300 dark:bg-neutral-800 animate-pulse"></div>
+        </div>
       ) : (
         <>
           <Card>
@@ -378,7 +418,7 @@ export default function RequisitionsPage() {
                   <PaginationItem>
                     <PaginationPrevious 
                       onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                      disabled={page === 1}
+                      className={page === 1 ? "opacity-50 cursor-not-allowed" : ""}
                     />
                   </PaginationItem>
                   
@@ -394,7 +434,7 @@ export default function RequisitionsPage() {
                   {/* Ellipsis */}
                   {page > 3 && (
                     <PaginationItem>
-                      <PaginationLink disabled>...</PaginationLink>
+                      <PaginationLink className="cursor-not-allowed">...</PaginationLink>
                     </PaginationItem>
                   )}
                   
@@ -424,7 +464,7 @@ export default function RequisitionsPage() {
                   {/* Ellipsis */}
                   {page < Math.ceil(total / limit) - 2 && (
                     <PaginationItem>
-                      <PaginationLink disabled>...</PaginationLink>
+                      <PaginationLink className="cursor-not-allowed">...</PaginationLink>
                     </PaginationItem>
                   )}
                   
@@ -440,7 +480,7 @@ export default function RequisitionsPage() {
                   <PaginationItem>
                     <PaginationNext 
                       onClick={() => setPage(prev => (prev < Math.ceil(total / limit) ? prev + 1 : prev))}
-                      disabled={page >= Math.ceil(total / limit)}
+                      className={page >= Math.ceil(total / limit) ? "opacity-50 cursor-not-allowed" : ""}
                     />
                   </PaginationItem>
                 </PaginationContent>

@@ -5,7 +5,15 @@ import ManpowerRequisition from "@/models/hiring/ManpowerRequisition.model";
 import JobPosting from "@/models/hiring/JobPosting.model";
 import { dbConnect } from "@/lib/mongoose";
 
-// Get a single requisition by ID
+// Define a type extension for the session user
+interface CustomUser {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
+// Get a specific requisition by ID
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -20,15 +28,26 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    // Await params before using its properties
+    const { id: requisitionId } = await params;
+    
+    // Get user identifier - prefer _id, fallback to email
+    const user = session.user as CustomUser;
+    const userId = user.id || user.email;
 
     // Connect to database
     await dbConnect();
 
-    // Find the requisition
-    const requisition = await ManpowerRequisition.findById(id)
+    // Fetch requisition with populated references
+    const requisition = await ManpowerRequisition.findById(requisitionId)
       .populate("requestedBy", "firstName lastName displayName email")
-      .populate("department", "name");
+      .populate("department", "name")
+      .populate("departmentHeadApproval.approvedBy", "firstName lastName displayName")
+      .populate("hrAdminReview.approvedBy", "firstName lastName displayName")
+      .populate("financeApproval.approvedBy", "firstName lastName displayName")
+      .populate("hrHeadApproval.approvedBy", "firstName lastName displayName")
+      .populate("cfoApproval.approvedBy", "firstName lastName displayName")
+      .populate("ceoApproval.approvedBy", "firstName lastName displayName");
 
     if (!requisition) {
       return NextResponse.json(
@@ -37,7 +56,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(requisition);
+    return NextResponse.json({ data: requisition });
   } catch (error: any) {
     console.error("Error fetching requisition:", error);
     return NextResponse.json(
@@ -62,22 +81,19 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    // Await params before using its properties
+    const { id: requisitionId } = await params;
     const data = await request.json();
+    
+    // Get user identifier
+    const user = session.user as CustomUser;
+    const userId = user.id || user.email;
 
     // Connect to database
     await dbConnect();
 
-    // Find and update the requisition
-    const requisition = await ManpowerRequisition.findByIdAndUpdate(
-      id,
-      {
-        ...data,
-        updatedBy: session.user.id,
-      },
-      { new: true, runValidators: true }
-    );
-
+    // Find requisition
+    const requisition = await ManpowerRequisition.findById(requisitionId);
     if (!requisition) {
       return NextResponse.json(
         { error: "Requisition not found" },
@@ -85,9 +101,19 @@ export async function PUT(
       );
     }
 
+    // Update requisition with new data
+    const updatedRequisition = await ManpowerRequisition.findByIdAndUpdate(
+      requisitionId,
+      {
+        ...data,
+        updatedBy: userId,
+      },
+      { new: true, runValidators: true }
+    );
+
     return NextResponse.json({
       message: "Requisition updated successfully",
-      data: requisition,
+      data: updatedRequisition,
     });
   } catch (error: any) {
     console.error("Error updating requisition:", error);
@@ -113,8 +139,13 @@ export async function POST(
       );
     }
 
-    const requisitionId = params.id;
+    // Await params before using its properties
+    const { id: requisitionId } = await params;
     const { action, remarks, approvalData } = await request.json();
+    
+    // Get user identifier
+    const user = session.user as CustomUser;
+    const userId = user.id || user.email;
 
     // Connect to database
     await dbConnect();
@@ -128,7 +159,7 @@ export async function POST(
       );
     }
 
-    const updateData: any = { updatedBy: session.user.id };
+    const updateData: any = { updatedBy: userId };
     let message = "";
 
     // Process different actions
@@ -157,7 +188,7 @@ export async function POST(
         
         updateData.departmentHeadApproval = {
           approved: true,
-          approvedBy: session.user.id,
+          approvedBy: userId,
           approvalDate: new Date()
         };
         updateData.status = "Pending HR Review";
@@ -187,7 +218,7 @@ export async function POST(
           actualHeadCount: approvalData.actualHeadCount,
           variance: approvalData.variance || 0,
           approved: true,
-          approvedBy: session.user.id,
+          approvedBy: userId,
           approvalDate: new Date()
         };
         updateData.status = "Pending Finance";
@@ -205,7 +236,7 @@ export async function POST(
         
         updateData.financeApproval = {
           approved: true,
-          approvedBy: session.user.id,
+          approvedBy: userId,
           approvalDate: new Date()
         };
         updateData.status = "Pending HR Head";
@@ -223,7 +254,7 @@ export async function POST(
         
         updateData.hrHeadApproval = {
           approved: true,
-          approvedBy: session.user.id,
+          approvedBy: userId,
           approvalDate: new Date()
         };
         updateData.status = "Pending CFO";
@@ -241,7 +272,7 @@ export async function POST(
         
         updateData.cfoApproval = {
           approved: true,
-          approvedBy: session.user.id,
+          approvedBy: userId,
           approvalDate: new Date()
         };
         updateData.status = "Pending CEO";
@@ -259,7 +290,7 @@ export async function POST(
         
         updateData.ceoApproval = {
           approved: true,
-          approvedBy: session.user.id,
+          approvedBy: userId,
           approvalDate: new Date()
         };
         updateData.status = "Approved";
@@ -299,8 +330,8 @@ export async function POST(
           responsibilities: [],
           requirements: [],
           expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-          addedBy: session.user.id,
-          updatedBy: session.user.id
+          addedBy: userId,
+          updatedBy: userId
         });
         
         await jobPosting.save();
@@ -337,7 +368,7 @@ export async function POST(
   }
 }
 
-// Delete a requisition
+// Delete a requisition (only drafts can be deleted)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -352,20 +383,31 @@ export async function DELETE(
       );
     }
 
-    const { id } = params;
+    // Await params before using its properties
+    const { id: requisitionId } = await params;
 
     // Connect to database
     await dbConnect();
 
-    // Find and delete the requisition
-    const requisition = await ManpowerRequisition.findByIdAndDelete(id);
-
+    // Find requisition
+    const requisition = await ManpowerRequisition.findById(requisitionId);
     if (!requisition) {
       return NextResponse.json(
         { error: "Requisition not found" },
         { status: 404 }
       );
     }
+
+    // Only drafts can be deleted
+    if (requisition.status !== "Draft") {
+      return NextResponse.json(
+        { error: "Only draft requisitions can be deleted" },
+        { status: 400 }
+      );
+    }
+
+    // Delete requisition
+    await ManpowerRequisition.findByIdAndDelete(requisitionId);
 
     return NextResponse.json({
       message: "Requisition deleted successfully",

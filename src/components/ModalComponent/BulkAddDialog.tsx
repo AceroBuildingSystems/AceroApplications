@@ -94,6 +94,7 @@ interface BulkAddDialogProps {
   products: any[];
   warehouses: any[];
   vendors: any[];
+  initialData?: any;
 }
 
 const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
@@ -103,6 +104,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   products,
   warehouses,
   vendors,
+  initialData
 }) => {
   const { user }:any = useUserAuthorised();
   const [step, setStep] = useState(1);
@@ -686,6 +688,7 @@ const handleSubmit = async (e:any) => {
                     }
                   }}
                   placeholder="Select vendor"
+                  initialValue={initialData?.vendor || ""}
                 />
                 {errors.vendor && <span className="text-sm text-destructive">{errors.vendor}</span>}
               </div>

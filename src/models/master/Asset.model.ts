@@ -105,7 +105,6 @@ const AssetSchema = new mongoose.Schema({
     invoiceNumber: {
         type: String,
         required: true,
-        unique: true,
     },
 
     // Warranty Information

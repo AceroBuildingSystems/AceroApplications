@@ -318,7 +318,7 @@ console.log(productsResponse)
     const editAsset = (data: any) => {
         setSelectedItem(data)
         setDialogAction("Update");
-        setIsDialogOpen(true);
+        setIsBulkDialogOpen(true);
     };
 
     const columns = [
@@ -678,7 +678,7 @@ console.log(productsResponse)
             }
         ]
     };
-
+    console.log({selectedItem,selectedProduct})
     return (
         <div className="h-full w-full">
             <MasterComponent config={pageConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
@@ -690,6 +690,7 @@ console.log(productsResponse)
                 products={productsResponse?.data || []}
                 warehouses={warehousesResponse?.data || []}
                 vendors={vendorsResponse?.data || []}
+                initialData={selectedItem}
             />
         </div>
     );

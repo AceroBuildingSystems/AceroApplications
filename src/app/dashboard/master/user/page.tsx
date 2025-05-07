@@ -29,7 +29,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
   const { user, status, authenticated } = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
     db: 'USER_MASTER',
-    filter: { isActive: true },
+   
     sort: { empId: 'asc' },
   });
 
@@ -385,6 +385,20 @@ const [designationDataNew, setDesignationdata] = useState([]);
         </button>
       ),
       cell: ({ row }: { row: any }) => <div>{row.getValue("email")}</div>,
+    },
+    {
+      accessorKey: "isActive",
+      header: ({ column }: { column: any }) => (
+        <button
+          className="flex items-center space-x-2"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+        >
+          <span>Status</span> {/* Label */}
+          <ArrowUpDown size={15} /> {/* Sorting Icon */}
+        </button>
+      ),
+      cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
 
   ];

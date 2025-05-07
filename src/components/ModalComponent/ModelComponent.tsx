@@ -81,7 +81,12 @@ function DynamicDialog<T extends BaseFormData>({
   const [selectedStatus, setSelectedStatus] = useState('');
 
   useEffect(() => {
-    const formattedData = Object.keys(initialData).reduce((acc: Record<string, any>, key: string) => {
+    if (!initialData) {
+      setFormData({});
+      return;
+    }
+
+    const formattedData = Object.keys(initialData || {}).reduce((acc: Record<string, any>, key: string) => {
       if (typeof initialData[key] === "object" && initialData[key]?._id) {
         acc[key] = initialData[key]._id;
       } else {

@@ -18,6 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Check, ChevronLeft, ChevronRight, Plus, Trash, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCreateMasterMutation } from "@/services/endpoints/masterApi";
+import { MONGO_MODELS } from "@/shared/constants";
 
 interface Field {
   name: string;
@@ -44,15 +46,8 @@ interface AssetFormData {
   product: string;
   warehouse: string;
   status: 'available' | 'assigned' | 'maintenance' | 'retired';
-  purchaseDate: string;
-  purchasePrice: number;
-  vendor: string;
-  poNumber: string;
-  prNumber?: string;
-  invoiceNumber: string;
   warrantyStartDate: string;
   warrantyEndDate: string;
-  warrantyDetails?: string;
   specifications: Record<string, any>;
   isActive: boolean;
   addedBy: string;
@@ -60,24 +55,26 @@ interface AssetFormData {
 }
 
 interface ProductItem {
+  _id?: string;
   product: string;
   productName?: string;
   quantity: number;
   serialNumbers: string[];
   specifications: Record<string, any>;
-  purchasePrice: number;
   warrantyStartDate: string;
   warrantyEndDate: string;
-  warrantyDetails?: string;
+  isNew?: boolean;
 }
 
 interface CommonData {
+  _id?: string;
+  invoiceNumber: string;
   vendor: string;
   poNumber: string;
   prNumber?: string;
-  invoiceNumber: string;
   warehouse: string;
   purchaseDate: string;
+  isActive: boolean;
 }
 
 interface SaveResult {
@@ -107,6 +104,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   initialData
 }) => {
   const { user }:any = useUserAuthorised();
+  const [createMaster] = useCreateMasterMutation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveResults, setSaveResults] = useState<SaveResult[]>([]);
@@ -115,12 +113,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   
   // Common data for all items
   const [commonData, setCommonData]:any = useState<CommonData>({
-    vendor: '',
-    poNumber: '',
-    prNumber: '',
-    invoiceNumber: '',
     warehouse: '',
-    purchaseDate: new Date().toISOString().split('T')[0],
   });
   
   // Product items
@@ -130,10 +123,8 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     quantity: 1,
     serialNumbers: [''],
     specifications: {},
-    purchasePrice: 0,
     warrantyStartDate: new Date().toISOString().split('T')[0],
     warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
-    warrantyDetails: '',
   });
   
   // Selected product for specifications
@@ -147,12 +138,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     if (!isOpen) {
       setStep(1);
       setCommonData({
-        vendor: '',
-        poNumber: '',
-        prNumber: '',
-        invoiceNumber: '',
         warehouse: '',
-        purchaseDate: new Date().toISOString().split('T')[0],
       });
       setProductItems([]);
       setCurrentProductItem({
@@ -544,20 +530,15 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   };
 
 const handleSubmit = async (e:any) => {
-  console.log("handleSubmit called");
-
   if (e && typeof e.preventDefault === 'function') {
     e.preventDefault();
   }
   
   if (isSubmitting) {
-    console.log("Already submitting, ignoring duplicate call");
     return;
   }
   
   setIsSubmitting(true);
-  console.log("handleSubmit called - setting isSubmitting to true");
-  
 
   if (!checkForDuplicateSerialNumbers()) {
     setIsSubmitting(false);
@@ -567,33 +548,99 @@ const handleSubmit = async (e:any) => {
   const results: SaveResult[] = [];
   
   try {
+    // Validate required inventory fields
+    const requiredFields = ['invoiceNumber', 'vendor', 'poNumber', 'warehouse', 'purchaseDate'];
+    const missingFields = requiredFields.filter(field => 
+      !commonData[field as keyof CommonData]
+    );
+    
+    if (missingFields.length > 0) {
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    console.log('Creating inventory with data:', JSON.stringify(commonData, null, 2));
+
+    // First create/update the inventory record
+    let inventoryId = commonData._id;
+    if (!inventoryId) {
+      const inventoryData = {
+        invoiceNumber: commonData.invoiceNumber,
+        vendor: commonData.vendor,
+        poNumber: commonData.poNumber,
+        prNumber: commonData.prNumber || undefined, // Only include if not empty
+        warehouse: commonData.warehouse,
+        purchaseDate: commonData.purchaseDate,
+        assets: [], // Will be populated with asset IDs
+        isActive: true,
+        addedBy: user._id,
+        updatedBy: user._id
+      };
+
+      try {
+        const inventoryResponse = await createMaster({
+          db: MONGO_MODELS.INVENTORY_MASTER,
+          action: 'create',
+          data: inventoryData
+        }).unwrap();
+
+        if (!inventoryResponse || inventoryResponse.error) {
+          const errorMsg = inventoryResponse?.error?.message || 'Failed to create inventory record';
+          console.error('Inventory creation error:', errorMsg);
+          toast.error(errorMsg);
+          setIsSubmitting(false);
+          return;
+        }
+
+        inventoryId = inventoryResponse.data._id;
+        console.log('Successfully created inventory with ID:', inventoryId);
+      } catch (error: any) {
+        const errorMsg = error?.data?.message || error?.message || 'An unknown error occurred creating inventory';
+        console.error('Error creating inventory:', error);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     // Create asset items from product items
     const assetItems: AssetFormData[] = [];
-    console.log(productItems);
+    
     for (const item of productItems) {
       for (const serialNumber of item.serialNumbers) {
-        assetItems.push({
+        if (!serialNumber.trim()) {
+          continue; // Skip empty serial numbers
+        }
+        
+        const assetData = {
           serialNumber,
           product: item.product,
           warehouse: commonData.warehouse,
+          inventory: inventoryId, // Add inventory reference
           status: 'available',
-          purchaseDate: commonData.purchaseDate,
-          purchasePrice: item.purchasePrice,
-          vendor: commonData.vendor,
-          poNumber: commonData.poNumber,
-          prNumber: commonData.prNumber,
-          invoiceNumber: commonData.invoiceNumber,
           warrantyStartDate: item.warrantyStartDate,
           warrantyEndDate: item.warrantyEndDate,
-          warrantyDetails: item.warrantyDetails,
           specifications: item.specifications,
           isActive: true,
           addedBy: user._id,
           updatedBy: user._id,
-        });
+        };
+
+        // If editing an existing asset
+        if (item._id) {
+          assetData._id = item._id;
+        }
+
+        assetItems.push(assetData);
       }
     }
-    console.log({assetItems, count: assetItems.length});
+    
+    if (assetItems.length === 0) {
+      toast.error('No valid assets to create');
+      setIsSubmitting(false);
+      return;
+    }
     
     // Move to results step before starting save operations
     setStep(5);
@@ -605,56 +652,73 @@ const handleSubmit = async (e:any) => {
     }
     setSaveResults([...results]);
 
-    // Save items one by one with a delay
+    const newAssetIds: string[] = [];
+
+    // Save items one by one
     for (let i = 0; i < assetItems.length; i++) {
       const item = assetItems[i];
-      const updatedData = {
-        ...item,
-        updatedBy: user._id,
-        addedBy: user._id
-      };
       
-      // Update status to saving
       results[i].message = "Saving...";
       setSaveResults([...results]);
       
       try {
+        console.log(`Saving asset ${i+1}/${assetItems.length}:`, JSON.stringify(item, null, 2));
+        
         const response = await onSave({ 
-          formData: updatedData as AssetFormData, 
-          action: "Add" 
+          formData: item as AssetFormData, 
+          action: item._id ? "Update" : "Add" 
         });
         
-        // Check if response exists and has error property
         if (!response || response.error) {
           results[i].success = false;
           results[i].message = response?.error?.message || "Failed to save";
+          console.error(`Failed to save asset ${i+1}:`, response?.error);
         } else {
           results[i].success = true;
           results[i].message = "";
+          if (!item._id) {
+            newAssetIds.push(response.data._id);
+          }
         }
       } catch (error:any) {
-        // This will catch any errors that weren't handled in the parent
         results[i].success = false;
         results[i].message = error.message || "Error saving item";
+        console.error(`Error saving asset ${i+1}:`, error);
       }
       
-      // Update UI after each item
       setSaveResults([...results]);
     }
 
-    // Show success/failure toast
+    // Update inventory with new asset IDs
+    if (newAssetIds.length > 0) {
+      try {
+        console.log('Updating inventory with new asset IDs:', newAssetIds);
+        
+        await createMaster({
+          db: MONGO_MODELS.INVENTORY_MASTER,
+          action: 'update',
+          filter: { _id: inventoryId },
+          data: {
+            $push: { assets: { $each: newAssetIds } }
+          }
+        });
+      } catch (error) {
+        console.error('Error updating inventory:', error);
+        toast.error('Failed to update inventory with new assets');
+      }
+    }
+
     const successCount = results.filter(r => r.success).length;
     if (successCount === assetItems.length) {
-      toast.success(`Successfully added ${successCount} items`);
+      toast.success(`Successfully ${commonData._id ? 'updated' : 'added'} ${successCount} items`);
     } else {
-      toast.warning(`Added ${successCount} of ${assetItems.length} items`);
+      toast.warning(`${commonData._id ? 'Updated' : 'Added'} ${successCount} of ${assetItems.length} items`);
     }
   } catch (error) {
     console.error("Error saving data:", error);
     toast.error("Error adding items");
   } finally {
     setIsSubmitting(false);
-    console.log("Setting isSubmitting back to false");
   }
 };
 

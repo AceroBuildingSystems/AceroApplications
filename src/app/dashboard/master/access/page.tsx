@@ -42,13 +42,13 @@ const MultiSelectAccess = ({
   onSelect, 
   placeholder,
   buttonText
-}) => {
+}:any) => {
   const [open, setOpen] = useState(false);
-  const [checkedItems, setCheckedItems] = useState({});
+  const [checkedItems, setCheckedItems]:any = useState({});
   
-  const handleSelect = (item) => {
+  const handleSelect = (item:any) => {
     // Toggle selection without closing dropdown
-    setCheckedItems(prev => ({
+    setCheckedItems((prev:any) => ({
       ...prev,
       [item._id]: !prev[item._id]
     }));
@@ -101,7 +101,7 @@ const MultiSelectAccess = ({
             <CommandList className="max-h-52 overflow-auto">
               <CommandEmpty>No access found</CommandEmpty>
               <CommandGroup>
-                {options.map(item => (
+                {options.map((item:any) => (
                   <CommandItem
                     key={item._id}
                     value={item.name}
@@ -132,7 +132,7 @@ const Access = () => {
     refetch: refetchAccess
   } = useGetMasterQuery({ 
     db: "ACCESS_MASTER",
-    filter: { isActive: true }, 
+   
     sort: { name: 'asc' }, 
   });
 
@@ -178,20 +178,20 @@ const Access = () => {
 
   const getAvailableAccess = useMemo(() => {
     return distinctAccessOptions.filter(
-      (option) => !userAccessList.some((userAccess) => userAccess._id === option._id)
+      (option:any) => !userAccessList.some((userAccess:any) => userAccess?._id === option?._id)
     );
   }, [distinctAccessOptions, userAccessList]);
 
   // Modified to allow tracking multiple selections without immediately adding
-  const handleAccessSelect = (accessId) => {
+  const handleAccessSelect = (accessId:any) => {
     if (!accessId) return;
     
-    const accessToSelect = distinctAccessOptions.find(option => option._id === accessId);
+    const accessToSelect = distinctAccessOptions.find((option:any) => option?._id === accessId);
     if (!accessToSelect) return;
     
     setSelectedAccessItems(prev => {
       // If already selected, do nothing
-      if (prev.some(item => item._id === accessId)) {
+      if (prev.some((item:any) => item?._id === accessId)) {
         return prev;
       }
       return [...prev, accessToSelect];
@@ -205,7 +205,7 @@ const Access = () => {
       return;
     }
 
-    const newAccessItems = selectedAccessItems.map(access => ({
+    const newAccessItems = selectedAccessItems.map((access:any) => ({
       ...access,
       hasAccess: true,
       permissions: {
@@ -413,30 +413,46 @@ const Access = () => {
       enableSorting: false,
       enableHiding: false,
     },
-    {
-      accessorKey: "_id",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Access Id</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("_id")}</div>,
-    },
+    // {
+    //   accessorKey: "_id",
+    //   header: ({ column }: { column: any }) => {
+    //           const isSorted = column.getIsSorted();
+      
+    //           return (
+    //             <button
+    //               className="group  flex items-center space-x-2 w-[100px]"
+    //               onClick={() => column.toggleSorting(isSorted === "asc")}
+    //             >
+    //               <span>Access Id</span>
+    //               <ChevronsUpDown
+    //                 size={15}
+    //                 className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+    //                   }`}
+    //               />
+    //             </button>
+    //           );
+    //         },
+    //   cell: ({ row }) => <div>{row.getValue("_id")}</div>,
+    // },
     {
       accessorKey: "name",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Name</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Name</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => (
         <div 
           onClick={() => editAccess(row.original)} 
@@ -448,55 +464,87 @@ const Access = () => {
     },
     {
       accessorKey: "category",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Category</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Category</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => <div>{row.getValue("category")}</div>,
     },
     {
       accessorKey: "url",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>URL</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>URL</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => <div>{row.getValue("url")}</div>,
     },
     {
       accessorKey: "isActive",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Active</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Active</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => <div>{row.getValue("isActive")?.toString()}</div>,
     },
     {
       accessorKey: "parent",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Parent Id</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("parent")?._id}</div>,
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Parent</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
+      cell: ({ row }) => <div>{row.getValue("parent")?.name}</div>,
     },
   ];
 

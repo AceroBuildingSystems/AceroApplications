@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,10 +18,10 @@ import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
-
+import * as XLSX from "xlsx";
 
 const page = () => {
-
+    const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
     const { data: visaTypeData = [], isLoading: visaTypeLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.VISA_TYPE_MASTER,
@@ -100,13 +100,43 @@ const page = () => {
 
     };
 
+
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [],designationData: [], departmentData: [], employeeTypeData:[], organisationData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.SECTOR_MASTER, masterName: "Sector" });
+        bulkImport({
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.VISA_TYPE_MASTER, masterName: "VisaType", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
     };
 
-    const handleExport = () => {
-        console.log('UserPage Update button clicked');
-        // Your update logic for user page
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                'Visa Type': data?.name,
+               
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                'Visa Type': '',
+                
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
+
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
     const handleDelete = () => {
@@ -142,31 +172,45 @@ const page = () => {
 
         {
             accessorKey: "name",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Visa Type</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+                return (
+                    <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Visa Type</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
 
         {
             accessorKey: "isActive",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Status</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+                return (
+                    <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Status</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
         },
 
@@ -188,9 +232,13 @@ const page = () => {
             data: visaTypeData?.data,
         },
         buttons: [
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            {
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
 
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-            { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
+                ]
+            },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
@@ -209,7 +257,7 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height='auto'
-                onchangeData={()=>{ }}
+                onchangeData={() => { }}
             />
         </>
 

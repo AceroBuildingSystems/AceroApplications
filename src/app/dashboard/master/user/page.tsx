@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,11 +25,11 @@ import moment from 'moment';
 
 const page = () => {
   const [importing, setImporting] = useState(false);
-const [designationDataNew, setDesignationdata] = useState([]);
+  const [designationDataNew, setDesignationdata] = useState([]);
   const { user, status, authenticated } = useUserAuthorised();
   const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
     db: 'USER_MASTER',
-   
+
     sort: { empId: 'asc' },
   });
 
@@ -78,7 +78,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
   const maritalStatusData = [{ _id: 'Single', name: 'Single' }, { _id: 'Married', name: 'Married' }, { _id: 'Divorced', name: 'Divorced' }];
 
-  const loading = userLoading || departmentLoading || designationLoading ||nationalityLoading||visaTypeLoading|| roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser || locationLoading;
+  const loading = userLoading || departmentLoading || designationLoading || nationalityLoading || visaTypeLoading || roleLoading || employeeTypeLoading || organisationLoading || isCreatingUser || locationLoading;
 
   const fieldsToAdd = [
     { fieldName: 'roleName', path: ['role', 'name'] },
@@ -103,7 +103,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
     ?.filter((org: undefined) => org !== undefined)  // Remove undefined entries
     ?.map((org: { _id: any; name: any }) => ({ _id: org.name, name: org.name }));
 
-    const reportingToData = userData?.data
+  const reportingToData = userData?.data
     ?.filter((user: any) =>
       user &&
       user.employeeType?.name &&
@@ -113,7 +113,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
       _id: user._id,
       name: user.displayName
     }));
-  
+
 
   interface RowData {
     id: string;
@@ -122,26 +122,26 @@ const [designationDataNew, setDesignationdata] = useState([]);
     role: string;
   }
 
-  const onchangeData = async ({ id, fieldName}: { id: string; fieldName: string;}) => {
+  const onchangeData = async ({ id, fieldName }: { id: string; fieldName: string; }) => {
 
     switch (fieldName) {
-        case "department":
-            const designation = await designationData?.data?.filter((deignation: { department: { _id: any; }; }) => deignation?.department?._id === id);
+      case "department":
+        const designation = await designationData?.data?.filter((deignation: { department: { _id: any; }; }) => deignation?.department?._id === id);
 
-            setDesignationdata(designation);
-            break;
+        setDesignationdata(designation);
+        break;
 
-        default:
-            break;
+      default:
+        break;
     }
 
-}
+  }
 
 
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
     { label: 'Employee ID', name: "empId", type: "number", required: true, placeholder: 'Employee ID' },
     { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email' },
-   
+
     { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name' },
     { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name' },
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name' },
@@ -151,10 +151,10 @@ const [designationDataNew, setDesignationdata] = useState([]);
     { label: 'Designation', name: "designation", type: "select", data: designationDataNew?.length > 0 ? designationDataNew : designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation' },
     { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type' },
-      { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
+    { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
     { label: 'Active Location', name: "activeLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location' },
     { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation' },
-  
+
     { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role' },
 
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension' },
@@ -171,10 +171,10 @@ const [designationDataNew, setDesignationdata] = useState([]);
     { label: 'Visa Issue Date', name: "visaIssueDate", type: "date", format: 'Date', placeholder: 'Select Visa Issue Date' },
     { label: 'Visa Expiry Date', name: "visaExpiryDate", type: "date", format: 'Date', placeholder: 'Select Visa Expiry Date' },
     { label: 'Passport Number', name: "passportNumber", type: "text", placeholder: 'Passport Number' },
-    { label: 'Passport Issue Date', name: "passportIssueDate", type: "date",format: 'Date', placeholder: 'Select Passport Issue Date' },
+    { label: 'Passport Issue Date', name: "passportIssueDate", type: "date", format: 'Date', placeholder: 'Select Passport Issue Date' },
     { label: 'Passport Expiry Date', name: "passportExpiryDate", type: "date", format: 'Date', placeholder: 'Select Passport Expiry Date' },
     { label: 'Emirates ID', name: "emiratesId", type: "text", placeholder: 'Emirates ID' },
-    { label: 'Emirates ID Issue Date', name: "emiratesIdIssueDate", type: "date",format: 'Date', placeholder: 'Select Emirates ID Issue Date' },
+    { label: 'Emirates ID Issue Date', name: "emiratesIdIssueDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Issue Date' },
     { label: 'Emirates ID Expiry Date', name: "emiratesIdExpiryDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Expiry Date' },
     { label: 'Work Permit', name: "workPermit", type: "text", placeholder: 'Work Permit' },
     { label: 'Labour Card Expiry Date', name: "labourCardExpiryDate", type: "date", format: 'Date', placeholder: 'Select Labour Card Expiry Date' },
@@ -229,8 +229,10 @@ const [designationDataNew, setDesignationdata] = useState([]);
   };
 
   const handleImport = () => {
-    bulkImport({ roleData, continentData: [], regionData: [], countryData: [], locationData: locationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, organisationData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User",onStart: () => setImporting(true),
-      onFinish: () => setImporting(false) });
+    bulkImport({
+      roleData, continentData: [], regionData: [], countryData: [], locationData: locationData, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData, organisationData, action: "Add", user, createUser, db: 'USER_DB', masterName: "User", onStart: () => setImporting(true),
+      onFinish: () => setImporting(false)
+    });
   };
 
   const handleExport = (type: string, data: any) => {
@@ -280,7 +282,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
         'Extension': '',
         'Mobile': '',
         'Joining Date': '',
-        'Personal Number':''
+        'Personal Number': ''
       }];
     }
 
@@ -299,7 +301,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
     XLSX.writeFile(workbook, 'exported_data.xlsx');
   };
 
- 
+
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
     // Your delete logic for user page
@@ -331,73 +333,108 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
     {
       accessorKey: "fullName",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Employee Name</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 "
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Employee Name</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("fullName")}</div>,
     },
     {
       accessorKey: "department",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Department</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Department</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{row.getValue("department")?.name}</div>,
     },
 
     {
       accessorKey: "designation",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Designation</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 w-[100px]"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Designation</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{row.getValue("designation")?.name}</div>,
     },
     {
       accessorKey: "email",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Email</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 w-[100px]"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Email</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{row.getValue("email")}</div>,
     },
     {
       accessorKey: "isActive",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Status</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 w-[100px]"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Status</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
 
@@ -419,13 +456,13 @@ const [designationDataNew, setDesignationdata] = useState([]);
     },
     buttons: [
 
-       { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-                 {
-                   label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                     { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
-                     
-                   ]
-                 },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      {
+        label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+          { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
+        ]
+      },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };

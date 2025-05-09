@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -150,21 +150,17 @@ const page = () => {
             
              if (data?.length > 0) {
                formattedData = data?.map((data: any) => ({
-                 "Name": data?.name,
-                 "Email": data?.email,
-                 "Phone": data?.phone,
-                 "Position": data?.position,
-                 "Customer Name": data?.customer?.name,
-         
+                 "Country Code": data?.countryCode,
+                 "Country": data?.name,
+                 "Region": data?.region?.name,
+                 
                }));
              } else {
                // Create a single empty row with keys only (for header export)
                formattedData = [{
-                 "Name": '',
-                 "Email": '',
-                 "Phone": '',
-                 "Position": '',
-                 "Customer Name": '',
+                "Country Code": '',
+                "Country": '',
+                "Region": '',
          
                }];
              }
@@ -206,59 +202,87 @@ const page = () => {
         },
         {
             accessorKey: "countryCode",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Country Code</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2 "
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Country Code</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div className='' >{row.getValue("countryCode")}</div>,
         },
         {
             accessorKey: "name",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Country</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2 "
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Country</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
         
         {
             accessorKey: "region",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Region</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Region</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
             cell: ({ row }: { row: any }) => <div className='' >{row.getValue("region")?.name}</div>,
         },
         {
             accessorKey: "isActive",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Status</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Status</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
         },
 

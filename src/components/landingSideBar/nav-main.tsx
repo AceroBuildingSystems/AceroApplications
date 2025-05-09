@@ -23,8 +23,8 @@ import Link from 'next/link';
 
 const CreateSideBarItems = ({ item }: any) => {
   if (item.length === 0) return <></>;
-
-  if (item.items.length === 0) {
+  
+  if (item.items.length === 0 && item.isActive) {
     return (
       <SidebarMenuSubItem key={item.title}>
         <SidebarMenuSubButton asChild>
@@ -36,6 +36,7 @@ const CreateSideBarItems = ({ item }: any) => {
     )
   }
 
+if (item.isActive) {
   return (
     <>
       <Collapsible key={item.title} asChild >
@@ -65,7 +66,7 @@ const CreateSideBarItems = ({ item }: any) => {
 
     </>
   )
-
+}
 }
 
 export function NavMain({
@@ -74,6 +75,7 @@ export function NavMain({
   items: any[],
   label: string
 }) {
+
   return (
     <SidebarGroup>
       {/* <SidebarGroupLabel>{label}</SidebarGroupLabel> */}

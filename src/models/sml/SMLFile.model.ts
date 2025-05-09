@@ -1,4 +1,4 @@
-import { Model, Schema, models, model  } from "mongoose";
+import { Model, Schema, models, model } from "mongoose";
 import { smlfile } from "@/types";
 
 const SmlFileSchema: Schema<smlfile> = new Schema(
@@ -13,10 +13,11 @@ const SmlFileSchema: Schema<smlfile> = new Schema(
             autopopulate: true
         },
         fileId: { type: Schema.Types.ObjectId, required: true },
+        addedBy: { type: String },
+        updatedBy: { type: String },
         isActive: { type: Boolean, default: true },
     },
-        
-    
+
     { timestamps: true }
 );
 

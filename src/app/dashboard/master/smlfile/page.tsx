@@ -20,211 +20,73 @@ import { error } from 'console';
 import { createMasterData } from '@/server/services/masterDataServices';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { bulkImport } from '@/shared/functions';
+import { useUploadFilesMutation } from '@/services/endpoints/smlFileApi';
 
 const page = () => {
-   
-    const { user, status, authenticated } = useUserAuthorised();
-    const { data: groupData = [], isLoading: groupLoading }: any = useGetMasterQuery({
-      db: MONGO_MODELS.SML_GROUP_MASTER,
-      sort: { name: 'asc' },
-      filter: { isActive: true }
-    });
+  const { user, status, authenticated }:any = useUserAuthorised();
+  const [uploadFiles] = useUploadFilesMutation();
+  const [formData, setFormData] = useState({
+    fileName: '',
+    description: '',
+    revNo: '',
+    subGroupId: '',
+    addedBy: 'admin@example.com', // Example
+  });
 
-    const { data: subGroupData = [], isLoading: subGroupLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.SML_SUB_GROUP_MASTER,
-        sort: { name: 'asc' },
-        filter: { isActive: true }
+  const [file, setFile] = useState<File | null>(null);
+
+  const saveData = async ({ formData, action }: { formData: any; action: string }) => {
+    const fileField = formData.files; // assume it's a File object or array
+    const form = new FormData();
+  
+    form.append("db", MONGO_MODELS.SML_GROUP_MASTER);
+    form.append("addedBy", user?._id || ""); // if available
+    form.append("updatedBy", user?._id || "");
+    
+    if (fileField instanceof FileList || Array.isArray(fileField)) {
+      Array.from(fileField).forEach((file, idx) => {
+        form.append("files", file);
       });
-  
-    const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
-  
-    const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
-  
-    const loading = groupLoading|| subGroupLoading;
-  
-    interface RowData {
-      id: string;
-      name: string;
-      email: string;
-      role: string;
+    } else if (fileField instanceof File) {
+      form.append("files", fileField);
     }
   
-    const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
+    // Use RTK Mutation here
+    const response = await uploadFiles(form); // comes from useUploadFilesMutation
   
-      { label: 'Sub Category Name', name: "name", type: "text", required: true, placeholder: 'Sub Category Name' },
-      { label: 'Category', name: "group", type: "select",required: true, data: groupData?.data, placeholder:'Select Category' },
-      { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
-  
-    ]
-  
-    const [isDialogOpen, setDialogOpen] = useState(false);
-    const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
-    const [initialData, setInitialData] = useState({});
-    const [action, setAction] = useState('Add');
-  
-    // Open the dialog and set selected master type
-    const openDialog = (masterType: React.SetStateAction<string>) => {
-      setSelectedMaster(masterType);
-  
-      setDialogOpen(true);
-    };
-  
-    // Close dialog
-    const closeDialog = () => {
-      setDialogOpen(false);
-      setSelectedMaster("");
-    };
-  
-    // Save function to send data to an API or database
-    const saveData = async ({ formData, action }: { formData: any; action: string }) => {
-  
-      const formattedData = {
-        db: MONGO_MODELS.SML_SUB_GROUP_MASTER,
-        action: action === 'Add' ? 'create' : 'update',
-        filter: { "_id": formData._id },
-        data: formData,
-      };
-  
-      const response: any = await createMaster(formattedData);
-      return response;
-  
-    };
-  
-    const editUser = (rowData: RowData) => {
-      setAction('Update');
-      setInitialData(rowData);
-      openDialog("Sub Category");
-      // Your add logic for user page
-    };
-  
-    const handleAdd = () => {
-      setInitialData({});
-      setAction('Add');
-      openDialog("Sub Category");
-  
-    };
-  
-    const handleImport = () => {
-      // bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CONTINENT_MASTER, masterName: "Continent" });
-    };
-  
-    const handleExport = () => {
-      console.log('UserPage Update button clicked');
-      // Your update logic for user page
-    };
-  
-    const handleDelete = () => {
-      console.log('UserPage Delete button clicked');
-      // Your delete logic for user page
-    };
-  
-    const groupColumns = [
-      {
-        id: "select",
-        header: ({ table }: { table: any }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Select all"
-          />
-        ),
-        cell: ({ row }: { row: any }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Select row"
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-      },
-  
-      {
-        accessorKey: "name",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  
-          >
-            <span>Sub Group Name</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
-      },
-      {
-        accessorKey: "group",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  
-          >
-            <span>Group Name</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("group")?.name}</div>,
-      },
-      {
-        accessorKey: "isActive",
-        header: ({ column }: { column: any }) => (
-          <button
-            className="flex items-center space-x-2"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  
-          >
-            <span>Status</span> {/* Label */}
-            <ArrowUpDown size={15} /> {/* Sorting Icon */}
-          </button>
-        ),
-        cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-      },
-  
-    ];
-  
-    const groupConfig = {
-      searchFields: [
-        { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by sub category' },
-  
-      ],
-      filterFields: [
-        // { key: "role", label: 'roleName', type: "select" as const, options: roleNames },
-  
-      ],
-      dataTable: {
-        columns: groupColumns,
-        data: subGroupData?.data,
-      },
-      buttons: [
-  
-        { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-        { label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300' },
-        { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
-      ]
-    };
-  
-    return (
-      <>
-  
-        <MasterComponent config={groupConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
-        <DynamicDialog
-          isOpen={isDialogOpen}
-          closeDialog={closeDialog}
-          selectedMaster={selectedMaster}
-          onSave={saveData}
-          fields={fields}
-          initialData={initialData}
-          action={action}
-          height='auto'
-        />
-      </>
-  
-    )
-}
+    return response;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+formData.append('db', "SML_FILE_MASTER");
+
+formData.append('description', 'Some description');
+
+
+    if (file) {
+      formData.append('file', file);
+    }
+
+    const response = await uploadFiles(formData);
+
+    const result = await response.json();
+    console.log('Upload result:', result);
+  };
+
+  return (
+    <input type="file" onChange={(e) => {
+      const form = new FormData();
+      form.append("db", "SML_GROUP_MASTER");
+      if (e.target.files && e.target.files[0]) {
+        form.append("files", e.target.files[0]);
+      }
+      uploadFiles(form);
+    }} />
+   
+  );
+};
 
 export default page

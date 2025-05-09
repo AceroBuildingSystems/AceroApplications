@@ -299,9 +299,15 @@ const page = () => {
         value: option._id, // Unique ID as value
     }));
 
+    const formattedAuthorityData = approvalAuthorityData?.data?.map((option: any) => ({
+        name: option?.code, // Display name
+        _id: option?._id, // Unique ID as value
+        location:option?.location
+    }));
+
     const teamId = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.team?._id;
     const teamRole = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
-
+    
     let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; teamRole: { name: string }[]; }) => data?.team?._id === teamId && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { displayName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
         name: option?.user?.displayName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
@@ -417,7 +423,8 @@ const page = () => {
             case "state":
                 switch (name) {
                     case 'approvalAuthority':
-                        const approvalData = await approvalAuthorityData?.data?.filter((item: { location: any[]; }) => item.location.some((loc: { state: { _id: any; }; }) => loc.state._id === id)
+                      
+                        const approvalData = await approvalAuthorityData?.data?.filter((item: { location: any[]; }) => item.location.some((loc: { state: { _id: any; }; }) => loc?.state?._id === id)
                         )?.map((data: { code: any; _id: any; location: any; }) => ({
                             name: data?.code,
                             _id: data?._id,
@@ -503,7 +510,7 @@ const page = () => {
         { label: 'Building Type', name: "buildingType", type: "select", data: buildingData?.data, format: 'ObjectId', required: false, placeholder: 'Select Building Type', section: 'ProjectDetails', visibility: true, elementType: { label: '', name: "otherBuildingType", type: "text", required: false, placeholder: 'Other Building Type', section: 'ProjectDetails', visibility: true } },
         { label: 'Building Usage', name: "buildingUsage", type: "text", data: customerTypeData?.data, format: 'ObjectId', required: false, placeholder: 'Select Customer Type', section: 'ProjectDetails', visibility: true },
         { label: 'City', name: "state", type: "select", data: stateData, format: 'ObjectId', required: false, placeholder: 'Select City', section: 'ProjectDetails', visibility: true, addNew: true },
-        { label: 'Approval Authority (GCC Only)', name: "approvalAuthority", type: "select", data: approvalAuthData.length > 0 ? approvalAuthData : approvalAuthorityData?.data, format: 'ObjectId', required: false, placeholder: 'Select Approval Authority', section: 'ProjectDetails', visibility: true, addNew: true, addHelp: true, title: 'Approval Authorities' },
+        { label: 'Approval Authority (GCC Only)', name: "approvalAuthority", type: "select", data: approvalAuthData.length > 0 ? approvalAuthData : formattedAuthorityData, format: 'ObjectId', required: false, placeholder: 'Select Approval Authority', section: 'ProjectDetails', visibility: true, addNew: true, addHelp: true, title: 'Approval Authorities' },
         { label: 'Plot Number (GCC Only)', name: "plotNumber", type: "text", required: false, placeholder: 'Plot Number', section: 'ProjectDetails', visibility: true },
         { label: 'End Client', name: "endClient", type: "text", required: false, placeholder: 'End Client', section: 'ProjectDetails', visibility: true },
         { label: 'Project Management Office', name: "projectManagementOffice", type: "text", required: false, placeholder: 'Project Management Office', section: 'ProjectDetails', visibility: true },

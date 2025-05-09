@@ -4,7 +4,7 @@ import React from 'react'
 import Layout from '../../layout'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,6 +21,7 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import * as XLSX from "xlsx";
 
 const page = () => {
+  const [importing, setImporting] = useState(false);
   const { user, status, authenticated } = useUserAuthorised();
   const { data: designationData = [], isLoading: designationLoading }: any = useGetMasterQuery({
     db: 'DESIGNATION_MASTER',
@@ -98,20 +99,7 @@ const page = () => {
 
     const response = await createMaster(formattedData);
 
-
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Designation added successfully');
-
-    }
-    else {
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Designation updated successfully');
-      }
-    }
-
-    if (response?.error?.data?.message?.message) {
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
+    return response;
 
   };
 
@@ -131,8 +119,12 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: designationData, departmentData: departmentData, employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: "DESIGNATION_MASTER", masterName: "Designation" });
+    bulkImport({
+      roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: "DESIGNATION_MASTER", masterName: "Designation", onStart: () => setImporting(true),
+      onFinish: () => setImporting(false)
+    });
   };
+
   const handleExport = (type: string, data: any) => {
     let formattedData: any[] = [];
 
@@ -200,44 +192,65 @@ const page = () => {
 
     {
       accessorKey: "name",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Designation</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Designation</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
     {
       accessorKey: "department",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-        >
-          <span>Department</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Department</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("department")?.name}</div>,
     },
     {
       accessorKey: "isActive",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Status</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 w-[100px]"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Status</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
 
@@ -261,9 +274,9 @@ const page = () => {
     },
     buttons: [
 
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
       {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+        label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
           { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
           { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
         ]

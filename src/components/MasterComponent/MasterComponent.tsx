@@ -49,7 +49,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
-console.log("Filtered Data", config?.dataTable?.data)
+
     useEffect(() => {
         setFilteredData(config?.dataTable?.data)
     }, [config, loadingState])

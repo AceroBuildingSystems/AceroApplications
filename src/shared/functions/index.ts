@@ -149,6 +149,11 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 Incoterm: ['Name', 'Description'],
                 QuoteStatus: ['Quote Status'],
                 Currency: ['Currency'],
+                Continent: ['Continent'],
+                Country: ['Country Code', 'Country', 'Region'],
+                VisaType: ['Visa Type'],
+                SmlGroup: ['Group Name'],
+                SmlSubGroup: ['Sub Group Name', 'Group Name'],
                 
                 // Add other masters as needed
             };
@@ -477,7 +482,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     return;
                 }
 
-                console.log("uniqueEnrichedData", uniqueEnrichedData);
+                
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
                 const revisionData = uniqueEnrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
                     {
@@ -750,6 +755,9 @@ const fieldMappingConfig: { [key: string]: any } = {
         state: { source: "locationData", key: "name", value: "_id" },
        
     },
+    SmlSubGroup: {
+        group: { source: "categoryData", key: "name", value: "_id" },
+    }
 
     // Add more entity mappings if needed
 };
@@ -1025,6 +1033,16 @@ const entityFieldMappings = {
         "Pin Code": "pincode",
         "City": "state",
 
+    },
+    VisaType: {
+        "Visa Type": "name"
+    },
+    SmlGroup: {
+        "Group Name": "name"
+    },
+    SmlSubGroup: {
+        "Sub Group Name": "name",
+        "Group Name": "group"
     },
    
    

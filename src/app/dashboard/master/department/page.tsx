@@ -2,7 +2,7 @@
 
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
@@ -19,13 +19,14 @@ import * as XLSX from "xlsx";
 
 
 const page = () => {
-const { user, status, authenticated } = useUserAuthorised();
-  const { data: departmentData = [], isLoading: departmentLoading }:any = useGetMasterQuery({
+  const [importing, setImporting] = useState(false);
+  const { user, status, authenticated } = useUserAuthorised();
+  const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     sort: { name: -1 },
   });
 
-  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
+  const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -76,22 +77,9 @@ const { user, status, authenticated } = useUserAuthorised();
       data: formData,
     };
 
-    const response:any = await createMaster(formattedData);
+    const response: any = await createMaster(formattedData);
 
-
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Department added successfully');
-
-    }
-    else {
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Department updated successfully');
-      }
-    }
-
-    if (response?.error?.data?.message?.message) {
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
+   return response;
 
   };
 
@@ -110,40 +98,45 @@ const { user, status, authenticated } = useUserAuthorised();
 
   };
 
+
   const handleImport = () => {
-    bulkImport({ roleData: [],continentData:[], regionData:[], countryData:[],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "DEPARTMENT_MASTER", masterName: "Department" });
+    bulkImport({
+      roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: "DEPARTMENT_MASTER", masterName: "Department", onStart: () => setImporting(true),
+      onFinish: () => setImporting(false)
+    });
   };
 
- const handleExport = (type: string) => {
-  let formattedData: any[] = [];
 
-  if (departmentData?.data?.length > 0) {
-    formattedData = departmentData.data.map((data: any) => ({
-      'Department Id': data?.depId,
-      'Department': data?.name,
-    }));
-  } else {
-    // Create a single empty row with keys only (for header export)
-    formattedData = [{
-      'Department Id': '',
-      'Department': '',
-    }];
-  }
+  const handleExport = (type: string, data: any) => {
+    let formattedData: any[] = [];
 
-        type === 'excel' && exportToExcel(formattedData);
+    if (departmentData?.data?.length > 0) {
+      formattedData = departmentData.data.map((data: any) => ({
+        'Department Id': data?.depId,
+        'Department': data?.name,
+      }));
+    } else {
+      // Create a single empty row with keys only (for header export)
+      formattedData = [{
+        'Department Id': '',
+        'Department': '',
+      }];
+    }
 
-    };
+    type === 'excel' && exportToExcel(formattedData);
 
-    const exportToExcel = (data: any[]) => {
-        // Convert JSON data to a worksheet
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        // Create a new workbook
-        const workbook = XLSX.utils.book_new();
-        // Append the worksheet to the workbook
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-        // Write the workbook and trigger a download
-        XLSX.writeFile(workbook, 'exported_data.xlsx');
-    };
+  };
+
+  const exportToExcel = (data: any[]) => {
+    // Convert JSON data to a worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    // Create a new workbook
+    const workbook = XLSX.utils.book_new();
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    // Write the workbook and trigger a download
+    XLSX.writeFile(workbook, 'exported_data.xlsx');
+  };
 
   const handleDelete = () => {
     console.log('UserPage Delete button clicked');
@@ -178,47 +171,68 @@ const { user, status, authenticated } = useUserAuthorised();
 
     {
       accessorKey: "depId",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Department Id</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Department Id</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("depId")}</div>,
     },
     {
       accessorKey: "name",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Department</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Department</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{row.getValue("name")}</div>,
     },
 
-     {
-          accessorKey: "isActive",
-          header: ({ column }: { column: any }) => (
-            <button
-              className="flex items-center space-x-2"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-    
-            >
-              <span>Status</span> {/* Label */}
-              <ArrowUpDown size={15} /> {/* Sorting Icon */}
-            </button>
-          ),
-          cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-        },
+    {
+      accessorKey: "isActive",
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
+
+        return (
+          <button
+            className="group  flex items-center space-x-2 w-[100px]"
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Status</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
+      cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+    },
 
 
 
@@ -237,13 +251,13 @@ const { user, status, authenticated } = useUserAuthorised();
     },
     buttons: [
 
-      { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-       {
-                     label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                         { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                         { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
-                     ]
-                 },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      {
+        label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+          { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+          { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
+        ]
+      },
       { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
     ]
   };
@@ -262,6 +276,7 @@ const { user, status, authenticated } = useUserAuthorised();
         initialData={initialData}
         action={action}
         height='auto'
+        onchangeData={() => { }}
       />
     </>
 

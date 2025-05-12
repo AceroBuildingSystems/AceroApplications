@@ -97,6 +97,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
     // Toggle filters dynamically
     const toggleFilter = (filter: FieldConfig) => {
+        console.log(activeFilters)
         setActiveFilters(prev => {
             if (prev.some(f => f.key === filter.key)) {
                 // Remove filter
@@ -158,6 +159,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
         });
 
         setFilteredData(filtered); // Update filtered data state
+        console.log(filtered)
     };
 
 
@@ -218,7 +220,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                         </div>
                                     </PopoverTrigger>
                                     {/* Popover Content */}
-                                    <PopoverContent className="fixed top-1/2 w-[600px] mt-2 left-[-15]">
+                                    <PopoverContent className="fixed top-1/2 w-[600px] mt-2 left-[-15] bg-white">
 
                                         <div className="flex items-center gap-2 flex-wrap ">
                                             {/* Render Filter Buttons */}
@@ -234,13 +236,13 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                                                     {/* Render Separator if it's not the last button */}
                                                     {index !== config?.filterFields.length - 1 && (
-                                                        <Separator className="h-7 w-[1px] bg-slate-400" orientation="vertical" />
+                                                        <Separator className="h-7 w-0.5 bg-slate-200" orientation="vertical" />
                                                     )}
                                                 </React.Fragment>
                                             ))}
 
                                         </div>
-                                        <Separator className="my-3" />
+                                        <Separator className="my-3 bg-slate-200 h-0.5" />
                                         {/* Render Filter Dropdowns inside Popover */}
                                         <div className="px-0 space-y-2 max-h-80 overflow-y-auto overflow-x-hidden">
 

@@ -136,7 +136,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
         </div> */}
 
         <div className="h-full w-full pb-6">
-          <div className=" h-auto max-h-[68vh] overflow-y-auto rounded-md border border-gray-200 cursor-pointer">
+          <div className=" h-auto max-h-[72vh] overflow-y-auto rounded-md border border-gray-200 cursor-pointer">
             <Table className="">
               <TableHeader className=" w-full ">
                 {table.getHeaderGroups().map((headerGroup) => (

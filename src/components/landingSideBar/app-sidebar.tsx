@@ -156,30 +156,33 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user,menuItems }:any = useUserAuthorised();
+  const { user, menuItems }: any = useUserAuthorised();
   return (
     <Sidebar variant="inset" {...props} className="px-0">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="#">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg  text-sidebar-primary-foreground">
-                  <Image
-                    src="/logo/logo-small.jpg"
+              <div className=" flex items-center justify-center p-0">
+                <a href="#">
+
+                  <img className='flex cursor-pointer w-48' src="/logo/logo-big.png" alt="" />
+                  {/* <Image
+                    src="/logo/logo-big.png"
                     alt="Acero Logo"
-                    width={32}
-                    height={32}
-                    className="rounded-lg"
-                  />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                    width={250}
+                    height={100}
+                    className=" bg-transparent"
+                  /> */}
+
+                  {/* <div className="grid flex-1 text-left text-base leading-tight">
                   <span className="truncate font-semibold">
                     Acero Applications
                   </span>
                   <span className="truncate text-xs">Enterprise</span>
-                </div>
-              </a>
+                </div> */}
+                </a>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -189,9 +192,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {/* <NavProjects projects={data.projects} />
         <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
       </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
+
     </Sidebar>
   );
 }

@@ -23,13 +23,14 @@ import Link from 'next/link';
 
 const CreateSideBarItems = ({ item }: any) => {
   if (item.length === 0) return <></>;
-  
+ 
   if (item.items.length === 0 && item.isActive) {
+    
     return (
       <SidebarMenuSubItem key={item.title}>
         <SidebarMenuSubButton asChild>
           <Link href={item.url}>
-            <span>{item.title}</span>
+            <span className={`${item?.category === 'menu' ? 'font-semibold' : ''}`}>{item.title}</span>
           </Link>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
@@ -44,7 +45,7 @@ if (item.isActive) {
           <SidebarMenuButton asChild tooltip={item.title}>
             <Link href={item.url}>
               {/* <item.icon /> */}
-              <span>{item.title}</span>
+              <span className="text-sm font-semibold">{item.title}</span>
             </Link>
           </SidebarMenuButton>
 

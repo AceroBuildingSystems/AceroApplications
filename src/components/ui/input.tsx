@@ -49,7 +49,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         >
           
-          <Search size={17} className="text-gray-400" />
+          {/* <Search size={17} className="text-gray-400" /> */}
           <input
             type={type}
             className={cn(

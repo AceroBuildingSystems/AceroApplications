@@ -231,7 +231,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                     </div>
 
-                    <div className="h-[85%]">
+                    <div className="h-[86%]">
                         {<DataTable data={filteredData && filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
                             rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
                     </div>

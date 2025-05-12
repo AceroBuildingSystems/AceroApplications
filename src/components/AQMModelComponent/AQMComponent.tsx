@@ -1188,7 +1188,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
       <Dialog open={isOpen} onOpenChange={closeDialog} >
         <DialogContent
-          className={`max-w-full pointer-events-auto mx-2 h-screen max-h-[95vh] ${width === 'full' ? 'w-[97%] h-[95%]' : 'sm:max-w-md lg:max-w-3xl'}`}
+          className={`bg-white max-w-full pointer-events-auto mx-2 h-screen max-h-[95vh] ${width === 'full' ? 'w-[97%] h-[95%]' : 'sm:max-w-md lg:max-w-3xl'}`}
         >
           <DialogTitle className="pl-1 hidden">{formData?.quoteNo ? `${action} ${selectedMaster?.toProperCase()} ${initialData?.country?.countryCode}-${initialData?.year?.toString().slice(-2)}-${formData?.quoteNo}` : `${action} ${selectedMaster?.toProperCase()}`}</DialogTitle>
 
@@ -1263,7 +1263,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             {/* Tabs Section */}
             <div className="w-full flex-1 min-h-0 overflow-hidden">
               <Tabs defaultValue="QuoteDetails" className="h-full flex flex-col min-h-0">
-                <TabsList width={"full"} className="bg-white" >
+                <TabsList width={"full"} className="bg-slate-300 text-slate-800" >
                   <TabsTrigger value="QuoteDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Quote Details</TabsTrigger>
                   <TabsTrigger value="CustomerDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Customer Details</TabsTrigger>
                   <TabsTrigger value="ProjectDetails" width={"full"} className="data-[state=active]:bg-red-700 data-[state=active]:text-white">Project Details</TabsTrigger>
@@ -1282,7 +1282,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
                     "CycleTimeDetails", "TechnicalDetails", "CommercialDetails", "JobDetails"
                   ].map(section => (
                     <TabsContent key={section} value={section} className="flex-1 overflow-y-auto">
-                      <div className="bg-white flex-1 h-[calc(100vh-190px)] overflow-y-auto p-2 rounded-md py-3">
+                      <div className=" bg-white flex-1 h-[calc(100vh-190px)] overflow-y-auto p-2 rounded-md py-3 ">
                         {section !== "CycleTimeDetails" && (<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           {fields.filter(field => field.section === section).map((field, index) => (
                             <div key={index} className={`flex flex-col gap-1 mb-2 ${field.type === "custom" ? "col-span-2" : ""} ${field.visibility ? '' : 'hidden'} ${(field.name === "approvalAuthority" || field.name === "plotNumber") && region !== "GCC" ? "hidden" : ""} ${(field.name === "quoteNo") && (initialData?.status === undefined || initialData?.status === 'draft') ? 'hidden' : ''} ${(field.name === "rejectReason") && (initialData?.status === undefined || (initialData?.status !== 'submitted' && initialData?.status !== 'rejected')) ? 'hidden' : ''}`}>

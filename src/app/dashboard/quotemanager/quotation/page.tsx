@@ -822,6 +822,7 @@ const page = () => {
                 id: "select",
                 header: ({ table }: { table: any }) => (
                     <Checkbox
+                    
                         checked={
                             table.getIsAllPageRowsSelected() ||
                             (table.getIsSomePageRowsSelected() && "indeterminate")
@@ -884,7 +885,7 @@ const page = () => {
 
                     return (
                         <button
-                            className="group  flex items-center space-x-2 w-[70px]"
+                            className="group  flex items-center space-x-2 w-[80px]"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
                         >
                             <span>Rev No</span>
@@ -1015,7 +1016,7 @@ const page = () => {
 
                     return (
                         <button
-                            className="group  flex items-center space-x-2 w-[120px]"
+                            className="group  flex items-center space-x-2 w-[130px]"
                             onClick={() => column.toggleSorting(isSorted === "asc")}
                         >
                             <span>Sales Engineer</span>

@@ -135,7 +135,7 @@ const Access = () => {
    
     sort: { name: 'asc' }, 
   });
-
+console.log("accessData", accessData)
   const [updateUser, { isLoading: updateUserAccessLoading }] = useUserOperationsMutation();
   
   const { 
@@ -705,6 +705,7 @@ const Access = () => {
       format: "ObjectId",
     },
     { label: "Order", name: "order", type: "number" },
+    { label: "Icon", name: "icon", type: "text" },
   ];
 
   // User Access Management Functions

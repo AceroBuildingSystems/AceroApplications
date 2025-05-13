@@ -9,5 +9,6 @@ export interface access {
     url:string,
     isMenuItem: boolean,
     parent: mongoose.ObjectId,
-    order:number
+    order:number,
+    icon: string,
 } 

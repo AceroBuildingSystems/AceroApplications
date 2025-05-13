@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
+import { GraduationCap, Box, BookUser,ScrollText,Ticket  } from 'lucide-react';
 
 import {
   Collapsible,
@@ -20,16 +21,27 @@ import {
 } from "@/components/ui/sidebar"
 import Link from 'next/link';
 
+const menuItems = [
+  { icon: 'GraduationCap', Icon: GraduationCap },
+  { icon: 'Box', Icon: Box },
+  { icon: 'BookUser', Icon: BookUser },
+  { icon: 'ScrollText', Icon: ScrollText },
+  { icon: 'Ticket', Icon: Ticket },
 
+];
 const CreateSideBarItems = ({ item }: any) => {
   if (item.length === 0) return <></>;
-  console.log(item)
+  
   if (item.items.length === 0 && item.isActive) {
 
+    const matchingItem = menuItems.find((menuItem) => menuItem?.icon === item?.icon);
     return (
       <SidebarMenuSubItem key={item.title}>
         <SidebarMenuSubButton asChild>
           <Link href={item.url}>
+            {matchingItem?.Icon && (
+              <matchingItem.Icon className="h-4 w-4  font-normal" />
+            )}
             <span className={`${item?.category === 'menu' ? 'font-semibold' : ''}`}>{item.title}</span>
           </Link>
         </SidebarMenuSubButton>
@@ -37,7 +49,12 @@ const CreateSideBarItems = ({ item }: any) => {
     )
   }
 
+
+
   if (item.isActive) {
+
+    const matchingItem = menuItems.find((menuItem) => menuItem?.icon === item?.icon);
+
     return (
       <>
         <Collapsible key={item.title}>
@@ -45,6 +62,9 @@ const CreateSideBarItems = ({ item }: any) => {
             <CollapsibleTrigger asChild>
               <button className="text-sm group flex items-center justify-between w-full px-2 py-1 text-left">
                 <div className="flex items-center gap-2">
+                  {matchingItem?.Icon && (
+                    <matchingItem.Icon className="h-4 w-4  font-normal" />
+                  )}
                   <span className="text-sm font-semibold">{item.title}</span>
                 </div>
                 <ChevronRight

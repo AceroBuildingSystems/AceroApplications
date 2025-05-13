@@ -32,8 +32,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <AuthComponent loadingState={customLoadingState}  >
       <SidebarProvider>
         <AppSidebar />
-        <SidebarInset>
-          <div className="flex flex-col w-full h-screen">
+        <SidebarInset className="">
+          <div className="flex flex-col w-full h-screen ">
             <header className="flex h-14 shrink-0 items-center gap-2">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2 px-4 w-full">

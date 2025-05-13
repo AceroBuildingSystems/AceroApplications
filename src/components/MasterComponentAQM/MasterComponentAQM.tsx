@@ -2,7 +2,7 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/inputSearch";
 import { Button } from '../ui/button';
 import { Check, Filter, FilterX, ListFilter } from 'lucide-react';
 import { DataTable } from '../TableComponent/TableComponent';
@@ -88,16 +88,16 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
-
+      
         const newFilterValues = { ...filterValues, [field]: value };
-
+      
         setFilterValues(newFilterValues);
         // filterData(searchValues, newFilterValues); // Trigger filterData after filter change
     };
 
     // Toggle filters dynamically
     const toggleFilter = (filter: FieldConfig) => {
-        console.log(activeFilters)
+       
         setActiveFilters(prev => {
             if (prev.some(f => f.key === filter.key)) {
                 // Remove filter
@@ -148,8 +148,16 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                 // Use filterBy to determine comparison
                 if (field?.filterBy === "id") {
+                   
+                    if (item[key] && typeof item[key] === "string") {
+                        return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
 
-                    return typeof item[key] === "object" && item[key] !== null && "name" in (item[key] as { name: string }) && (item[key] as { name: string }).name === filterValue;
+                    }
+                    else {
+
+                        return typeof item[key] === "object" && item[key] !== null && "name" in (item[key] as { name: string }) && (item[key] as { name: string }).name === filterValue;
+
+                    }
                 } else {
                     return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
                 }
@@ -159,7 +167,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
         });
 
         setFilteredData(filtered); // Update filtered data state
-        console.log(filtered)
+      
     };
 
 
@@ -174,7 +182,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className="flex flex-col gap-1 w-full h-full px-4 pt-2 border-t-2 shadow-lg border-gray-100">
+                <div className="flex flex-col gap-1 w-full h-full px-4 py-1">
 
                     {/* Filter Section */}
                     <div className="flex flex-row justify-between gap-2 pb-1">

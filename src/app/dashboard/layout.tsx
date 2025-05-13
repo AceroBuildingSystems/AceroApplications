@@ -63,7 +63,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
 
             </header>
-            <div className="h-full w-full overflow-auto">
+            <div className="h-full w-full overflow-auto py-1 border-t-2 shadow-lg border-gray-100">
               {children}
             </div>
           </div>

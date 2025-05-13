@@ -23,9 +23,9 @@ import Link from 'next/link';
 
 const CreateSideBarItems = ({ item }: any) => {
   if (item.length === 0) return <></>;
- 
+  console.log(item)
   if (item.items.length === 0 && item.isActive) {
-    
+
     return (
       <SidebarMenuSubItem key={item.title}>
         <SidebarMenuSubButton asChild>
@@ -37,37 +37,38 @@ const CreateSideBarItems = ({ item }: any) => {
     )
   }
 
-if (item.isActive) {
-  return (
-    <>
-      <Collapsible key={item.title} asChild >
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip={item.title}>
-            <Link href={item.url}>
-              {/* <item.icon /> */}
-              <span className="text-sm font-semibold">{item.title}</span>
-            </Link>
-          </SidebarMenuButton>
+  if (item.isActive) {
+    return (
+      <>
+        <Collapsible key={item.title}>
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <button className="text-sm group flex items-center justify-between w-full px-2 py-1 text-left">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">{item.title}</span>
+                </div>
+                <ChevronRight
+                  className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-90"
+                />
 
-          <CollapsibleTrigger asChild>
-            <SidebarMenuAction className="data-[state=open]:rotate-90">
-              <ChevronRight />
-              <span className="sr-only">Toggle</span>
-            </SidebarMenuAction>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <SidebarMenuSub>
-              {item.items?.map((subItem: { title: any; }) => (
-                <CreateSideBarItems key={subItem.title} item={subItem} />
-              ))}
-            </SidebarMenuSub>
-          </CollapsibleContent>
-        </SidebarMenuItem>
-      </Collapsible>
 
-    </>
-  )
-}
+              </button>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {item.items?.map((subItem: { title: any }) => (
+                  <CreateSideBarItems key={subItem.title} item={subItem} />
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+
+
+
+      </>
+    )
+  }
 }
 
 export function NavMain({

@@ -19,7 +19,7 @@ const ReportComponent: React.FC<ReportComponentProps> = ({ config, loadingState,
 
   return (
     <>
-        <div className="w-full">
+        <div className="w-full pt-2 ">
           <Tabs value={activeTab} onValueChange={(value)=>{setActiveTab(value); setSelectedRegion(''); setSelectedArea('')}} className="w-full px-4" >
             {/* Tab Navigation */}
             <TabsList className="flex gap-2 bg-slate-300 text-slate-800">

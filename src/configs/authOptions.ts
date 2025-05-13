@@ -87,17 +87,21 @@ export const authOptions: AuthOptions = {
         { $sort: { order: 1 } },
       ]);
       const allAncestors = trees.flatMap((tree) => [...tree.ancestors, tree]);
+      // console.log("All Ancestors:", allAncestors);
       const uniqueAncestors = Array.from(
         new Map(allAncestors.map((ancestor) => [ancestor._id.toString(), ancestor])).values()
       );
+     
       const menuItems = buildNavStructure(
         uniqueAncestors.map((ancestor) => ({
           ...ancestor,
           _id: ancestor?._id?.toString(),
           parent: ancestor.parent ? ancestor?.parent?.toString() : null,
+          icon: ancestor?.icon
         })),
         accessMap
       );
+      
       session.menuItems = menuItems;
       return session;
     },
@@ -126,7 +130,7 @@ function buildNavStructure(ancestors: any[], accessMap: Map<string, any>) {
         title: ancestor.name,
         url: ancestor.url || "#",
         category: ancestor.category,
-        icon: "",
+        icon: ancestor?.icon,
         isActive: ancestor.isActive || false,
         permissions,
         items: [],

@@ -215,7 +215,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <div className='flex items-center gap-1 cursor-pointer text-slate-800 text-sm'>
-                                                            <ListFilter size={17} className="" /> Filters
+                                                            <ListFilter size={17} className="text-red-700" /> Filters
                                                         </div>
 
                                                     </TooltipTrigger>

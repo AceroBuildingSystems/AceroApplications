@@ -90,7 +90,8 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     const handleFilterChange = (value: string | null, field: string) => {
       
         const newFilterValues = { ...filterValues, [field]: value };
-      
+    
+        // Check if the filter is already active
         setFilterValues(newFilterValues);
         // filterData(searchValues, newFilterValues); // Trigger filterData after filter change
     };
@@ -148,7 +149,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                 // Use filterBy to determine comparison
                 if (field?.filterBy === "id") {
-                   
+                  
                     if (item[key] && typeof item[key] === "string") {
                         return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
 

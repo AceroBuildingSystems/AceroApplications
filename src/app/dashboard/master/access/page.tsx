@@ -1032,19 +1032,19 @@ const Access = () => {
   };
 
   return (
-    <div className="w-full h-full px-4">
-      <Tabs defaultValue="Access" className="h-full">
-        <TabsList width="full">
-          <TabsTrigger value="Access" width="full">
+    <div className="w-full h-full px-4 py-1">
+      <Tabs defaultValue="Access" className="h-full ">
+        <TabsList width="full" className="bg-slate-300 text-slate-800">
+          <TabsTrigger value="Access" width="full" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
             Access Management
           </TabsTrigger>
-          <TabsTrigger value="User" width="full">
+          <TabsTrigger value="User" width="full" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
             User Access
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="Access" className="h-5/6">
-          <div className="pt-4 overflow-auto h-full">
+          <div className=" overflow-auto h-full">
             <MasterComponent
               config={accessConfig}
               loadingState={loading}
@@ -1055,7 +1055,7 @@ const Access = () => {
         </TabsContent>
         
         <TabsContent value="User" className="h-5/6">
-          <div className="pt-4 overflow-auto h-full flex">
+          <div className=" overflow-auto h-full flex">
             {/* Left side: User list */}
             <div className="w-1/4 pr-4">
               {renderUserListSidebar()}

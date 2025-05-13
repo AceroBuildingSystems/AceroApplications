@@ -638,7 +638,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                 <div className='flex flex-col gap-1 w-full h-full'>
 
                     {/* Filter Section */}
-                    <div className='flex flex-row items-center justify-between'>
+                    <div className='flex flex-row items-center justify-between py-1'>
                         <div className="flex flex-row items-center">
                             {/* Render search fields */}
                             <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (

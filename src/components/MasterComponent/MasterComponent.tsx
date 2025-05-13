@@ -2,7 +2,7 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/inputSearch";
 import { Button } from '../ui/button';
 import { ChevronsUpDown, Check, ListFilter } from 'lucide-react';
 
@@ -146,7 +146,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className='flex flex-col gap-2 w-full h-full px-4 pt-2 border-t-2 shadow-lg border-gray-100'>
+                <div className='flex flex-col gap-2 w-full h-full px-4 py-1'>
 
                     {/* Filter Section */}
                     <div className='flex flex-row items-center justify-between'>

@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import { GraduationCap, Box, BookUser,ScrollText,Ticket, PanelsTopLeft  } from 'lucide-react';
+import { GraduationCap, Box, BookUser,ScrollText,Ticket,PanelsTopLeft  } from 'lucide-react';
 
 import {
   Collapsible,

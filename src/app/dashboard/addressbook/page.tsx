@@ -36,6 +36,22 @@ const page = () => {
     sort: { name: 'asc' },
   });
 
+ const uniqueActiveLocations = [
+  ...new Map(
+    userData?.data
+      ?.map((user: { activeLocation?: { _id?: string; name?: string } }) =>
+        user.activeLocation?._id
+          ? [user.activeLocation._id, {
+              _id: user.activeLocation.name,
+              name: user.activeLocation.name
+            }]
+          : null
+      )
+      .filter(Boolean) // remove null entries
+  ).values()
+].sort((a:any, b:any) => a.name.localeCompare(b.name));
+
+
   const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
     db: "LOCATION_MASTER", filter: { isActive: true },
     sort: { name: 'asc' }
@@ -143,7 +159,7 @@ const page = () => {
     const response = await createUser(formattedData);
 
 
-   return response;
+    return response;
 
   };
 
@@ -391,7 +407,7 @@ const page = () => {
     filterFields: [
 
       { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name: 'departmentName' },
-      { key: "activeLocation", label: 'locationName', type: "select" as const, data: locNames, placeholder: 'Search by Location', name: 'locationName' },
+      { key: "activeLocation", label: 'locationName', type: "select" as const, data: uniqueActiveLocations, placeholder: 'Search by Location', name: 'locationName' },
 
     ],
     dataTable: {

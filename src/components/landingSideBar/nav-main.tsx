@@ -43,7 +43,7 @@ const CreateSideBarItems = ({ item }: any) => {
             {matchingItem?.Icon && (
               <matchingItem.Icon className="h-4 w-4  font-normal" />
             )}
-            <span className={`${item?.category === 'menu' ? 'font-semibold' : ''}`}>{item.title}</span>
+            <span className={`px-0.5 ${item?.category === 'menu' ? 'font-semibold' : ''}`}>{item.title}</span>
           </Link>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
@@ -64,9 +64,9 @@ const CreateSideBarItems = ({ item }: any) => {
               <button className="text-sm group flex items-center justify-between w-full px-2 py-1 text-left">
                 <div className="flex items-center gap-2">
                   {matchingItem?.Icon && (
-                    <matchingItem.Icon className="h-4 w-4  font-normal" />
+                    <matchingItem.Icon className="h-4 w-4  " />
                   )}
-                  <span className="text-sm font-semibold">{item.title}</span>
+                  <span className="px-0.5 text-sm font-semibold">{item.title}</span>
                 </div>
                 <ChevronRight
                   className="h-4 w-4 transition-transform duration-300 group-data-[state=open]:rotate-90"

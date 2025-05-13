@@ -217,13 +217,13 @@ const page = () => {
       accessorKey: "displayName",
       header: ({ column }: { column: any }) => {
         const isSorted = column.getIsSorted();
-
+    
         return (
           <button
-            className="group  flex items-center space-x-2 pl-3"
+            className="group flex items-center space-x-2 pl-3"
             onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Employee Name</span>
+            <span className="truncate">Employee Name</span>
             <ChevronsUpDown
               size={15}
               className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -234,16 +234,17 @@ const page = () => {
       },
       cell: ({ row }: { row: any }) => {
         const firstName = row.getValue("displayName");
-        const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
-
+        const designation = row.original?.designation?.name || "";
+    
         return (
           <div className="pl-3">
-            <div className="">{firstName}</div>
-            <div className="text-sm text-gray-500">{designation}</div>
+            <div className="font-medium ">{firstName}</div>
+            <div className="text-sm text-gray-500 ">{designation}</div>
           </div>
         );
       },
     },
+    
     {
       accessorKey: "department",
       header: ({ column }: { column: any }) => {

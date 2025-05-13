@@ -163,7 +163,7 @@ const page = () => {
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
     { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Select Joining Date' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Select Leaving Date' },
-    { label: 'Nationality', name: "nationality", type: "select", data: nationalityData?.data, format: 'ObjectId', required: true, placeholder: 'Select Nationality' },
+    { label: 'Nationality', name: "nationality", type: "select", data: nationalityData?.data, format: 'ObjectId', required: false, placeholder: 'Select Nationality' },
     { label: 'Gender', name: "gender", type: "select", data: genderData, format: 'ObjectId', required: false, placeholder: 'Select Gender' },
     { label: 'Marital Status', name: "maritalStatus", type: "select", data: maritalStatusData, format: 'ObjectId', required: false, placeholder: 'Select Marital Status' },
     { label: 'Date Of Birth', name: "dateOfBirth", type: "date", format: 'Date', placeholder: 'Select Birth Date' },

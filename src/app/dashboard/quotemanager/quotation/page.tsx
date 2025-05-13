@@ -876,7 +876,7 @@ const page = () => {
                         </button>
                     );
                 },
-                cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editQuotation(row.original)}>{row.getValue("quoteNo") && `${row.getValue("country")?.countryCode}-${row.getValue("year")?.toString().slice(-2)}-${row.getValue("quoteNo")}` || "Add Quote No"}</div>,
+                cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editQuotation(row.original)}>{row.getValue("quoteNo") && `${row.getValue("country")?.countryCode}-${row.getValue("year")?.toString().slice(-2)}-${row.getValue("quoteNo")?.toString().padStart(5, '0')}` || "Add Quote No"}</div>,
             },
             {
                 accessorKey: "revNo",

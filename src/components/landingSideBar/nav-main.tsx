@@ -61,7 +61,7 @@ const CreateSideBarItems = ({ item }: any) => {
         <Collapsible key={item.title}>
           <SidebarMenuItem>
             <CollapsibleTrigger asChild>
-              <button className="text-sm group flex items-center justify-between w-full px-2 py-1 text-left">
+              <button className="text-sm group flex items-center justify-between w-full px-2 py-1.5 text-left">
                 <div className="flex items-center gap-2">
                   {matchingItem?.Icon && (
                     <matchingItem.Icon className="h-4 w-4  " />

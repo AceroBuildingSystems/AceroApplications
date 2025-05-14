@@ -606,7 +606,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           };
 
           emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
-          console.log(quoteExists, "isQuoteNoExist");
+        
           !quoteExists && await sendEmail(emailData);
         };
 
@@ -849,7 +849,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           };
 
           emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
-           console.log(quoteExists, "isQuoteNoExist");
+           
           !quoteExists && await sendEmail(emailData);
          
         }

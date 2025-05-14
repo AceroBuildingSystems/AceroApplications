@@ -216,7 +216,7 @@ function DynamicDialog<T extends BaseFormData>({
         updatedData.addedBy = user._id;
       }
       const response: any = await onSave({ formData: updatedData, action });
-      console.log(response);
+     
       if (!response || response?.error) {
         toast.error(response?.error.message || "Something Went Wrong!");
         return;

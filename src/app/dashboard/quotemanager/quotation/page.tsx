@@ -1081,7 +1081,7 @@ const page = () => {
 
     const quotationColumns = getQuotationColumns(teamRole);
 
-    const statusNames = [{ id: 'draft', name: 'Draft', color: 'bg-white' }, { id: 'quoterequested', name: 'QuoteNo Requested', color: 'bg-yellow-100' }, { id: 'incomplete', name: 'Incomplete', color: 'bg-blue-100' }, { id: 'submitted', name: 'Submitted (Pending Approval)', color: 'bg-orange-200' }, { id: 'rejected', name: 'Rejected', color: 'bg-red-200' }, { id: 'approved', name: 'Approved', color: 'bg-green-200' }];
+    const statusNames = [{ id: 'draft', name: 'Draft', color: 'bg-white' }, { id: 'quoterequested', name: 'QuoteRequested', color: 'bg-yellow-100' }, { id: 'incomplete', name: 'Incomplete', color: 'bg-blue-100' }, { id: 'submitted', name: 'Submitted', color: 'bg-orange-200' }, { id: 'rejected', name: 'Rejected', color: 'bg-red-200' }, { id: 'approved', name: 'Approved', color: 'bg-green-200' }];
 
     const bookingProbabilityNames = ['Low', 'Medium', 'High'];
 

@@ -15,7 +15,7 @@ export default function Provider({ children }: ProviderProps) {
     <SessionProvider>
       <ReduxProvider store={store}>
         {children}
-        <ToastContainer />
+        <ToastContainer position="bottom-right"/>
       </ReduxProvider>
     </SessionProvider>
   )

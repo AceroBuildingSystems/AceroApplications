@@ -87,6 +87,8 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
   const [formDataSecondary, setFormDataSecondary] = useState<Record<string, any>>({});
   const [isSecondaryDialogOpen, setIsSecondaryDialogOpen] = useState(false);
+  const [isQuoteNoExistDialogOpen, setIsQuoteNoExistDialogOpen] = useState(false);
+  const [isQuoteNoExist, setIsQuoteNoExist] = useState(false);
   const [secondaryDialogType, setSecondaryDialogType] = useState("");
 
   const [secondaryFields, setSecondaryFields]: any = useState([]);
@@ -243,7 +245,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
   function updateCycleTimeForArray(dataArray: any[]) {
     return dataArray.map(item => {
       const { sentToEstimation, receivedFromEstimation } = item;
-      
+
       // Ensure both dates are valid
       if (!sentToEstimation) {
         console.log("Error: sentToEstimation or receivedFromEstimation should be there", item);
@@ -264,16 +266,16 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
         return updatedFormData; // Skip calculation if the condition is violated
       }
 
-      const rcvdDate:Date = new Date(receivedFromEstimation);
-      const sentDate:Date = new Date(sentToEstimation);
+      const rcvdDate: Date = new Date(receivedFromEstimation);
+      const sentDate: Date = new Date(sentToEstimation);
       if (rcvdDate.getTime() === 0 || sentDate.getTime() === 0) {
         console.log("Error: One or both date values are invalid.");
         item.cycleTime = 0; // Ensure it's a string if required
-    } else {
+      } else {
         // Calculate cycle time in days
         const cycleTime = (rcvdDate.getTime() - sentDate.getTime()) / (1000 * 60 * 60 * 24);
         item.cycleTime = Math.trunc(cycleTime).toString();
-    }
+      }
 
       return item; // Return the updated item
     });
@@ -281,7 +283,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
 
   const handleChange = (e: { target: { value: any } } | any[] | string | null | React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement> | null, fieldName: string, format: string, type: string, data: any[], field: { data: any[]; section: string; subSection?: string; } | undefined, revNo: any, customFunction = (dateValue: any) => { }) => {
 
-    let value: any|string | null = "";
+    let value: any | string | null = "";
     fieldName === 'country' && setRegion(field?.data?.filter((item) => item._id === e)[0]?.region?.name);
 
     fieldName === 'industryType' && Array.isArray(data) && setIndustryType(data?.filter((item) => item._id === e)[0]?.name);
@@ -297,11 +299,11 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
     if (type === "multiselect") {
       value = Array.isArray(e) ? e.map((item) => item.value) : ''; // Store only `_id`s as a comma-separated string
     } else if (type === "select") {
-      value = typeof e === 'string' || typeof e === 'number'  ? e : ""; // Ensure single select values are stored correctly
+      value = typeof e === 'string' || typeof e === 'number' ? e : ""; // Ensure single select values are stored correctly
     } else {
       if (typeof e === 'string' || typeof e === 'number') {
         value = e;
-       
+
       } else if (Array.isArray(e)) {
         value = e.map((item) => item.value).join(",");
       } else {
@@ -330,8 +332,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           [fieldName]: formattedValue,
         };
 
-        console.log(updatedFormData);
-
+      
         if (fieldName === "company") {
           updatedFormData['customerType'] = data.filter((item) => item?._id === e)[0]?.customerType?._id;
 
@@ -400,11 +401,11 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           }
           return item;
         });
-  
+
         const updatedData = updateCycleTimeForArray(updatedFormData.sort((a, b) => a.revNo - b.revNo));
-  
+
         customFunction(updatedData?.[revNo]?.[fieldName])
-  
+
 
         return updatedData.sort((a, b) => a.revNo - b.revNo);
       })
@@ -522,15 +523,29 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
     return response;
   };
 
+  const handleSubmitQuotation1 = async (status: string) => {
+
+    if (status === 'quoterequested') {
+
+      setIsQuoteNoExistDialogOpen(true);
+
+    }
+    else {
+
+      handleSubmitQuotation(status, false);
+    }
+  }
+
   // Handle form submission
-  const handleSubmitQuotation = async (status: string) => {
+  const handleSubmitQuotation = async (status: string, quoteExists:boolean) => {
     try {
       if (!(formData?.country && formData?.salesEngineer && formData?.salesSupportEngineer?.length > 0 && formData?.rcvdDateFromCustomer && formData?.sellingTeam && formData?.responsibleTeam)) {
 
         toast.error(`Please fill the required fields.`);
         return;
       }
-     
+
+   
       let emailData = {}
       const master = 'QUOTATION_MASTER';
       if (action === 'Add') {
@@ -589,9 +604,10 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
             'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
           };
-          
+
           emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
-          await sendEmail(emailData);
+          console.log(quoteExists, "isQuoteNoExist");
+          !quoteExists && await sendEmail(emailData);
         };
 
       }
@@ -831,9 +847,11 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             'Plot Number': response?.data?.data?.plotNumber, 'End Client': response?.data?.data?.endClient, 'Project Management Office': response?.data?.data?.projectManagementOffice,
             'Consultant': response?.data?.data?.consultant, 'Main Contractor': response?.data?.data?.mainContractor, 'Erector': response?.data?.data?.erector,
           };
-         
+
           emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
-          await sendEmail(emailData);
+           console.log(quoteExists, "isQuoteNoExist");
+          !quoteExists && await sendEmail(emailData);
+         
         }
         if (status === 'submitted') {
           const quoteData = {
@@ -878,6 +896,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
       setProposalDataIds({});
 
       closeDialog();
+      setIsQuoteNoExistDialogOpen(false);
     } catch (error) {
       console.error("Error saving data:", error);
     }
@@ -1048,19 +1067,19 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           }
 
         case "date":
-        
+
           return (
             <DatePicker
               currentDate={field.section !== "CycleTimeDetails" ? formData[field.name] : rev?.[field.name] ? new Date(rev[field.name]) : undefined}
               handleChange={(selectedDate: { toISOString: () => any; }, setDate: (() => void) | undefined) => {
-                handleChange({ target: { value: selectedDate?.toISOString() || "" } }, 
-                field.name, 
-                field.format, 
-                field.type, 
-                field.data, 
-                field, 
-                rev?.revNo, 
-                setDate);
+                handleChange({ target: { value: selectedDate?.toISOString() || "" } },
+                  field.name,
+                  field.format,
+                  field.type,
+                  field.data,
+                  field,
+                  rev?.revNo,
+                  setDate);
                 return true;
               }}
               placeholder={field.placeholder || ""}
@@ -1165,8 +1184,8 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
   };
 
   const handleCheckboxChange = () => {
-  
-    if (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length+1) {
+
+    if (proposalRevData.length === initialData?.proposals?.[0]?.revisions.length + 1) {
       setIsChecked((prev) => !prev); // Toggle checkbox state
 
       if (!isChecked) {
@@ -1204,7 +1223,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
                     effect="expandIcon"
                     icon={Check}
                     iconPlacement="right"
-                    onClick={() => handleSubmitQuotation('approved')}
+                    onClick={() => handleSubmitQuotation('approved', false)}
                     className={`w-28 bg-green-600 hover:bg-green-700 duration-300`}
                   >
                     Approve
@@ -1214,7 +1233,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
                     effect="expandIcon"
                     icon={X}
                     iconPlacement="right"
-                    onClick={() => handleSubmitQuotation('rejected')}
+                    onClick={() => handleSubmitQuotation('rejected', false)}
                     className={`w-28 bg-red-600 hover:bg-red-700 duration-300`}
                   >
                     Reject
@@ -1228,7 +1247,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
                   icon={initialData?.quoteNo && SendHorizontal}
                   iconPlacement="right"
                   className={`w-28 bg-blue-600 hover:bg-blue-700 ${initialData?.quoteNo && ' bg-green-600 hover:bg-green-700'} duration-300`}
-                  onClick={() => handleSubmitQuotation(initialData?.quoteNo ? 'submitted' : 'quoterequested')}
+                  onClick={() => handleSubmitQuotation1(initialData?.quoteNo ? 'submitted' : 'quoterequested')}
                 >
                   {initialData?.quoteNo ? 'Submit' : 'Get Quote No'}
                 </Button>}
@@ -1237,7 +1256,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
                   effect="expandIcon"
                   icon={Save}
                   iconPlacement="right"
-                  onClick={() => handleSubmitQuotation((initialData?.status !== 'draft' && initialData?.status) ? 'incomplete' : 'draft')}
+                  onClick={() => handleSubmitQuotation((initialData?.status !== 'draft' && initialData?.status) ? 'incomplete' : 'draft', false)}
                   className={`w-28  bg-green-600 hover:bg-green-700 ${initialData?.quoteNo && ' bg-blue-600 hover:bg-blue-700'} duration-300`}
                 >
                   {(initialData?.status !== 'draft' && initialData?.status) ? 'Update' : 'Save'}
@@ -1247,7 +1266,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
                   effect="expandIcon"
                   icon={initialData?._id ? Trash2Icon : Save}
                   iconPlacement="right"
-                  onClick={() => handleSubmitQuotation(initialData?._id ? 'delete' : 'draft')}
+                  onClick={() => handleSubmitQuotation(initialData?._id ? 'delete' : 'draft', false)}
                   className={`w-28 bg-green-600 hover:bg-green-700 duration-300 ${initialData?._id ? 'bg-red-700 hover:bg-red-800' : ''}`}
                 >
                   {initialData?._id ? 'Delete' : 'Save'}
@@ -1497,6 +1516,24 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
             {<Button onClick={() => { handleSubmit('Form2', formDataSecondary) }}>Save</Button>}
 
           </DialogFooter>}
+        </DialogContent>
+      </Dialog>
+
+      {/* QuoteExists Dialog */}
+      <Dialog open={isQuoteNoExistDialogOpen} onOpenChange={() => { setIsQuoteNoExistDialogOpen(false) }}>
+        <DialogContent className={`max-w-full max-h-[30%] pointer-events-auto mx-2 h-[20%] sm:max-w-md lg:max-w-2xl bg-white`}>
+          <DialogTitle className="pt-4" >{`Do you already have the Quote No?`}</DialogTitle>
+          <div className="bg-white h-auto overflow-y-auto rounded-md ">
+
+          </div>
+
+          <DialogFooter>
+            <Button className="w-16" onClick={() => {handleSubmitQuotation('quoterequested', false) }}>
+              No
+            </Button>
+            {<Button className="w-16 bg-green-700 hover:bg-green-600" onClick={() => {handleSubmitQuotation('quoterequested', true) }}>Yes</Button>}
+
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -280,6 +280,7 @@ const InventoryPage = () => {
                             'Model': asset?.product?.model || '',
                             'Warranty Start Date': asset?.warrantyStartDate ? moment(asset?.warrantyStartDate).format("DD-MM-YYYY") : '',
                             'Warranty End Date': asset?.warrantyEndDate ? moment(asset?.warrantyEndDate).format("DD-MM-YYYY") : '',
+                            'Specifications': asset?.specifications ? JSON.stringify(asset.specifications) : ''
 
                         });
                     });
@@ -292,7 +293,8 @@ const InventoryPage = () => {
                         'Brand': '',
                         'Model': '',
                         'Warranty Start Date': '',
-                        'Warranty End Date': ''
+                        'Warranty End Date': '',
+                        'Specifications': ''
 
                     });
                 }
@@ -313,7 +315,8 @@ const InventoryPage = () => {
                 'Brand': '',
                 'Model': '',
                 'Warranty Start Date': '',
-                'Warranty End Date': ''
+                'Warranty End Date': '',
+                'Specifications': ''
             });
         }
 

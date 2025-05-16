@@ -224,7 +224,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 let skippedInventories = [];
                 // Group rows by invoiceNumber
                 for (const row of enrichedData) {
-                    console.log(row, "Row");
+                  
                     const invoice = row?.invoiceNumber?.toString()?.trim();
                     if (!grouped[invoice]) grouped[invoice] = [];
                     grouped[invoice].push(row);
@@ -271,6 +271,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
                         inventory: inventoryId,
                         warehouse: row.warehouse,
+                        specifications:JSON.parse(row?.specifications),
                         addedBy: user?._id,
                         updatedBy: user?._id,
                     }));
@@ -326,7 +327,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     exportToExcel(allSkippedAssets);
                 }
                 onFinish?.();
-                input.click();
+              
                 return;
             }
 
@@ -1076,7 +1077,8 @@ const entityFieldMappings = {
         'Serial Number': 'serialNumber',
         'Model': 'product',
         'Warranty Start Date': 'warrantyStartDate',
-        'Warranty End Date': 'warrantyEndDate'
+        'Warranty End Date': 'warrantyEndDate',
+        'Specifications': 'specifications'
     },
     Customer: {
         "Name": "name",

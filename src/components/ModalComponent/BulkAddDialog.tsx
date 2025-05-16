@@ -624,7 +624,7 @@ const handleSubmit = async (e:any) => {
           addedBy: user._id,
           updatedBy: user._id,
         };
-
+console.log(assetData,'assetData');
         // If editing an existing asset
         if (item._id) {
           assetData._id = item._id;

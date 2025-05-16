@@ -19,9 +19,9 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import moment from 'moment';
 import { toast } from 'react-hot-toast';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -132,7 +132,7 @@ const InventoryPage = () => {
     const [isBulkDialogOpen, setIsBulkDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
     const [selectedItem, setSelectedItem] = useState<InvoiceFormData | null>(null);
-    const { user } = useUserAuthorised();
+    const { user }: any = useUserAuthorised();
     const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<any>(null);
     const [editingAsset, setEditingAsset] = useState<AssetFormData | null>(null);
@@ -165,15 +165,15 @@ const InventoryPage = () => {
     const [createMaster] = useCreateMasterMutation();
 
     const handleEdit = (row: any) => {
-        console.log('Editing row:', row.original); // Debug log
+
         setDialogAction("Update");
-        
+
         // Use Set to ensure unique asset IDs and prevent duplicates
         const uniqueAssets = Array.from(
             new Map(row.original.assets.map((asset: any) => [asset._id, asset])).values()
         );
-        
-        const invoiceData = {
+
+        const invoiceData: any = {
             _id: row.original._id,
             invoiceNumber: row.original.invoiceNumber,
             vendor: row.original.vendor?._id,
@@ -184,24 +184,24 @@ const InventoryPage = () => {
             assets: uniqueAssets,
             isActive: row.original.isActive
         };
-        console.log('Setting selected item with filtered assets:', invoiceData); // Debug log
+
         setSelectedItem(invoiceData);
         setIsDialogOpen(true);
     };
 
     const handleSave = async ({ formData, action }: { formData: InvoiceFormData; action: string }) => {
         try {
-            console.log('Saving invoice with data:', JSON.stringify(formData, null, 2));
-            
+
             // Validate required fields
             const requiredFields = ['invoiceNumber', 'poNumber', 'vendor', 'purchaseDate', 'warehouse'];
             const missingFields = requiredFields.filter(field => !formData[field as keyof InvoiceFormData]);
-            
+
             if (missingFields.length > 0) {
                 toast.error(`Missing required fields: ${missingFields.join(', ')}`);
                 return { error: 'Validation error' };
             }
-            
+
+
             // Prepare the payload - only include fields that are valid for Inventory
             const payload: any = {
                 invoiceNumber: formData.invoiceNumber,
@@ -211,19 +211,18 @@ const InventoryPage = () => {
                 warehouse: formData.warehouse,
                 purchaseDate: formData.purchaseDate,
                 // Make sure assets is an array of IDs
-                assets: Array.isArray(formData.assets) 
+                assets: Array.isArray(formData.assets)
                     ? formData.assets.map((asset: any) => typeof asset === 'string' ? asset : asset._id)
                     : [],
                 isActive: formData.isActive ?? true,
                 addedBy: user?._id || '',
                 updatedBy: user?._id || ''
             };
-            
+
             // Do not include status field for Inventory records
             // status is only for Asset records
-            
-            console.log('Final invoice payload:', JSON.stringify(payload, null, 2));
-            
+
+
             const response = await createMaster({
                 db: MONGO_MODELS.INVENTORY_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
@@ -249,7 +248,7 @@ const InventoryPage = () => {
 
     const handleImport = async () => {
         await bulkImport({
-            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: [], warehouseData: warehousesResponse, customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.INVENTORY_MASTER, masterName: "Inventory", onStart: () => setImporting(true),
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: vendorsResponse, productData: productsResponse, warehouseData: warehousesResponse, customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.INVENTORY_MASTER, masterName: "Asset", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
     };
@@ -258,15 +257,64 @@ const InventoryPage = () => {
         let formattedData: any[] = [];
 
         if (data?.length > 0) {
-            formattedData = data?.map((data: any) => ({
-                'Vendor Name': data.vendor?.name,
-                'Invoice No': data?.invoiceNumber,
-                'PO Number': data?.poNumber,
-                'PR Number': data?.prNumber,
-                'Purchase Date': moment(data?.purchaseDate).format("DD-MM-YYYY"),
-                'Warehouse': data?.warehouse?.name,
-                'Total Assets': data?.assets?.length || 0
-            }));
+
+
+            data.forEach((record: any) => {
+                console.log('Processing record:', record); // Debug log
+                const commonFields = {
+                    'Vendor Name': record.vendor?.name || '',
+                    'Invoice No': record?.invoiceNumber || '',
+                    'PO Number': record?.poNumber || '',
+                    'PR Number': record?.prNumber || '',
+                    'Purchase Date': record?.purchaseDate ? moment(record.purchaseDate).format("DD-MM-YYYY") : '',
+                    'Warehouse': record?.warehouse?.name || '',
+                };
+
+                if (record?.assets?.length > 0) {
+                    record.assets.forEach((asset: any) => {
+                        formattedData.push({
+                            ...commonFields,
+                            'Serial Number': asset?.serialNumber || '',
+                            'Category': asset?.product?.category?.name || '',
+                            'Brand': asset?.product?.brand || '',
+                            'Model': asset?.product?.model || '',
+                            'Warranty Start Date': asset?.warrantyStartDate ? moment(asset?.warrantyStartDate).format("DD-MM-YYYY") : '',
+                            'Warranty End Date': asset?.warrantyEndDate ? moment(asset?.warrantyEndDate).format("DD-MM-YYYY") : '',
+
+                        });
+                    });
+                } else {
+                    // Still add the record if no assets are present
+                    formattedData.push({
+                        ...commonFields,
+                        'Serial Number': '',
+                        'Category': '',
+                        'Brand': '',
+                        'Model': '',
+                        'Warranty Start Date': '',
+                        'Warranty End Date': ''
+
+                    });
+                }
+            });
+
+
+        }
+        else {
+            formattedData.push({
+                'Vendor Name': '',
+                'Invoice No': '',
+                'PO Number': '',
+                'PR Number': '',
+                'Purchase Date': '',
+                'Warehouse': '',
+                'Serial Number': '',
+                'Category': '',
+                'Brand': '',
+                'Model': '',
+                'Warranty Start Date': '',
+                'Warranty End Date': ''
+            });
         }
 
         type === 'excel' && exportToExcel(formattedData);
@@ -306,11 +354,11 @@ const InventoryPage = () => {
             specifications: asset.specifications || {},
             isActive: asset.isActive
         });
-        
+
         // Find the product to populate specifications
         const productDetails = productsResponse?.data?.find((p: any) => p._id === asset.product?._id);
         setSelectedProductForSpecs(productDetails ? { product: productDetails } : null);
-        
+
         setIsProductDialogOpen(true);
     };
 
@@ -319,12 +367,12 @@ const InventoryPage = () => {
             setSelectedProductForSpecs(null);
             return;
         }
-        
+
         const productDetails = productsResponse?.data?.find((p: any) => p._id === productId);
         if (productDetails) {
             setSelectedProductForSpecs({ product: productDetails });
-            setEditingAsset(prev => prev ? { 
-                ...prev, 
+            setEditingAsset(prev => prev ? {
+                ...prev,
                 product: productId,
                 specifications: {} // Reset specifications when product changes
             } : null);
@@ -345,12 +393,12 @@ const InventoryPage = () => {
                 toast.error('Please select a product');
                 return;
             }
-            
+
             if (!formData.serialNumber) {
                 toast.error('Serial number is required');
                 return;
             }
-            
+
             console.log('Saving asset with data:', JSON.stringify(formData, null, 2));
 
             // For new products in edit mode, associate with current invoice
@@ -363,7 +411,7 @@ const InventoryPage = () => {
                 addedBy: user?._id || '',
                 updatedBy: user?._id || ''
             };
-            
+
             console.log('Final asset payload:', JSON.stringify(payload, null, 2));
 
             const response = await createMaster({
@@ -376,13 +424,13 @@ const InventoryPage = () => {
             if (response) {
                 toast.success(`Asset ${formData._id ? 'updated' : 'added'} successfully`);
                 setIsProductDialogOpen(false);
-                
+
                 // Update the local state to reflect changes immediately
                 if (formData._id && selectedItem) {
                     // Find and update the existing asset in the selectedItem assets array
-                    const updatedAssets = selectedItem.assets.map((asset: any) => 
-                        asset._id === formData._id ? { 
-                            ...asset, 
+                    const updatedAssets = selectedItem.assets.map((asset: any) =>
+                        asset._id === formData._id ? {
+                            ...asset,
                             serialNumber: formData.serialNumber,
                             product: { _id: formData.product },
                             warrantyStartDate: formData.warrantyStartDate,
@@ -390,7 +438,7 @@ const InventoryPage = () => {
                             specifications: formData.specifications
                         } : asset
                     );
-                    setSelectedItem({...selectedItem, assets: updatedAssets});
+                    setSelectedItem({ ...selectedItem, assets: updatedAssets });
                 } else if (selectedItem && response.data) {
                     // Add new asset to the list if it's newly created
                     const newAsset = response.data;
@@ -404,13 +452,13 @@ const InventoryPage = () => {
                             category: productDetails.category
                         } : { _id: formData.product }
                     };
-                    
+
                     setSelectedItem({
                         ...selectedItem,
                         assets: [...(selectedItem.assets || []), enhancedAsset]
                     });
                 }
-                
+
                 // Also refresh the data from API
                 refetch();
             }
@@ -429,15 +477,15 @@ const InventoryPage = () => {
                 filter: { _id: assetId },
                 data: { isActive: false }
             }).unwrap();
-            
+
             toast.success('Product removed successfully');
-            
+
             // Update the local state to remove the deleted asset
             if (selectedItem) {
                 const updatedAssets = selectedItem.assets.filter((asset: any) => asset._id !== assetId);
-                setSelectedItem({...selectedItem, assets: updatedAssets});
+                setSelectedItem({ ...selectedItem, assets: updatedAssets });
             }
-            
+
             // Also refresh the data
             refetch();
         } catch (error) {
@@ -453,15 +501,15 @@ const InventoryPage = () => {
             if (!formData.product) {
                 return { error: { message: 'Product is required' } };
             }
-            
+
             if (!formData.serialNumber) {
                 return { error: { message: 'Serial number is required' } };
             }
-            
+
             if (!formData.warehouse) {
                 return { error: { message: 'Warehouse is required' } };
             }
-            
+
             console.log('Saving asset with data:', JSON.stringify(formData, null, 2));
 
             const payload = {
@@ -469,7 +517,7 @@ const InventoryPage = () => {
                 status: 'available', // Set default status for new assets
                 isActive: true
             };
-            
+
             const response = await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
@@ -503,7 +551,7 @@ const InventoryPage = () => {
                 );
             },
             cell: ({ row }: any) => (
-                <div 
+                <div
                     className='text-red-700 cursor-pointer hover:underline'
                     onClick={(e) => {
                         e.stopPropagation();
@@ -623,15 +671,7 @@ const InventoryPage = () => {
                 </div>
             )
         },
-        {
-            accessorKey: "isActive",
-            header: "Status",
-            cell: ({ row }: any) => (
-                <Badge variant={row.original.isActive ? "default" : "destructive"}>
-                    {row.original.isActive ? 'Active' : 'Inactive'}
-                </Badge>
-            )
-        }
+
     ];
 
     // Configure page layout
@@ -695,11 +735,11 @@ const InventoryPage = () => {
 
     return (
         <div className="h-full">
-            <MasterComponent 
-                config={pageConfig} 
-                loadingState={loading} 
-                rowClassMap={undefined} 
-                summary={false} 
+            <MasterComponent
+                config={pageConfig}
+                loadingState={loading}
+                rowClassMap={undefined}
+                summary={false}
             />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -714,7 +754,7 @@ const InventoryPage = () => {
                                 <label className="text-sm font-medium">Invoice Number</label>
                                 <Input
                                     value={selectedItem?.invoiceNumber || ''}
-                                    onChange={(e) => setSelectedItem(prev => prev ? {...prev, invoiceNumber: e.target.value} : null)}
+                                    onChange={(e) => setSelectedItem(prev => prev ? { ...prev, invoiceNumber: e.target.value } : null)}
                                     placeholder="Enter invoice number"
                                 />
                             </div>
@@ -722,7 +762,7 @@ const InventoryPage = () => {
                                 <label className="text-sm font-medium">Vendor</label>
                                 <Select
                                     value={selectedItem?.vendor}
-                                    onValueChange={(value) => setSelectedItem(prev => prev ? {...prev, vendor: value} : null)}
+                                    onValueChange={(value) => setSelectedItem(prev => prev ? { ...prev, vendor: value } : null)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select vendor" />
@@ -740,7 +780,7 @@ const InventoryPage = () => {
                                 <label className="text-sm font-medium">PO Number</label>
                                 <Input
                                     value={selectedItem?.poNumber || ''}
-                                    onChange={(e) => setSelectedItem(prev => prev ? {...prev, poNumber: e.target.value} : null)}
+                                    onChange={(e) => setSelectedItem(prev => prev ? { ...prev, poNumber: e.target.value } : null)}
                                     placeholder="Enter PO number"
                                 />
                             </div>
@@ -748,7 +788,7 @@ const InventoryPage = () => {
                                 <label className="text-sm font-medium">PR Number</label>
                                 <Input
                                     value={selectedItem?.prNumber || ''}
-                                    onChange={(e) => setSelectedItem(prev => prev ? {...prev, prNumber: e.target.value} : null)}
+                                    onChange={(e) => setSelectedItem(prev => prev ? { ...prev, prNumber: e.target.value } : null)}
                                     placeholder="Enter PR number"
                                 />
                             </div>
@@ -756,7 +796,7 @@ const InventoryPage = () => {
                                 <label className="text-sm font-medium">Warehouse</label>
                                 <Select
                                     value={selectedItem?.warehouse}
-                                    onValueChange={(value) => setSelectedItem(prev => prev ? {...prev, warehouse: value} : null)}
+                                    onValueChange={(value) => setSelectedItem(prev => prev ? { ...prev, warehouse: value } : null)}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select warehouse" />
@@ -775,7 +815,7 @@ const InventoryPage = () => {
                                 <Input
                                     type="date"
                                     value={selectedItem?.purchaseDate || ''}
-                                    onChange={(e) => setSelectedItem(prev => prev ? {...prev, purchaseDate: e.target.value} : null)}
+                                    onChange={(e) => setSelectedItem(prev => prev ? { ...prev, purchaseDate: e.target.value } : null)}
                                 />
                             </div>
                         </div>
@@ -789,7 +829,7 @@ const InventoryPage = () => {
                                 </Button>
                             </div>
                             <div className="space-y-2">
-                                {selectedItem?.assets?.length > 0 ? (
+                                {selectedItem && selectedItem?.assets?.length > 0 ? (
                                     selectedItem.assets.map((asset: any, index: number) => (
                                         <div key={`${asset._id}-${index}`} className="flex items-center justify-between p-3 border rounded-lg">
                                             <div>
@@ -894,11 +934,11 @@ const InventoryPage = () => {
                                 />
                             </div>
                         </div>
-                        
+
                         <div>
                             <h3 className="text-md font-medium mb-2">Product Specifications</h3>
                             {editingAsset?.product ? (
-                                <SpecificationsComponent 
+                                <SpecificationsComponent
                                     accessData={editingAsset?.specifications || {}}
                                     handleChange={handleSpecificationsChange}
                                     selectedItem={selectedProductForSpecs}
@@ -913,7 +953,7 @@ const InventoryPage = () => {
                                 </Card>
                             )}
                         </div>
-                        
+
                         <div className="flex justify-end gap-2">
                             <Button
                                 variant="outline"

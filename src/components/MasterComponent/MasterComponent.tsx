@@ -149,10 +149,10 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 <div className='flex flex-col gap-2 w-full h-full px-4 py-1'>
 
                     {/* Filter Section */}
-                    <div className='flex flex-row items-center justify-between'>
-                        <div className="flex flex-row items-center gap-2 w-full">
+                    <div className='flex flex-row items-center justify-between gap-2'>
+                        <div className="flex items-center gap-1 w-full">
                             {/* Render search fields */}
-                            <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
+                            <div className='flex items-center '>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
                                 <div key={index} className='w-full'>
 
                                     <Input

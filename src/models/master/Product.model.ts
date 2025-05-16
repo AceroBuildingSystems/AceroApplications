@@ -14,7 +14,8 @@ const ProductSchema = new mongoose.Schema({
     },
     model: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     isActive: {
         type: Boolean,

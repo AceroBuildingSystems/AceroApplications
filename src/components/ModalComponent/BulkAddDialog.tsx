@@ -178,9 +178,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     }
   };
 
-  console.log("Common Data:", commonData);
-  console.log("initial data:", initialData);
-  
+ 
   // Handle product selection
   const handleProductChange = (productId: string) => {
     const product = products.find((p: any) => p._id === productId);
@@ -1255,7 +1253,7 @@ const handleSubmit = async (e:any) => {
         return null;
     }
   };
-  console.log({countCalls})
+
   // Render step indicator
   const renderStepIndicator = () => {
     return (

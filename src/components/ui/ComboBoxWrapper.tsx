@@ -25,8 +25,7 @@ import {
 export function Combobox({ field, formData, handleChange, placeholder, selectedRegion, setSelectedRegion, selectedArea, setSelectedArea, setSelectedYear, setSelectedMonth }: any) {
     const [open, setOpen] = useState(false)
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
-console.log("field", field)
-    console.log("formData", formData)
+
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>

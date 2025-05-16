@@ -125,7 +125,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
             const masterRequiredFields: Record<string, string[]> = {
                 User: ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role'],
-                Asset: ['Vendor Name', 'Invoice No', 'Purchase Date', 'Warehouse', 'Product Name'], // example
+                Asset: ['Vendor Name', 'Invoice No', 'Purchase Date', 'Warehouse', 'Model'], // example
                 Vendor: ['Name'], // example
                 Category: ['name', 'description', 'specsRequired'], // example
                 Department: ['Department Id', 'Department'],
@@ -154,7 +154,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 VisaType: ['Visa Type'],
                 SmlGroup: ['Group Name'],
                 SmlSubGroup: ['Sub Group Name', 'Group Name'],
-                
+
                 // Add other masters as needed
             };
 
@@ -182,7 +182,6 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 toast.error(`Missing required fields - ${errorMessage}`);
                 return;
             }
-
 
             // Transform the sheet data based on the entity
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
@@ -218,14 +217,119 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
             }));
 
             if (masterName === 'Asset') {
-                enrichedData = finalData.map((item: any) => ({
-                    ...item,
-                    specifications: item?.specifications?JSON.parse(item?.specifications):{},
-                    purchaseDate: moment(item?.purchaseDate, "DD-MM-YYYY").toDate(),
-                    warrantyStartDate: moment(item?.warrantyStartDate, "DD-MM-YYYY").toDate(),
-                    warrantyEndDate: moment(item?.warrantyEndDate, "DD-MM-YYYY").toDate(),
-                }));
-            };
+                const grouped: any = {};
+                let allInsertedAssets = [];
+                let allSkippedAssets = [];
+                let insertedInventories = [];
+                let skippedInventories = [];
+                // Group rows by invoiceNumber
+                for (const row of enrichedData) {
+                    console.log(row, "Row");
+                    const invoice = row?.invoiceNumber?.toString()?.trim();
+                    if (!grouped[invoice]) grouped[invoice] = [];
+                    grouped[invoice].push(row);
+                }
+
+                for (const invoiceNumber in grouped) {
+                    const rowsForInvoice = grouped[invoiceNumber];
+                    const firstRow = rowsForInvoice[0];
+
+                    const inventory = {
+                        vendor: firstRow.vendor,
+                        warehouse: firstRow.warehouse,
+                        purchaseDate: moment(firstRow?.purchaseDate, "DD-MM-YYYY").toDate(),
+                        poNumber: firstRow.poNumber,
+                        prNumber: firstRow.prNumber,
+                        invoiceNumber: firstRow.invoiceNumber,
+                        addedBy: user?._id,
+                        updatedBy: user?._id,
+                    };
+
+                    const formattedData = {
+                        action: action === 'Add' ? 'create' : 'update',
+                        db: db,
+                        bulkInsert: true,
+                        data: [inventory],
+                    };
+                    const inventoryRes = await createUser(formattedData);
+                  
+                    if (inventoryRes?.data?.data?.inserted?.length) {
+                        insertedInventories.push(...inventoryRes.data.data.inserted);
+                    }
+
+                    if (inventoryRes?.data?.data?.skipped?.length) {
+                        skippedInventories.push(...inventoryRes.data.data.skipped);
+                    }
+
+                    const inventoryId = inventoryRes?.data?.data?.inserted?.[0]?._id;
+                  
+                    const assetEntries = rowsForInvoice.map((row: any) => ({
+                        serialNumber: row.serialNumber,
+                        product: row.product,
+                        warrantyStartDate: moment(row?.warrantyStartDate, "DD-MM-YYYY").toDate(),
+                        warrantyEndDate: moment(row?.warrantyEndDate, "DD-MM-YYYY").toDate(),
+
+                        inventory: inventoryId,
+                        warehouse: row.warehouse,
+                        addedBy: user?._id,
+                        updatedBy: user?._id,
+                    }));
+
+                    const formattedData1 = {
+                        action: action === 'Add' ? 'create' : 'update',
+                        db: "ASSET_MASTER",
+                        bulkInsert: true,
+                        data: assetEntries,
+                    };
+                    const assetRes = inventoryId && await createUser(formattedData1);
+                    
+
+                    if (assetRes?.data?.data?.inserted?.length) {
+                        allInsertedAssets.push(...assetRes.data.data.inserted);
+                        const insertedAssets = assetRes.data.data.inserted;
+
+                        // If inserted contains full docs
+                        const assetIds = insertedAssets.map((asset:any) => asset._id);
+                        const inventory = {
+                            assets: assetIds,
+                        };
+
+                       
+                        const formattedData = {
+                            action: 'update',
+                            db: db,
+                            filter: { "_id": inventoryId },
+                            data: inventory,
+                        };
+                         const inventoryRes = await createUser(formattedData);
+
+                    }
+
+                    if (assetRes?.data?.data?.skipped?.length) {
+                        allSkippedAssets.push(...assetRes.data.data.skipped);
+                    }
+                }
+
+                if (insertedInventories.length > 0) {
+                    toast.success(`${insertedInventories.length} invoices added successfully.`);
+                }
+                if (skippedInventories.length > 0) {
+                    toast.warning(`${skippedInventories.length} invoices were skipped.`);
+                    exportToExcel(skippedInventories);
+                }
+
+                if (allInsertedAssets.length > 0) {
+                    toast.success(`${allInsertedAssets.length} assets created successfully.`);
+                }
+                if (allSkippedAssets.length > 0) {
+                    toast.warning(`${allSkippedAssets.length} assets were skipped.`);
+                    exportToExcel(allSkippedAssets);
+                }
+                onFinish?.();
+                input.click();
+                return;
+            }
+
 
             if (masterName === 'User') {
                 enrichedData = finalData.map((item: any) => ({
@@ -239,7 +343,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     name: item?.name,
                     teamHead: [item?.teamHead],
                     department: item?.department,
-                    
+
                     addedBy: user?._id,
                     updatedBy: user?._id,
                 }));
@@ -464,7 +568,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                         return false;
                     }
                     uniqueSet.add(key);
-                    
+
                     return true;
                 });
 
@@ -472,17 +576,17 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     if (skipped.length > 0) {
                         exportToExcel(skipped);
                         toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
-                        
+
                     } else {
-                        
+
                         toast.warning("No unique records found for import.");
-                        
+
                     }
                     onFinish?.();
                     return;
                 }
 
-                
+
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
                 const revisionData = uniqueEnrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
                     {
@@ -590,19 +694,19 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 if (response?.data?.data?.inserted.length > 0) {
                     toast.success(`${response?.data?.data?.inserted.length} records imported successfully.`);
                 }
-    
+
                 if (skipped.length > 0) {
                     const combinedData = [...response?.data?.data?.skipped, ...skipped];
                     exportToExcel(combinedData);
                     toast.warning(`${combinedData.length} duplicates were skipped and exported to excel.`);
-                    
-                } 
+
+                }
 
                 // if (response?.data?.data?.skipped.length > 0) {
                 //     exportToExcel(response?.data?.data?.skipped);
                 //     toast.warning(`${response?.data?.data?.skipped.length} duplicates were skipped and exported to Excel.`);
                 // }
-    
+
                 onFinish?.();
 
             } catch (err) {
@@ -729,7 +833,7 @@ const fieldMappingConfig: { [key: string]: any } = {
     },
     Asset: {
         vendor: { source: "vendorData", key: "name", value: "_id" },
-        product: { source: "productData", key: "name", value: "_id" },
+        product: { source: "productData", key: "model", value: "_id" },
         warehouse: { source: "warehouseData", key: "name", value: "_id" },
     },
     Customer: {
@@ -753,7 +857,7 @@ const fieldMappingConfig: { [key: string]: any } = {
     },
     Location: {
         state: { source: "locationData", key: "name", value: "_id" },
-       
+
     },
     SmlSubGroup: {
         group: { source: "categoryData", key: "name", value: "_id" },
@@ -968,11 +1072,9 @@ const entityFieldMappings = {
         'PR Number': 'prNumber',
         'Purchase Date': 'purchaseDate',
         'Warehouse': 'warehouse',
-        'Product Name': 'product',
-        'Serial No': 'serialNumber',
-        'Specifications': 'specifications',
-        'Status': 'status',
-        'Warranty Details': 'warrantyDetails',
+
+        'Serial Number': 'serialNumber',
+        'Model': 'product',
         'Warranty Start Date': 'warrantyStartDate',
         'Warranty End Date': 'warrantyEndDate'
     },
@@ -1005,14 +1107,14 @@ const entityFieldMappings = {
     },
     TeamRole: {
         "Name": "name",
-      
+
     },
     TeamMember: {
         "Name": "user",
         "Team Role": "teamRole",
         "Reporting To": "teamReportingTo",
         "Team": "team",
-      
+
     },
     CustomerType: {
         "Customer Type": "name",
@@ -1044,8 +1146,8 @@ const entityFieldMappings = {
         "Sub Group Name": "name",
         "Group Name": "group"
     },
-   
-   
+
+
     // Add mappings for other entities
 };
 
@@ -1077,11 +1179,11 @@ const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: st
                     const reference = referenceArray.find((ref) => ref[key]?.toLowerCase() === item[field]?.toLowerCase());
                     // const reference = referenceArray.find((ref) => {
                     //     const refValue = ref[key];
-                        
+
                     //     const itemValue = item[field];
                     //     return refValue?.toLowerCase() === itemValue?.toLowerCase();
                     // });
-                   transformedItem[field] = reference ? reference[value] : undefined;
+                    transformedItem[field] = reference ? reference[value] : undefined;
                 }
 
                 if (!transformedItem[field]) {
@@ -1202,6 +1304,7 @@ export const generateTicketId = async () => {
 const mapExcelToEntity = (excelData: any[], entityType: keyof typeof entityFieldMappings) => {
 
     const mappings = entityFieldMappings[entityType];
+    console.log("mappings", mappings);
     return excelData.map((row) =>
         Object.keys(row).reduce((acc: Record<string, any>, key) => {
             const mappedKey = (mappings as Record<string, string>)[key];

@@ -18,6 +18,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { usePathname } from "next/navigation";
+import NotificationPopover from "@/components/ui/NotificationPopover";
 
 
 export default function Layout({children}: {children: React.ReactNode}) {
@@ -31,8 +32,8 @@ const pathContent = pathName.split('/')
         <AppSidebar />
         <SidebarInset>
           <div className="flex flex-col w-full h-screen">
-          <header className="flex h-12 shrink-0 items-center gap-2">
-            <div className="flex items-center gap-2 px-4">
+          <header className="flex h-12 shrink-0 items-center justify-between px-4">
+            <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <Separator orientation="vertical" className="mr-2 h-4" />
               <Breadcrumb>
@@ -48,6 +49,9 @@ const pathContent = pathName.split('/')
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
+            </div>
+            <div className="flex items-center gap-2">
+              <NotificationPopover />
             </div>
           </header>
           <div className="h-full w-full overflow-auto">

@@ -92,3 +92,6 @@ export const MASTER_DATA = {
         }
     }
 }
+
+// Notification Constants
+export const NOTIFICATION_MASTER = 'NOTIFICATION_MASTER';

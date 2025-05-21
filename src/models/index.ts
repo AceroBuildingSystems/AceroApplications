@@ -52,7 +52,13 @@ import SmlSubGroup from "./sml/SmlSubGroup.model";
 import SmlFile from "./sml/SMLFile.model"
 import VisaType from "./master/VisaType.model"
 import ProductType from "./master/ProductType.model";
-
+import ProviderType from "./itapplications/ProviderType.model";
+import DeductionType from "./itapplications/DeductionType.model"
+import PackageMaster from "./itapplications/PackageMaster.model"
+import AccountMaster from "./itapplications/AccountMaster.model"
+import AccountHistory from "./itapplications/AccountHistory.model"
+import OtherMaster from "./itapplications/OtherMaster.model"
+import UsageDetail from "./itapplications/UsageDetail.model"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -74,5 +80,15 @@ export {
     SmlSubGroup,
     SmlFile,
     VisaType,
-    ProductType
+    ProductType,
+
+    // itapplications
+
+    ProviderType,
+    DeductionType,
+    PackageMaster,
+    AccountMaster,
+    AccountHistory,
+    OtherMaster,
+    UsageDetail
 }

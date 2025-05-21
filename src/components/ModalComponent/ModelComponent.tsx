@@ -154,7 +154,7 @@ function DynamicDialog<T extends BaseFormData>({
       if (fieldName === 'quoteStatus' && quoteStatusData?.find((data:any) => data._id === formattedValue)?.name === 'L - Lost') {
         updatedFormData['lostDate'] = new Date().toISOString();
       }
-     console.log('updatedFormData', updatedFormData)
+
       return updatedFormData;
     });
   };

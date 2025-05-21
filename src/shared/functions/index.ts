@@ -237,7 +237,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     const inventory = {
                         vendor: firstRow.vendor,
                         warehouse: firstRow.warehouse,
-                        purchaseDate: moment(firstRow?.purchaseDate, "DD-MM-YYYY").toDate(),
+                        purchaseDate: parseExcelDate(firstRow?.purchaseDate),
                         poNumber: firstRow.poNumber,
                         prNumber: firstRow.prNumber,
                         invoiceNumber: firstRow.invoiceNumber,
@@ -266,8 +266,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     const assetEntries = rowsForInvoice.map((row: any) => ({
                         serialNumber: row.serialNumber,
                         product: row.product,
-                        warrantyStartDate: moment(row?.warrantyStartDate, "DD-MM-YYYY").toDate(),
-                        warrantyEndDate: moment(row?.warrantyEndDate, "DD-MM-YYYY").toDate(),
+                        warrantyStartDate: parseExcelDate(row?.warrantyStartDate),
+                        warrantyEndDate: parseExcelDate(row?.warrantyEndDate),
 
                         inventory: inventoryId,
                         warehouse: row.warehouse,

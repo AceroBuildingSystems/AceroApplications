@@ -419,8 +419,8 @@ const InventoryPage = () => {
 
             const response = await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
-                action: formData._id ? 'update' : 'create',
-                filter: formData._id ? { _id: formData._id } : undefined,
+                action: formData?._id ? 'update' : 'create',
+                filter: formData?._id ? { "_id": formData._id } : undefined,
                 data: payload
             }).unwrap();
 
@@ -477,7 +477,7 @@ const InventoryPage = () => {
             await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: 'update',
-                filter: { _id: assetId },
+                filter: { "_id": assetId },
                 data: { isActive: false }
             }).unwrap();
 
@@ -524,7 +524,7 @@ const InventoryPage = () => {
             const response = await createMaster({
                 db: MONGO_MODELS.ASSET_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
-                filter: formData._id ? { _id: formData._id } : undefined,
+                filter: formData._id ? { "_id": formData._id } : undefined,
                 data: payload
             }).unwrap();
 

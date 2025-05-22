@@ -72,7 +72,7 @@ const page = () => {
         { label: 'Account Number', name: "name", type: "text", required: true, placeholder: 'Account Number' },
         { label: 'Provider', name: "provider", type: "select", required: true, placeholder: 'Select Provider', format: 'ObjectId', data: providerData?.data },
         { label: 'Company', name: "company", type: "select", required: true, placeholder: 'Select Company', format: 'ObjectId', data: organisationData?.data },
-        { label: 'Employee', name: "employee", type: "select", required: true, placeholder: 'Select Employee', format: 'ObjectId', data: userData?.data },
+        { label: 'Employee', name: "employee", type: "select", required: false, placeholder: 'Select Employee', format: 'ObjectId', data: userData?.data },
         { label: 'Others', name: "others", type: "select", required: false, placeholder: 'Select Others', format: 'ObjectId', data: otherMasterData?.data },
         { label: 'Package', name: "package", type: "select", required: false, placeholder: 'Select Package', format: 'ObjectId', data: packageData?.data },
 
@@ -296,7 +296,7 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.displayName}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.displayName?.toProperCase()}</div>,
         },
         {
             accessorKey: "others",

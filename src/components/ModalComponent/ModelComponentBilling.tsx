@@ -112,7 +112,22 @@ function DynamicDialog<T extends BaseFormData>({
             }
             return acc;
         }, {});
-        setFormData(formattedData as Partial<T>);
+
+         const extraDeductionFields = {};
+        formattedData.deductions?.forEach(deduction => {
+            if (deduction?.deductionType?._id) {
+                const key = `deduction_${deduction?.deductionType?._id}`;
+                extraDeductionFields[key] = deduction?.amount;
+            }
+        });
+
+        // Merge original data with extra deduction fields
+        const updatedFormData = {
+            ...formattedData,
+            ...extraDeductionFields,
+        };
+console.log(updatedFormData);
+        setFormData(updatedFormData as Partial<T>);
         setErrors({});
         console.log(accountData?.data)
         console.log(initialData?._id)
@@ -160,6 +175,7 @@ function DynamicDialog<T extends BaseFormData>({
         }));
         accountId ? setDeductionField(deductionFields) : setDeductionField([]);
 
+       
     }
 
     const extractDeductions = (formData: Record<string, any>) => {
@@ -348,21 +364,21 @@ function DynamicDialog<T extends BaseFormData>({
                         <div>
                             {`${action} ${selectedMaster?.toProperCase()}`}
                         </div>
-                        <div className="flex justify-between gap-1 pr-2">
-
-                            <Button effect="expandIcon"
-                                icon={Save}
-                                iconPlacement="right"
-                                onClick={() => handleSubmit('update')} disabled={isSubmitting} className={` ${action === 'Update' && 'bg-blue-800 hover:bg-blue-700 duration-300'} w-28`}>
-                                {action === 'Add' ? isSubmitting ? "Saving..." : "Save" : isSubmitting ? "Updating..." : "Update"}
-                            </Button>
-                            {action === 'Update' && <Button effect="expandIcon"
+                        <div className="flex justify-between gap-1 pr-3">
+{action === 'Update' && <Button effect="expandIcon"
                                 icon={Trash2Icon}
                                 iconPlacement="right"
                                 className="w-28"
                                 onClick={() => handleSubmit('delete')} disabled={isSubmitting}>
                                 {isSubmitting ? "Deleting..." : "Delete"}
                             </Button>}
+                            <Button effect="expandIcon"
+                                icon={Save}
+                                iconPlacement="right"
+                                onClick={() => handleSubmit('update')} disabled={isSubmitting} className={` ${action === 'Update' && 'bg-blue-800 hover:bg-blue-700 duration-300'} w-28`}>
+                                {action === 'Add' ? isSubmitting ? "Saving..." : "Save" : isSubmitting ? "Updating..." : "Update"}
+                            </Button>
+                            
                         </div>
                     </div>
 
@@ -651,7 +667,7 @@ function DynamicDialog<T extends BaseFormData>({
                                                     <p className="p-1 flex flex-col"><span className=" font-semibold">Account No</span> {item?.name}</p>
                                                     <p className="p-1 flex flex-col"><span className="font-semibold">Package Amount</span> {Number(item?.package?.amount).toFixed(2)} Dhs</p>
                                                     <p className="p-1 flex flex-col"><span className="font-semibold">Provider</span> {item?.provider?.name}</p>
-                                                    <p className="p-1 flex flex-col"><span className="font-semibold">Department</span> {item?.employee?.department?.name || item?.others?.department?.name}</p>
+                                                    <p className="p-1 flex flex-col"><span className="font-semibold">Department</span> {item?.employee ? item?.employee?.department?.name : item?.others?.department?.name}</p>
                                                     <p className="p-1 flex flex-col"><span className="font-semibold">Employee</span> {item?.employee?.displayName?.toProperCase()}</p>
                                                     <p className="p-1 flex flex-col"><span className="font-semibold">Others</span> {item?.others?.name}</p>
                                                     <p className="p-1 flex flex-col"><span className="font-semibold">Company</span> {item?.company?.name}</p>

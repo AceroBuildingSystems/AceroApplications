@@ -209,7 +209,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
             };
 
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
-
+            console.log(finalData, 'final data')
             let enrichedData = finalData.map((item: any) => ({
                 ...item,
                 addedBy: user?._id,
@@ -224,12 +224,12 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 let skippedInventories = [];
                 // Group rows by invoiceNumber
                 for (const row of enrichedData) {
-                  
+
                     const invoice = row?.invoiceNumber?.toString()?.trim();
                     if (!grouped[invoice]) grouped[invoice] = [];
                     grouped[invoice].push(row);
                 }
-
+                console.log(grouped, 'grouped');
                 for (const invoiceNumber in grouped) {
                     const rowsForInvoice = grouped[invoiceNumber];
                     const firstRow = rowsForInvoice[0];
@@ -245,6 +245,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         updatedBy: user?._id,
                     };
 
+                    console.log(action, 'action');
+                    console.log(inventory);
                     const formattedData = {
                         action: action === 'Add' ? 'create' : 'update',
                         db: db,
@@ -252,7 +254,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         data: [inventory],
                     };
                     const inventoryRes = await createUser(formattedData);
-                  
+
                     if (inventoryRes?.data?.data?.inserted?.length) {
                         insertedInventories.push(...inventoryRes.data.data.inserted);
                     }
@@ -262,7 +264,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     }
 
                     const inventoryId = inventoryRes?.data?.data?.inserted?.[0]?._id;
-                  
+                    console.log(inventoryId, 'inventoryid');
                     const assetEntries = rowsForInvoice.map((row: any) => ({
                         serialNumber: row.serialNumber,
                         product: row.product,
@@ -271,11 +273,12 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
                         inventory: inventoryId,
                         warehouse: row.warehouse,
-                        specifications:JSON.parse(row?.specifications),
+                        specifications: JSON.parse(row?.specifications),
                         addedBy: user?._id,
                         updatedBy: user?._id,
                     }));
 
+                    console.log(assetEntries, 'assetEntries');
                     const formattedData1 = {
                         action: action === 'Add' ? 'create' : 'update',
                         db: "ASSET_MASTER",
@@ -283,27 +286,28 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         data: assetEntries,
                     };
                     const assetRes = inventoryId && await createUser(formattedData1);
-                    
+
 
                     if (assetRes?.data?.data?.inserted?.length) {
                         allInsertedAssets.push(...assetRes.data.data.inserted);
                         const insertedAssets = assetRes.data.data.inserted;
 
                         // If inserted contains full docs
-                        const assetIds = insertedAssets.map((asset:any) => asset._id);
+                        const assetIds = insertedAssets.map((asset: any) => asset._id);
+                        console.log(assetIds, 'assetids');
                         const inventory = {
                             assets: assetIds,
                         };
 
-                       
+
                         const formattedData = {
                             action: 'update',
                             db: db,
                             filter: { "_id": inventoryId },
                             data: inventory,
                         };
-                         const inventoryRes = await createUser(formattedData);
-
+                        const inventoryRes = await createUser(formattedData);
+                        console.log(inventoryRes, 'invetroryupdate')
                     }
 
                     if (assetRes?.data?.data?.skipped?.length) {
@@ -327,7 +331,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     exportToExcel(allSkippedAssets);
                 }
                 onFinish?.();
-              
+
                 return;
             }
 

@@ -7,7 +7,8 @@ const OtherMasterSchema: Schema<othermaster> = new Schema({
     department: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Department',
-            required: true
+            required: true,
+            autopopulate: true
         },
     isActive: { type: Boolean, default: true },
     addedBy: { type: String },
@@ -15,7 +16,7 @@ const OtherMasterSchema: Schema<othermaster> = new Schema({
    
 }, { timestamps: true })
 
-
+OtherMasterSchema.plugin(require('mongoose-autopopulate'));
 const OtherMaster: Model<othermaster> = mongoose.models.OtherMaster || mongoose.model<othermaster>("OtherMaster", OtherMasterSchema)
 
 export default OtherMaster

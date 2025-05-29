@@ -197,25 +197,26 @@ const page = () => {
 
         if (data?.length > 0) {
             formattedData = data?.map((data: any) => ({
-                "Account No": data?.name,
+                "Account Number": data?.name,
                 "Department": data?.employee?.department?.name || '',
                 "Employee": data?.employee?.name || '',
                 "Others": data?.others?.name || '',
                 "Company": data?.company?.name || '',
                 "Provider": data?.provider?.name || '',
-                "Package": data?.package?.amount || '',
+                "Package Name": data?.package?.name || '',
+                "Package Amount": data?.package?.amount || '',
 
             }));
         } else {
             // Create a single empty row with keys only (for header export)
             formattedData = [{
-                "Account No": '',
+                "Account Number": '',
                 "Department": '',
                 "Employee": '',
                 "Others": '',
                 "Company": '',
                 "Provider": '',
-                "Package": '',
+                "Package Name": '',
 
             }];
         }

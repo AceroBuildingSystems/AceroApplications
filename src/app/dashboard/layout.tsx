@@ -33,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="">
-          <div className="flex flex-col w-full h-screen ">
+          <div className="flex flex-col w-full h-screen  max-w-[85vw] 2xl:max-w-[100%]">
             <header className="flex h-14 shrink-0 items-center gap-2">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2 px-4 w-full">

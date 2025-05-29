@@ -89,7 +89,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                             {field?.data?.map((data: { _id: React.Key | null | undefined; name: string | undefined; displayName: any }) => (
                                 <CommandItem
                                     className="cursor-pointer"
-                                    key={data._id}
+                                    key={data?._id}
                                     value={data.name}
                                     onSelect={(value) => {
                                         setSelectedValue(value);

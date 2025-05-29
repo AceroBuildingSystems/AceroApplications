@@ -187,6 +187,25 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                     ))}
 
                     {/* Summary Row (placed outside the map) */}
+                    {summary && title === 'Usage Details' && <TableRow className="bg-gray-200 font-bold">
+                      <TableCell>Total</TableCell>
+                      <TableCell colSpan={4}></TableCell>
+                      <TableCell >{summaryTotal?.totalPackageAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell colSpan={1}></TableCell>
+                      <TableCell >{summaryTotal?.totalGrossBillAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalOneTimeCharges)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalVAT)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalNetBillAmount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>}
+                    {summary && title === 'Deduction Reports' && <TableRow className="bg-gray-200 font-bold">
+                      <TableCell>Total</TableCell>
+                      <TableCell colSpan={3}></TableCell>
+                      <TableCell >{summaryTotal?.totalPackageAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell colSpan={1}></TableCell>
+                      <TableCell >{summaryTotal?.totalGrossBillAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalWaivedAMount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalDeductionAmount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>}
                     {summary && title === 'Quotation Details' && <TableRow className="bg-gray-200 font-bold">
                       <TableCell>Total</TableCell>
                       <TableCell colSpan={3}></TableCell>
@@ -257,7 +276,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
               {table.getFilteredRowModel().rows.length} row(s) selected.
             </div>
             <div className="flex items-center space-x-2 gap-2">
-            <div className="text-sm">Rows Per Page</div>
+              <div className="text-sm">Rows Per Page</div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button

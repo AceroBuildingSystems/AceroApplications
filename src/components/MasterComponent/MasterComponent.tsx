@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import * as XLSX from "xlsx";
 import { Combobox } from '../ui/ComboBoxWrapper';
+import { DatePicker } from '../ui/date-picker';
+import { set } from 'lodash';
 
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
@@ -49,14 +51,116 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
+    const [summaryData, setSummaryData] = useState([]);
+    const [title, setTitle] = useState(config?.title || "");
 
     useEffect(() => {
-        setFilteredData(config?.dataTable?.data)
+        let summary: any = {};
+        console.log("Config:", config);
+        setFilteredData(config?.dataTable?.data);
+        console.log(config?.title, "Config Title");
+        switch (config?.title) {
+            case "Usage Details":
+                summary = config?.dataTable?.data?.reduce(
+                    (acc: any, item: any) => {
+                        const packageAmount = item?.account?.package?.amount || 0;
+                        const gross = item?.grossBillAmount || 0;
+                        const vat = item?.vat || 0;
+                        const oneTime = item?.oneTimeCharge || 0;
+                        const net = item?.netBillAmount || 0;
+
+                        acc.totalPackageAmount += packageAmount;
+                        acc.totalGrossBillAmount += gross;
+                        acc.totalVAT += vat;
+                        acc.totalOneTimeCharges += oneTime;
+                        acc.totalNetBillAmount += net;
+
+                        return acc;
+                    },
+                    {
+                        totalPackageAmount: 0,
+                        totalGrossBillAmount: 0,
+                        totalVAT: 0,
+                        totalOneTimeCharges: 0,
+                        totalNetBillAmount: 0
+                    }
+                );
+                break;
+            case "Deduction Reports":
+                summary = config?.dataTable?.data?.reduce(
+                    (acc: any, item: any) => {
+                        const packageAmount = item?.account?.package?.amount || 0;
+                        const gross = item?.grossBillAmount || 0;
+                        const waivedAmount = item?.waivedAmount || 0;
+                        const deductionAmount = item?.finalDeduction || 0;
+
+                        acc.totalPackageAmount += packageAmount;
+                        acc.totalGrossBillAmount += gross;
+                        acc.totalWaivedAMount += waivedAmount;
+                        acc.totalDeductionAmount += deductionAmount;
+
+
+                        return acc;
+                    },
+                    {
+                        totalPackageAmount: 0,
+                        totalGrossBillAmount: 0,
+                        totalWaivedAMount: 0,
+                        totalDeductionAmount: 0
+
+                    }
+                );
+                break;
+
+                case "Deduction Summary":
+                summary = config?.dataTable?.data?.reduce(
+                    (acc: any, item: any) => {
+                        const packageAmount = item?.account?.package?.amount || 0;
+                        const gross = item?.grossBillAmount || 0;
+                        const waivedAmount = item?.waivedAmount || 0;
+                        const deductionAmount = item?.finalDeduction || 0;
+
+                        acc.totalPackageAmount += packageAmount;
+                        acc.totalGrossBillAmount += gross;
+                        acc.totalWaivedAMount += waivedAmount;
+                        acc.totalDeductionAmount += deductionAmount;
+
+
+                        return acc;
+                    },
+                    {
+                        totalPackageAmount: 0,
+                        totalGrossBillAmount: 0,
+                        totalWaivedAMount: 0,
+                        totalDeductionAmount: 0
+
+                    }
+                );
+                break;
+
+            default:
+                return;
+
+
+        }
+
+
+        console.log(summary);
+        setSummaryData(summary);
+        setTitle(config?.title || "");
     }, [config, loadingState])
 
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
-        const newSearchValues = { ...searchValues, [field]: e.target.value };
+
+        let value: any = "";
+        if (e?.target?.value) {
+            value = e?.target?.value;
+        }
+        else {
+            value = e;
+        }
+        const newSearchValues = { ...searchValues, [field]: value };
 
         setSearchValues(newSearchValues);
         // filterData(newSearchValues, filterValues); // Trigger filterData after search change
@@ -72,22 +176,37 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     };
 
     useEffect(() => {
-
+        console.log(searchValues, filterValues)
         filterData(searchValues, filterValues); // Trigger filtering after search/filter change
     }, [searchValues, filterValues]);
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
 
-        const filtered = config?.dataTable?.data?.filter((item: { [x: string]: string; }) => {
+        const filtered = config?.dataTable?.data?.filter((item: { [x: string]: any; }) => {
             // Check if item matches search criteria
+
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
-                const searchQuery = searchValues[key]?.toLowerCase() || ''; // Get search query, default to empty string
+                if (key === 'billingPeriodStart') {
+                    const searchQuery: any = searchValues[key]
+                        ? new Date(searchValues[key]).toLocaleDateString("en-GB")
+                        : null;
 
-                const value = item[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
+                    const value = item[key]
+                        ? new Date(item[key]).toLocaleDateString("en-GB")
+                        : null;
+                    if (!searchQuery) return true;
+                    return value && value?.includes(searchQuery);
+                }
+                else {
+                    const searchQuery = searchValues[key]?.toLowerCase() || ''; // Get search query, default to empty string
 
-                return value.includes(searchQuery);
+                    const value = item[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
+
+                    return value.includes(searchQuery);
+                }
+
             });
 
             // Check if item matches filter criteria
@@ -99,13 +218,75 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
 
-
                 return typeof item[key] === 'string' && item[key].toLowerCase() === filterValue?.toLowerCase();
             });
 
             return matchesSearch && matchesFilter;
         });
         setFilteredData(filtered); // Update filtered data state
+        switch (config?.title) {
+            case "Usage Details":
+                summary = filtered?.reduce(
+                    (acc: any, item: any) => {
+                        const packageAmount = item?.account?.package?.amount || 0;
+                        const gross = item?.grossBillAmount || 0;
+                        const vat = item?.vat || 0;
+                        const oneTime = item?.oneTimeCharge || 0;
+                        const net = item?.netBillAmount || 0;
+
+                        acc.totalPackageAmount += packageAmount;
+                        acc.totalGrossBillAmount += gross;
+                        acc.totalVAT += vat;
+                        acc.totalOneTimeCharges += oneTime;
+                        acc.totalNetBillAmount += net;
+
+                        return acc;
+                    },
+                    {
+                        totalPackageAmount: 0,
+                        totalGrossBillAmount: 0,
+                        totalVAT: 0,
+                        totalOneTimeCharges: 0,
+                        totalNetBillAmount: 0
+                    }
+                );
+                break;
+            case "Deduction Reports":
+                summary = filtered?.reduce(
+                    (acc: any, item: any) => {
+                        const packageAmount = item?.account?.package?.amount || 0;
+                        const gross = item?.grossBillAmount || 0;
+                        const waivedAmount = item?.waivedAmount || 0;
+                        const deductionAmount = item?.finalDeduction || 0;
+
+                        acc.totalPackageAmount += packageAmount;
+                        acc.totalGrossBillAmount += gross;
+                        acc.totalWaivedAMount += waivedAmount;
+                        acc.totalDeductionAmount += deductionAmount;
+
+
+                        return acc;
+                    },
+                    {
+                        totalPackageAmount: 0,
+                        totalGrossBillAmount: 0,
+                        totalWaivedAMount: 0,
+                        totalDeductionAmount: 0
+
+                    }
+                );
+                break;
+
+            default:
+                return;
+
+
+        }
+
+
+        console.log(summary);
+        setSummaryData(summary);
+        setTitle(config?.title || "");
     };
 
 
@@ -146,41 +327,81 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className='flex flex-col gap-2 w-full h-full px-4 py-1'>
+                <div className='flex flex-col gap-2 w-full h-full px-4 py-1 pt-4'>
 
                     {/* Filter Section */}
                     <div className='flex flex-row items-center justify-between gap-2'>
                         <div className="flex items-center gap-1 w-full">
                             {/* Render search fields */}
-                            <div className='flex items-center '>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
-                                <div key={index} className='w-full'>
+                            <div className='flex items-center '>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => {
 
-                                    <Input
-                                        type={field.type}
-                                        placeholder={field.placeholder}
-                                        value={searchValues[field.label] || ''}
-                                        onChange={(e) => handleSearchChange(e, field.label)}
-                                    />
-                                </div>
-                            ))}
+                                if (field?.type === 'date') {
+                                    return (
+                                        <div key={index} className='w-full'>
+
+                                            <DatePicker
+                                                currentDate={undefined}
+                                                handleChange={(e) => handleSearchChange(e, field.label)}
+
+                                                placeholder={field.placeholder}
+                                            />
+
+                                        </div>
+                                    )
+                                }
+                                else {
+                                    return (
+
+                                        <div key={index} className='w-full'>
+
+                                            <Input
+                                                type={field.type}
+                                                placeholder={field.placeholder}
+                                                value={searchValues[field.label] || ''}
+                                                onChange={(e) => handleSearchChange(e, field.label)}
+                                            />
+                                        </div>
+                                    )
+                                }
+
+                            })}
                             </div>
 
 
                             <div className='flex items-center gap-1'>
                                 {config.filterFields?.map((field: FieldObject, index: number) => {
 
-                                    return (
-                                        <div key={index} className='w-full'>
-                                        <Combobox
-                                            key={field.key || index}
-                                            field={field}
-                                            formData={[]}
-                                            handleChange={handleFilterChange}
-                                            placeholder={field.placeholder || ""}
+                                    if (field?.type === 'date') {
+                                        return (
+                                            <div key={index} className='w-full'>
 
-                                        />
-                                        </div>
-                                    );
+                                                <DatePicker
+                                                    currentDate={undefined}
+                                                    handleChange={handleFilterChange}
+
+                                                    placeholder={field.placeholder}
+                                                />
+
+                                            </div>
+                                        )
+                                    }
+                                    else {
+                                        return (
+
+                                            <div key={index} className='w-full'>
+
+                                                <Combobox
+                                                    key={field.key || index}
+                                                    field={field}
+                                                    formData={[]}
+                                                    handleChange={handleFilterChange}
+                                                    placeholder={field.placeholder || ""}
+
+                                                />
+                                            </div>
+                                        );
+                                    }
+
                                 })}
                             </div>
                         </div>
@@ -210,13 +431,13 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                     {/* Dropdown (only if dropdownOptions are provided and active) */}
                                     {button.dropdownOptions && activeDropdown === index && (
                                         <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
-                                            {button.dropdownOptions.map((option:any, optionIndex) => (
+                                            {button.dropdownOptions.map((option: any, optionIndex) => (
                                                 <div
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
                                                     onClick={() => {
                                                         console.log(option)
-                                                        option.action(option.value, (filteredData !== undefined && filteredData?.length > 0) ? filteredData : filteredData?.length === 0 ? [] : config?.dataTable?.data); // Execute the action for this dropdown option
+                                                        option.action(option.value, (filteredData && filteredData?.length > 0) ? filteredData : (filteredData ? [] : config?.dataTable?.data)); // Execute the action for this dropdown option
                                                         setActiveDropdown(null); // Close the dropdown after selection
                                                     }}
                                                 >
@@ -233,7 +454,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                     <div className="h-[86%]">
                         {<DataTable data={filteredData && filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
-                            rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
+                            rowClassMap={rowClassMap} summary={summary} summaryTotal={summaryData} title={title} />}
                     </div>
                 </div>
 

@@ -36,11 +36,9 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   AccountMaster,
   AccountHistory,
   OtherMaster,
-  UsageDetail
+  UsageDetail,
+  ThresholdAmount
 } from '@/models';
-
-
-
 
 
 
@@ -108,7 +106,8 @@ function getMongooseAdapter(): MongooseAdapter {
     ACCOUNT_MASTER: AccountMaster,
     ACCOUNT_HISTORY: AccountHistory,
     OTHER_MASTER: OtherMaster,
-    USAGE_DETAIL: UsageDetail
+    USAGE_DETAIL: UsageDetail,
+    THRESHOLD_AMOUNT: ThresholdAmount
     });
   }
   return dbEngineInstance;

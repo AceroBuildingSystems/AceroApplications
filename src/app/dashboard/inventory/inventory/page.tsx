@@ -144,7 +144,7 @@ const InventoryPage = () => {
         filter: { isActive: true },
         populate: ['vendor', 'warehouse', 'assets', 'assets.product', 'assets.product.category']
     });
-
+console.log(inventoryResponse, 'inventorydata')
     const { data: vendorsResponse, isLoading: vendorLoading } = useGetMasterQuery({
         db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true }

@@ -113,7 +113,7 @@ function DynamicDialog<T extends BaseFormData>({
             return acc;
         }, {});
 
-         const extraDeductionFields = {};
+        const extraDeductionFields = {};
         formattedData.deductions?.forEach(deduction => {
             if (deduction?.deductionType?._id) {
                 const key = `deduction_${deduction?.deductionType?._id}`;
@@ -126,7 +126,7 @@ function DynamicDialog<T extends BaseFormData>({
             ...formattedData,
             ...extraDeductionFields,
         };
-console.log(updatedFormData);
+        console.log(updatedFormData);
         setFormData(updatedFormData as Partial<T>);
         setErrors({});
         console.log(accountData?.data)
@@ -174,8 +174,24 @@ console.log(updatedFormData);
             deductionId: item._id, // keep original ID for later
         }));
         accountId ? setDeductionField(deductionFields) : setDeductionField([]);
+        if (accountId) {
+            const now = new Date();
 
-       
+            // Set first day of current month at midnight UTC
+            const firstOfMonth = new Date(Date.UTC(
+                now.getUTCFullYear(),
+                now.getUTCMonth(),
+                1,
+                0, 0, 0
+            ));
+            formData['billingPeriodStart'] = firstOfMonth?.toISOString();
+            formData['grossBillAmount'] = parseFloat(accountData[0]?.package?.amount);
+            formData['vat'] = Number(Number(accountData[0]?.package?.amount) * 0.05).toFixed(2);
+            formData['netBillAmount'] = Number(parseFloat(accountData[0]?.package?.amount) + parseFloat(((Number(accountData[0]?.package?.amount)) * 0.05).toFixed(2))).toFixed(2);
+            formData['totalAmountDue'] = Number(parseFloat(accountData[0]?.package?.amount) + parseFloat(((Number(accountData[0]?.package?.amount)) * 0.05).toFixed(2))).toFixed(2);
+        }
+
+
     }
 
     const extractDeductions = (formData: Record<string, any>) => {
@@ -253,17 +269,27 @@ console.log(updatedFormData);
                 });
             }
 
-            if (['grossBillAmount', 'oneTimeCharge', 'outstandingAmount', 'waivedAmount'].includes(fieldName)) {
+            if (['grossBillAmount', 'oneTimeCharge', 'outstandingAmount', 'waivedAmount', 'vat'].includes(fieldName)) {
+                const vatAmount = fieldName === 'vat' ? formattedValue : prev.vat || 0;
                 const waivedAmount = fieldName === 'waivedAmount' ? formattedValue : prev.waivedAmount || 0;
                 const outstandingAmount = fieldName === 'outstandingAmount' ? formattedValue : prev.outstandingAmount || 0;
                 const gross = fieldName === 'grossBillAmount' ? formattedValue : prev.grossBillAmount || 0;
                 const oneTime = fieldName === 'oneTimeCharge' ? formattedValue : prev.oneTimeCharge || 0;
                 const vatValue = ((Number(gross) + Number(oneTime)) * 0.05).toFixed(2);
-                updatedFormData['vat'] = parseFloat(vatValue);
-                updatedFormData['netBillAmount'] = parseFloat(vatValue) + parseFloat(gross) + parseFloat(oneTime);
-                updatedFormData['totalAmountDue'] = parseFloat(vatValue) + parseFloat(gross) + parseFloat(oneTime) + parseFloat(outstandingAmount);
+               
+                updatedFormData['netBillAmount'] = parseFloat(vatAmount) + parseFloat(gross) + parseFloat(oneTime);
+                updatedFormData['totalAmountDue'] = parseFloat(vatAmount) + parseFloat(gross) + parseFloat(oneTime) + parseFloat(outstandingAmount);
                 updatedFormData['totalDeduction'] = parseFloat(gross) - packageDetail[0]?.package?.amount;
                 updatedFormData['finalDeduction'] = parseFloat(gross) - packageDetail[0]?.package?.amount - parseFloat(waivedAmount);
+            }
+
+            if (fieldName === "billingPeriodStart") {
+                const startDate = new Date(value);
+                const endOfMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
+                // Optional: keep same time (if needed)
+                endOfMonth.setHours(startDate.getHours(), startDate.getMinutes(), startDate.getSeconds(), startDate.getMilliseconds());
+
+                updatedFormData.billingPeriodEnd = endOfMonth.toISOString(); // "YYYY-MM-DDTHH:mm:ss.sssZ"
             }
 
 
@@ -275,7 +301,7 @@ console.log(updatedFormData);
             return updatedFormData;
 
         });
-        console.log(formData)
+       
     };
 
     // Validate form
@@ -365,7 +391,7 @@ console.log(updatedFormData);
                             {`${action} ${selectedMaster?.toProperCase()}`}
                         </div>
                         <div className="flex justify-between gap-1 pr-3">
-{action === 'Update' && <Button effect="expandIcon"
+                            {action === 'Update' && <Button effect="expandIcon"
                                 icon={Trash2Icon}
                                 iconPlacement="right"
                                 className="w-28"
@@ -378,7 +404,7 @@ console.log(updatedFormData);
                                 onClick={() => handleSubmit('update')} disabled={isSubmitting} className={` ${action === 'Update' && 'bg-blue-800 hover:bg-blue-700 duration-300'} w-28`}>
                                 {action === 'Add' ? isSubmitting ? "Saving..." : "Save" : isSubmitting ? "Updating..." : "Update"}
                             </Button>
-                            
+
                         </div>
                     </div>
 
@@ -461,11 +487,20 @@ console.log(updatedFormData);
                                                                     </div>
                                                                 );
                                                             case "date":
+                                                                const now = new Date();
+
+                                                                // Set first day of current month at midnight UTC
+                                                                const firstOfMonth = new Date(Date.UTC(
+                                                                    now.getUTCFullYear(),
+                                                                    now.getUTCMonth(),
+                                                                    1,
+                                                                    0, 0, 0
+                                                                ));
                                                                 return (
                                                                     <div>
 
                                                                         <DatePicker
-                                                                            currentDate={formData[field.name] || undefined}
+                                                                            currentDate={formData[field.name] || firstOfMonth?.toISOString() || undefined}
                                                                             handleChange={(selectedDate: { toISOString: () => any; }, setDate: any) => {
                                                                                 handleChange(
                                                                                     { target: { value: selectedDate?.toISOString() || "" } },

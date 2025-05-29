@@ -59,6 +59,7 @@ import AccountMaster from "./itapplications/AccountMaster.model"
 import AccountHistory from "./itapplications/AccountHistory.model"
 import OtherMaster from "./itapplications/OtherMaster.model"
 import UsageDetail from "./itapplications/UsageDetail.model"
+import ThresholdAmount from "./itapplications/ThresholdAmount.model"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -90,5 +91,6 @@ export {
     AccountMaster,
     AccountHistory,
     OtherMaster,
-    UsageDetail
+    UsageDetail,
+    ThresholdAmount
 }

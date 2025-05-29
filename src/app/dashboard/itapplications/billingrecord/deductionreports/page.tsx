@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
-import { Plus, Import, Download, Upload } from 'lucide-react';
+import { Plus, Import, Download, Upload, SendHorizontal } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useGetUsersQuery } from '@/services/endpoints/usersApi';
@@ -28,6 +28,10 @@ const page = () => {
         sort: { account: 'asc' },
     });
 
+    const { data: thresholdData = [], isLoading: thresholdLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.THRESHOLD_AMOUNT,
+        sort: { account: 'asc' },
+    });
     const { data: accountData = [], isLoading: accountLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.ACCOUNT_MASTER,
         filter: { isActive: true },
@@ -54,6 +58,7 @@ const page = () => {
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
+    const filteredData = usageData?.data?.filter((item: any) => item?.finalDeduction > thresholdData?.data?.[0]?.amount);
 
     const fieldsToAdd1 = [
         { fieldName: 'accountNumber', path: ['account', 'name'] },
@@ -62,7 +67,7 @@ const page = () => {
 
     ];
 
-    const transformedData1: any = transformData(usageData?.data, fieldsToAdd1);
+    const transformedData1: any = transformData(filteredData, fieldsToAdd1);
     const fieldToAdd2 = [
 
         { fieldName: 'employeeName', path: ['employee', '_id'] },
@@ -81,11 +86,12 @@ const page = () => {
 
     const transformedData: any = transformData(transformedData2, fieldToAdd);
 
+
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = usageLoading || accountLoading || employeeLoading || companyLoading || deductionLoading;
+    const loading = usageLoading || accountLoading || employeeLoading || companyLoading || deductionLoading || thresholdLoading;
 
     interface RowData {
         id: string;
@@ -109,14 +115,13 @@ const page = () => {
         ?.filter((comp: undefined) => comp !== undefined)  // Remove undefined entries
         ?.map((comp: { _id: any; name: any }) => ({ _id: comp?.name, name: comp?.name }));
 
-    
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
         { label: 'Account Number', name: "account", type: "select", required: true, placeholder: 'Select Account', format: 'ObjectId', data: accountData?.data },
         { label: 'Billing Start Date', name: "billingPeriodStart", type: "date", format: 'Date', placeholder: 'Select Bill Start Date' },
         { label: 'Gross Bill Amount', name: "grossBillAmount", type: "number", required: true, placeholder: 'Gross Bill Amount' },
         { label: 'One Time Charge', name: "oneTimeCharge", type: "number", required: false, placeholder: 'One Time Charge' },
-        { label: 'Vat', name: "vat", type: "number", required: true, readOnly: false, placeholder: 'Vat' },
+        { label: 'Vat', name: "vat", type: "number", required: true, readOnly: true, placeholder: 'Vat' },
         { label: 'Net Bill Amount', name: "netBillAmount", type: "number", required: false, readOnly: true, placeholder: 'Net Bill Amount' },
         { label: 'Outstanding Amount', name: "outstandingAmount", type: "number", required: false, placeholder: 'Net Bill Amount' },
         { label: 'Total Amount Due', name: "totalAmountDue", type: "number", required: false, readOnly: true, placeholder: 'Net Bill Amount' },
@@ -146,7 +151,8 @@ const page = () => {
 
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any; action: string }) => {
-
+        console.log(formData);
+        console.log(usageData?.data);
         function formatDate(dateString) {
             const d = new Date(dateString);
             return d.toLocaleDateString('en-GB'); // "dd/MM/yyyy"
@@ -156,7 +162,7 @@ const page = () => {
             formatDate(item?.billingPeriodStart) === formatDate(formData?.billingPeriodStart)
         );
 
-        if (exists && action === 'Add') {
+        if (exists) {
             toast.error("Data entry for this account for the selected month is already exists.");
             return;
         }
@@ -191,8 +197,7 @@ const page = () => {
 
     };
 
-console.log(usageData?.data, "usageData");
-   
+
     const handleImport = () => {
         bulkImport({
             roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.USAGE_DETAIL, masterName: "UsageDetail", onStart: () => setImporting(true),
@@ -204,6 +209,20 @@ console.log(usageData?.data, "usageData");
 
         // Convert JSON data to a worksheet
         const worksheet = XLSX.utils.json_to_sheet(data);
+        const targetColumns = ['D', 'E', 'F', 'G', 'H', 'I'];
+
+        // Apply format to each cell in columns D to I
+        Object.keys(worksheet).forEach(cell => {
+            if (!cell.startsWith('!')) {
+                const match = cell.match(/[A-Z]+/); // safely check match result
+                if (match) {
+                    const col = match[0];
+                    if (['D', 'E', 'F', 'G', 'H', 'I'].includes(col)) {
+                        worksheet[cell].z = '0.00';
+                    }
+                }
+            }
+        });
         // Create a new workbook
         const workbook = XLSX.utils.book_new();
         // Append the worksheet to the workbook
@@ -219,15 +238,12 @@ console.log(usageData?.data, "usageData");
             formattedData = data?.map((data: any) => ({
                 "Account Number": data?.account?.name,
                 "Employee": data?.employee?.displayName?.toProperCase(),
-                "Others": data?.account?.others?.name?.toProperCase(),
-                "Department": data?.employee ? data?.employee?.department?.name : data?.account?.others?.department?.name,
+                "Department": data?.employee?.department?.name,
                 "Company": data?.company?.name,
                 "Package": Math.round(parseFloat(data?.account?.package?.amount) * 100) / 100,
                 "Gross Bill AMount": Number(parseFloat(data?.grossBillAmount)?.toFixed(2)),
                 "One Time Charge": Number(parseFloat(data?.oneTimeCharge)?.toFixed(2)),
                 "Net Bill Amount": Number(parseFloat(data?.netBillAmount)?.toFixed(2)),
-                "Total Amount Due": Number(parseFloat(data?.totalAmountDue)?.toFixed(2)),
-                "Deduction Amount": Number(parseFloat(data?.totalDeduction)?.toFixed(2)),
                 "Waived Amount": Number(parseFloat(data?.waivedAmount)?.toFixed(2)),
                 "Total Deduction Amount": Number(parseFloat(data?.finalDeduction)?.toFixed(2)),
 
@@ -237,17 +253,15 @@ console.log(usageData?.data, "usageData");
             formattedData = [{
                 "Account Number": '',
                 "Employee": '',
-                "Others": '',
                 "Department": '',
                 "Company": '',
                 "Package": '',
                 "Gross Bill AMount": '',
                 "One Time Charge": '',
                 "Net Bill Amount": '',
-                "Total Amount Due": '',
-                "Deduction Amount": '',
                 "Waived Amount": '',
                 "Total Deduction Amount": '',
+
             }];
         }
 
@@ -255,6 +269,11 @@ console.log(usageData?.data, "usageData");
 
     };
 
+    const handleEmail = () => {
+        console.log('UserPage Delete button clicked');
+
+        // Your delete logic for user page
+    };
 
     const handleDelete = () => {
         console.log('UserPage Delete button clicked');
@@ -306,7 +325,7 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("account")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("account")?.name}</div>,
         },
 
         {
@@ -330,27 +349,7 @@ console.log(usageData?.data, "usageData");
             },
             cell: ({ row }: { row: any }) => <div >{row.getValue("account")?.employee?.displayName?.toProperCase()}</div>,
         },
-        {
-            accessorKey: "others",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
 
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Others</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("account")?.others?.name}</div>,
-        },
 
         {
             accessorKey: "company",
@@ -394,7 +393,7 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("account")?.package?.amount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
+            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("account")?.package?.amount)?.toFixed(2)}</div>,
         },
         {
             accessorKey: "billingPeriodStart",
@@ -436,10 +435,10 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("grossBillAmount"))?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
+            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("grossBillAmount"))?.toFixed(2)}</div>,
         },
         {
-            accessorKey: "oneTimeCharge",
+            accessorKey: "waivedAmount",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -448,7 +447,7 @@ console.log(usageData?.data, "usageData");
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>One Time Charges</span>
+                        <span>Waived Amount</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -457,10 +456,10 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("oneTimeCharge"))?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
+            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("waivedAmount"))?.toFixed(2)}</div>,
         },
         {
-            accessorKey: "vat",
+            accessorKey: "finalDeduction",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -469,7 +468,7 @@ console.log(usageData?.data, "usageData");
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Vat</span>
+                        <span>Deduction Amount</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -478,33 +477,13 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("vat"))?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
+            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("finalDeduction"))?.toFixed(2)}</div>,
         },
-        {
-            accessorKey: "netBillAmount",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
 
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Net Bill Amount</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("netBillAmount"))?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
-        },
     ];
 
     const usageConfig = {
-        title: 'Usage Details',
+        title: 'Deduction Reports',
         searchFields: [
             // { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by account' },
             { key: "billMonth", label: 'billingPeriodStart', type: "date" as const, data: accountNames, placeholder: 'Bill Start Date' },
@@ -515,6 +494,7 @@ console.log(usageData?.data, "usageData");
             { key: "department", label: 'departmentName', type: "select" as const, data: departmentNames, placeholder: 'Search by Department', name: 'departmentName' },
             { key: "company", label: 'companyName', type: "select" as const, data: companyNames, placeholder: 'Search by Company', name: 'companyName' },
 
+
         ],
         dataTable: {
             columns: usageColumns,
@@ -522,14 +502,14 @@ console.log(usageData?.data, "usageData");
         },
         buttons: [
 
-            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            { label: importing ? 'Sending...' : 'Email', action: handleEmail, icon: SendHorizontal, className: 'bg-blue-600 hover:bg-blue-700 duration-300', },
             {
                 label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
                     { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
                     { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
                 ]
             },
-            { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+            // { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
 

@@ -51,7 +51,7 @@ const page = () => {
   ).values()
 ].sort((a:any, b:any) => a.name.localeCompare(b.name));
 
-
+console.log(uniqueActiveLocations);
   const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
     db: "LOCATION_MASTER", filter: { isActive: true },
     sort: { name: 'asc' }

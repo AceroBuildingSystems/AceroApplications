@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Cookies from 'js-cookie';
 import { Label } from "./label";
 import { Input } from "./input";
 import { cn } from "@/lib/utils";
@@ -19,10 +20,14 @@ interface FormErrors {
 export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (state: boolean) => void }) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+  
+  const [formData, setFormData] = useState(() => {
+    return {
+      email: Cookies.get('login_email') || '',
+      password: ''  // Never store password
+    };
   });
+  
   const [touched, setTouched] = useState({
     email: false,
     password: false
@@ -60,7 +65,6 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
   }, [formData, touched]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    
     const { id, value } = e.target;
     const fieldName = id === 'email' ? 'email' : 'password';
 
@@ -68,6 +72,12 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
       ...prev,
       [fieldName]: value
     }));
+    
+    // Save email to cookie whenever it changes (never save password)
+    if (fieldName === 'email') {
+      // Set cookie to expire in 4 weeks
+      Cookies.set('login_email', value, { expires: 28 });
+    }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -115,19 +125,28 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
     }
 
     setCustomLoadingState(true);
+    
+    // Use form data to ensure proper password manager integration
+    const formElement = e.target as HTMLFormElement;
+    const emailInput = formElement.querySelector('input[name="email"]') as HTMLInputElement;
+    const passwordInput = formElement.querySelector('input[name="password"]') as HTMLInputElement;
+    
+    // This ensures browser password managers can properly detect the successful login
     const result = await signIn(provider, {
-      email: formData.email,
-      password: formData.password,
-      redirect: false, //prevent redirection to show the error
-      //redirectTo: "/dashboard",
+      email: emailInput.value,
+      password: passwordInput.value,
+      redirect: false,
+      callbackUrl: "/dashboard" // Add redirect URL for successful login
     });
 
     if (result?.error) {
       setCustomLoadingState(false);
       toast.error("Invalid credentials or contact the admin to sign up");
       return;
+    } else if (result?.url) {
+      // On success, redirect to ensure password manager captures the successful login
+      window.location.href = result.url;
     }
-
   }
 
   return (
@@ -148,13 +167,15 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
         Please contact the admin if you are signing up for the first time
       </p>
 
-      <form className="my-4 w-full px-2 md:px-4" onSubmit={(e)=>handleSubmit(e,"credentials")}>
+      <form className="my-4 w-full px-2 md:px-4" method="post" onSubmit={(e)=>handleSubmit(e,"credentials")} name="loginForm">
         <LabelInputContainer className="mb-3">
           <Label htmlFor="email">Email Address</Label>
           <Input 
             id="email" 
+            name="email"
             placeholder="projectmayhem@fc.com" 
             type="email"
+            autoComplete="username email"
             value={formData.email}
             onChange={handleInputChange}
             onBlur={handleBlur}
@@ -173,8 +194,10 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
           <div className="relative w-full">
             <Input 
               id="password" 
+              name="password"
               placeholder="********" 
               type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
               value={formData.password}
               onChange={handleInputChange}
               onBlur={handleBlur}
@@ -205,13 +228,22 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
           )}
         </LabelInputContainer>
 
+        {/* Add Forgot Password link here */}
+        <div className="flex justify-end mb-4">
+          <a 
+            href="/resetPassword" 
+            className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+          >
+            Forgot password?
+          </a>
+        </div>
+
         <Button
           className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-9 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
           type="submit"
-          //@ts-ignore
-          onClick={(e: React.FormEvent<HTMLFormElement>) => { handleSubmit(e, "credentials") }}
+          name="login"
         >
-          Sign up &rarr;
+          Log In &rarr;
           <BottomGradient />
         </Button>
 

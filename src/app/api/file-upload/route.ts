@@ -13,9 +13,6 @@ export async function POST(request: NextRequest) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
 
-    // Clone the request to access it multiple times
-    const clonedRequest = request.clone();
-    
     // Check if it's a multipart form
     const contentType = request.headers.get('content-type') || '';
     if (!contentType.includes('multipart/form-data')) {
@@ -25,8 +22,9 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Access form data
-    const formData = await request.formData();
+    // Access form data using experimental utility
+    // @ts-expect-error: experimental API
+    const formData = await (request as any).unstable_getFormData?.() ?? await request.formData();
     const file = formData.get('file') as File;
     const ticketId = formData.get('ticketId') as string;
     const userId = formData.get('userId') as string;
@@ -46,7 +44,24 @@ export async function POST(request: NextRequest) {
 
     // Get file extension from original filename
     const originalExt = path.extname(file.name);
-    const newFilename = `${uuidv4()}${originalExt}`;
+
+    // Generate timestamp string (format: YYYYMMDD-HHMMSS)
+    const now = new Date();
+    const timestamp = now.getFullYear().toString() +
+                     (now.getMonth() + 1).toString().padStart(2, '0') +
+                     now.getDate().toString().padStart(2, '0') + '-' +
+                     now.getHours().toString().padStart(2, '0') +
+                     now.getMinutes().toString().padStart(2, '0') +
+                     now.getSeconds().toString().padStart(2, '0');
+
+    // Generate random 3-digit number
+    const uniqueId = Math.floor(Math.random() * 900 + 100).toString();
+
+    // Get original filename without extension
+    const originalFilename = path.basename(file.name, originalExt);
+
+    // Create new filename with format: timestamp_uniqueId_originalFilename + extension
+    const newFilename = `${timestamp}_${uniqueId}_${originalFilename}${originalExt}`;
     const filePath = path.join(uploadDir, newFilename);
 
     // Convert file to buffer and save it

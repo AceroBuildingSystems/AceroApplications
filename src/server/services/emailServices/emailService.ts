@@ -45,10 +45,11 @@ export const sendEmail = async (
         if(!fileName){
            return {status:ERROR,message: "File Name must be sent!",data:{},statusCode:500}
         }
+        console.log({templateData,fileName});
         const filePath = `src/server/shared/emailTemplates/${fileName}.ejs`
         const templatePath = path.join(process.cwd(),filePath );
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const htmlContent =  ejs.render(template, { subject, templateData, senderName,approveUrl,rejectUrl, reason });
+        const htmlContent =  ejs.render(template, { subject, ...templateData, senderName,approveUrl,rejectUrl, reason });
 
         // Set up email options
         const mailOptions = {

@@ -19,6 +19,10 @@ export interface UserDocument {
     imageUrl: string;
     isActive: boolean;
     
+    // Password reset fields
+    resetToken?: string;
+    resetTokenExpiry?: Date;
+    
     // References to related user data categories
     personalDetails: mongoose.ObjectId | UserPersonalDetailsDocument;
     employmentDetails: mongoose.ObjectId | UserEmploymentDetailsDocument;

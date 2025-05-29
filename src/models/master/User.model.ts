@@ -13,6 +13,10 @@ const UserSchema: Schema<UserDocument> = new Schema({
     imageUrl: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
     
+    // Password reset fields
+    resetToken: { type: String },
+    resetTokenExpiry: { type: Date },
+    
     // References to related user data categories
     personalDetails: {
         type: mongoose.Schema.Types.ObjectId,

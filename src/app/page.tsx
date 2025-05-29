@@ -12,7 +12,7 @@ const LoginPage: FC = () => {
   return (
     <AuthComponent loadingState={customLoadingState}>
       <section className="h-screen w-screen flex gap-2 overflow-hidden">
-        <GridBackground >
+        <GridBackground>
           <div className="w-full h-full flex items-center justify-center p-4 md:p-8">
             <div className="w-full md:w-2/3 lg:w-1/3 h-full flex-col justify-center items-center flex md:mr-10">
               <SignupForm setCustomLoadingState={setCustomLoadingState} />

@@ -157,7 +157,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 SmlGroup: ['Group Name'],
                 SmlSubGroup: ['Sub Group Name', 'Group Name'],
                 PackageMaster: ['Package Name', 'Description', 'Amount'],
-                AccountMaster: ['Account Number', 'Company', 'Provider', 'Package Name'],
+                AccountMaster: ['Account Number', 'Company', 'Provider'],
 
                 // Add other masters as needed
             };

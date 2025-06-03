@@ -276,7 +276,7 @@ function DynamicDialog<T extends BaseFormData>({
                 const gross = fieldName === 'grossBillAmount' ? formattedValue : prev.grossBillAmount || 0;
                 const oneTime = fieldName === 'oneTimeCharge' ? formattedValue : prev.oneTimeCharge || 0;
                 const vatValue = ((Number(gross) + Number(oneTime)) * 0.05).toFixed(2);
-               
+
                 updatedFormData['netBillAmount'] = parseFloat(vatAmount) + parseFloat(gross) + parseFloat(oneTime);
                 updatedFormData['totalAmountDue'] = parseFloat(vatAmount) + parseFloat(gross) + parseFloat(oneTime) + parseFloat(outstandingAmount);
                 updatedFormData['totalDeduction'] = parseFloat(gross) - packageDetail[0]?.package?.amount;
@@ -301,7 +301,7 @@ function DynamicDialog<T extends BaseFormData>({
             return updatedFormData;
 
         });
-       
+
     };
 
     // Validate form
@@ -489,10 +489,10 @@ function DynamicDialog<T extends BaseFormData>({
                                                             case "date":
                                                                 const now = new Date();
 
-                                                                // Set first day of current month at midnight UTC
-                                                                const firstOfMonth = new Date(Date.UTC(
+                                                                // Set first day of previous month at midnight UTC
+                                                                const firstOfPrevMonth = new Date(Date.UTC(
                                                                     now.getUTCFullYear(),
-                                                                    now.getUTCMonth(),
+                                                                    now.getUTCMonth() - 1,
                                                                     1,
                                                                     0, 0, 0
                                                                 ));
@@ -500,7 +500,7 @@ function DynamicDialog<T extends BaseFormData>({
                                                                     <div>
 
                                                                         <DatePicker
-                                                                            currentDate={formData[field.name] || firstOfMonth?.toISOString() || undefined}
+                                                                            currentDate={formData[field.name] || firstOfPrevMonth?.toISOString() || undefined}
                                                                             handleChange={(selectedDate: { toISOString: () => any; }, setDate: any) => {
                                                                                 handleChange(
                                                                                     { target: { value: selectedDate?.toISOString() || "" } },

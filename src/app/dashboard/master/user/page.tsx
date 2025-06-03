@@ -179,7 +179,7 @@ const page = () => {
     { label: 'Work Permit', name: "workPermit", type: "text", placeholder: 'Work Permit' },
     { label: 'Labour Card Expiry Date', name: "labourCardExpiryDate", type: "date", format: 'Date', placeholder: 'Select Labour Card Expiry Date' },
     { label: 'Person Code', name: "personCode", type: "text", placeholder: 'Person Code' },
-    { label: 'Visa Type', name: "visatype", type: "select", data: visTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Visa Type' },
+    { label: 'Visa Type', name: "visatype", type: "select", data: visTypeData?.data, format: 'ObjectId', required: false, placeholder: 'Select Visa Type' },
     { label: 'Medical Insurance', name: "medicalInsurance", type: "text", placeholder: 'Medical Insurance' },
     { label: 'ILOE Expiry Date', name: "iloeExpiryDate", type: "date", format: 'Date', placeholder: 'Select ILOE Expiry Date' },
   ]

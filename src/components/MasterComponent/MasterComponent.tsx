@@ -112,7 +112,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 );
                 break;
 
-                case "Deduction Summary":
+            case "Deduction Summary":
                 summary = config?.dataTable?.data?.reduce(
                     (acc: any, item: any) => {
                         const packageAmount = item?.account?.package?.amount || 0;
@@ -154,13 +154,16 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
 
         let value: any = "";
-        if (e?.target?.value) {
-            value = e?.target?.value;
-        }
-        else {
-            value = e;
-        }
+
+        value = e?.target?.value;
+
         const newSearchValues = { ...searchValues, [field]: value };
+
+        if (value === '') {
+            delete newSearchValues[field]; // Remove field if empty
+        } else {
+            newSearchValues[field] = value;
+        }
 
         setSearchValues(newSearchValues);
         // filterData(newSearchValues, filterValues); // Trigger filterData after search change
@@ -190,7 +193,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                 if (key === 'billingPeriodStart') {
                     const searchQuery: any = searchValues[key]
-                        ? new Date(searchValues[key]).toLocaleDateString("en-GB")
+                        ? new Date(searchValues?.[key]).toLocaleDateString("en-GB")
                         : null;
 
                     const value = item[key]
@@ -200,9 +203,12 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                     return value && value?.includes(searchQuery);
                 }
                 else {
-                    const searchQuery = searchValues[key]?.toLowerCase() || ''; // Get search query, default to empty string
+                    console.log("Search Key:", key);
+                    console.log("Search Value:", searchValues);
+                    const rawSearch = searchValues?.[key];
+                    const searchQuery = typeof rawSearch === 'string' ? rawSearch.toLowerCase() : '';
 
-                    const value = item[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
+                    const value = item?.[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
 
                     return value.includes(searchQuery);
                 }

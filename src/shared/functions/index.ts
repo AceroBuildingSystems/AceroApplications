@@ -10,6 +10,8 @@ import moment from 'moment';
 import { Department, Organisation } from '@/models';
 import { exportToExcel } from '@/utils/copyToClipboard';
 import { skip } from 'node:test';
+import { Package } from 'lucide-react';
+import Provider from '@/components/provider/Provider';
 
 export const createMongooseObjectId = (id: any) => {
     if (mongoose.Types.ObjectId.isValid(id) && new mongoose.Types.ObjectId(id).toString() === id.toString()) {
@@ -154,6 +156,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 VisaType: ['Visa Type'],
                 SmlGroup: ['Group Name'],
                 SmlSubGroup: ['Sub Group Name', 'Group Name'],
+                PackageMaster: ['Package Name', 'Description', 'Amount'],
+                AccountMaster: ['Account Number', 'Company', 'Provider', 'Package Name'],
 
                 // Add other masters as needed
             };
@@ -245,8 +249,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         updatedBy: user?._id,
                     };
 
-                    console.log(action, 'action');
-                    console.log(inventory);
+                  
                     const formattedData = {
                         action: action === 'Add' ? 'create' : 'update',
                         db: db,
@@ -866,7 +869,15 @@ const fieldMappingConfig: { [key: string]: any } = {
     },
     SmlSubGroup: {
         group: { source: "categoryData", key: "name", value: "_id" },
-    }
+    },
+    AccountMaster: {
+        employee: { source: "userData", key: "displayName", value: "_id" },
+        others: { source: "teamData", key: "name", value: "_id" },
+        company: { source: "organisationData", key: "name", value: "_id" },
+        provider: { source: "vendorData", key: "name", value: "_id" },
+        package: { source: "productData", key: "name", value: "_id" },
+    },
+
 
     // Add more entity mappings if needed
 };
@@ -1151,6 +1162,19 @@ const entityFieldMappings = {
     SmlSubGroup: {
         "Sub Group Name": "name",
         "Group Name": "group"
+    },
+    PackageMaster: {
+        "Package Name": "name",
+        "Description": "description",
+        "Amount": "amount",
+    },
+    AccountMaster: {
+        "Account Number": "name",
+        "Provider": "provider",
+        "Employee": "employee",
+        "Others": "others",
+        "Company": "company",
+        "Package Name": "package",
     },
 
 

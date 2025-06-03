@@ -175,7 +175,7 @@ const page = () => {
 
     const handleImport = () => {
         bulkImport({
-            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ACCOUNT_MASTER, masterName: "AccountMaster", onStart: () => setImporting(true),
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: providerData, productData: packageData, warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: otherMasterData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: organisationData, action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ACCOUNT_MASTER, masterName: "AccountMaster", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
     };

@@ -38,7 +38,8 @@ import ProductCategory from "./master/ProductCategory.model"
 import Product from "./master/Product.model"
 import Warehouse from "./master/Warehouse.model"
 import Inventory from "./master/Inventory.model"
-import UnitMeasurement from "./master/UnitMeasurement"
+import { default as UnitMeasurement } from "./master/UnitMeasurement";
+import { default as ApprovalFlow } from "./approvals/ApprovalFlow.model";
 import Option from "./aqm/OptionsModel.model"
 import Ticket from "./ticket/Ticket.model";
 import TicketCategory from "./ticket/TicketCategory.model";
@@ -61,7 +62,8 @@ export {
     PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
     ProposalRevisions, Proposal, Quotation,Option,
     // Asset and Inventory exports
-    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement,
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory, UnitMeasurement,
+    ApprovalFlow,
     // Tickets
     Ticket,
     TicketCategory,

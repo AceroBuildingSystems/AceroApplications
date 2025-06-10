@@ -31,7 +31,8 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   TicketTask,
   TicketHistory,
   UserSkill, TeamRole, SmlGroup, SmlSubGroup, SmlFile, ProductType,VisaType,
-  Notification
+  Notification,
+  ApprovalFlow // Added ApprovalFlow import
 } from '@/models';
 
 
@@ -97,6 +98,7 @@ function getMongooseAdapter(): MongooseAdapter {
     VISA_TYPE_MASTER: VisaType,
     PRODUCT_TYPE_MASTER: ProductType,
     NOTIFICATION_MASTER: Notification,
+    [MONGO_MODELS.APPROVAL_FLOW_MASTER]: ApprovalFlow // Added ApprovalFlow to the adapter config
     });
   }
   return dbEngineInstance;

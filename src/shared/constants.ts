@@ -4,6 +4,8 @@ export const ERROR = "Error"
 export const SIGNUP = "signup"
 
 //ERROR MESSAGES
+export const UNAUTHORIZED_ACCESS = "Unauthorized access";
+export const RESOURCE_NOT_FOUND = "Resource not found";
 export const USER_NOT_FOUND = "User not found"
 export const INVALID_CREDENTIALS = "Invalid credentials"
 export const USER_ALREADY_EXISTS = "User already exists"
@@ -80,6 +82,7 @@ export const MONGO_MODELS = {
     // Employee Extra Details Models
     VISA_TYPE_MASTER:"VISA_TYPE_MASTER",
     PRODUCT_TYPE_MASTER:"PRODUCT_TYPE_MASTER",
+    APPROVAL_FLOW_MASTER: "APPROVAL_FLOW_MASTER",
 }
 
 

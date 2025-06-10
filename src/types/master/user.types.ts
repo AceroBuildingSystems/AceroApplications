@@ -6,7 +6,7 @@ import { UserIdentificationDocument } from "@/models/master/UserIdentification.m
 import { UserBenefitsDocument } from "@/models/master/UserBenefits.model";
 
 export interface UserDocument {
-    _id?: mongoose.ObjectId;
+    _id?: mongoose.Types.ObjectId;
     
     // Core user information
     employeeId: string;

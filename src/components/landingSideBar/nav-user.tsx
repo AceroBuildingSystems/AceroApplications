@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { signOut } from "next-auth/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Avatar,
   AvatarFallback,
@@ -44,6 +45,7 @@ export function NavUser({
 }) {
 
   const { isMobile } = useSidebar()
+  const router = useRouter();
   const [customLoadingState, setCustomLoadingState] = useState(false);
 
  
@@ -94,7 +96,7 @@ export function NavUser({
             <DropdownMenuSeparator />
        
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => router.push("/account")}>
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>

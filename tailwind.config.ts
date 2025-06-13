@@ -30,6 +30,7 @@ export default {
   			},
   			primary: {
   				DEFAULT: 'hsl(var(--primary))',
+                'dark': 'hsl(var(--primary-dark))',
   				foreground: 'hsl(var(--primary-foreground))'
   			},
   			secondary: {
@@ -79,9 +80,39 @@ export default {
 			  from: { backgroundPosition: '200% 0' },
 			  to: { backgroundPosition: '-200% 0' },
 			},
+			"float": {
+			  "0%, 100%": { transform: "translateY(0)" },
+			  "50%": { transform: "translateY(-10px)" }
+			},
+			"gradient-shift": {
+			  "0%": { backgroundPosition: "0% 50%" },
+			  "50%": { backgroundPosition: "100% 50%" },
+			  "100%": { backgroundPosition: "0% 50%" }
+			},
+			"orb-float": {
+			  "0%, 100%": { transform: "translate(0px, 0px)" },
+			  "25%": { transform: "translate(10px, -10px)" },
+			  "50%": { transform: "translate(0px, -20px)" },
+			  "75%": { transform: "translate(-10px, -10px)" }
+			},
+			"fade-in": {
+			  "0%": { opacity: "0", transform: "translateY(10px)" },
+			  "100%": { opacity: "1", transform: "translateY(0)" }
+			},
+			"logo-entrance": {
+			  "0%": { opacity: "0", transform: "scale(0.9)" },
+			  "100%": { opacity: "1", transform: "scale(1)" }
+			}
 		},
 		animation: {
 			"shine": "shine 8s ease-in-out infinite",
+			"float": "float 3s ease-in-out infinite",
+			"float-delayed": "float 3s ease-in-out 1.5s infinite",
+			"gradient-shift": "gradient-shift 15s ease infinite",
+			"orb-float": "orb-float 10s ease-in-out infinite",
+			"orb-float-delayed": "orb-float 12s ease-in-out 2s infinite",
+			"fade-in": "fade-in 0.5s ease-out forwards",
+			"logo-entrance": "logo-entrance 0.7s ease-out forwards"
 		},
 		boxShadow: {
 			input: `0px 2px 3px -1px rgba(0,0,0,0.1), 0px 1px 0px 0px rgba(25,28,33,0.02), 0px 0px 0px 1px rgba(25,28,33,0.08)`,

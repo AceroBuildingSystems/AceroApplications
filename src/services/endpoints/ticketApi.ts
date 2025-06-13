@@ -29,8 +29,23 @@ export const ticketApi = baseApi.injectEndpoints({
         id && params.append('id', id);
         return `ticket?${params.toString()}`;
       },
-      transformResponse: (response: TicketApiResponse) => response,
-      providesTags: ['Ticket'],
+      transformResponse: (response: TicketApiResponse) => {
+        console.log("Ticket API response:", response);
+        return response;
+      },
+      providesTags: (result) => {
+        // Improve tag caching with more specific tags
+        const tags = [{ type: 'Ticket' as const, id: 'LIST' }];
+        if (result?.data) {
+          // Add individual ticket tags for more precise invalidation
+          const tickets = Array.isArray(result.data) ? result.data : [result.data];
+          return [
+            ...tags,
+            ...tickets.map(ticket => ({ type: 'Ticket' as const, id: ticket._id }))
+          ];
+        }
+        return tags;
+      }
     }),
 
     createTicket: builder.mutation<TicketApiResponse, any>({
@@ -39,7 +54,18 @@ export const ticketApi = baseApi.injectEndpoints({
         method: 'POST',
         body: ticketData,
       }),
-      invalidatesTags: ['Ticket'],
+      // Add onQueryStarted to improve logging and debugging
+      async onQueryStarted(ticketData, { dispatch, queryFulfilled }) {
+        try {
+          console.log("Starting ticket creation with data:", ticketData);
+          const { data: response } = await queryFulfilled;
+          console.log("Ticket creation successful:", response);
+        } catch (error) {
+          console.error("Ticket creation failed:", error);
+        }
+      },
+      // Invalidate all ticket-related queries to ensure fresh data
+      invalidatesTags: [{ type: 'Ticket', id: 'LIST' }],
     }),
 
     updateTicket: builder.mutation<TicketApiResponse, any>({

@@ -199,17 +199,38 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         color: 'purple'
       }
     };
+    
+    // Debug: Log all ticket statuses to see what we're getting
+    console.log("Processing tickets:", tickets.map(ticket => ({ 
+      id: ticket._id,
+      title: ticket.title,
+      status: ticket.status
+    })));
 
     // Distribute tickets to columns based on status
     tickets.forEach(ticket => {
-      switch (ticket.status.toUpperCase()) {
+      // Normalize the status to uppercase and trim for consistent comparison
+      const status = ticket.status ? ticket.status.toUpperCase().trim() : "NEW";
+      
+      console.log(`Processing ticket: ${ticket._id}, Title: ${ticket.title}, Status: ${status}`);
+      
+      // Handle case sensitivity and extra whitespace in status values
+      switch (status) {
         case 'NEW':
           initialColumns.new.tickets.push(ticket);
           break;
         case 'ASSIGNED':
-          initialColumns.assigned?.tickets.push(ticket);
+          // If there's no assigned column, put it in new
+          if (!initialColumns.assigned) {
+            console.log(`No 'assigned' column found, adding to 'new' instead for ticket: ${ticket._id}`);
+            initialColumns.new.tickets.push(ticket);
+          } else {
+            initialColumns.assigned.tickets.push(ticket);
+          }
           break;
         case 'IN_PROGRESS':
+        case 'INPROGRESS': // Handle possible variations
+        case 'IN PROGRESS':
           initialColumns.inProgress.tickets.push(ticket);
           break;
         case 'RESOLVED':
@@ -219,8 +240,14 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
           initialColumns.closed.tickets.push(ticket);
           break;
         default:
+          console.log(`Unrecognized status: "${status}" for ticket: ${ticket._id}, defaulting to 'new'`);
           initialColumns.new.tickets.push(ticket);
       }
+    });
+    
+    // Log the final column distribution
+    Object.entries(initialColumns).forEach(([columnId, column]) => {
+      console.log(`Column ${columnId} has ${column.tickets.length} tickets`);
     });
 
     setColumns(initialColumns);

@@ -19,15 +19,31 @@ const CreateTicketPage = () => {
   
   const handleSubmit = async (data: any) => {
     try {
+      // Log the data being submitted for debugging
+      console.log("Submitting ticket with data:", JSON.stringify(data, null, 2));
+      
       const response = await createTicket({
         action: 'create',
         data
       }).unwrap();
       
-      toast.success('Ticket created successfully');
-      router.push(`/dashboard/ticket/${response.data._id}`);
-    } catch (error) {
-      toast.error('Failed to create ticket');
+      // Log the response for debugging
+      console.log("Ticket creation response:", JSON.stringify(response, null, 2));
+      
+      if (response.status === 'SUCCESS' || response.status === 'Success') {
+        toast.success('Ticket created successfully');
+        
+        // Add a small delay before redirecting to ensure data is properly refreshed
+        setTimeout(() => {
+          // Refresh the ticket listing data in Redux store before redirecting
+          router.push(`/dashboard/ticket/${response.data._id}`);
+        }, 500);
+      } else {
+        toast.error(`Failed to create ticket: ${response.message || 'Unknown error'}`);
+      }
+    } catch (error: any) {
+      console.error("Ticket creation error:", error);
+      toast.error(`Failed to create ticket: ${error.message || 'Unknown error'}`);
     }
   };
   

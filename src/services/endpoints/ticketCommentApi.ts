@@ -112,7 +112,7 @@ export const ticketCommentApi = baseApi.injectEndpoints({
       },
     }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 });
 
 export const {

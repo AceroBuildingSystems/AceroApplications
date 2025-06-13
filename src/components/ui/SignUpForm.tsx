@@ -20,6 +20,7 @@ interface FormErrors {
 export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (state: boolean) => void }) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   const [formData, setFormData] = useState(() => {
     return {
@@ -92,12 +93,16 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>, provider: string): Promise<void> => {
     e.preventDefault();
+    
+    // Set local loading state
+    setIsLoading(true);
 
     if (provider === "azure-ad") {
       setCustomLoadingState(true);
       const result = await signIn(provider, { callbackUrl: "/dashboard", redirect: false });
       if (result?.error) {
         setCustomLoadingState(false);
+        setIsLoading(false);
         toast.error("Please contact the admin to sign up");
       }
       return
@@ -120,6 +125,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
 
     // Check if there are any errors
     if (emailError || passwordError) {
+      setIsLoading(false);
       toast.error("Please fill in all the required fields");
       return;
     }
@@ -141,6 +147,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
 
     if (result?.error) {
       setCustomLoadingState(false);
+      setIsLoading(false);
       toast.error("Invalid credentials or contact the admin to sign up");
       return;
     } else if (result?.url) {
@@ -150,7 +157,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
   }
 
   return (
-    <div className="w-full max-w-md mx-auto rounded-2xl p-3 md:p-6 shadow-input bg-white dark:bg-black min-h-0">
+    <div className="w-full max-w-md mx-auto rounded-2xl p-3 md:p-6 shadow-input bg-white dark:bg-black min-h-0 backdrop-blur-sm bg-opacity-90 dark:bg-opacity-80 border border-neutral-200 dark:border-neutral-800 animate-fade-in">
       <div className="flex flex-col items-center justify-center">
         <div className="w-full sm:w-3/4 md:w-2/3 flex-col justify-center items-center flex">
           <Image
@@ -158,7 +165,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
             alt="Acero Logo"
             width={500}
             height={500}
-            className="w-[60%] md:w-[50%] h-auto object-contain"
+            className="w-[60%] md:w-[50%] h-auto object-contain animate-logo-entrance"
             priority
           />
         </div>
@@ -169,7 +176,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
 
       <form className="my-4 w-full px-2 md:px-4" method="post" onSubmit={(e)=>handleSubmit(e,"credentials")} name="loginForm">
         <LabelInputContainer className="mb-3">
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email" className="text-neutral-700 dark:text-neutral-200 font-medium">Email Address</Label>
           <Input 
             id="email" 
             name="email"
@@ -180,8 +187,8 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
             onChange={handleInputChange}
             onBlur={handleBlur}
             className={cn(
-              errors.email && touched.email ? 'border-red-500 focus:border-red-500' : '',
-              'transition-colors duration-200 w-full'
+              errors.email && touched.email ? 'border-red-500 focus:border-red-500' : 'focus:border-primary/50 hover:border-neutral-300 dark:hover:border-neutral-500',
+              'transition-all duration-200 w-full bg-neutral-50 dark:bg-neutral-900/50 rounded-md'
             )}
           />
           {errors.email && touched.email && (
@@ -190,7 +197,7 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
         </LabelInputContainer>
 
         <LabelInputContainer className="mb-3">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-neutral-700 dark:text-neutral-200 font-medium">Password</Label>
           <div className="relative w-full">
             <Input 
               id="password" 
@@ -202,14 +209,14 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
               onChange={handleInputChange}
               onBlur={handleBlur}
               className={cn(
-                errors.password && touched.password ? 'border-red-500 focus:border-red-500' : '',
-                'transition-colors duration-200 w-full'
+                errors.password && touched.password ? 'border-red-500 focus:border-red-500' : 'focus:border-primary/50 hover:border-neutral-300 dark:hover:border-neutral-500',
+                'transition-all duration-200 w-full bg-neutral-50 dark:bg-neutral-900/50 rounded-md pr-10'
               )}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 dark:text-neutral-300 hover:text-neutral-700 dark:hover:text-neutral-100 transition-colors"
             >
               {showPassword ? (
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -239,29 +246,57 @@ export function SignupForm({ setCustomLoadingState }: { setCustomLoadingState: (
         </div>
 
         <Button
-          className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-9 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
+          className="bg-gradient-to-br relative group/btn from-primary/90 dark:from-primary/80 dark:to-primary-dark/80 to-primary-dark/90 block w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_rgba(255,255,255,0.2)_inset,0px_-1px_0px_0px_rgba(255,255,255,0.1)_inset,0px_0px_10px_rgba(0,0,0,0.1)] dark:shadow-[0px_1px_0px_0px_rgba(255,255,255,0.1)_inset,0px_-1px_0px_0px_rgba(255,255,255,0.05)_inset,0px_0px_10px_rgba(0,0,0,0.2)] transition-all duration-300 hover:shadow-[0px_0px_0px_1px_rgba(255,255,255,0.2)_inset,0px_0px_15px_rgba(120,120,250,0.3)]"
           type="submit"
           name="login"
+          disabled={isLoading}
         >
-          Log In &rarr;
+          {isLoading ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Signing in...
+            </span>
+          ) : (
+            <>Log In &rarr;</>
+          )}
           <BottomGradient />
         </Button>
 
-        <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-4 h-[1px] w-full" />
+        <div className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-6 h-[1px] w-full" />
 
         <div className="flex flex-col space-y-4">
           <button
-            className="relative group/btn flex space-x-2 justify-center items-center px-4 w-full text-black rounded-md h-9 font-medium shadow-input bg-gray-50 dark:bg-zinc-900 dark:shadow-[0px_0px_1px_1px_var(--neutral-800)]"
+            className="relative group/btn flex space-x-2 justify-center items-center px-4 w-full rounded-md h-10 font-medium transition-all duration-300
+            bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/40
+            hover:shadow-md hover:from-blue-100 hover:to-blue-50 dark:hover:from-blue-900/50 dark:hover:to-blue-800/50
+            border border-blue-200/50 dark:border-blue-800/50"
             onClick={() => {
+              setIsLoading(true);
               setCustomLoadingState(true);
               signIn("azure-ad", { callbackUrl: "/dashboard" });
             }}
             type="button"
+            disabled={isLoading}
           >
-            <IconBrandWindowsFilled className="h-4 w-4 text-neutral-800 dark:text-neutral-300 flex justify-center items-center" />
-            <span className="text-neutral-700 dark:text-neutral-300 text-sm">
-              SSO with outlook
-            </span>
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Connecting...
+              </span>
+            ) : (
+              <>
+                <IconBrandWindowsFilled className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                <span className="text-blue-700 dark:text-blue-300 text-sm">
+                  SSO with Microsoft
+                </span>
+              </>
+            )}
             <BottomGradient />
           </button>
         </div>

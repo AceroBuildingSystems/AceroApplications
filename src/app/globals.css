@@ -16,10 +16,11 @@ body {
     --card-foreground: 0 5% 15%;
     --popover: 0 8% 95%;
     --popover-foreground: 0 95% 10%;
-    --primary: 0 93.4% 35.9%;
+    --primary: 220 70% 50%;
+    --primary-dark: 220 70% 40%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 10% 71%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary: 260 60% 60%;
+    --secondary-foreground: 0 0% 100%;
     --muted: -38 10% 85%;
     --muted-foreground: 0 5% 40%;
     --accent: -38 10% 80%;
@@ -46,7 +47,8 @@ body {
     --card-foreground: 0 5% 90%;
     --popover: 0 10% 5%;
     --popover-foreground: 0 5% 90%;
-    --primary: 0 93.4% 35.9%;
+    --primary: 220 70% 50%;
+    --primary-dark: 220 70% 40%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 10% 20%;
     --secondary-foreground: 0 0% 100%;

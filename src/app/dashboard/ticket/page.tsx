@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGetTicketsQuery } from '@/services/endpoints/ticketApi';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import DashboardLoader from '@/components/ui/DashboardLoader';
@@ -74,6 +74,9 @@ const TicketDashboardPage = () => {
     sort: { createdAt: 'asc'}
   });
  
+  // Debug console log for tickets data
+  console.log("Tickets data from API:", ticketsData);
+  
   // Fetch departments
   const { data: departmentData = {data:[]}, isLoading: departmentLoading } = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
@@ -86,10 +89,32 @@ const TicketDashboardPage = () => {
   // Handle manual refresh
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
-    toast.success("Tickets refreshed");
+    try {
+      // Force refetch of ticket data with skipCache option
+      await refetch();
+      toast.success("Tickets refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing tickets:", error);
+      toast.error("Failed to refresh tickets");
+    } finally {
+      setIsRefreshing(false);
+    }
   };
+  
+  // Automatic refresh on mount and every 5 minutes
+  useEffect(() => {
+    // Initial data fetch
+    refetch();
+    
+    // Set up interval for periodic refreshes (every 5 minutes)
+    const intervalId = setInterval(() => {
+      console.log("Auto-refreshing ticket data...");
+      refetch();
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    // Clean up on unmount
+    return () => clearInterval(intervalId);
+  }, [refetch]);
   
   // Filter tickets
   const filteredTickets = ticketsData?.data?.filter((ticket:any) => {
@@ -586,7 +611,7 @@ const TicketDashboardPage = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          className="focus-ring rounded-lg border-border/30 bg-white/70 dark:bg-card/70"
+                          className="focus-ring rounded-lg border-blue-300 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50"
                           onClick={resetFilters}
                         >
                           Reset Filters
@@ -597,13 +622,7 @@ const TicketDashboardPage = () => {
                         whileTap={microButtonAnimation.tap}
                         transition={microButtonAnimation.transition}
                       >
-                        <Button 
-                          size="sm"
-                          className="shadow-sm focus-ring rounded-lg"
-                          onClick={() => setShowFilters(false)}
-                        >
-                          Apply
-                        </Button>
+
                       </motion.div>
                     </div>
                   </CardContent>
@@ -710,7 +729,7 @@ const TicketDashboardPage = () => {
                       >
                         <Button 
                           variant="outline"
-                          className="focus-ring rounded-lg border-border/30 bg-white/70 dark:bg-card/70"
+                          className="focus-ring rounded-lg border-blue-300 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-800 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50"
                           onClick={resetFilters}
                         >
                           Reset Filters

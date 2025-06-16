@@ -160,6 +160,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 AccountMaster: ['Account Number', 'Company', 'Provider'],
                 PrinterUsage: ['Account Id', 'Printer', 'Date'],
                 JobAccount: ['Account Id', 'Employee'],
+                PrinterMaster: ['Printer Name'],
 
                 // Add other masters as needed
             };
@@ -1205,6 +1206,11 @@ const entityFieldMappings = {
     JobAccount: {
         "Account Id": "name",
         "Employee": "employee",
+       
+    },
+    PrinterMaster: {
+        "Printer Name": "name",
+        "Printer Location": "printerLocation",
        
     },
 

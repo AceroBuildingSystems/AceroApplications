@@ -37,7 +37,10 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   AccountHistory,
   OtherMaster,
   UsageDetail,
-  ThresholdAmount
+  ThresholdAmount,
+  JobAccount,
+  PrinterMaster,
+  PrinterUsage
 } from '@/models';
 
 
@@ -107,7 +110,10 @@ function getMongooseAdapter(): MongooseAdapter {
     ACCOUNT_HISTORY: AccountHistory,
     OTHER_MASTER: OtherMaster,
     USAGE_DETAIL: UsageDetail,
-    THRESHOLD_AMOUNT: ThresholdAmount
+    THRESHOLD_AMOUNT: ThresholdAmount,
+    JOB_ACCOUNT: JobAccount,
+    PRINTER_MASTER: PrinterMaster,
+    PRINTER_USAGE: PrinterUsage 
     });
   }
   return dbEngineInstance;

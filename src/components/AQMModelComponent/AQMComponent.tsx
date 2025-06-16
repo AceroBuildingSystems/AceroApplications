@@ -332,7 +332,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           [fieldName]: formattedValue,
         };
 
-      
+
         if (fieldName === "company") {
           updatedFormData['customerType'] = data.filter((item) => item?._id === e)[0]?.customerType?._id;
 
@@ -537,7 +537,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
   }
 
   // Handle form submission
-  const handleSubmitQuotation = async (status: string, quoteExists:boolean) => {
+  const handleSubmitQuotation = async (status: string, quoteExists: boolean) => {
     try {
       if (!(formData?.country && formData?.salesEngineer && formData?.salesSupportEngineer?.length > 0 && formData?.rcvdDateFromCustomer && formData?.sellingTeam && formData?.responsibleTeam)) {
 
@@ -545,7 +545,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
         return;
       }
 
-   
+
       let emailData = {}
       const master = 'QUOTATION_MASTER';
       if (action === 'Add') {
@@ -606,7 +606,7 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           };
 
           emailData = { recipient: sellingTeamData?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
-         
+
           !quoteExists && await sendEmail(emailData);
         };
 
@@ -849,9 +849,9 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           };
 
           emailData = { recipient: sellingTeamData?.teamHead[0]?.email, subject: 'Quote No Request', templateData: quoteData, fileName: "aqmTemplates/quoteNoRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=${master}&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=${master}` };
-           
+
           !quoteExists && await sendEmail(emailData);
-         
+
         }
         if (status === 'submitted') {
           const quoteData = {
@@ -1528,10 +1528,10 @@ const QuotationDialog: React.FC<QuotationDialogProps> = ({
           </div>
 
           <DialogFooter>
-            <Button className="w-16" onClick={() => {handleSubmitQuotation('quoterequested', false) }}>
+            <Button className="w-16" onClick={() => { handleSubmitQuotation('quoterequested', false) }}>
               No
             </Button>
-            {<Button className="w-16 bg-green-700 hover:bg-green-600" onClick={() => {handleSubmitQuotation('quoterequested', true) }}>Yes</Button>}
+            {<Button className="w-16 bg-green-700 hover:bg-green-600" onClick={() => { handleSubmitQuotation('quoterequested', true) }}>Yes</Button>}
 
           </DialogFooter>
         </DialogContent>

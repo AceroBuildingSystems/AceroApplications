@@ -18,46 +18,21 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import * as XLSX from "xlsx";
 
 const page = () => {
+
     const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: accountData = [], isLoading: accountLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ACCOUNT_MASTER,
+    const { data: printerData = [], isLoading: printerLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.PRINTER_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: packageData = [], isLoading: packageLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PACKAGE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: providerData = [], isLoading: providerLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PROVIDER_TYPE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ORGANISATION_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
-        db: 'USER_MASTER',
-        filter: { isActive: true },
-        sort: { displayName: 'asc' },
-    });
-
-    const { data: otherMasterData = [], isLoading: otherMasterLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.OTHER_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = packageLoading || providerLoading || userLoading || organisationLoading || otherMasterLoading || accountLoading;
+    const loading = printerLoading;
 
     interface RowData {
         id: string;
@@ -69,17 +44,11 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Account Number', name: "name", type: "text", required: true, placeholder: 'Account Number' },
-        { label: 'Provider', name: "provider", type: "select", required: true, placeholder: 'Select Provider', format: 'ObjectId', data: providerData?.data },
-        { label: 'Company', name: "company", type: "select", required: true, placeholder: 'Select Company', format: 'ObjectId', data: organisationData?.data },
-        { label: 'Employee', name: "employee", type: "select", required: false, placeholder: 'Select Employee', format: 'ObjectId', data: userData?.data },
-        { label: 'Others', name: "others", type: "select", required: false, placeholder: 'Select Others', format: 'ObjectId', data: otherMasterData?.data },
-        { label: 'Package', name: "package", type: "select", required: false, placeholder: 'Select Package', format: 'ObjectId', data: packageData?.data },
-
+        { label: 'Printer Name', name: "name", type: "text", required: true, placeholder: 'Printer Name' },
+        { label: 'Printer Location', name: "printerLocation", type: "text", required: true, placeholder: 'Printer Location' },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
-
 
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
@@ -103,55 +72,13 @@ const page = () => {
     const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.ACCOUNT_MASTER,
+            db: MONGO_MODELS.PRINTER_MASTER,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
         };
 
         const response: any = await createMaster(formattedData);
-
-        if (response?.error?.data?.message?.errorResponse?.errmsg) {
-            toast?.error(response?.error?.data?.message?.errorResponse?.errmsg);
-        }
-        else {
-            formData.account = response?.data?.data?._id;
-            formData.startDate = new Date();
-
-            if (action === 'Update') {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'update',
-                    bulkUpdate: true,
-                    filter: { "account": formData._id, 'endDate': null },
-                    data: { 'endDate': new Date() },
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-                delete formData._id;
-                const formattedData2 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-
-                }
-                const response2: any = await createMaster(formattedData2);
-            }
-            else {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-            }
-
-        }
 
         return response;
 
@@ -161,21 +88,21 @@ const page = () => {
     const editUser = (rowData: RowData) => {
         setAction('Update');
         setInitialData(rowData);
-        openDialog("account master");
+        openDialog("printer master");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("account master");
+        openDialog("printer master");
 
     };
 
 
     const handleImport = () => {
         bulkImport({
-            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: providerData, productData: packageData, warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: otherMasterData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: organisationData, action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ACCOUNT_MASTER, masterName: "AccountMaster", onStart: () => setImporting(true),
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.PRINTER_MASTER, masterName: "PrinterMaster", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
     };
@@ -197,26 +124,17 @@ const page = () => {
 
         if (data?.length > 0) {
             formattedData = data?.map((data: any) => ({
-                "Account Number": data?.name,
-                "Department": data?.employee?.department?.name || '',
-                "Employee": data?.employee?.displayName || '',
-                "Others": data?.others?.name || '',
-                "Company": data?.company?.name || '',
-                "Provider": data?.provider?.name || '',
-                "Package Name": data?.package?.name || '',
-                "Package Amount": data?.package?.amount || '',
+                "Printer Name": data?.name,
+                "Printer Location": data?.printerLocation || '',
+               
 
             }));
         } else {
             // Create a single empty row with keys only (for header export)
             formattedData = [{
-                "Account Number": '',
-                "Department": '',
-                "Employee": '',
-                "Others": '',
-                "Company": '',
-                "Provider": '',
-                "Package Name": '',
+               "Printer Name": '',
+                "Printer Location": '',
+               
 
             }];
         }
@@ -267,7 +185,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Account No</span>
+                        <span>Printer Name</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -279,7 +197,7 @@ const page = () => {
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
         },
         {
-            accessorKey: "employee",
+            accessorKey: "printerLocation",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -288,7 +206,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Employee</span>
+                        <span>Printer Location</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -297,92 +215,9 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.displayName?.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("printerLocation")}</div>,
         },
-        {
-            accessorKey: "others",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Others</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("others")?.name}</div>,
-        },
-        {
-            accessorKey: "company",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Company</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("company")?.name}</div>,
-        },
-        {
-            accessorKey: "package",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Package</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("package")?.name}</div>,
-        },
-        {
-            accessorKey: "provider",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Provider</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("provider")?.name}</div>,
-        },
+        
         {
             accessorKey: "isActive",
             header: ({ column }: { column: any }) => {
@@ -409,14 +244,14 @@ const page = () => {
 
     const accountConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by account' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by printer name' },
 
         ],
         filterFields: [
         ],
         dataTable: {
             columns: accountColumns,
-            data: Array.isArray(accountData) ? accountData : accountData?.data,
+            data: Array.isArray(printerData) ? printerData : printerData?.data,
         },
         buttons: [
 

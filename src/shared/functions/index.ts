@@ -158,6 +158,8 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 SmlSubGroup: ['Sub Group Name', 'Group Name'],
                 PackageMaster: ['Package Name', 'Description', 'Amount'],
                 AccountMaster: ['Account Number', 'Company', 'Provider'],
+                PrinterUsage: ['Account Id', 'Printer', 'Date'],
+                JobAccount: ['Account Id', 'Employee'],
 
                 // Add other masters as needed
             };
@@ -219,7 +221,6 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 addedBy: user?._id,
                 updatedBy: user?._id,
             }));
-
             if (masterName === 'Asset') {
                 const grouped: any = {};
                 let allInsertedAssets = [];
@@ -249,7 +250,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         updatedBy: user?._id,
                     };
 
-                  
+
                     const formattedData = {
                         action: action === 'Add' ? 'create' : 'update',
                         db: db,
@@ -343,6 +344,13 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 enrichedData = finalData.map((item: any) => ({
                     ...item,
                     joiningDate: parseExcelDate(item?.joiningDate),
+                }));
+            };
+
+            if (masterName === 'PrinterUsage') {
+                enrichedData = finalData.map((item: any) => ({
+                    ...item,
+                    date: parseExcelDate(item?.date),
                 }));
             };
 
@@ -877,6 +885,15 @@ const fieldMappingConfig: { [key: string]: any } = {
         provider: { source: "vendorData", key: "name", value: "_id" },
         package: { source: "productData", key: "name", value: "_id" },
     },
+    PrinterUsage: {
+        jobAccount: { source: "userData", key: "name", value: "_id" },
+        printer: { source: "teamData", key: "name", value: "_id" },
+
+    },
+    JobAccount: {
+        employee: { source: "userData", key: "displayName", value: "_id" },
+
+    },
 
 
     // Add more entity mappings if needed
@@ -1175,6 +1192,20 @@ const entityFieldMappings = {
         "Others": "others",
         "Company": "company",
         "Package Name": "package",
+    },
+    PrinterUsage: {
+        "Account Id": "jobAccount",
+        "Printer": "printer",
+        "Date": "date",
+        "Copy Color": "copyColor",
+        "Copy BW": "copyBw",
+        "Print Color": "printColor",
+        "Print BW": "printBw",
+    },
+    JobAccount: {
+        "Account Id": "name",
+        "Employee": "employee",
+       
     },
 
 

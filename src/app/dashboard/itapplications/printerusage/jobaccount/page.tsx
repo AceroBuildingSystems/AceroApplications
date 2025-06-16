@@ -20,44 +20,25 @@ import * as XLSX from "xlsx";
 const page = () => {
     const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: accountData = [], isLoading: accountLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ACCOUNT_MASTER,
+    const { data: jobaccountData = [], isLoading: jobaccountLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.JOB_ACCOUNT,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: packageData = [], isLoading: packageLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PACKAGE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: providerData = [], isLoading: providerLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PROVIDER_TYPE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ORGANISATION_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
+
     const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
         db: 'USER_MASTER',
         filter: { isActive: true },
         sort: { displayName: 'asc' },
     });
 
-    const { data: otherMasterData = [], isLoading: otherMasterLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.OTHER_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = packageLoading || providerLoading || userLoading || organisationLoading || otherMasterLoading || accountLoading;
+    const loading = userLoading || jobaccountLoading;
 
     interface RowData {
         id: string;
@@ -69,17 +50,11 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Account Number', name: "name", type: "text", required: true, placeholder: 'Account Number' },
-        { label: 'Provider', name: "provider", type: "select", required: true, placeholder: 'Select Provider', format: 'ObjectId', data: providerData?.data },
-        { label: 'Company', name: "company", type: "select", required: true, placeholder: 'Select Company', format: 'ObjectId', data: organisationData?.data },
+        { label: 'Account Id', name: "name", type: "text", required: true, placeholder: 'Account Id' },
         { label: 'Employee', name: "employee", type: "select", required: false, placeholder: 'Select Employee', format: 'ObjectId', data: userData?.data },
-        { label: 'Others', name: "others", type: "select", required: false, placeholder: 'Select Others', format: 'ObjectId', data: otherMasterData?.data },
-        { label: 'Package', name: "package", type: "select", required: false, placeholder: 'Select Package', format: 'ObjectId', data: packageData?.data },
-
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
-
 
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
@@ -103,55 +78,13 @@ const page = () => {
     const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.ACCOUNT_MASTER,
+            db: MONGO_MODELS.JOB_ACCOUNT,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
         };
 
         const response: any = await createMaster(formattedData);
-
-        if (response?.error?.data?.message?.errorResponse?.errmsg) {
-            toast?.error(response?.error?.data?.message?.errorResponse?.errmsg);
-        }
-        else {
-            formData.account = response?.data?.data?._id;
-            formData.startDate = new Date();
-
-            if (action === 'Update') {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'update',
-                    bulkUpdate: true,
-                    filter: { "account": formData._id, 'endDate': null },
-                    data: { 'endDate': new Date() },
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-                delete formData._id;
-                const formattedData2 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-
-                }
-                const response2: any = await createMaster(formattedData2);
-            }
-            else {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-            }
-
-        }
 
         return response;
 
@@ -161,21 +94,21 @@ const page = () => {
     const editUser = (rowData: RowData) => {
         setAction('Update');
         setInitialData(rowData);
-        openDialog("account master");
+        openDialog("job account");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("account master");
+        openDialog("job account");
 
     };
 
 
     const handleImport = () => {
         bulkImport({
-            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: providerData, productData: packageData, warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: otherMasterData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: organisationData, action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ACCOUNT_MASTER, masterName: "AccountMaster", onStart: () => setImporting(true),
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.JOB_ACCOUNT, masterName: "JobAccount", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
     };
@@ -197,26 +130,17 @@ const page = () => {
 
         if (data?.length > 0) {
             formattedData = data?.map((data: any) => ({
-                "Account Number": data?.name,
-                "Department": data?.employee?.department?.name || '',
-                "Employee": data?.employee?.displayName || '',
-                "Others": data?.others?.name || '',
-                "Company": data?.company?.name || '',
-                "Provider": data?.provider?.name || '',
-                "Package Name": data?.package?.name || '',
-                "Package Amount": data?.package?.amount || '',
+                "Account Id": data?.name,
+                "Employee": data?.employee?.displayName?.toProperCase() || '',
+                "Department": data?.employee?.department?.name || ''
 
             }));
         } else {
             // Create a single empty row with keys only (for header export)
             formattedData = [{
-                "Account Number": '',
-                "Department": '',
+                "Account Id": '',
                 "Employee": '',
-                "Others": '',
-                "Company": '',
-                "Provider": '',
-                "Package Name": '',
+                "Department": ''
 
             }];
         }
@@ -267,7 +191,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Account No</span>
+                        <span>Account Id</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -300,7 +224,7 @@ const page = () => {
             cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.displayName?.toProperCase()}</div>,
         },
         {
-            accessorKey: "others",
+            accessorKey: "department",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -309,7 +233,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Others</span>
+                        <span>Department</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -318,71 +242,9 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("others")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.department?.name}</div>,
         },
-        {
-            accessorKey: "company",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Company</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("company")?.name}</div>,
-        },
-        {
-            accessorKey: "package",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Package</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("package")?.name}</div>,
-        },
-        {
-            accessorKey: "provider",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
-
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Provider</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("provider")?.name}</div>,
-        },
+        
         {
             accessorKey: "isActive",
             header: ({ column }: { column: any }) => {
@@ -409,14 +271,14 @@ const page = () => {
 
     const accountConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by account' },
+            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by account id' },
 
         ],
         filterFields: [
         ],
         dataTable: {
             columns: accountColumns,
-            data: Array.isArray(accountData) ? accountData : accountData?.data,
+            data: Array.isArray(jobaccountData) ? jobaccountData : jobaccountData?.data,
         },
         buttons: [
 

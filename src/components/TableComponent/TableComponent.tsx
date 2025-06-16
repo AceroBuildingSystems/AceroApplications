@@ -41,7 +41,7 @@ import DashboardLoader from "../ui/DashboardLoader";
 interface DataTableProps<T extends { status: string }> {
   data: T[];
   columns: ColumnDef<T>[];
-  rowClassMap: Record<string, string>; // Mapping of status to CSS class names
+   rowClassMap?: (row: T) => string; // Function instead of object // Mapping of status to CSS class names
   summary: boolean;
   summaryTotal: any;
   title: string;
@@ -164,7 +164,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
 
                       <TableRow
                         key={row.id}
-                        className={rowClassMap && rowClassMap[row.original?.status]}
+                        className={rowClassMap?.(row.original)}
                         data-state={row.getIsSelected() && "selected"}
                       >
                         {row.getVisibleCells().map((cell) => {

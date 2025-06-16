@@ -60,6 +60,9 @@ import AccountHistory from "./itapplications/AccountHistory.model"
 import OtherMaster from "./itapplications/OtherMaster.model"
 import UsageDetail from "./itapplications/UsageDetail.model"
 import ThresholdAmount from "./itapplications/ThresholdAmount.model"
+import JobAccount from "./itapplications/JobAccount.model"
+import PrinterMaster from "./itapplications/PrinterMaster.model"
+import PrinterUsage from "./itapplications/PrinterUsage.model"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -92,5 +95,8 @@ export {
     AccountHistory,
     OtherMaster,
     UsageDetail,
-    ThresholdAmount
+    ThresholdAmount,
+    JobAccount,
+    PrinterMaster,
+    PrinterUsage
 }

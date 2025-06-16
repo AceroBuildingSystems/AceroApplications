@@ -302,12 +302,12 @@ const page = () => {
     const formattedAuthorityData = approvalAuthorityData?.data?.map((option: any) => ({
         name: option?.code, // Display name
         _id: option?._id, // Unique ID as value
-        location:option?.location
+        location: option?.location
     }));
 
     const teamId = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.team?._id;
     const teamRole = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
-    
+
     let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; teamRole: { name: string }[]; }) => data?.team?._id === teamId && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { displayName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
         name: option?.user?.displayName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value
@@ -423,7 +423,7 @@ const page = () => {
             case "state":
                 switch (name) {
                     case 'approvalAuthority':
-                      
+
                         const approvalData = await approvalAuthorityData?.data?.filter((item: { location: any[]; }) => item.location.some((loc: { state: { _id: any; }; }) => loc?.state?._id === id)
                         )?.map((data: { code: any; _id: any; location: any; }) => ({
                             name: data?.code,
@@ -822,7 +822,7 @@ const page = () => {
                 id: "select",
                 header: ({ table }: { table: any }) => (
                     <Checkbox
-                    
+
                         checked={
                             table.getIsAllPageRowsSelected() ||
                             (table.getIsSomePageRowsSelected() && "indeterminate")
@@ -1058,19 +1058,19 @@ const page = () => {
                 const isSorted = column.getIsSorted();
 
                 return (
-                    
-                        <button
-                            className="group  flex items-center space-x-2"
-                            onClick={() => column.toggleSorting(isSorted === "asc")}
-                        >
-                            <span>Project Name</span>
-                            <ChevronsUpDown
-                                size={15}
-                                className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                    }`}
-                            />
-                        </button>
-                  
+
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Project Name</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+
 
                 );
             },
@@ -1123,14 +1123,27 @@ const page = () => {
             { label: 'Add', action: handleAdd, icon: Plus, },
         ]
     };
-    const rowClassMap = {
-        draft: "bg-white",
-        quoterequested: "bg-yellow-100",
-        incomplete: 'bg-blue-100',
-        submitted: 'bg-orange-200',
-        rejected: 'bg-red-200',
-        approved: 'bg-green-200'
+    // const rowClassMap = {
+    //     draft: "bg-white",
+    //     quoterequested: "bg-yellow-100",
+    //     incomplete: 'bg-blue-100',
+    //     submitted: 'bg-orange-200',
+    //     rejected: 'bg-red-200',
+    //     approved: 'bg-green-200'
 
+    // };
+
+    const rowClassMap = (row: any) => {
+        if (row?.isTotalRow) return "bg-yellow-100 font-bold";
+        if (row?.status) return {
+            draft: "bg-white",
+            quoterequested: "bg-yellow-100",
+            incomplete: 'bg-blue-100',
+            submitted: 'bg-orange-200',
+            rejected: 'bg-red-200',
+            approved: 'bg-green-200'
+        }[row.status] || "";
+        return "";
     };
 
     return (

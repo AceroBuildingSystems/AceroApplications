@@ -41,12 +41,13 @@ interface MasterComponentProps {
     loadingState: boolean;
     rowClassMap: any;
     summary: boolean;
+    onchangeData: (data: any) => void; // Optional callback for data changes
 }
 
 
 
 
-const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
+const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary, onchangeData }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
@@ -171,7 +172,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
-        if (field === 'currentMonth') {
+        if (field === 'currentMonth' || field === 'currentYear' ) {
+            onchangeData({ id: value, fieldName: field });
             return;
         }
         const newFilterValues = { ...filterValues, [field]: value };
@@ -297,7 +299,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
         }
 
 
-        console.log(summary);
+
         setSummaryData(summary);
         setTitle(config?.title || "");
     };

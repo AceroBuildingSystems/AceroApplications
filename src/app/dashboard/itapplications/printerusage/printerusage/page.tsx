@@ -16,48 +16,38 @@ import { createMasterData } from '@/server/services/masterDataServices';
 import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import * as XLSX from "xlsx";
+import moment from 'moment';
+import { transformData } from '@/lib/utils';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const page = () => {
+
     const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
+    const { data: printerUsageData = [], isLoading: printerUsageLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.PRINTER_USAGE,
+        sort: { name: 'asc' },
+    });
+
+    const { data: printerData = [], isLoading: printerLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.PRINTER_MASTER,
+        filter: { isActive: true },
+        sort: { name: 'asc' },
+    });
+
     const { data: accountData = [], isLoading: accountLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ACCOUNT_MASTER,
+        db: MONGO_MODELS.JOB_ACCOUNT,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
 
-    const { data: packageData = [], isLoading: packageLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PACKAGE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: providerData = [], isLoading: providerLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PROVIDER_TYPE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ORGANISATION_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
-        db: 'USER_MASTER',
-        filter: { isActive: true },
-        sort: { displayName: 'asc' },
-    });
-
-    const { data: otherMasterData = [], isLoading: otherMasterLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.OTHER_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = packageLoading || providerLoading || userLoading || organisationLoading || otherMasterLoading || accountLoading;
+    const loading = printerUsageLoading || printerLoading || accountLoading;
 
     interface RowData {
         id: string;
@@ -67,19 +57,28 @@ const page = () => {
     }
 
 
+    const fieldsToAdd = [
+        { fieldName: 'accountId', path: ['jobAccount', 'name'] },
+
+    ];
+
+    const transformedData: any = transformData(printerUsageData?.data, fieldsToAdd);
+ 
+    const accountIds = accountData?.data
+        ?.filter((acc: undefined) => acc !== undefined)  // Remove undefined entries
+        ?.map((acc: { _id: any; name: any; employee:any }) => ({ _id: acc.name, name: `${acc.name} - ${acc.employee?.displayName || ''}` }));
+
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Account Number', name: "name", type: "text", required: true, placeholder: 'Account Number' },
-        { label: 'Provider', name: "provider", type: "select", required: true, placeholder: 'Select Provider', format: 'ObjectId', data: providerData?.data },
-        { label: 'Company', name: "company", type: "select", required: true, placeholder: 'Select Company', format: 'ObjectId', data: organisationData?.data },
-        { label: 'Employee', name: "employee", type: "select", required: false, placeholder: 'Select Employee', format: 'ObjectId', data: userData?.data },
-        { label: 'Others', name: "others", type: "select", required: false, placeholder: 'Select Others', format: 'ObjectId', data: otherMasterData?.data },
-        { label: 'Package', name: "package", type: "select", required: false, placeholder: 'Select Package', format: 'ObjectId', data: packageData?.data },
-
-        { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+        { label: 'Account Id', name: "jobAccount", type: "select", required: true, placeholder: 'Select Account Id', format: 'ObjectId', data: accountData?.data },
+        { label: 'Printer', name: "printer", type: "select", required: true, placeholder: 'Select Printer', format: 'ObjectId', data: printerData?.data },
+        { label: 'Copy Color', name: "copyColor", type: "number", required: false, placeholder: 'Copy Color' },
+        { label: 'Print Color', name: "printColor", type: "number", required: false, placeholder: 'Print Color' },
+        { label: 'Copy BW', name: "copyBw", type: "number", required: false, placeholder: 'Copy BW' },
+        { label: 'Print BW', name: "printBw", type: "number", required: false, placeholder: 'Print BW' },
+        { label: 'Month End Date', name: "date", type: "date", format: 'Date', placeholder: 'Select Month End Date' },
 
     ]
-
 
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
@@ -102,56 +101,34 @@ const page = () => {
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any; action: string }) => {
 
+        const inputDate = moment(formData.date);
+        const inputMonth = inputDate.month();
+        const inputYear = inputDate.year();
+
+        const isDuplicate = printerUsageData?.data?.some((entry: any) => {
+            const entryDate = moment(entry.date);
+
+            return (
+                entryDate.month() === inputMonth &&
+                entryDate.year() === inputYear &&
+                entry.printer?._id === formData?.printer &&
+                entry.jobAccount?._id === formData?.jobAccount
+            );
+
+        });
+        if (isDuplicate && action === 'Add') {
+            toast.error("Duplicate entry found for the same month, printer, and account.");
+            return;
+        }
+
         const formattedData = {
-            db: MONGO_MODELS.ACCOUNT_MASTER,
+            db: MONGO_MODELS.PRINTER_USAGE,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
             data: formData,
         };
 
         const response: any = await createMaster(formattedData);
-
-        if (response?.error?.data?.message?.errorResponse?.errmsg) {
-            toast?.error(response?.error?.data?.message?.errorResponse?.errmsg);
-        }
-        else {
-            formData.account = response?.data?.data?._id;
-            formData.startDate = new Date();
-
-            if (action === 'Update') {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'update',
-                    bulkUpdate: true,
-                    filter: { "account": formData._id, 'endDate': null },
-                    data: { 'endDate': new Date() },
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-                delete formData._id;
-                const formattedData2 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-
-                }
-                const response2: any = await createMaster(formattedData2);
-            }
-            else {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-            }
-
-        }
 
         return response;
 
@@ -161,23 +138,31 @@ const page = () => {
     const editUser = (rowData: RowData) => {
         setAction('Update');
         setInitialData(rowData);
-        openDialog("account master");
+        openDialog("printer usage");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
         setInitialData({});
         setAction('Add');
-        openDialog("account master");
+        openDialog("printer usage");
 
     };
 
 
     const handleImport = () => {
         bulkImport({
-            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: providerData, productData: packageData, warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: otherMasterData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: organisationData, action: "Add", user, createUser: createMaster, db: MONGO_MODELS.ACCOUNT_MASTER, masterName: "AccountMaster", onStart: () => setImporting(true),
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: accountData, teamData: printerData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.PRINTER_USAGE, masterName: "PrinterUsage", onStart: () => setImporting(true),
             onFinish: () => setImporting(false)
         });
+    };
+
+    const exportPrinterReportToPDF = () => {
+        const doc = new jsPDF();
+        const title = `User Wise Summary Report Of B&W - Color Printing For March 2024`;
+        doc.text(title, 14, 15);
+
+        doc.save(`Printer_Usage_Report.pdf`);
     };
 
     const exportToExcel = (data: any[]) => {
@@ -197,31 +182,34 @@ const page = () => {
 
         if (data?.length > 0) {
             formattedData = data?.map((data: any) => ({
-                "Account Number": data?.name,
-                "Department": data?.employee?.department?.name || '',
-                "Employee": data?.employee?.displayName || '',
-                "Others": data?.others?.name || '',
-                "Company": data?.company?.name || '',
-                "Provider": data?.provider?.name || '',
-                "Package Name": data?.package?.name || '',
-                "Package Amount": data?.package?.amount || '',
+                "Account Id": data?.jobAccount?.name,
+                "Employee": data?.jobAccount?.employee?.displayName?.toProperCase() || '',
+                "Printer": data?.printer?.name || '',
+                "Date": data?.date ? moment(data.date).format('DD-MM-YYYY') : '',
+                "Copy Color": data?.copyColor || '0',
+                "Copy BW": data?.copyBw || '0',
+                "Print Color": data?.printColor || '0',
+                "Print BW": data?.printBw || '0',
+
 
             }));
         } else {
             // Create a single empty row with keys only (for header export)
             formattedData = [{
-                "Account Number": '',
-                "Department": '',
+                "Account Id": '',
                 "Employee": '',
-                "Others": '',
-                "Company": '',
-                "Provider": '',
-                "Package Name": '',
+                "Printer": '',
+                "Date": '',
+                "Copy Color": '',
+                "Copy BW": '',
+                "Print Color": '',
+                "Print BW": '',
 
             }];
         }
 
         type === 'excel' && exportToExcel(formattedData);
+        type === 'pdf' && exportPrinterReportToPDF();
 
     };
 
@@ -230,8 +218,6 @@ const page = () => {
         console.log('UserPage Delete button clicked');
         // Your delete logic for user page
     };
-
-
 
     const accountColumns = [
         {
@@ -258,7 +244,7 @@ const page = () => {
         },
 
         {
-            accessorKey: "name",
+            accessorKey: "jobAccount",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -267,7 +253,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Account No</span>
+                        <span>Account Id</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -276,7 +262,7 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("jobAccount")?.name}</div>,
         },
         {
             accessorKey: "employee",
@@ -297,10 +283,10 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.displayName?.toProperCase()}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("jobAccount")?.employee?.displayName?.toProperCase()}</div>,
         },
         {
-            accessorKey: "others",
+            accessorKey: "printer",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -309,7 +295,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Others</span>
+                        <span>Printer</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -318,10 +304,10 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("others")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("printer")?.name}</div>,
         },
         {
-            accessorKey: "company",
+            accessorKey: "date",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -330,7 +316,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Company</span>
+                        <span>Date</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -339,10 +325,10 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("company")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("date") && moment(row.getValue("date")).format("DD-MMM-YYYY")}</div>,
         },
         {
-            accessorKey: "package",
+            accessorKey: "copyColor",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -351,7 +337,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Package</span>
+                        <span>Copy Color</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -360,10 +346,10 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("package")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("copyColor")}</div>,
         },
         {
-            accessorKey: "provider",
+            accessorKey: "copyBw",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -372,7 +358,7 @@ const page = () => {
                         className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Provider</span>
+                        <span>Copy BW</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -381,19 +367,19 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("provider")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("copyBw")}</div>,
         },
         {
-            accessorKey: "isActive",
+            accessorKey: "printColor",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
                 return (
                     <button
-                        className="group  flex items-center space-x-2 w-[100px]"
+                        className="group  flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
-                        <span>Status</span>
+                        <span>Print Color</span>
                         <ChevronsUpDown
                             size={15}
                             className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -402,21 +388,43 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("printColor")}</div>,
         },
+        {
+            accessorKey: "printBw",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Print BW</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => <div >{row.getValue("printBw")}</div>,
+        },
+
 
     ];
 
     const accountConfig = {
         searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by account' },
 
         ],
         filterFields: [
+            { key: "jobAccount", label: 'accountId', type: "select" as const, data: accountIds, placeholder: 'Search by Account Id', name: 'accountId' },
         ],
         dataTable: {
             columns: accountColumns,
-            data: Array.isArray(accountData) ? accountData : accountData?.data,
+            data: Array.isArray(transformedData) ? transformedData : transformedData,
         },
         buttons: [
 
@@ -434,6 +442,7 @@ const page = () => {
 
     return (
         <>
+           
 
             <MasterComponent config={accountConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
             <DynamicDialog

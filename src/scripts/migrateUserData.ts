@@ -99,7 +99,7 @@ async function migrateUserData(dryRun = false) {
           // 2. Create Employment Details record
           const employmentDetails = new UserEmploymentDetails({
             userId: oldUser._id,
-            employeeId: oldUser.empId,
+            empId: oldUser.empId,
             department: oldUser.department,
             designation: oldUser.designation,
             reportingTo: oldUser.reportingTo,
@@ -165,7 +165,7 @@ async function migrateUserData(dryRun = false) {
             visaDetails: visaDetails._id,
             identification: identification._id,
             benefits: benefits._id,
-            employeeId: oldUser.empId,
+            empId: oldUser.empId,
             // Keep the existing data for core user fields
           });
         }

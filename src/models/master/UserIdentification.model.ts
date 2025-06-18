@@ -31,8 +31,6 @@ const UserIdentificationSchema: Schema<UserIdentificationDocument> = new Schema(
   updatedBy: { type: String }
 }, { timestamps: true });
 
-// Ensure the userId is unique to maintain one-to-one relationship
-UserIdentificationSchema.index({ userId: 1 }, { unique: true });
 
 // Add autopopulate plugin to automatically populate referenced fields
 UserIdentificationSchema.plugin(require('mongoose-autopopulate'));

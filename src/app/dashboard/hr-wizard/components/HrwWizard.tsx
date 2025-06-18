@@ -110,7 +110,7 @@ const defaultSteps: WizardStep[] = [
         required: true
       },
       {
-        id: 'employmentDetails.employeeId',
+        id: 'employmentDetails.empId',
         label: 'Employee ID',
         type: 'text',
         required: true,

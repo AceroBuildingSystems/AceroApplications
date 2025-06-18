@@ -163,7 +163,7 @@ export const ReviewStep: React.FC<WizardStepProps> = ({
         >
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ReviewField label="Employee ID" value={formData.employeeId} />
+              <ReviewField label="Employee ID" value={formData.empId} />
               <ReviewField label="Department" value={formData.department} />
               <ReviewField label="Position" value={formData.position} />
               <ReviewField label="Employment Type" value={formData.employmentType} />

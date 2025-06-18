@@ -95,11 +95,11 @@ export const hrWizardSteps: HRWizardStep[] = [
     icon: 'briefcase',
     fields: [
       {
-        id: 'employeeId',
+        id: 'empId',
         label: 'Employee ID',
         type: 'text',
         required: true,
-        modelPath: 'employeeId'
+        modelPath: 'empId'
       },
       {
         id: 'department',

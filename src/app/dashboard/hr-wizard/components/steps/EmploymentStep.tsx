@@ -28,16 +28,16 @@ export const EmploymentStep: React.FC<WizardStepProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={control}
-          name="employeeId"
+          name="empId"
           render={({ field }) => (
             <FormItem>
-              <Label htmlFor="employeeId">Employee ID *</Label>
+              <Label htmlFor="empId">Employee ID *</Label>
               <FormControl>
                 <Input
-                  id="employeeId"
+                  id="empId"
                   placeholder="EMP-001"
                   {...field}
-                  className={errors.employeeId ? "border-red-500" : ""}
+                  className={errors.empId ? "border-red-500" : ""}
                 />
               </FormControl>
               <FormMessage />

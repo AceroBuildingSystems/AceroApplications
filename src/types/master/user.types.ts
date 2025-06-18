@@ -9,7 +9,7 @@ export interface UserDocument {
     _id?: mongoose.Types.ObjectId;
     
     // Core user information
-    employeeId: string;
+    empId: string;
     firstName: string;
     lastName: string;
     fullName: string;

@@ -39,7 +39,7 @@ export interface HrWizardProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isEditing?: boolean;
-  employeeId?: string;
+  empId?: string;
   onSuccess?: () => void;
 }
 
@@ -177,7 +177,7 @@ export const HrWizard: FC<HrWizardProps> = ({
   onOpenChange,
   onSuccess,
   isEditing,
-  employeeId,
+  empId,
 }) => {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
@@ -221,7 +221,7 @@ export const HrWizard: FC<HrWizardProps> = ({
   // Document handlers
   const handleUploadDocument = async (file: File, docType: string) => {
     try {
-      await uploadDocument({ file, docType, userId: employeeId || '' }).unwrap();
+      await uploadDocument({ file, docType, userId: empId || '' }).unwrap();
       toast.success('Document uploaded successfully');
       return Promise.resolve();
     } catch (error) {
@@ -233,7 +233,7 @@ export const HrWizard: FC<HrWizardProps> = ({
   
   const handleDeleteDocument = async (documentUrl: string) => {
     try {
-      await deleteDocument({ documentUrl, userId: employeeId || '' }).unwrap();
+      await deleteDocument({ documentUrl, userId: empId || '' }).unwrap();
       toast.success('Document deleted successfully');
       return Promise.resolve();
     } catch (error) {
@@ -267,7 +267,7 @@ export const HrWizard: FC<HrWizardProps> = ({
       await saveWizardStep({
         data: formData,
         stepId: STEPS[currentStep].id,
-        userId: employeeId || '',
+        userId: empId || '',
         isDraft: true
       }).unwrap();
       
@@ -288,7 +288,7 @@ export const HrWizard: FC<HrWizardProps> = ({
     try {
       const response = await submitWizard({
         data: data,
-        userId: employeeId || '',
+        userId: empId || '',
       }).unwrap();
       
       toast.success('Form submitted successfully');

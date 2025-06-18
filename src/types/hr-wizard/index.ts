@@ -43,7 +43,7 @@ export type HRWizardDocumentUploadResponse = HrWizardDocumentUploadResponse;
 // HR Wizard User Data
 export interface HrWizardUserData {
   // Core user information (from User model)
-  employeeId?: string;
+  empId?: string;
   firstName: string;
   lastName: string;
   email: string;

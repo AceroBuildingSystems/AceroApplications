@@ -68,8 +68,7 @@ const NotificationSchema = new Schema({
   timestamps: true,
 });
 
-// Add indexes for better query performance
-NotificationSchema.index({ userId: 1, isRead: 1 });
+
 NotificationSchema.index({ createdAt: -1 });
 
 export default mongoose.models.Notification || mongoose.model<NotificationDocument>('Notification', NotificationSchema); 

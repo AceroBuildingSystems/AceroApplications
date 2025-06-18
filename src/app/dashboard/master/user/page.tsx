@@ -149,7 +149,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
   // Reorganize fields to match new database model structure
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; category?: string }> = [
     // Core user fields
-    { label: 'Employee ID', name: "employeeId", type: "number", required: true, placeholder: 'Employee ID', category: 'core' },
+    { label: 'Employee ID', name: "empId", type: "number", required: true, placeholder: 'Employee ID', category: 'core' },
     { label: 'Email', name: "email", type: "email", required: false, placeholder: 'Email', category: 'core' },
     { label: 'First Name', name: "firstName", type: "text", required: true, placeholder: 'First Name', category: 'core' },
     { label: 'Last Name', name: "lastName", type: "text", placeholder: 'Last Name', category: 'core' },
@@ -167,7 +167,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
     // Employment details fields
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department', category: 'employment' },
     { label: 'Designation', name: "designation", type: "select", data: designationDataNew?.length > 0 ? designationDataNew : designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation', category: 'employment' },
-    { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: true, placeholder: 'Select Reporting To', category: 'employment' },
+    { label: 'Reporting To', name: "reportingTo", type: "select", data: reportingToData, required: false, placeholder: 'Select Reporting To', category: 'employment' },
     { label: 'Employee Type', name: "employeeType", type: "select", data: employeeTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Employee Type', category: 'employment' },
     { label: 'Role', name: "role", type: "select", data: roleData?.data, format: 'ObjectId', required: true, placeholder: 'Select Role', category: 'employment' },
     { label: 'Reporting Location', name: "reportingLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location', category: 'employment' },

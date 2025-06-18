@@ -28,7 +28,7 @@ export interface CompleteUserData {
   personalMobileNo?: string;
   
   // Employment details
-  employeeId?: string;
+  empId?: string;
   department?: string | mongoose.Types.ObjectId;
   designation?: string | mongoose.Types.ObjectId;
   reportingTo?: string | mongoose.Types.ObjectId;
@@ -91,7 +91,7 @@ export async function createUserWithDetails(userData: CompleteUserData) {
       displayName: userData.displayName,
       imageUrl: userData.imageUrl,
       isActive: userData.isActive ?? true,
-      employeeId: userData.employeeId,
+      empId: userData.empId,
       addedBy: userData.addedBy,
       updatedBy: userData.updatedBy
     });
@@ -115,7 +115,7 @@ export async function createUserWithDetails(userData: CompleteUserData) {
     // Create employment details
     const employmentDetails = new UserEmploymentDetails({
       userId: user._id,
-      employeeId: userData.employeeId,
+      empId: userData.empId,
       department: userData.department,
       designation: userData.designation,
       reportingTo: userData.reportingTo,
@@ -244,7 +244,7 @@ export async function updateUserWithDetails(userId: string | mongoose.Types.Obje
     if (userData.displayName) user.displayName = userData.displayName;
     if (userData.imageUrl) user.imageUrl = userData.imageUrl;
     if (userData.isActive !== undefined) user.isActive = userData.isActive;
-    if (userData.employeeId) user.employeeId = userData.employeeId;
+    if (userData.empId) user.empId = userData.empId;
     if (userData.updatedBy) user.updatedBy = userData.updatedBy;
     
     await user.save({ session });
@@ -267,7 +267,7 @@ export async function updateUserWithDetails(userId: string | mongoose.Types.Obje
     // Update employment details if they exist
     if (user.employmentDetails) {
       const employmentDetailsFields: any = {};
-      if (userData.employeeId) employmentDetailsFields.employeeId = userData.employeeId;
+      if (userData.empId) employmentDetailsFields.empId = userData.empId;
       if (userData.department) employmentDetailsFields.department = userData.department;
       if (userData.designation) employmentDetailsFields.designation = userData.designation;
       if (userData.reportingTo) employmentDetailsFields.reportingTo = userData.reportingTo;

@@ -43,7 +43,7 @@ export interface HrWizardProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isEditing?: boolean;
-  employeeId?: string;
+  empId?: string;
   onSuccess?: () => void;
 }
 
@@ -181,7 +181,7 @@ export const HrWizard: FC<HrWizardProps> = ({
   onOpenChange,
   onSuccess,
   isEditing,
-  employeeId,
+  empId,
 }) => {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
@@ -271,7 +271,7 @@ export const HrWizard: FC<HrWizardProps> = ({
       const formData = formMethods.getValues();
       await saveWizardStep({
         formData,
-        employeeId,
+        empId,
         currentStep: STEPS[currentStep].id,
       }).unwrap();
       
@@ -292,7 +292,7 @@ export const HrWizard: FC<HrWizardProps> = ({
     try {
       const response = await submitWizard({
         formData: data,
-        employeeId,
+        empId,
       }).unwrap();
       
       toast.success('Form submitted successfully');
@@ -303,7 +303,7 @@ export const HrWizard: FC<HrWizardProps> = ({
       if (onSuccess) onSuccess();
       
       // Optional: Navigate to success page or employee details
-      // router.push(`/dashboard/hr/employees/${response.employeeId}`);
+      // router.push(`/dashboard/hr/employees/${response.empId}`);
     } catch (error) {
       toast.error('Failed to submit form');
       console.error('Submit error:', error);

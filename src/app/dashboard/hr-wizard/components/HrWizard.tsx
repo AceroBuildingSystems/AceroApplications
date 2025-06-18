@@ -39,7 +39,7 @@ export interface HrWizardProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isEditing?: boolean;
-  employeeId?: string;
+  empId?: string;
   onSuccess?: () => void;
 }
 
@@ -177,7 +177,7 @@ const HrWizard: FC<HrWizardProps> = ({
   onOpenChange,
   onSuccess,
   isEditing,
-  employeeId,
+  empId,
 }) => {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0);
@@ -248,14 +248,14 @@ const HrWizard: FC<HrWizardProps> = ({
   
   useEffect(() => {
     // Only try to load draft when dialog opens and we haven't loaded yet
-    if (isOpen && employeeId && employeeId.startsWith('draft-') && !draftLoadedRef.current) {
+    if (isOpen && empId && empId.startsWith('draft-') && !draftLoadedRef.current) {
       // This is a local draft, load from localStorage
       try {
         const draftKey = 'hr-wizard-draft-new';
         const allDrafts = JSON.parse(localStorage.getItem(draftKey) || '{}');
         
-        if (allDrafts[employeeId]) {
-          const draftData = allDrafts[employeeId];
+        if (allDrafts[empId]) {
+          const draftData = allDrafts[empId];
           console.log('Loading draft data:', draftData);
           
           // Set current step if available
@@ -274,7 +274,7 @@ const HrWizard: FC<HrWizardProps> = ({
       // Reset the flag when dialog closes
       draftLoadedRef.current = false;
     }
-  }, [isOpen, employeeId]); // Only depend on isOpen and employeeId
+  }, [isOpen, empId]); // Only depend on isOpen and empId
   
   // Local state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -288,7 +288,7 @@ const HrWizard: FC<HrWizardProps> = ({
   // Document handlers
   const handleUploadDocument = async (file: File, docType: string) => {
     try {
-      await uploadDocument({ file, documentType: docType, userId: employeeId || '' }).unwrap();
+      await uploadDocument({ file, documentType: docType, userId: empId || '' }).unwrap();
       toast.success('Document uploaded successfully');
       return Promise.resolve();
     } catch (error) {
@@ -300,7 +300,7 @@ const HrWizard: FC<HrWizardProps> = ({
   
   const handleDeleteDocument = async (documentUrl: string) => {
     try {
-      await deleteDocument({ documentUrl, userId: employeeId || '' }).unwrap();
+      await deleteDocument({ documentUrl, userId: empId || '' }).unwrap();
       toast.success('Document deleted successfully');
       return Promise.resolve();
     } catch (error) {
@@ -405,14 +405,14 @@ const HrWizard: FC<HrWizardProps> = ({
     try {
       const data = formMethods.getValues();
       
-      // If we have an employeeId, save to the API
-      if (employeeId) {
-        console.log('Saving draft for user:', employeeId, 'step:', STEPS[currentStep].id);
+      // If we have an empId, save to the API
+      if (empId) {
+        console.log('Saving draft for user:', empId, 'step:', STEPS[currentStep].id);
         
         await saveWizardStep({
           data,
           stepId: STEPS[currentStep].id,
-          userId: employeeId,
+          userId: empId,
           isDraft: true
         }).unwrap();
         
@@ -429,7 +429,7 @@ const HrWizard: FC<HrWizardProps> = ({
         // Create a unique ID for this draft with timestamp and random string
         const tempId = `draft-${new Date().getTime()}-${Math.random().toString(36).substring(2, 10)}`;
         
-        // Use localStorage as a fallback when no employeeId exists
+        // Use localStorage as a fallback when no empId exists
         const draftKey = `hr-wizard-draft-new`;
         const allDrafts = JSON.parse(localStorage.getItem(draftKey) || '{}');
         
@@ -474,7 +474,7 @@ const HrWizard: FC<HrWizardProps> = ({
     try {
       const response = await submitWizard({
         data: formData,
-        userId: employeeId || '',
+        userId: empId || '',
       }).unwrap();
       
       toast.success('Form submitted successfully');

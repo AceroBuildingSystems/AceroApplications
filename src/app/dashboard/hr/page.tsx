@@ -28,7 +28,7 @@ interface HrUser {
   phoneNumber?: string;
   jobTitle?: string;
   status: 'active' | 'pending' | 'inactive';
-  employeeId?: string;
+  empId?: string;
   avatar?: string;
   createdAt?: Date | string;
   fullName: string;
@@ -125,7 +125,7 @@ export default function HrDashboard() {
     
     return fullName.includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employeeId?.toLowerCase().includes(searchTerm.toLowerCase())
+      user.empId?.toLowerCase().includes(searchTerm.toLowerCase())
   });
 
   const handleEditUser = (user: HrUser) => {
@@ -396,7 +396,7 @@ export default function HrDashboard() {
                       <TableCell>
                         <div className="flex items-center text-sm">
                           <Hash className="mr-2 h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{user.employeeId || 'N/A'}</span>
+                          <span>{user.empId || 'N/A'}</span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -448,7 +448,7 @@ export default function HrDashboard() {
       <HrWizard 
         isOpen={isWizardOpen}
         onOpenChange={handleWizardClose}
-        employeeId={selectedUserId || undefined}
+        empId={selectedUserId || undefined}
         onSuccess={handleWizardClose}
       />
     </div>

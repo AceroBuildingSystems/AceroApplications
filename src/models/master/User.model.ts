@@ -3,7 +3,7 @@ import { UserDocument } from "@/types";
 
 const UserSchema: Schema<UserDocument> = new Schema({
     // Core user information
-    employeeId: { type: String, unique: true },
+    empId: { type: String, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     fullName: { type: String },

@@ -43,9 +43,7 @@ export default async function handler(
         path: '/api/socket',
         addTrailingSlash: false,
         cors: {
-          origin: process.env.NODE_ENV === 'production' 
-            ? [process.env.NEXT_PUBLIC_BASE_URL || ''] 
-            : '*',
+          origin:  '*',
           methods: ['GET', 'POST'],
           credentials: true
         },

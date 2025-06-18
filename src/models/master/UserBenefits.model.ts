@@ -25,8 +25,7 @@ const UserBenefitsSchema: Schema<UserBenefitsDocument> = new Schema({
   updatedBy: { type: String }
 }, { timestamps: true });
 
-// Ensure the userId is unique to maintain one-to-one relationship
-UserBenefitsSchema.index({ userId: 1 }, { unique: true });
+
 
 // Add autopopulate plugin to automatically populate referenced fields
 UserBenefitsSchema.plugin(require('mongoose-autopopulate'));

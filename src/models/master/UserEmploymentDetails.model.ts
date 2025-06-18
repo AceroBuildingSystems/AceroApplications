@@ -2,7 +2,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface UserEmploymentDetailsDocument extends Document {
   userId: mongoose.Types.ObjectId;
-  employeeId: string;
+  empId: string;
   department: mongoose.Types.ObjectId;
   designation: mongoose.Types.ObjectId;
   reportingTo: mongoose.Types.ObjectId;
@@ -31,7 +31,7 @@ const UserEmploymentDetailsSchema: Schema<UserEmploymentDetailsDocument> = new S
     required: true,
     unique: true
   },
-  employeeId: { type: String, unique: true },
+  empId: { type: String, unique: true },
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Department",
@@ -93,8 +93,7 @@ const UserEmploymentDetailsSchema: Schema<UserEmploymentDetailsDocument> = new S
   updatedBy: { type: String }
 }, { timestamps: true });
 
-// Ensure the userId is unique to maintain one-to-one relationship
-UserEmploymentDetailsSchema.index({ userId: 1 }, { unique: true });
+
 
 // Add autopopulate plugin to automatically populate referenced fields
 UserEmploymentDetailsSchema.plugin(require('mongoose-autopopulate'));

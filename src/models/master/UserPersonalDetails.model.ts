@@ -39,8 +39,7 @@ const UserPersonalDetailsSchema: Schema<UserPersonalDetailsDocument> = new Schem
   updatedBy: { type: String }
 }, { timestamps: true });
 
-// Ensure the userId is unique to maintain one-to-one relationship
-UserPersonalDetailsSchema.index({ userId: 1 }, { unique: true });
+
 
 // Add autopopulate plugin to automatically populate referenced fields
 UserPersonalDetailsSchema.plugin(require('mongoose-autopopulate'));

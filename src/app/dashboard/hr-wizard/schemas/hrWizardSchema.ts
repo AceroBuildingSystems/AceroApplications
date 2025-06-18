@@ -11,7 +11,7 @@ export const hrWizardSchema = z.object({
     nationality: z.string().min(1, 'Nationality is required'),
   }),
   employment: z.object({
-    employeeId: z.string().min(1, 'Employee ID is required'),
+    empId: z.string().min(1, 'Employee ID is required'),
     department: z.string().min(1, 'Department is required'),
     position: z.string().min(1, 'Position is required'),
     employmentType: z.string().min(1, 'Employment type is required'),

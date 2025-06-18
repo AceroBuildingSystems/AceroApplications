@@ -24,7 +24,7 @@ const { user, status, authenticated } = useUserAuthorised();
     db: 'DEPARTMENT_MASTER',
     sort: { name: -1 },
   });
-
+  console.log("departmentData", departmentData);
   const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];

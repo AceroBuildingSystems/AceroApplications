@@ -37,8 +37,7 @@ const UserVisaDetailsSchema: Schema<UserVisaDetailsDocument> = new Schema({
   updatedBy: { type: String }
 }, { timestamps: true });
 
-// Ensure the userId is unique to maintain one-to-one relationship
-UserVisaDetailsSchema.index({ userId: 1 }, { unique: true });
+
 
 // Add autopopulate plugin to automatically populate referenced fields
 UserVisaDetailsSchema.plugin(require('mongoose-autopopulate'));

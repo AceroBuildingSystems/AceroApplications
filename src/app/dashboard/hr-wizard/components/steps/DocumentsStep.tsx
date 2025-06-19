@@ -343,8 +343,8 @@ export const DocumentsStep: React.FC<DocumentsStepProps> = ({
             'Labor Contract',
             'Insurance Card',
           ].map((docName) => {
-            const isUploaded = documents.some(
-              (doc) => doc.name.toLowerCase().includes(docName.split(' ')[0].toLowerCase())
+            const isUploaded = documents?.some(
+              (doc) => doc?.name.toLowerCase().includes(docName.split(' ')[0].toLowerCase())
             );
             
             return (

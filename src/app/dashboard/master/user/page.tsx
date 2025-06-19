@@ -31,7 +31,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
     filter: { isActive: true },
     sort: { empId: 'asc' },
   });
-
+console.log("userData", userData);
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -89,6 +89,7 @@ const [designationDataNew, setDesignationdata] = useState([]);
 
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
+  console.log(transformedData, "transformedData");
   const roleNames = roleData?.data
     ?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
     ?.map((role: { _id: any; name: any }) => ({ _id: role.name, name: role.name }));

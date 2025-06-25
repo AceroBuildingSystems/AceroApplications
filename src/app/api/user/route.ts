@@ -35,6 +35,10 @@ export async function POST(request:NextRequest) {
     
       break;
     case 'update':
+      // Expect filter and data fields for update
+      if (!body.filter || !body.data) {
+        return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
+      }
       response = await userManager.updateUser(body)
       break;
     case 'updateAccess':

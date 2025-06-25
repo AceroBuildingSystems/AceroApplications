@@ -40,7 +40,11 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   ThresholdAmount,
   JobAccount,
   PrinterMaster,
-  PrinterUsage
+  PrinterUsage,
+  Notification,
+  ApprovalFlow, // Added ApprovalFlow import
+UserBenefits
+, UserPersonalDetails, UserEmploymentDetails, UserVisaDetails, UserIdentification
 } from '@/models';
 
 
@@ -113,7 +117,14 @@ function getMongooseAdapter(): MongooseAdapter {
     THRESHOLD_AMOUNT: ThresholdAmount,
     JOB_ACCOUNT: JobAccount,
     PRINTER_MASTER: PrinterMaster,
-    PRINTER_USAGE: PrinterUsage 
+    PRINTER_USAGE: PrinterUsage ,
+    NOTIFICATION_MASTER: Notification,
+    [MONGO_MODELS.APPROVAL_FLOW_MASTER]: ApprovalFlow, // Added ApprovalFlow to the adapter config
+    USER_PERSONAL_DETAILS: UserPersonalDetails,
+    USER_BENEFITS: UserBenefits,
+    USER_EMPLOYMENT_DETAILS: UserEmploymentDetails,
+    USER_VISA_DETAILS: UserVisaDetails,
+    USER_IDENTIFICATION: UserIdentification
     });
   }
   return dbEngineInstance;

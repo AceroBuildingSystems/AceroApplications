@@ -41,12 +41,10 @@ interface MasterComponentProps {
     loadingState: boolean;
     rowClassMap: any;
     summary: boolean;
+    children?: React.ReactNode;
 }
 
-
-
-
-const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
+const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary, children }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
@@ -54,6 +52,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const [summaryData, setSummaryData] = useState([]);
     const [title, setTitle] = useState(config?.title || "");
 
+    console.log("Filtered Data", config?.dataTable?.data)
     useEffect(() => {
         let summary: any = {};
         console.log("Config:", config);
@@ -465,9 +464,18 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
                     </div>
 
-                    <div className="h-[86%]">
-                        {<DataTable data={filteredData && filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
-                            rowClassMap={rowClassMap} summary={summary} summaryTotal={summaryData} title={title} />}
+                    <div className="flex-grow overflow-auto">
+                        {children ? children : (
+                            (config?.dataTable?.columns && config?.dataTable?.data) ?
+                            <DataTable 
+                                data={filteredData && filteredData.length > 0 ? filteredData : (filteredData && filteredData.length === 0) ? [] : config.dataTable.data} 
+                                columns={config.dataTable.columns}
+                                rowClassMap={rowClassMap} 
+                                summary={summary} 
+                                title={config?.dataTable?.title || config?.title || ''} // Added title prop
+                                summaryTotal={config?.dataTable?.summaryTotal} // Added summaryTotal prop
+                            /> : null
+                        )}
                     </div>
                 </div>
 

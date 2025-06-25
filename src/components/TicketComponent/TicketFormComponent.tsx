@@ -118,6 +118,9 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
       updatedBy: userId,
       ...(isEdit && initialData ? { _id: initialData._id } : {})
     };
+    
+    // Submit the form data
+    onSubmit(formData).then((response) => {
     onSubmit(formData);
   };
   

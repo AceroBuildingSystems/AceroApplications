@@ -38,7 +38,8 @@ import ProductCategory from "./master/ProductCategory.model"
 import Product from "./master/Product.model"
 import Warehouse from "./master/Warehouse.model"
 import Inventory from "./master/Inventory.model"
-import UnitMeasurement from "./master/UnitMeasurement"
+import { default as UnitMeasurement } from "./master/UnitMeasurement";
+import { default as ApprovalFlow } from "./approvals/ApprovalFlow.model";
 import Option from "./aqm/OptionsModel.model"
 import Ticket from "./ticket/Ticket.model";
 import TicketCategory from "./ticket/TicketCategory.model";
@@ -63,6 +64,12 @@ import ThresholdAmount from "./itapplications/ThresholdAmount.model"
 import JobAccount from "./itapplications/JobAccount.model"
 import PrinterMaster from "./itapplications/PrinterMaster.model"
 import PrinterUsage from "./itapplications/PrinterUsage.model"
+import Notification from "./notification/Notification";
+import UserPersonalDetails from "./master/UserPersonalDetails.model";
+import UserBenefits from "./master/UserBenefits.model"
+import UserEmploymentDetails from "./master/UserEmploymentDetails.model";
+import UserVisaDetails from "./master/UserVisaDetails.model";
+import UserIdentification from "./master/UserIdentification.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -71,7 +78,8 @@ export {
     PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
     ProposalRevisions, Proposal, Quotation,Option,
     // Asset and Inventory exports
-    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement,
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory, UnitMeasurement,
+    ApprovalFlow,
     // Tickets
     Ticket,
     TicketCategory,
@@ -98,5 +106,12 @@ export {
     ThresholdAmount,
     JobAccount,
     PrinterMaster,
-    PrinterUsage
+    PrinterUsage,
+    Notification,
+    UserPersonalDetails,
+    UserBenefits,
+    UserEmploymentDetails,
+    UserVisaDetails,
+    UserIdentification
+    
 }

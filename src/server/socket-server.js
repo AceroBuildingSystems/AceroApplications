@@ -13,10 +13,26 @@ const { MongoClient } = require('mongodb');
 // Create Express app
 const app = express();
 app.use(cors({
-  origin: '*', // Be as permissive as possible for testing
+  origin: 'http://10.20.80.71:3000', // use specific origin
   methods: ['GET', 'POST'],
   credentials: true
 }));
+// const allowedOrigins = ['http://localhost:3000', 'http://10.20.80.71:3000'];
+
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error('Not allowed by CORS'));
+//     }
+//   },
+//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+//   credentials: true
+// };
+
+// app.use(cors(corsOptions));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

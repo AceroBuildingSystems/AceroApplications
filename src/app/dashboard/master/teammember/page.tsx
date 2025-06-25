@@ -148,7 +148,7 @@ return response;
 
         if (data?.length > 0) {
             formattedData = data?.map((data: any) => ({
-                'Name': data?.displayName?.toPropercase(),
+                'Name': data?.user?.displayName?.toProperCase(),
                 'Team Role': data?.teamRole?.[0]?.name?.toProperCase(),
                 'Reporting To': data?.teamReportingTo?.[0]?.displayName?.toProperCase(),
                 'Team': data?.team?.name?.toProperCase(),

@@ -4,6 +4,8 @@ export const ERROR = "Error"
 export const SIGNUP = "signup"
 
 //ERROR MESSAGES
+export const UNAUTHORIZED_ACCESS = "Unauthorized access";
+export const RESOURCE_NOT_FOUND = "Resource not found";
 export const USER_NOT_FOUND = "User not found"
 export const INVALID_CREDENTIALS = "Invalid credentials"
 export const USER_ALREADY_EXISTS = "User already exists"
@@ -95,6 +97,14 @@ export const MONGO_MODELS = {
     JOB_ACCOUNT: "JOB_ACCOUNT",
     PRINTER_MASTER: "PRINTER_MASTER",
     PRINTER_USAGE: "PRINTER_USAGE",
+
+    APPROVAL_FLOW_MASTER: "APPROVAL_FLOW_MASTER",
+    USER_PERSONAL_DETAILS: "USER_PERSONAL_DETAILS",
+    USER_BENEFITS: "USER_BENEFITS",
+    USER_EMPLOYMENT_DETAILS: "USER_EMPLOYMENT_DETAILS",
+    USER_VISA_DETAILS: "USER_VISA_DETAILS",
+    USER_IDENTIFICATION: "USER_IDENTIFICATION"
+    
 }
 
 
@@ -107,3 +117,6 @@ export const MASTER_DATA = {
         }
     }
 }
+
+// Notification Constants
+export const NOTIFICATION_MASTER = 'NOTIFICATION_MASTER';

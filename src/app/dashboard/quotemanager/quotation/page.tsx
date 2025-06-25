@@ -307,7 +307,7 @@ const page = () => {
 
     const teamId = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.team?._id;
     const teamRole = teamMemberData?.data?.filter((data: { user: { _id: any; }; }) => data?.user?._id === user?._id)?.[0]?.teamRole[0]?.name;
-
+console.log(teamId, teamRole, user?._id, teamMemberData?.data);
     let salesEngData = teamMemberData?.data?.filter((data: { team: { _id: any; }; teamRole: { name: string }[]; }) => data?.team?._id === teamId && data?.teamRole[0]?.name !== "Support Engineer")?.map((option: { user: { displayName: string; }; _id: any; team: { _id: any; teamHead: any; }; }) => ({
         name: option?.user?.displayName?.toProperCase(), // Display name
         _id: option?._id, // Unique ID as value

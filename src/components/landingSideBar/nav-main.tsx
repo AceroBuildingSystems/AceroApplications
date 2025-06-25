@@ -28,6 +28,7 @@ const menuItems = [
   { icon: 'ScrollText', Icon: ScrollText },
   { icon: 'Ticket', Icon: Ticket },
   { icon: 'AppWindow', Icon: AppWindow },
+  { icon: 'PanelsTopLeft', Icon: PanelsTopLeft },
 
 ];
 const CreateSideBarItems = ({ item }: any) => {

@@ -34,6 +34,7 @@ export const authOptions: AuthOptions = {
         await dbConnect();
         const user = await User.findOne({ email });
         const isPasswordValid = await bcrypt.compare(password, user?.password || "");
+        console.log("DB User:", user, "Email:", email,isPasswordValid ? "Password valid" : "Password invalid");
         if (!user || !isPasswordValid) return null;
         return user as any;
       },
@@ -44,6 +45,7 @@ export const authOptions: AuthOptions = {
       await dbConnect();
       const email = user.email;
       const dbUser = await User.findOne({ email });
+      console.log("DB User:", dbUser, "Email:", email);
       if (!dbUser) return false;
       return true;
     },

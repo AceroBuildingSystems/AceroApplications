@@ -12,6 +12,7 @@ import { QueryResult } from "./types";
 import { Model, Document } from "mongoose";
 import { dbConnect } from "@/lib/mongoose";
 import bcrypt from 'bcryptjs';
+import { Organisation } from "@/models";
 
 interface MultiQuery {
   action: "find" | "create" | "update" | "delete";
@@ -149,11 +150,34 @@ export class MongooseAdapter implements DatabaseAdapter {
       query = query.skip(skip).limit(limit);
     }
 
-    const [docs, total] = await Promise.all([query.exec(), countQuery]);
+    const [docs, total]:any = await Promise.all([query.exec(), countQuery]);
+    let sanitizedDocs = docs;
+if (modelName === 'USER_MASTER') {
+   sanitizedDocs = docs.map((doc:any) => {
+    const plainDoc = doc.toObject(); // ensure we work with a plain JS object
+
+    const { employmentDetails } = plainDoc;
 
     return {
+      ...plainDoc,
+      department: employmentDetails?.department,
+      designation: employmentDetails?.designation,
+      reportingTo: employmentDetails?.reportingTo,
+      role: employmentDetails?.role,
+      mobile: employmentDetails?.workMobile,
+      extension: employmentDetails?.extension,
+      activeLocation: employmentDetails?.activeLocation,
+      reportingLocation: employmentDetails?.reportingLocation,
+      Organisation: employmentDetails?.organisation,
+   
+    };
+  });
+
+  console.log('Sanitized docs:', sanitizedDocs);
+}
+    return {
       status: SUCCESS,
-      data: docs,
+      data: sanitizedDocs,
       pagination: {
         total,
         page,

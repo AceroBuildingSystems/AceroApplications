@@ -25,8 +25,8 @@ const page = () => {
     db: 'DEPARTMENT_MASTER',
     sort: { name: -1 },
   });
-
-  const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
+  console.log("departmentData", departmentData);
+  const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 

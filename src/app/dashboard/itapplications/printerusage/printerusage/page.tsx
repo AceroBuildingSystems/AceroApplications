@@ -63,14 +63,20 @@ const page = () => {
     ];
 
     const transformedData: any = transformData(printerUsageData?.data, fieldsToAdd);
- 
+
+    const reformattedData = accountData?.data?.map((item: any) => ({
+        _id: item._id,
+        name: `${item.name} - ${item?.employee?.displayName}`
+    }));
+
+
     const accountIds = accountData?.data
         ?.filter((acc: undefined) => acc !== undefined)  // Remove undefined entries
-        ?.map((acc: { _id: any; name: any; employee:any }) => ({ _id: acc.name, name: `${acc.name} - ${acc.employee?.displayName || ''}` }));
+        ?.map((acc: { _id: any; name: any; employee: any }) => ({ _id: acc.name, name: `${acc.name} - ${acc.employee?.displayName || ''}` }));
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Account Id', name: "jobAccount", type: "select", required: true, placeholder: 'Select Account Id', format: 'ObjectId', data: accountData?.data },
+        { label: 'Account Id', name: "jobAccount", type: "select", required: true, placeholder: 'Select Account Id', format: 'ObjectId', data: reformattedData },
         { label: 'Printer', name: "printer", type: "select", required: true, placeholder: 'Select Printer', format: 'ObjectId', data: printerData?.data },
         { label: 'Copy Color', name: "copyColor", type: "number", required: false, placeholder: 'Copy Color' },
         { label: 'Print Color', name: "printColor", type: "number", required: false, placeholder: 'Print Color' },
@@ -80,6 +86,7 @@ const page = () => {
 
     ]
 
+    
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
@@ -442,7 +449,7 @@ const page = () => {
 
     return (
         <>
-           
+
 
             <MasterComponent config={accountConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
             <DynamicDialog

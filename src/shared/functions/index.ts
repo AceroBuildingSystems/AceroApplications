@@ -1219,7 +1219,6 @@ const entityFieldMappings = {
 };
 
 
-
 const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; locationData?: any; }) => {
 
     const mappings = fieldMappingConfig[entityType as keyof typeof fieldMappingConfig];

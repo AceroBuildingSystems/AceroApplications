@@ -49,16 +49,15 @@ async function dbConnect() {
 
     // Register all models by ensuring their modules are loaded.
     Object.values(models).forEach(model => {
-      if (model && typeof model.modelName === 'string' && !mongoose.models[model.modelName]) {
-        // This condition means a module was loaded, it appears to be a Mongoose model (has .modelName),
-        // but it's not yet in mongoose.models. This is highly unlikely if the model file itself
-        // calls mongoose.model('ModelName', schema) correctly, as that call registers it.
-        // console.warn(`Model ${model.modelName} (from models object) was not found in mongoose.models. This is unexpected.`);
+      if (model.modelName && !mongoose.models[model.modelName]) {
+        model.init()
       }
-    });
+    })
 
-    // Assign the promise directly, do not await here
-    cached.promise = await mongoose.connect(MONGODB_URI, opts).then(() => mongoose)
+    // @ts-ignore
+    cached.promise = await mongoose.connect(MONGODB_URI!, opts).then(() => {
+      return mongoose
+    })
   }
 
   try {

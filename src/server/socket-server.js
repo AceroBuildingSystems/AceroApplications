@@ -5,7 +5,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config({path:path.resolve(__dirname, '../../.env')});
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const fs = require('fs');
 const multer = require('multer');
 const { MongoClient } = require('mongodb');
@@ -57,8 +57,8 @@ const io = new Server(server, {
 const DEBUG = true;
 
 // MongoDB connection from .env
-const MONGODB_URI = process.env.NODE_ENV === 'production' 
-  ? process.env.NEXT_PUBLIC_PROD_MONGODB_URI 
+const MONGODB_URI = process.env.NODE_ENV === 'production'
+  ? process.env.NEXT_PUBLIC_PROD_MONGODB_URI
   : process.env.NEXT_PUBLIC_DEV_MONGODB_URI;
 
 // Configure multer for file uploads
@@ -81,7 +81,7 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
@@ -107,7 +107,7 @@ function defineModels() {
   // Only define if they don't already exist
   if (!mongoose.models.TicketComment) {
     console.log('Defining TicketComment model');
-    
+
     // Define User schema if it doesn't exist
     if (!mongoose.models.User) {
       const UserSchema = new mongoose.Schema({
@@ -118,7 +118,7 @@ function defineModels() {
       });
       mongoose.model('User', UserSchema);
     }
-    
+
     // Define Ticket schema if it doesn't exist
     if (!mongoose.models.Ticket) {
       const TicketSchema = new mongoose.Schema({
@@ -127,7 +127,7 @@ function defineModels() {
       });
       mongoose.model('Ticket', TicketSchema);
     }
-    
+
     // Define TicketComment schema
     const AttachmentSchema = new mongoose.Schema({
       fileName: { type: String, required: true },
@@ -136,7 +136,7 @@ function defineModels() {
       url: { type: String, required: true },
       uploadedAt: { type: Date, default: Date.now }
     });
-    
+
     const ReactionSchema = new mongoose.Schema({
       emoji: { type: String, required: true },
       userId: {
@@ -146,7 +146,7 @@ function defineModels() {
       },
       createdAt: { type: Date, default: Date.now }
     });
-    
+
     const TicketCommentSchema = new mongoose.Schema({
       ticket: {
         type: mongoose.Schema.Types.ObjectId,
@@ -181,10 +181,10 @@ function defineModels() {
       isActive: { type: Boolean, default: true },
       addedBy: { type: String },
       updatedBy: { type: String }
-    }, { 
+    }, {
       timestamps: true
     });
-    
+
     mongoose.model('TicketComment', TicketCommentSchema);
   }
 }
@@ -194,10 +194,10 @@ async function connectToMongoDB() {
   try {
     await mongoose.connect(MONGODB_URI);
     console.log('Connected to MongoDB');
-    
+
     // Define our models
     defineModels();
-    
+
     console.log('Models loaded successfully');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -211,7 +211,7 @@ async function saveMessageToDB(message) {
       log('MongoDB not connected, cannot save message');
       return null;
     }
-    
+
     // Get the TicketComment model
     let TicketComment;
     try {
@@ -222,16 +222,16 @@ async function saveMessageToDB(message) {
       console.error('TicketComment model not found, using generic document');
       return null;
     }
-    
+
     // Convert string IDs to ObjectIds
-    const ticketId = mongoose.Types.ObjectId.isValid(message.ticket) 
-      ? new mongoose.Types.ObjectId(message.ticket) 
+    const ticketId = mongoose.Types.ObjectId.isValid(message.ticket)
+      ? new mongoose.Types.ObjectId(message.ticket)
       : message.ticket;
-      
-    const senderId = mongoose.Types.ObjectId.isValid(message.user._id) 
-      ? new mongoose.Types.ObjectId(message.user._id) 
+
+    const senderId = mongoose.Types.ObjectId.isValid(message.user._id)
+      ? new mongoose.Types.ObjectId(message.user._id)
       : message.user._id;
-    
+
     // Create a new comment document
     const ticketComment = new TicketComment({
       ticket: ticketId,
@@ -247,11 +247,11 @@ async function saveMessageToDB(message) {
       deliveredAt: new Date(),
       readBy: [senderId] // Mark as read by sender
     });
-    
+
     // Save to database
     const savedMessage = await ticketComment.save();
     log(`Message saved to database with ID: ${savedMessage._id}`);
-    
+
     return savedMessage;
   } catch (error) {
     console.error('Error saving message to database:', error);
@@ -266,7 +266,7 @@ async function loadMessagesFromDB(ticketId) {
       log('MongoDB not connected, cannot load messages');
       return [];
     }
-    
+
     // Get the TicketComment model
     let TicketComment;
     try {
@@ -277,18 +277,18 @@ async function loadMessagesFromDB(ticketId) {
       console.error('TicketComment model not found, cannot load messages');
       return [];
     }
-    
-    const objectId = mongoose.Types.ObjectId.isValid(ticketId) 
-      ? new mongoose.Types.ObjectId(ticketId) 
+
+    const objectId = mongoose.Types.ObjectId.isValid(ticketId)
+      ? new mongoose.Types.ObjectId(ticketId)
       : ticketId;
-    
+
     // Find messages for this ticket
     const messages = await TicketComment.find({ ticket: objectId })
       .populate('replyTo', 'content user')
       .sort({ createdAt: 1 })
-    
+
     log(`Loaded ${messages.length} messages from database for ticket ${ticketId}`);
-    
+
     // Convert to the format expected by the client
     return messages.map(msg => ({
       _id: msg._id.toString(),
@@ -324,7 +324,7 @@ async function loadMessagesFromDB(ticketId) {
 // Socket.IO event handlers
 io.on('connection', (socket) => {
   log(`Socket connected: ${socket.id}`);
-  
+
   // Store user data on connection
   const { userId } = socket.handshake.auth;
   if (userId) {
@@ -334,10 +334,10 @@ io.on('connection', (socket) => {
     }
     userConnections.get(userId).add(socket.id);
     userSockets.set(userId, socket.id);
-    
+
     // Set user as online
     userStatus.set(userId, 'online');
-    
+
     // Broadcast user online status to all clients
     io.emit('user-status', { userId, status: 'online' });
   }
@@ -346,21 +346,21 @@ io.on('connection', (socket) => {
   socket.on('join', async (data) => {
     const { ticketId, userId: joinUserId } = data;
     const roomId = `ticket-${ticketId}`;
-    
+
     log(`User ${joinUserId} joining room ${roomId}`);
-    
+
     // Create room if it doesn't exist
     if (!ticketRooms.has(roomId)) {
       ticketRooms.set(roomId, new Set());
     }
     const roomMembers = ticketRooms.get(roomId);
-    
+
     // Add user to room members
     if (joinUserId) {
       log(`Adding user ${joinUserId} to room ${roomId}`);
       roomMembers.add(joinUserId);
     }
-    
+
     // Notify everyone in the room that a new user joined
     if (joinUserId) {
       socket.to(roomId).emit('user-joined', {
@@ -369,25 +369,25 @@ io.on('connection', (socket) => {
         timestamp: new Date()
       });
     }
-    
+
     // Join the socket to the room
     socket.join(roomId);
     log(`Socket ${socket.id} joined room ${roomId}`);
-    
+
     // Initialize typing status for this room if not exists
     if (!typingUsers.has(roomId)) {
       typingUsers.set(roomId, new Map());
     }
-    
+
     // Load messages from database
     const dbMessages = await loadMessagesFromDB(ticketId);
-    
+
     // Send database messages to the client
     if (dbMessages.length > 0) {
       log(`Sending ${dbMessages.length} database messages to user ${joinUserId}`);
       socket.emit('messages', dbMessages);
     }
-    
+
     // Send any queued messages for this room
     if (messageQueue.has(roomId)) {
       const queuedMessages = messageQueue.get(roomId) || [];
@@ -397,25 +397,25 @@ io.on('connection', (socket) => {
         socket.emit('message', msg);
       }
     }
-    
+
     // Notify other users in the room that this user is online
     log(`Notifying other users that ${joinUserId} is online in room ${roomId}`);
     if (joinUserId) {
-      socket.to(roomId).emit('user-status', { 
-        userId: joinUserId, 
-        status: userStatus.get(joinUserId) || 'online' 
+      socket.to(roomId).emit('user-status', {
+        userId: joinUserId,
+        status: userStatus.get(joinUserId) || 'online'
       });
     }
-    
+
     // Send list of online users in this room
     const onlineUsers = {};
     roomMembers.forEach(memberId => {
       onlineUsers[memberId] = userStatus.get(memberId) || 'offline';
     });
-    
+
     log(`Sending online users to ${joinUserId}: ${JSON.stringify(onlineUsers)}`);
     socket.emit('online-users-update', onlineUsers);
-    
+
     // Notify the client that join was successful
     socket.emit('joined', { ticketId, success: true });
   });
@@ -423,24 +423,24 @@ io.on('connection', (socket) => {
   // Handle leaving a room
   socket.on('leave', (ticketId) => {
     const roomId = `ticket-${ticketId}`;
-    
+
     socket.leave(roomId);
     log(`Socket ${socket.id} left room ${roomId}`);
-    
+
     // Notify others that user left
     // Remove user from room members but keep the room
     if (userId && ticketRooms.has(roomId)) {
       ticketRooms.get(roomId).delete(userId);
       log(`Removed user ${userId} from room ${roomId}`);
     }
-    
+
     // Remove user from typing status for this room
     if (userId) {
       const roomTyping = typingUsers.get(roomId);
       if (roomTyping) {
         roomTyping.delete(userId);
       }
-      
+
       // Notify others that user left
       socket.to(roomId).emit('user-left', {
         userId,
@@ -464,13 +464,13 @@ io.on('connection', (socket) => {
   socket.on('edit-message', async (data) => {
     try {
       const { messageId, ticketId, userId, content } = data;
-      
+
       log(`Received edit request for message ${messageId} from user ${userId}`);
-      
+
       if (!messageId || !ticketId || !userId || !content) {
         return socket.emit('error', { message: 'Missing required fields for message edit' });
       }
-      
+
       // Get the TicketComment model
       let TicketComment;
       try {
@@ -479,36 +479,36 @@ io.on('connection', (socket) => {
         console.error('TicketComment model not found, cannot edit message');
         return socket.emit('error', { message: 'Database error' });
       }
-      
+
       // Find and update the message in the database
-      const objectId = mongoose.Types.ObjectId.isValid(messageId) 
-        ? new mongoose.Types.ObjectId(messageId) 
+      const objectId = mongoose.Types.ObjectId.isValid(messageId)
+        ? new mongoose.Types.ObjectId(messageId)
         : null;
-        
+
       if (!objectId) {
         return socket.emit('error', { message: 'Invalid message ID' });
       }
-      
+
       // Update the message
       console.log('Updating message:', objectId, content);
       const updatedMessage = await TicketComment.findByIdAndUpdate(
         objectId,
-        { 
+        {
           content,
           isEdited: true,
           updatedAt: new Date()
         },
         { new: true }
       );
-      
+
       if (!updatedMessage) {
         return socket.emit('error', { message: 'Message not found' });
       }
-      
+
       // Broadcast the updated message to all clients in the room
       const roomId = `ticket-${ticketId}`;
       io.to(roomId).emit('message-updated', { messageId, content, isEdited: true });
-      
+
     } catch (error) {
       console.error('Error editing message:', error);
       socket.emit('error', { message: 'Failed to edit message' });
@@ -519,9 +519,9 @@ io.on('connection', (socket) => {
   socket.on('message', async (data) => {
     try {
       const { ticketId, userId: messageUserId, content, attachments, replyTo, replyToContent, mentions, tempId, user } = data;
-      
+
       log(`Received message from user ${messageUserId} in room ticket-${ticketId}: ${content.substring(0, 30)}...`);
-      
+
       // Create a message object
       const message = {
         _id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
@@ -537,24 +537,24 @@ io.on('connection', (socket) => {
         readBy: [messageUserId],
         tempId // Include the tempId in the broadcast to help clients match messages
       };
-      
+
       // Save message to database
       const savedMessage = await saveMessageToDB(message);
       if (savedMessage) {
         // Update message ID with the database ID
         message._id = savedMessage._id.toString();
       }
-      
+
       const roomId = `ticket-${ticketId}`;
-      
+
       // Get room members
       const roomMembers = Array.from(ticketRooms.get(roomId) || []);
       log(`Room members: ${JSON.stringify(roomMembers)}`);
-      
+
       // Get connected sockets in this room
       const roomSockets = io.sockets.adapter.rooms.get(roomId);
       log(`Room has ${roomSockets?.size || 0} connected sockets`);
-      
+
       // Send acknowledgment to sender first with the tempId for matching
       if (tempId) {
         log(`Sending message acknowledgment to sender with tempId ${tempId}`);
@@ -565,18 +565,18 @@ io.on('connection', (socket) => {
           timestamp: message.createdAt
         });
       }
-      
+
       // Now broadcast to everyone EXCEPT the sender
       // This prevents the sender from receiving the message twice
       log(`Broadcasting message to others in room ${roomId}`);
       socket.to(roomId).emit('message', message);
-      
+
       // Store in message queue for users who join later
       if (!messageQueue.has(roomId)) {
         messageQueue.set(roomId, []);
       }
       log(`Adding message to persistence queue for room ${roomId}`);
-      
+
       // Store message in queue for users who join later
       // Limit queue size to prevent memory issues
       const queue = messageQueue.get(roomId);
@@ -584,10 +584,10 @@ io.on('connection', (socket) => {
       if (queue.length > 50) {
         queue.shift(); // Remove oldest message if queue is too large
       }
-      
+
       // Also emit typing stopped event
       io.to(roomId).emit('typing', { userId: messageUserId, isTyping: false });
-      
+
       // Reset typing status for this user
       const roomTyping = typingUsers.get(roomId);
       if (roomTyping) {
@@ -602,14 +602,14 @@ io.on('connection', (socket) => {
   // Handle typing events
   socket.on('typing', (data) => {
     const { ticketId, userId: typingUserId, isTyping } = data;
-    
+
     // Update typing status for this user in this room
     const roomId = `ticket-${ticketId}`;
     const roomTyping = typingUsers.get(roomId);
     if (roomTyping) {
       roomTyping.set(typingUserId, isTyping);
     }
-    
+
     // Broadcast typing status to room (except sender)
     socket.to(roomId).emit('typing', { userId: typingUserId, isTyping });
   });
@@ -617,33 +617,33 @@ io.on('connection', (socket) => {
   // Handle disconnections
   socket.on('disconnect', () => {
     log(`Socket disconnected: ${socket.id}`);
-    
+
     if (userId) {
       userSockets.delete(userId);
       // Remove socket from user's connections
       const userSocketIds = userConnections.get(userId);
       if (userSocketIds) {
         userSocketIds.delete(socket.id);
-        
+
         // If user has no more connections, mark as offline
         if (userSocketIds.size === 0) {
           userStatus.set(userId, 'offline');
-          
+
           // Broadcast user offline status after a short delay
           // (to handle page refreshes and brief disconnections)
           setTimeout(() => {
             const currentUserSockets = userConnections.get(userId);
             if (!currentUserSockets || currentUserSockets.size === 0) {
-              io.emit('user-status', { 
-                userId, 
-                status: 'offline', 
-                lastSeen: new Date() 
+              io.emit('user-status', {
+                userId,
+                status: 'offline',
+                lastSeen: new Date()
               });
             }
           }, 5000);
         }
       }
-      
+
       // Remove user from typing status in all rooms
       for (const [roomId, typingMap] of typingUsers.entries()) {
         if (typingMap.has(userId)) {
@@ -658,13 +658,13 @@ io.on('connection', (socket) => {
   socket.on('add-reaction', async (data) => {
     try {
       const { messageId, emoji, ticketId, userId } = data;
-      
+
       log(`Received reaction ${emoji} for message ${messageId} from user ${userId}`);
-      
+
       if (!messageId || !emoji || !ticketId || !userId) {
         return socket.emit('error', { message: 'Missing required fields for reaction' });
       }
-      
+
       // Get the TicketComment model
       let TicketComment;
       try {
@@ -673,37 +673,37 @@ io.on('connection', (socket) => {
         console.error('TicketComment model not found, cannot add reaction');
         return socket.emit('error', { message: 'Database error' });
       }
-      
+
       // Find the message in the database
-      const objectId = mongoose.Types.ObjectId.isValid(messageId) 
-        ? new mongoose.Types.ObjectId(messageId) 
+      const objectId = mongoose.Types.ObjectId.isValid(messageId)
+        ? new mongoose.Types.ObjectId(messageId)
         : null;
-        
+
       if (!objectId) {
         return socket.emit('error', { message: 'Invalid message ID' });
       }
-      
+
       const message = await TicketComment.findById(objectId);
-      
+
       if (!message) {
         return socket.emit('error', { message: 'Message not found' });
       }
-      
+
       // Check if user already reacted with this emoji
-      const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
-        ? new mongoose.Types.ObjectId(userId) 
+      const userIdObj = mongoose.Types.ObjectId.isValid(userId)
+        ? new mongoose.Types.ObjectId(userId)
         : null;
-        
+
       if (!userIdObj) {
         return socket.emit('error', { message: 'Invalid user ID' });
       }
-      
+
       const existingReactionIndex = message.reactions.findIndex(
         r => r.emoji === emoji && r.userId.toString() === userIdObj.toString()
       );
-      
+
       let updatedMessage;
-      
+
       if (existingReactionIndex !== -1) {
         // Remove existing reaction
         message.reactions.splice(existingReactionIndex, 1);
@@ -717,18 +717,18 @@ io.on('connection', (socket) => {
         });
         updatedMessage = await message.save();
       }
-      
+
       // Broadcast the updated reactions to all clients in the room
       const roomId = `ticket-${ticketId}`;
-      io.to(roomId).emit('reaction-updated', { 
-        messageId, 
+      io.to(roomId).emit('reaction-updated', {
+        messageId,
         reactions: updatedMessage.reactions.map(r => ({
           emoji: r.emoji,
           userId: r.userId.toString(),
           createdAt: r.createdAt
         }))
       });
-      
+
     } catch (error) {
       console.error('Error handling reaction:', error);
       socket.emit('error', { message: 'Failed to add reaction' });
@@ -739,13 +739,13 @@ io.on('connection', (socket) => {
   socket.on('message-reaction', async (data) => {
     try {
       const { messageId, emoji, ticketId, userId } = data;
-      
+
       log(`Received message-reaction ${emoji} for message ${messageId} from user ${userId}`);
-      
+
       if (!messageId || !emoji || !ticketId || !userId) {
         return socket.emit('error', { message: 'Missing required fields for reaction' });
       }
-      
+
       // Get the TicketComment model
       let TicketComment;
       try {
@@ -754,37 +754,37 @@ io.on('connection', (socket) => {
         console.error('TicketComment model not found, cannot add reaction');
         return socket.emit('error', { message: 'Database error' });
       }
-      
+
       // Find the message in the database
-      const objectId = mongoose.Types.ObjectId.isValid(messageId) 
-        ? new mongoose.Types.ObjectId(messageId) 
+      const objectId = mongoose.Types.ObjectId.isValid(messageId)
+        ? new mongoose.Types.ObjectId(messageId)
         : null;
-        
+
       if (!objectId) {
         return socket.emit('error', { message: 'Invalid message ID' });
       }
-      
+
       const message = await TicketComment.findById(objectId);
-      
+
       if (!message) {
         return socket.emit('error', { message: 'Message not found' });
       }
-      
+
       // Check if user already reacted with this emoji
-      const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
-        ? new mongoose.Types.ObjectId(userId) 
+      const userIdObj = mongoose.Types.ObjectId.isValid(userId)
+        ? new mongoose.Types.ObjectId(userId)
         : null;
-        
+
       if (!userIdObj) {
         return socket.emit('error', { message: 'Invalid user ID' });
       }
-      
+
       const existingReactionIndex = message.reactions.findIndex(
         r => r.emoji === emoji && r.userId.toString() === userIdObj.toString()
       );
-      
+
       let updatedMessage;
-      
+
       if (existingReactionIndex !== -1) {
         // Remove existing reaction
         message.reactions.splice(existingReactionIndex, 1);
@@ -798,18 +798,18 @@ io.on('connection', (socket) => {
         });
         updatedMessage = await message.save();
       }
-      
+
       // Broadcast the updated reactions to all clients in the room
       const roomId = `ticket-${ticketId}`;
-      io.to(roomId).emit('reaction-updated', { 
-        messageId, 
+      io.to(roomId).emit('reaction-updated', {
+        messageId,
         reactions: updatedMessage.reactions.map(r => ({
           emoji: r.emoji,
           userId: r.userId.toString(),
           createdAt: r.createdAt
         }))
       });
-      
+
     } catch (error) {
       console.error('Error handling reaction:', error);
       socket.emit('error', { message: 'Failed to add reaction' });
@@ -820,13 +820,13 @@ io.on('connection', (socket) => {
   socket.on('mark-as-read', async (data) => {
     try {
       const { messageIds, userId } = data;
-      
+
       log(`Marking messages as read: ${messageIds.join(', ')} by user ${userId}`);
-      
+
       if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0 || !userId) {
         return socket.emit('error', { message: 'Missing required fields for marking messages as read' });
       }
-      
+
       // Get the TicketComment model
       let TicketComment;
       try {
@@ -835,45 +835,45 @@ io.on('connection', (socket) => {
         console.error('TicketComment model not found, cannot mark messages as read');
         return socket.emit('error', { message: 'Database error' });
       }
-      
-      const userIdObj = mongoose.Types.ObjectId.isValid(userId) 
-        ? new mongoose.Types.ObjectId(userId) 
+
+      const userIdObj = mongoose.Types.ObjectId.isValid(userId)
+        ? new mongoose.Types.ObjectId(userId)
         : null;
-        
+
       if (!userIdObj) {
         return socket.emit('error', { message: 'Invalid user ID' });
       }
-      
+
       // Find messages and update readBy field
       for (const messageId of messageIds) {
-        const objectId = mongoose.Types.ObjectId.isValid(messageId) 
-          ? new mongoose.Types.ObjectId(messageId) 
+        const objectId = mongoose.Types.ObjectId.isValid(messageId)
+          ? new mongoose.Types.ObjectId(messageId)
           : null;
-          
+
         if (!objectId) {
           log(`Invalid message ID: ${messageId}`);
           continue;
         }
-        
+
         await TicketComment.findByIdAndUpdate(
           objectId,
-          { 
+          {
             $addToSet: { readBy: userIdObj },
             $set: { isRead: true, readAt: new Date() }
           }
         );
       }
-      
+
       // Broadcast read status to all clients
       const message = await TicketComment.findById(messageIds[0]);
       if (message) {
         const roomId = `ticket-${message.ticket}`;
-        io.to(roomId).emit('messages-read', { 
-          messageIds, 
-          userId 
+        io.to(roomId).emit('messages-read', {
+          messageIds,
+          userId
         });
       }
-      
+
     } catch (error) {
       console.error('Error marking messages as read:', error);
       socket.emit('error', { message: 'Failed to mark messages as read' });
@@ -883,28 +883,28 @@ io.on('connection', (socket) => {
   // Add handler for updating user status
   socket.on('update-status', (data) => {
     const { status, userId } = data;
-    
+
     if (!userId || !status) {
       return socket.emit('error', { message: 'Missing required fields for status update' });
     }
-    
+
     // Update user status
     userStatus.set(userId, status);
-    
+
     // Broadcast to all clients
     io.emit('user-status', { userId, status });
-    
+
     log(`User ${userId} status updated to ${status}`);
   });
 
   // Add handler for file upload notifications
   socket.on('file-uploaded', (data) => {
     const { ticketId, messageId, userId, ...fileData } = data;
-    
+
     if (!ticketId || !messageId || !userId) {
       return socket.emit('error', { message: 'Missing required fields for file upload notification' });
     }
-    
+
     // Broadcast to all clients in the room
     const roomId = `ticket-${ticketId}`;
     io.to(roomId).emit('file_uploaded', {
@@ -913,7 +913,7 @@ io.on('connection', (socket) => {
       uploadedBy: userId,
       uploadedAt: new Date()
     });
-    
+
     log(`File upload notification sent for message ${messageId} in room ${roomId}`);
   });
 });
@@ -921,7 +921,7 @@ io.on('connection', (socket) => {
 // API routes
 app.get('/api/ping', (req, res) => {
   console.log('Ping received from', req.ip);
-  res.json({ 
+  res.json({
     timestamp: Date.now(),
     status: 'ok',
     server: 'socket-server',
@@ -932,7 +932,7 @@ app.get('/api/ping', (req, res) => {
 
 app.post('/api/ping', (req, res) => {
   console.log('POST ping received from', req.ip);
-  res.json({ 
+  res.json({
     timestamp: Date.now(),
     status: 'ok',
     server: 'socket-server',
@@ -955,11 +955,11 @@ app.post('/api/file-upload', upload.single('file'), async (req, res) => {
     }
 
     const { ticketId, userId } = req.body;
-    
+
     if (!ticketId || !userId) {
       return res.status(400).json({ status: 'error', message: 'Missing ticketId or userId' });
     }
-    
+
     // Create file info
     const fileInfo = {
       fileName: req.file.originalname,
@@ -968,14 +968,14 @@ app.post('/api/file-upload', upload.single('file'), async (req, res) => {
       url: `/uploads/${req.file.filename}`,
       uploadedAt: new Date()
     };
-    
+
     // Return success response
     res.json({
       status: 'success',
       message: 'File uploaded successfully',
       data: fileInfo
     });
-    
+
     log(`File uploaded: ${fileInfo.fileName} for ticket ${ticketId} by user ${userId}`);
   } catch (error) {
     console.error('File upload error:', error);
@@ -986,7 +986,7 @@ app.post('/api/file-upload', upload.single('file'), async (req, res) => {
 // Debug endpoint to get room info
 app.get('/api/debug/rooms', (req, res) => {
   const rooms = {};
-  
+
   ticketRooms.forEach((members, roomId) => {
     rooms[roomId] = {
       members: Array.from(members),
@@ -994,7 +994,7 @@ app.get('/api/debug/rooms', (req, res) => {
       messageCount: messageQueue.get(roomId)?.length || 0
     };
   });
-  
+
   res.json({
     rooms,
     userCount: userConnections.size,
@@ -1010,7 +1010,7 @@ const PORT = process.env.PORT || 3001;
 connectToMongoDB().then(() => {
   server.listen(PORT, () => {
     console.log(`Socket.IO server running on port ${PORT}`);
-    
+
     // Print server info
     console.log(`
 Server Information:

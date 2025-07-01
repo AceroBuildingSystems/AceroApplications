@@ -887,7 +887,7 @@ const EnhancedTicketChat: React.FC<EnhancedTicketChatProps> = ({
           
           <div className="py-4">
             <Input 
-              placeholder="Search for team members..."
+              placeholder="team members..."
               className="mb-4"
             />
             

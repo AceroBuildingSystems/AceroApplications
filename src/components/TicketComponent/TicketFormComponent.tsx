@@ -49,15 +49,13 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
   // Monitor form completion for enabling the submit button
   const [canSubmit, setCanSubmit] = useState(false);
   
-  const { data: departmentData = [], isLoading: departmentLoading }:any = useGetMasterQuery({
+  const { data: departmentData = { data: [] }, isLoading: departmentLoading }:any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { name: 1 },
   });
   
-  const { data: categoryData = [], isLoading: categoryLoading, refetch: refetchCategories }:any = useGetTicketCategoriesQuery({
-    departmentId: selectedDepartment
-  });
+  const { data: categoryData = { data: [] }, isLoading: categoryLoading }:any = useGetTicketCategoriesQuery({});
   
   const { register, handleSubmit, formState: { errors, isSubmitting }, 
          setValue, watch, trigger } = useForm({
@@ -104,11 +102,24 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
     }
   }, [watchedDepartment, selectedDepartment, setValue]);
   
+  // Debug effect to log category data
   useEffect(() => {
-    if (selectedDepartment) {
-      refetchCategories();
-    }
-  }, [selectedDepartment, refetchCategories]);
+    console.log('Category Data:', categoryData);
+    console.log('Selected Department:', selectedDepartment);
+    console.log('Category Loading:', categoryLoading);
+    
+    // Filter categories for debugging
+    const filteredCategories = selectedDepartment 
+      ? categoryData?.data?.filter((cat: any) => {
+          // Handle both string and object department references
+          const catDepartmentId = typeof cat.department === 'string' 
+            ? cat.department 
+            : cat.department?._id;
+          return catDepartmentId === selectedDepartment;
+        }) || []
+      : [];
+    console.log('Filtered Categories:', filteredCategories);
+  }, [categoryData, selectedDepartment, categoryLoading]);
   
   const handleFormSubmit = (data: any) => {
     const formData = {
@@ -324,11 +335,38 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="rounded-md">
-                      {categoryData?.data?.map((cat: any) => (
-                        <SelectItem key={cat._id} value={cat._id} className="cursor-pointer">
-                          {cat.name}
+                      {categoryLoading ? (
+                        <SelectItem value="loading" disabled className="text-muted-foreground">
+                          Loading categories...
                         </SelectItem>
-                      ))}
+                      ) : (() => {
+                        // Filter categories by selected department
+                        const filteredCategories = selectedDepartment 
+                          ? categoryData?.data?.filter((cat: any) => {
+                              // Handle both string and object department references
+                              const catDepartmentId = typeof cat.department === 'string' 
+                                ? cat.department 
+                                : cat.department?._id;
+                              return catDepartmentId === selectedDepartment;
+                            }) || []
+                          : [];
+                        
+                        return filteredCategories.length > 0 ? (
+                          filteredCategories.map((cat: any) => (
+                            <SelectItem key={cat._id} value={cat._id} className="cursor-pointer">
+                              {cat.name}
+                            </SelectItem>
+                          ))
+                        ) : selectedDepartment ? (
+                          <SelectItem value="no-categories" disabled className="text-muted-foreground">
+                            No categories available for this department
+                          </SelectItem>
+                        ) : (
+                          <SelectItem value="select-department" disabled className="text-muted-foreground">
+                            Select a department first
+                          </SelectItem>
+                        );
+                      })()}
                     </SelectContent>
                   </Select>
                   {errors.category && (

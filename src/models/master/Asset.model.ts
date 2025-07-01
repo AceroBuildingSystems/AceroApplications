@@ -101,7 +101,8 @@ const AssetSchema = new mongoose.Schema({
     currentAssignment: {
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
-            refPath: 'currentAssignment.assignedType'
+            refPath: 'currentAssignment.assignedType',
+            autopopulate: true
         },
         assignedType: {
             type: String,
@@ -118,7 +119,8 @@ const AssetSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Location'
         },
-        remarks: String
+        remarks: String,
+       
     },
 
     // Assignment History
@@ -258,6 +260,8 @@ AssetSchema.methods.retire = async function(remarks?: string) {
     }
     await this.save();
 };
+
+AssetSchema.plugin(require('mongoose-autopopulate'));
 
 const Asset = mongoose.models.Asset || mongoose.model<IAsset, IAssetModel>('Asset', AssetSchema);
 

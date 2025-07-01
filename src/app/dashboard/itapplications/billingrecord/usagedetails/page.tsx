@@ -23,21 +23,50 @@ const page = () => {
     const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
 
-    const { data: usageData = [], isLoading: usageLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.USAGE_DETAIL,
-        sort: { account: 'asc' },
-    });
-
-    const { data: accountData = [], isLoading: accountLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ACCOUNT_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-
     const { data: employeeData = [], isLoading: employeeLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.USER_MASTER,
         sort: { name: 'asc' },
     });
+
+    const { data: assetData, isLoading: assetsLoading, refetch } = useGetMasterQuery({
+        db: MONGO_MODELS.ASSET_MASTER,
+        filter: { isActive: true },
+        populate: [
+            { path: 'product' },
+            { path: 'warehouse' },
+            { path: 'inventory' },
+            { path: 'inventory.vendor', select: 'name' },
+            { path: 'currentAssignment.assignedTo', select: 'firstName lastName name' },
+            { path: 'currentAssignment.location', select: 'name' },
+            { path: 'assignmentHistory.assignedTo', select: 'firstName lastName name' },
+            { path: 'assignmentHistory.location', select: 'name' }
+        ]
+    });
+
+
+    const { data: usageData = [], isLoading: usageLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.USAGE_DETAIL,
+        sort: { account: 'asc' },
+
+
+    });
+
+
+    const { data: accountData = [], isLoading: accountLoading }: any = useGetMasterQuery({
+        db: MONGO_MODELS.ACCOUNT_MASTER,
+        filter: { isActive: true },
+        
+    });
+
+
+    const serialNumbers = accountData?.data?.map((item: any) => ({
+        name: item?.name?.serialNumber,
+        _id: item._id,
+        package: item?.package,
+    }));
+
+
+
 
     const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.DEPARTMENT_MASTER,
@@ -55,31 +84,20 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
-    const fieldsToAdd1 = [
-        { fieldName: 'accountNumber', path: ['account', 'name'] },
-        { fieldName: 'employee', path: ['account', 'employee'] },
-        { fieldName: 'company', path: ['account', 'company'] },
+   const fieldsToAdd = [
+    { fieldName: 'accountNumber1', path: ['account', 'name'] },
+    { fieldName: 'currentAssignment', path: ['account', 'name', 'currentAssignment'] },
+    { fieldName: 'assignedTo', path: ['account', 'name', 'currentAssignment', 'assignedTo'] },
+    { fieldName: 'company', path: ['account', 'name', 'currentAssignment', 'organisation'] },
+    { fieldName: 'accountNumber', path: ['account', 'name', 'serialNumber'] },
+    { fieldName: 'department', path: ['account', 'name', 'currentAssignment', 'assignedTo', 'employmentDetails', 'department'] },
+    { fieldName: 'company', path: ['account', 'name', 'currentAssignment', 'assignedTo', 'employmentDetails', 'organisation'] },
+    { fieldName: 'departmentName', path: ['account', 'name', 'currentAssignment', 'assignedTo', 'employmentDetails', 'department', 'name'] },
+    { fieldName: 'companyName', path: ['account', 'name', 'currentAssignment', 'assignedTo', 'employmentDetails', 'organisation', 'name'] },
+    { fieldName: 'employeeName', path: ['account', 'name', 'currentAssignment', 'assignedTo', '_id'] },
+];
 
-    ];
-
-    const transformedData1: any = transformData(usageData?.data, fieldsToAdd1);
-    const fieldToAdd2 = [
-
-        { fieldName: 'employeeName', path: ['employee', '_id'] },
-        { fieldName: 'department', path: ['employee', 'department'] },
-        { fieldName: 'companyName', path: ['company', 'name'] },
-
-    ];
-
-    const transformedData2: any = transformData(transformedData1, fieldToAdd2);
-
-    const fieldToAdd = [
-
-        { fieldName: 'departmentName', path: ['department', 'name'] },
-
-    ];
-
-    const transformedData: any = transformData(transformedData2, fieldToAdd);
+const transformedData = transformData(usageData?.data, fieldsToAdd);
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
@@ -95,7 +113,7 @@ const page = () => {
     }
     const accountNames = accountData?.data
         ?.filter((acc: undefined) => acc !== undefined)  // Remove undefined entries
-        ?.map((acc: { _id: any; name: any }) => ({ _id: acc.name, name: acc.name }));
+        ?.map((acc: { _id: any; name: any; serialNumber:any }) => ({ _id: acc.name.serialNumber, name: acc.name.serialNumber }));
 
     const employeeNames = employeeData?.data
         ?.filter((emp: undefined) => emp !== undefined)  // Remove undefined entries
@@ -109,10 +127,10 @@ const page = () => {
         ?.filter((comp: undefined) => comp !== undefined)  // Remove undefined entries
         ?.map((comp: { _id: any; name: any }) => ({ _id: comp?.name, name: comp?.name }));
 
-    
+
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Account Number', name: "account", type: "select", required: true, placeholder: 'Select Account', format: 'ObjectId', data: accountData?.data },
+        { label: 'Account Number', name: "account", type: "select", required: true, placeholder: 'Select Account', format: 'ObjectId', data: serialNumbers },
         { label: 'Billing Start Date', name: "billingPeriodStart", type: "date", format: 'Date', placeholder: 'Select Bill Start Date' },
         { label: 'Gross Bill Amount', name: "grossBillAmount", type: "number", required: true, placeholder: 'Gross Bill Amount' },
         { label: 'One Time Charge', name: "oneTimeCharge", type: "number", required: false, placeholder: 'One Time Charge' },
@@ -191,8 +209,8 @@ const page = () => {
 
     };
 
-console.log(usageData?.data, "usageData");
-   
+    console.log(transformedData, "usageData");
+
     const handleImport = () => {
         bulkImport({
             roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.USAGE_DETAIL, masterName: "UsageDetail", onStart: () => setImporting(true),
@@ -306,11 +324,11 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("account")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("account")?.name?.serialNumber}</div>,
         },
 
         {
-            accessorKey: "employee",
+            accessorKey: "account.name.currentAssignment",
             header: ({ column }: { column: any }) => {
                 const isSorted = column.getIsSorted();
 
@@ -328,28 +346,15 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("account")?.employee?.displayName?.toProperCase()}</div>,
-        },
-        {
-            accessorKey: "others",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
+            cell: ({ row }: { row: any }) => {
+                const assignment = row.original?.account?.name?.currentAssignment;
+                const empName =
+                    assignment?.assignedTo?.displayName ||
+                    assignment?.assignedTo?.firstName ||
+                    "—";
 
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Others</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
+                return <div>{empName.toProperCase?.() || empName}</div>;
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("account")?.others?.name}</div>,
         },
 
         {
@@ -371,7 +376,14 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("account")?.company?.name}</div>,
+            cell: ({ row }: { row: any }) => {
+                const assignment = row.original?.account?.name?.currentAssignment;
+                const company =
+                    assignment?.assignedTo?.employmentDetails?.organisation?.name ||
+                    "—";
+
+                return <div>{company.toProperCase?.() || company}</div>;
+            },
         },
 
 
@@ -487,7 +499,7 @@ console.log(usageData?.data, "usageData");
 
                 return (
                     <button
-                        className="group  flex items-center space-x-2"
+                        className="group flex items-center space-x-2"
                         onClick={() => column.toggleSorting(isSorted === "asc")}
                     >
                         <span>Net Bill Amount</span>
@@ -499,7 +511,7 @@ console.log(usageData?.data, "usageData");
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{parseFloat(row.getValue("netBillAmount"))?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
+            cell: ({ row }: { row: any }) => <div className="">{parseFloat(row.getValue("netBillAmount"))?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>,
         },
     ];
 

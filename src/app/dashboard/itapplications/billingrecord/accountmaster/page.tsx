@@ -26,38 +26,46 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
+    const { data: assetData, isLoading: assetsLoading, refetch } = useGetMasterQuery({
+        db: MONGO_MODELS.ASSET_MASTER,
+        filter: { isActive: true },
+        populate: [
+            { path: 'product' },
+            { path: 'warehouse' },
+            { path: 'inventory' },
+            { path: 'inventory.vendor', select: 'name' },
+            { path: 'currentAssignment.assignedTo', select: 'firstName lastName name' },
+            { path: 'currentAssignment.location', select: 'name' },
+            { path: 'assignmentHistory.assignedTo', select: 'firstName lastName name' },
+            { path: 'assignmentHistory.location', select: 'name' }
+        ]
+    });
+
+
+    const filteredAssets = assetData?.data?.filter(
+        (item: any) =>
+            item.product?.category?.name?.toLowerCase() === 'sim'
+    );
+
+    console.log('filteredAssets', filteredAssets);
+    const serialNumbers = filteredAssets?.map((item: any) => ({
+        name: item?.serialNumber,
+        _id: item._id,
+    }));
+
+    console.log('assetData', serialNumbers);
     const { data: packageData = [], isLoading: packageLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.PACKAGE_MASTER,
         filter: { isActive: true },
         sort: { name: 'asc' },
     });
-    const { data: providerData = [], isLoading: providerLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.PROVIDER_TYPE_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.ORGANISATION_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
-    const { data: userData = [], isLoading: userLoading }: any = useGetMasterQuery({
-        db: 'USER_MASTER',
-        filter: { isActive: true },
-        sort: { displayName: 'asc' },
-    });
 
-    const { data: otherMasterData = [], isLoading: otherMasterLoading }: any = useGetMasterQuery({
-        db: MONGO_MODELS.OTHER_MASTER,
-        filter: { isActive: true },
-        sort: { name: 'asc' },
-    });
 
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = packageLoading || providerLoading || userLoading || organisationLoading || otherMasterLoading || accountLoading;
+    const loading = packageLoading || accountLoading || assetsLoading;
 
     interface RowData {
         id: string;
@@ -69,14 +77,9 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Account Number', name: "name", type: "text", required: true, placeholder: 'Account Number' },
-        { label: 'Provider', name: "provider", type: "select", required: true, placeholder: 'Select Provider', format: 'ObjectId', data: providerData?.data },
-        { label: 'Company', name: "company", type: "select", required: true, placeholder: 'Select Company', format: 'ObjectId', data: organisationData?.data },
-        { label: 'Employee', name: "employee", type: "select", required: false, placeholder: 'Select Employee', format: 'ObjectId', data: userData?.data },
-        { label: 'Others', name: "others", type: "select", required: false, placeholder: 'Select Others', format: 'ObjectId', data: otherMasterData?.data },
+        { label: 'Account Number', name: "name", type: "select", required: true, placeholder: 'Select Account No', format: 'ObjectId', data: serialNumbers },
         { label: 'Package', name: "package", type: "select", required: false, placeholder: 'Select Package', format: 'ObjectId', data: packageData?.data },
 
-        { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
 
@@ -111,47 +114,6 @@ const page = () => {
 
         const response: any = await createMaster(formattedData);
 
-        if (response?.error?.data?.message?.errorResponse?.errmsg) {
-            toast?.error(response?.error?.data?.message?.errorResponse?.errmsg);
-        }
-        else {
-            formData.account = response?.data?.data?._id;
-            formData.startDate = new Date();
-
-            if (action === 'Update') {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'update',
-                    bulkUpdate: true,
-                    filter: { "account": formData._id, 'endDate': null },
-                    data: { 'endDate': new Date() },
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-                delete formData._id;
-                const formattedData2 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-
-                }
-                const response2: any = await createMaster(formattedData2);
-            }
-            else {
-
-                const formattedData1 = {
-                    db: MONGO_MODELS.ACCOUNT_HISTORY,
-                    action: 'create',
-                    data: formData,
-                };
-
-                const response1: any = await createMaster(formattedData1);
-
-            }
-
-        }
 
         return response;
 
@@ -276,7 +238,7 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")?.serialNumber}</div>,
         },
         {
             accessorKey: "employee",
@@ -299,27 +261,7 @@ const page = () => {
             },
             cell: ({ row }: { row: any }) => <div >{row.getValue("employee")?.displayName?.toProperCase()}</div>,
         },
-        {
-            accessorKey: "others",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
 
-                return (
-                    <button
-                        className="group  flex items-center space-x-2"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Others</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("others")?.name}</div>,
-        },
         {
             accessorKey: "company",
             header: ({ column }: { column: any }) => {
@@ -381,29 +323,9 @@ const page = () => {
                     </button>
                 );
             },
-            cell: ({ row }: { row: any }) => <div >{row.getValue("provider")?.name}</div>,
+            cell: ({ row }: { row: any }) => <div >{row.getValue("name")?.product?.brand}</div>,
         },
-        {
-            accessorKey: "isActive",
-            header: ({ column }: { column: any }) => {
-                const isSorted = column.getIsSorted();
 
-                return (
-                    <button
-                        className="group  flex items-center space-x-2 w-[100px]"
-                        onClick={() => column.toggleSorting(isSorted === "asc")}
-                    >
-                        <span>Status</span>
-                        <ChevronsUpDown
-                            size={15}
-                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                                }`}
-                        />
-                    </button>
-                );
-            },
-            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-        },
 
     ];
 

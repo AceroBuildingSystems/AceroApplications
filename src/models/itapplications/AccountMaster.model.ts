@@ -3,27 +3,12 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import { accountmaster } from "@/types/itapplications/accountmaster.types";
 
 const AccountMasterSchema: Schema<accountmaster> = new Schema({
-    name: { type: String, required: true, unique: true },
-    provider: {
+    name: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "ProviderType", // Reference
+        ref: "Asset", // Reference
         autopopulate: true
     },
-    company: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Organisation", // Reference
-        autopopulate: true
-    },
-    employee: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // Reference
-        autopopulate: true
-    },
-    others: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "OtherMaster", // Reference
-        autopopulate: true
-    },
+    
     package: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "PackageMaster", // Reference

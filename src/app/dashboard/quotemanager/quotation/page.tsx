@@ -66,8 +66,9 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
+    console.log(sortedQuotations);
     const quotationDataNew = transformQuoteData(sortedQuotations, user, teamMemberData?.data);
-
+console.log(quotationDataNew);
     const { data: countryData = [], isLoading: countryLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.COUNTRY_MASTER,
         filter: { isActive: true },

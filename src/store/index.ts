@@ -12,7 +12,9 @@ export const store = configureStore({
     // Add other reducers here
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware()
+    getDefaultMiddleware({
+      serializableCheck: false, // 🔴 disable serializable state check in dev
+    })
       .concat(baseApi.middleware)
       .concat(hrWizardApi.middleware)
       .concat(rtkQueryErrorLogger),

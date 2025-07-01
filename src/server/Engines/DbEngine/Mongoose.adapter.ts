@@ -168,12 +168,14 @@ if (modelName === 'USER_MASTER') {
       extension: employmentDetails?.extension,
       activeLocation: employmentDetails?.activeLocation,
       reportingLocation: employmentDetails?.reportingLocation,
-      Organisation: employmentDetails?.organisation,
+      organisation: employmentDetails?.organisation,
+      joiningDate: employmentDetails?.joiningDate,
+      relievingDate: employmentDetails?.relievingDate,
    
     };
   });
 
-  console.log('Sanitized docs:', sanitizedDocs);
+  
 }
     return {
       status: SUCCESS,

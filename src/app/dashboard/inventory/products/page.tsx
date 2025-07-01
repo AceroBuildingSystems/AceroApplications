@@ -186,6 +186,7 @@ const ProductsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: ProductFormData; action: string }) => {
         try {
+            console.log('Saving product:', formData, action);
             const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_MASTER,
                 action: action === 'Add' ? 'create' : 'update',

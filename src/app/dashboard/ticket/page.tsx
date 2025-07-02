@@ -232,7 +232,7 @@ const TicketDashboardPage = () => {
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.3 }}
                   >
-                    <Badge className="ml-2 badge-status bg-primary/10 text-primary font-medium px-2.5 py-0.5 text-xs">
+                    <Badge className="ml-2 badge-status bg-primary/10 text-primary font-medium px-2.5 py-0.5 text-xs hover:bg-white/80 dark:hover:bg-secondary/80 transition-colors duration-200">
                       {filteredTickets.length} {filteredTickets.length === 1 ? 'ticket' : 'tickets'}
                     </Badge>
                   </motion.div>
@@ -320,13 +320,13 @@ const TicketDashboardPage = () => {
                     >
                       User Skills
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-border/30" />
-                    <DropdownMenuItem 
+                    {/* <DropdownMenuSeparator className="bg-border/30" /> */}
+                    {/* <DropdownMenuItem 
                       onClick={() => setShowFilters(!showFilters)}
                       className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md transition-all duration-200"
                     >
                       {showFilters ? 'Hide Filters' : 'Show Filters'}
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </motion.div>

@@ -148,14 +148,15 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     }),
     useSensor(KeyboardSensor)
   );
-
+console.log(ticketToAssign?.department?._id)
   // Fetch users for assignment dialog
   const { data: usersData = {data:[]}, isLoading: usersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
-    filter: ticketToAssign ? { department: ticketToAssign.department._id, isActive: true } : {},
-    sort: { firstName: 1 }
+    filter: ticketToAssign ? { departmentId: ticketToAssign?.department?._id, isActive: true } : {},
+    sort: { firstName: 'asc' }
   }, { skip: !ticketToAssign });
 
+ 
   // Store the previous tickets ref to avoid unnecessary re-renders
   const prevTicketsRef:any = useRef(null);
   

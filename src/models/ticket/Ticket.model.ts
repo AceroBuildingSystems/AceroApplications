@@ -1,6 +1,15 @@
 // src/models/ticket/Ticket.model.ts
 import mongoose, { Document, Model, Schema, Query } from "mongoose";
 
+export interface TicketAttachment {
+  url: string;
+  attachedBy: mongoose.Types.ObjectId;
+  attachedAt: Date;
+  fileName: string;
+  fileType: string; // MIME type of the file
+  fileSize: number; // Size in bytes
+}
+
 export interface TicketDocument extends Document {
   title: string;
   description: string;
@@ -25,7 +34,8 @@ export interface TicketDocument extends Document {
   recurringEndDate?: Date;
   recurringInterval?: number;
   nextRecurringDate?: Date;
-  child?: number; // Add the 'child' field to match the schema
+  child?: number;
+  attachments?: TicketAttachment[]; // Add the 'child' field to match the schema
 }
 
 const TicketSchema: Schema<TicketDocument> = new Schema({
@@ -66,15 +76,23 @@ const TicketSchema: Schema<TicketDocument> = new Schema({
   totalEfforts: { type: Number, default: 0 },
   roomId: { type: String, default: () => `room-${new mongoose.Types.ObjectId().toString()}` },
   isRecurring: { type: Boolean, default: false },
-  recurringType: { 
-    type: String, 
-    enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'CUSTOM'], 
-    default: 'WEEKLY' 
+  recurringType: {
+    type: String,
+    enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'CUSTOM'],
+    default: 'WEEKLY'
   },
   recurringEndDate: { type: Date },
   recurringInterval: { type: Number, default: 1 }, // For custom intervals
   nextRecurringDate: { type: Date },
-  child: { type: Number, ref: 'Child', autopopulate: true }
+  child: { type: Number, ref: 'Child', autopopulate: true },
+  attachments: [{
+    url: { type: String },
+    attachedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", autopopulate: true },
+    attachedAt: { type: Date, default: Date.now },
+    fileName: { type: String },
+    fileType: { type: String }, // MIME type of the file
+    fileSize: { type: Number } // Size in bytes
+  }]
 }, { timestamps: true });
 
 TicketSchema.pre<Query<any, TicketDocument>>(/^find/, function (next) {

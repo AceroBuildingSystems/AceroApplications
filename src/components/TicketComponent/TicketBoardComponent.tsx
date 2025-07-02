@@ -123,6 +123,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   onTicketClick,
   userId
 }) => {
+  console.log('tickets:', tickets);
   const router = useRouter();
   const [columns, setColumns] = useState<{ [key: string]: Column }>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -177,6 +178,13 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         tickets: [],
         color: 'blue'
       },
+      assigned: {
+        id: 'assigned',
+        title: 'Assigned',
+        status: 'ASSIGNED',
+        tickets: [],
+        color: 'amber'
+      },
       inProgress: {
         id: 'inProgress',
         title: 'In Progress',
@@ -199,7 +207,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         color: 'purple'
       }
     };
-
+console.log(tickets);
     // Distribute tickets to columns based on status
     tickets.forEach(ticket => {
       switch (ticket.status.toUpperCase()) {
@@ -468,7 +476,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   return (
     <>
       <div className="w-full max-w-[83vw] overflow-x-scroll bg-background/50 rounded-xl p-4">
-        <div className="w-full overflow-x-auto pb-6 pt-2 snap-x hide-scrollbar">
+        <div className="w-full overflow-x-auto pb-6 pt-2 snap-x">
           <div className="flex gap-6 px-1">
             <DndContext 
               sensors={sensors}

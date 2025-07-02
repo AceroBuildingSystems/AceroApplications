@@ -202,7 +202,7 @@ const TicketDashboardPage = () => {
     setPriorityFilter('');
     setSearchQuery('');
   };
-  
+  console.log("Filtered Tickets:", filteredTickets);
   return (
     <DashboardLoader loading={loading}>
       <motion.div 

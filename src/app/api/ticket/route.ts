@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
 Object.values(models).forEach(model => {
   const modelName = (model as any).modelName;
   if (modelName && !mongoose.models[modelName]) {
-    ;(model as any).init();
+    ; (model as any).init();
   }
 });
 
@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
 
   // Get all tickets with filters
   const response = await ticketManager.getTickets(operations);
-  
+
   if (response.status === SUCCESS) {
     return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: response.data, pagination: response.pagination }, { status: 200 });
   }
@@ -120,40 +120,43 @@ export async function POST(request: NextRequest) {
   if (data.assignees && Array.isArray(data.assignees)) {
     data.assignees = data.assignees.map((id: string) => createMongooseObjectId(id));
   }
-  
+
   if (data.addedBy) data.addedBy = createMongooseObjectId(data.addedBy);
   if (data.updatedBy) data.updatedBy = createMongooseObjectId(data.updatedBy);
 
   let response: any = {};
-  
+
   switch (action) {
     case "create":
       response = await ticketManager.createTicket({ data });
       break;
-      case "update":
-        // Log the update data
-        console.log("Updating ticket with data:", data);
-        
-        if (!data._id) {
-          return NextResponse.json({ status: ERROR, message: "Ticket ID is required for updates", data: {} }, { status: 400 });
+    case "update":
+      
+      // Log the update data
+      console.log("Updating ticket with data:", data);
+
+      if (!data._id) {
+        return NextResponse.json({ status: ERROR, message: "Ticket ID is required for updates", data: {} }, { status: 400 });
+      }
+
+      response = await ticketManager.updateTicket({
+        filter: { _id: data._id },
+        data: {
+          ...(data.status && { status: data.status }),
+          ...(data.priority && { priority: data.priority }),
+          ...(data.title && { title: data.title }),
+          ...(data.description && { description: data.description }),
+          ...(data.department && { department: createMongooseObjectId(data.department) }),
+          ...(data.category && { category: createMongooseObjectId(data.category) }),
+          ...(data.assignee && { assignee: createMongooseObjectId(data.assignee) }),
+          ...(data.assignees && { assignees: data.assignees.map((id: string) => createMongooseObjectId(id)) }),
+          ...(data.dueDate && { dueDate: data.dueDate }),
+          ...(data.attachments && { attachments: data.attachments }),
+          updatedBy: createMongooseObjectId(data.updatedBy)
         }
-        
-        response = await ticketManager.updateTicket({
-          filter: { _id: data._id },
-          data: {
-            ...(data.status && { status: data.status }),
-            ...(data.priority && { priority: data.priority }),
-            ...(data.title && { title: data.title }),
-            ...(data.description && { description: data.description }),
-            ...(data.department && { department: createMongooseObjectId(data.department) }),
-            ...(data.category && { category: createMongooseObjectId(data.category) }),
-            ...(data.assignee && { assignee: createMongooseObjectId(data.assignee) }),
-            ...(data.assignees && { assignees: data.assignees.map((id: string) => createMongooseObjectId(id)) }),
-            ...(data.dueDate && { dueDate: data.dueDate }),
-            updatedBy: createMongooseObjectId(data.updatedBy)
-          }
-        });
-        break;
+      });
+      console.log(response);
+      break;
     case "assign":
       response = await ticketManager.assignTicket({
         ticketId: data.ticketId,
@@ -168,8 +171,8 @@ export async function POST(request: NextRequest) {
         updatedBy: data.updatedBy
       });
       break;
-      
-      
+
+
     case "changeStatus":
       response = await ticketManager.changeTicketStatus({
         ticketId: data.ticketId,

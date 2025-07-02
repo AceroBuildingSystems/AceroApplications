@@ -164,7 +164,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
 
                       <TableRow
                         key={row.id}
-                        className={rowClassMap?.(row.original)}
+                        className={rowClassMap?.row?.original}
                         data-state={row.getIsSelected() && "selected"}
                       >
                         {row.getVisibleCells().map((cell) => {

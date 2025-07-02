@@ -121,18 +121,18 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
     console.log('Filtered Categories:', filteredCategories);
   }, [categoryData, selectedDepartment, categoryLoading]);
   
-  const handleFormSubmit = (data: any) => {
+  const handleFormSubmit = async (data: any) => {
     const formData = {
       ...data,
       creator: userId,
       addedBy: userId,
       updatedBy: userId,
-      ...(isEdit && initialData ? { _id: initialData._id } : {})
+      ...(isEdit && initialData ? { _id: initialData._id } : {}),
+      ...(!isEdit ? { status: 'NEW' } : {}) // Always set status NEW for new tickets
     };
     
     // Submit the form data
-    onSubmit(formData).then((response) => {
-    onSubmit(formData);
+    await onSubmit(formData);
   };
   
   const goToNextStep = async () => {

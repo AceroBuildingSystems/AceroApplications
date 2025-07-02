@@ -7,7 +7,7 @@ import DashboardLoader from '@/components/ui/DashboardLoader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/inputSearch';
 import { Button } from '@/components/ui/button';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { 
@@ -433,18 +433,13 @@ const TicketDashboardPage = () => {
               variants={dashboardItemVariants}
               className="relative max-w-xs sm:max-w-sm w-full group"
             >
-              <motion.div
-                initial={{ opacity: 0.5 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
-              </motion.div>
+             
               <Input
+              type='text'
                 placeholder="Search tickets..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 rounded-lg border-border/30 h-9 focus:border-primary/40 transition-all duration-200 bg-white/70 dark:bg-card/70 backdrop-blur-sm focus:ring-2 focus:ring-primary/10 focus:ring-offset-0"
+               
               />
               <AnimatePresence>
                 {searchQuery && (

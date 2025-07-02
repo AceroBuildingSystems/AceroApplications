@@ -392,6 +392,8 @@ console.log(inventoryResponse, 'inventorydata')
     const handleSaveProduct = async (formData: AssetFormData) => {
         try {
             // Validation - ensure product is selected
+            console.log('Form data before validation:', formData);
+            console.log('Selected item', selectedItem);
             if (!formData.product) {
                 toast.error('Please select a product');
                 return;

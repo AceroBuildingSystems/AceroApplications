@@ -37,62 +37,64 @@ interface TicketFormComponentProps {
   isEdit?: boolean;
 }
 
-const TicketFormComponent: React.FC<TicketFormComponentProps> = ({ 
-  onSubmit, 
-  initialData, 
+export const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
+  onSubmit,
+  initialData,
   userId,
   isEdit = false
 }) => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>(initialData?.department?._id || '');
   const [formStep, setFormStep] = useState(0);
-  
+
   // Monitor form completion for enabling the submit button
   const [canSubmit, setCanSubmit] = useState(false);
-  
-  const { data: departmentData = { data: [] }, isLoading: departmentLoading }:any = useGetMasterQuery({
+
+  const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
     sort: { name: 1 },
   });
-  
-  const { data: categoryData = { data: [] }, isLoading: categoryLoading }:any = useGetTicketCategoriesQuery({});
-  
-  const { register, handleSubmit, formState: { errors, isSubmitting }, 
-         setValue, watch, trigger } = useForm({
-    resolver: zodResolver(ticketSchema),
-    mode: "onChange",
-    defaultValues: initialData ? {
-      title: initialData.title,
-      description: initialData.description,
-      department: initialData.department?._id,
-      category: initialData.category?._id,
-      priority: initialData.priority,
-      dueDate: initialData.dueDate ? new Date(initialData.dueDate) : undefined,
-    } : {
-      priority: 'MEDIUM'
-    }
+
+  const { data: categoryData = [], isLoading: categoryLoading, refetch: refetchCategories }: any = useGetTicketCategoriesQuery({
+    departmentId: selectedDepartment
   });
-  
+
+  const { register, handleSubmit, formState: { errors, isSubmitting },
+    setValue, watch, trigger } = useForm({
+      resolver: zodResolver(ticketSchema),
+      mode: "onChange",
+      defaultValues: initialData ? {
+        title: initialData.title,
+        description: initialData.description,
+        department: initialData.department?._id,
+        category: initialData.category?._id,
+        priority: initialData.priority,
+        dueDate: initialData.dueDate ? new Date(initialData.dueDate) : undefined,
+      } : {
+        priority: 'MEDIUM'
+      }
+    });
+
   // Watch form fields
   const watchedDepartment = watch('department');
   const watchedTitle = watch('title');
   const watchedDescription = watch('description');
   const watchedPriority = watch('priority');
   const watchedCategory = watch('category');
-  
+
   // Monitor all required form values to enable the submit button
   useEffect(() => {
     if (formStep === 1) {
-      const hasRequiredFields = !!watchedTitle && 
-                               !!watchedDescription && 
-                               !!watchedDepartment && 
-                               !!watchedCategory && 
-                               !!watchedPriority;
-      
+      const hasRequiredFields = !!watchedTitle &&
+        !!watchedDescription &&
+        !!watchedDepartment &&
+        !!watchedCategory &&
+        !!watchedPriority;
+
       setCanSubmit(hasRequiredFields);
     }
   }, [formStep, watchedTitle, watchedDescription, watchedDepartment, watchedCategory, watchedPriority]);
-  
+
   // Watch for department changes
   useEffect(() => {
     if (watchedDepartment && watchedDepartment !== selectedDepartment) {
@@ -101,26 +103,13 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
       setValue('category', '');
     }
   }, [watchedDepartment, selectedDepartment, setValue]);
-  
-  // Debug effect to log category data
+
   useEffect(() => {
-    console.log('Category Data:', categoryData);
-    console.log('Selected Department:', selectedDepartment);
-    console.log('Category Loading:', categoryLoading);
-    
-    // Filter categories for debugging
-    const filteredCategories = selectedDepartment 
-      ? categoryData?.data?.filter((cat: any) => {
-          // Handle both string and object department references
-          const catDepartmentId = typeof cat.department === 'string' 
-            ? cat.department 
-            : cat.department?._id;
-          return catDepartmentId === selectedDepartment;
-        }) || []
-      : [];
-    console.log('Filtered Categories:', filteredCategories);
-  }, [categoryData, selectedDepartment, categoryLoading]);
-  
+    if (selectedDepartment) {
+      refetchCategories();
+    }
+  }, [selectedDepartment, refetchCategories]);
+
   const handleFormSubmit = async (data: any) => {
     const formData = {
       ...data,
@@ -130,11 +119,11 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
       ...(isEdit && initialData ? { _id: initialData._id } : {}),
       ...(!isEdit ? { status: 'NEW' } : {}) // Always set status NEW for new tickets
     };
-    
+
     // Submit the form data
     await onSubmit(formData);
   };
-  
+
   const goToNextStep = async () => {
     const isStepValid = await trigger(['title', 'description']);
     if (isStepValid) {
@@ -143,14 +132,14 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
       toast.error("Please complete all required fields");
     }
   };
-  
+
   const goToPreviousStep = () => {
     setFormStep(0);
   };
-  
+
   // Get priority badge styling
   const getPriorityBadge = (priority: string) => {
-    switch(priority) {
+    switch (priority) {
       case 'HIGH':
         return "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20";
       case 'MEDIUM':
@@ -167,7 +156,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
     animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
     exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
   };
-  
+
   return (
     <Card className="w-full max-w-3xl mx-auto border shadow-md overflow-hidden rounded-xl bg-card">
       <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -176,12 +165,12 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
             <div>
               <CardTitle className="text-xl text-foreground">{isEdit ? 'Edit Ticket' : 'Create New Ticket'}</CardTitle>
               <CardDescription className="text-muted-foreground mt-1">
-                {isEdit 
-                  ? 'Update the ticket details below' 
+                {isEdit
+                  ? 'Update the ticket details below'
                   : 'Fill in the details below to create a new support ticket'}
               </CardDescription>
             </div>
-            
+
             {/* Step indicator */}
             <div className="flex items-center space-x-1">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${formStep === 0 ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
@@ -194,11 +183,11 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="p-6">
           {formStep === 0 && (
-            <motion.div 
-              className="space-y-6" 
+            <motion.div
+              className="space-y-6"
               variants={formVariants}
               initial="initial"
               animate="animate"
@@ -230,7 +219,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                   )}
                 </div>
               </div>
-              
+
               {/* Description field */}
               <div className="space-y-2">
                 <label htmlFor="description" className="text-sm font-medium flex items-center text-foreground">
@@ -258,10 +247,10 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                   )}
                 </div>
               </div>
-              
+
               <div className="pt-2">
-                <Button 
-                  type="button" 
+                <Button
+                  type="button"
                   className="w-full rounded-md bg-primary hover:bg-primary/90 shadow-sm"
                   onClick={goToNextStep}
                   disabled={!watchedTitle || !watchedDescription}
@@ -272,10 +261,10 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
               </div>
             </motion.div>
           )}
-          
+
           {formStep === 1 && (
-            <motion.div 
-              className="space-y-6" 
+            <motion.div
+              className="space-y-6"
               variants={formVariants}
               initial="initial"
               animate="animate"
@@ -289,8 +278,8 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     Department
                     <span className="text-primary ml-1">*</span>
                   </label>
-                  <Select 
-                    onValueChange={(value) => setValue('department', value)} 
+                  <Select
+                    onValueChange={(value) => setValue('department', value)}
                     defaultValue={initialData?.department?._id}
                   >
                     <SelectTrigger className={cn(
@@ -314,7 +303,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     </p>
                   )}
                 </div>
-                
+
                 {/* Category field */}
                 <div className="space-y-2">
                   <label htmlFor="category" className="text-sm font-medium flex items-center text-foreground">
@@ -322,7 +311,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     Category
                     <span className="text-primary ml-1">*</span>
                   </label>
-                  <Select 
+                  <Select
                     onValueChange={(value) => setValue('category', value)}
                     defaultValue={initialData?.category?._id}
                     disabled={!selectedDepartment}
@@ -382,7 +371,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     </p>
                   )}
                 </div>
-                
+
                 {/* Priority field */}
                 <div className="space-y-2">
                   <label htmlFor="priority" className="text-sm font-medium flex items-center text-foreground">
@@ -390,7 +379,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     Priority
                     <span className="text-primary ml-1">*</span>
                   </label>
-                  <Select 
+                  <Select
                     onValueChange={(value) => setValue('priority', value)}
                     defaultValue={initialData?.priority || 'MEDIUM'}
                   >
@@ -424,7 +413,7 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                     </p>
                   )}
                 </div>
-                
+
                 {/* Due Date field */}
                 <div className="space-y-2">
                   <label htmlFor="dueDate" className="text-sm font-medium flex items-center text-foreground">
@@ -448,14 +437,15 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 rounded-md shadow-md" align="start">
+                    <PopoverContent className="w-auto p-0 rounded-md shadow-md bg-white dark:bg-zinc-900 z-50"
+                      align="start">
                       <Calendar
                         mode="single"
                         selected={watch('dueDate')}
                         onSelect={(date) => setValue('dueDate', date)}
                         initialFocus
                         disabled={(date) => date < new Date()}
-                        className="rounded-md border-none"
+                        className="rounded-md border-none bg-white dark:bg-zinc-900"
                       />
                     </PopoverContent>
                   </Popover>
@@ -463,10 +453,10 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
               </div>
             </motion.div>
           )}
-          
+
           {/* Preview card at bottom of step 2 */}
           {formStep === 1 && (
-            <motion.div 
+            <motion.div
               className="mt-8 pt-6 border-t"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -494,20 +484,20 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
             </motion.div>
           )}
         </CardContent>
-        
+
         <CardFooter className="flex justify-between py-4 border-t bg-secondary/5">
           {formStep === 0 ? (
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               className="rounded-md border-input hover:bg-secondary/20"
               onClick={() => window.history.back()}
             >
               Cancel
             </Button>
           ) : (
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               variant="outline"
               className="rounded-md border-input hover:bg-secondary/20"
               onClick={goToPreviousStep}
@@ -515,10 +505,10 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
               Back
             </Button>
           )}
-          
+
           {formStep === 1 && (
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="rounded-md bg-primary hover:bg-primary/90 shadow-sm"
               disabled={isSubmitting || (!canSubmit)}
             >
@@ -535,7 +525,8 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
         </CardFooter>
       </form>
     </Card>
-  );
-};
 
+  );
+
+};
 export default TicketFormComponent;

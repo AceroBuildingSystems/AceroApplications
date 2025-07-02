@@ -6,6 +6,7 @@ import { dbConnect } from "@/lib/mongoose";
 import { Access, User } from "@/models";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
+import { sanitizeUserDocs } from "@/shared/functions";
 
 declare module "next-auth" {
   interface Session {
@@ -33,10 +34,13 @@ export const authOptions: AuthOptions = {
         const { email, password } = credentials as { email: string; password: string };
         await dbConnect();
         const user = await User.findOne({ email });
+        console.log("DB User:", user, "Email:", email);
+        const sanitizedDocs = sanitizeUserDocs([user]); // dbUser is your DB user object
+
         const isPasswordValid = await bcrypt.compare(password, user?.password || "");
         console.log("DB User:", user, "Email:", email,isPasswordValid ? "Password valid" : "Password invalid");
         if (!user || !isPasswordValid) return null;
-        return user as any;
+        return sanitizedDocs[0] as any;
       },
     }),
   ],
@@ -55,12 +59,16 @@ export const authOptions: AuthOptions = {
         console.error("Session user is undefined");
         return session;
       }
-      const user = await User.findOne({ email: session.user.email });
+      const user:any = await User.findOne({ email: session.user.email });
       if (!user) {
         console.error("User not found");
         return session;
       }
-      session.user = user;
+      
+      const sanitizedDocs = sanitizeUserDocs([user]); // dbUser is your DB user object
+
+     session.user = sanitizedDocs[0];
+   
       const accessIdsUnfiltered = Array.isArray(user.access) ? user.access.map((data: { accessId: any }) => data.accessId) : [];
       const accessIds = accessIdsUnfiltered.filter((id: any) => id);
       const accessMap = new Map(

@@ -41,28 +41,31 @@ export const organisationTransformData = (data: any[]) => {
 };
 
 export const transformQuoteData = (data: any[], user: { _id: any; role: { name: any; }; }, teamMemberData: any[]) => {
+   console.log(user);
   if (!Array.isArray(data)) {
     return [];
   }
+   console.log(user);
   const transformData = data.reduce((acc, obj) => {
-    
-        acc.push({...obj, region: obj?.country?.region?.continent?.name, area:obj?.country?.region?.name, salesEngineerName:obj?.salesEngineer?.user?.displayName,salesSupportEngineerName:obj?.salesSupportEngineer[0]?.user?.displayName});
+
+    acc.push({ ...obj, region: obj?.country?.region?.continent?.name, area: obj?.country?.region?.name, salesEngineerName: obj?.salesEngineer?.user?.displayName, salesSupportEngineerName: obj?.salesSupportEngineer[0]?.user?.displayName });
     return acc;
-}, []);
+  }, []);
+  console.log(user);
   const userId = user?._id;
   const teamRole = teamMemberData?.find(data => data?.user?._id === userId)?.teamRole[0]?.name;
   return transformData.filter((quote: { handleBy: any; }) => {
     const handledBy = quote?.handleBy;
 
     if (!handledBy || !userId) return false; // Skip if there's no handledBy data or userId
- 
+
     switch (user?.role?.name) {
       case "Admin":
         console.log(teamRole)
         return true; // Admin gets all data
 
       default:
-      
+
         switch (teamRole) {
           case "Director":
             return (
@@ -160,7 +163,7 @@ export const transformDataForExcel = (data: any[]) => {
     "Initial Ship Date": item.initialShipDate ? moment(item.initialShipDate).format("DD-MMM-YYYY") : '',
     "Final Ship Date": item.finalShipDate ? moment(item.finalShipDate).format("DD-MMM-YYYY") : '',
     "Status": item.status || '',
-    "Handle By": item.handleBy?.user?.displayName?.toProperCase()|| '',
+    "Handle By": item.handleBy?.user?.displayName?.toProperCase() || '',
   }));
 };
 

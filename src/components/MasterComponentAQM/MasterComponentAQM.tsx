@@ -53,7 +53,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
-
+console.log(filteredData, 'filteredData')
     const availableFilters: FieldConfig[] = [
         ...(config?.filterFields || []),
         { key: "status", label: 'status', type: "select" as const, options: config?.filterData?.statusNames, placeholder: 'Select Status', filterBy: "name", name: 'Status By Color' },

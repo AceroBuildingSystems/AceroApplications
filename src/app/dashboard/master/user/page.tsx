@@ -107,8 +107,8 @@ console.log("userData", userData);
   const reportingToData = userData?.data
     ?.filter((user: any) =>
       user &&
-      user.employeeType?.name &&
-      ['Manager', 'Management'].includes(user.employeeType.name)
+      user?.employmentDetails?.employeeType?.name &&
+      ['Manager', 'Management'].includes(user?.employmentDetails?.employeeType?.name)
     )
     ?.map((user: { _id: any; displayName: any }) => ({
       _id: user._id,
@@ -146,7 +146,7 @@ console.log("userData", userData);
     }
 
   }
-
+console.log({transformedData}, "transformedData after transformation");
 
   // Reorganize fields to match new database model structure
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; category?: string }> = [

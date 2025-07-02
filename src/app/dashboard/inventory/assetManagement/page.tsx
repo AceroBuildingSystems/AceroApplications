@@ -694,15 +694,24 @@ const AssetManagementPage = () => {
         }
     };
 
+     const rowClassMap = (row: any) => {
+       
+        if (row?.original?.status) return {
+           
+            retired: "bg-muted",
+            maintenance: 'bg-muted/50',
+           
+        }[row.original.status] || "";
+        return "";
+    };
+
+    
     return (
         <div className="container mx-auto p-4">
             <MasterComponent
                 config={pageConfig}
                 loadingState={loading}
-                rowClassMap={{
-                    'bg-muted': (row: any) => row.original.status === 'retired',
-                    'bg-muted/50': (row: any) => row.original.status === 'maintenance'
-                }}
+                rowClassMap={rowClassMap}
                 summary={false}
             />
             <DynamicDialog

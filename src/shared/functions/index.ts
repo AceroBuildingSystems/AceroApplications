@@ -13,6 +13,45 @@ import { skip } from 'node:test';
 import { Package } from 'lucide-react';
 import Provider from '@/components/provider/Provider';
 
+import { Types } from 'mongoose';
+
+export function sanitizeUserDocs(docs: any[]): any[] {
+  return docs.map((doc: any) => {
+    const plainDoc = doc.toObject ? doc.toObject() : { ...doc };
+    const employment = plainDoc.employmentDetails || {};
+
+    // Safely extract and simplify necessary fields
+    return {
+      ...simplify(plainDoc),
+      department: simplify(employment?.department),
+      designation: simplify(employment?.designation),
+      reportingTo: employment?.reportingTo,
+      role: simplify(employment?.role),
+      mobile: employment?.workMobile || '',
+      extension: employment?.extension || '',
+      activeLocation: simplify(employment?.activeLocation),
+      reportingLocation: simplify(employment?.reportingLocation),
+      organisation: simplify(employment?.organisation),
+    };
+  });
+}
+
+// Recursive simplifier to flatten ObjectIds and subdocuments
+function simplify(obj: any): any {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  if (obj instanceof Types.ObjectId) return obj.toString();
+
+  const result: any = {};
+  for (const key in obj) {
+    const value = obj[key];
+    result[key] = simplify(value);
+  }
+
+  return result;
+}
+
+
 export const createMongooseObjectId = (id: any) => {
     if (mongoose.Types.ObjectId.isValid(id) && new mongoose.Types.ObjectId(id).toString() === id.toString()) {
         return id;

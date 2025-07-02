@@ -102,6 +102,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     } else {
       setFormData({} as CompleteUserData);
     }
+    console.log("Form data initialized:", initialData);
   }, [initialData, isOpen]);
 
   // Handle form field changes
@@ -119,6 +120,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     // Special handling for certain types
     if (format === "Date" && value) {
       value = new Date(value);
+      console.log(`Formatted date for ${fieldName}:`, value);
     } else if (format === "ObjectId" && value) {
       // If it's an ObjectId reference, we handle it differently
       const dataItem = data?.find((item) => item._id === value);
@@ -278,7 +280,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   // Render appropriate input field based on type
   const renderField = (field: any) => {
     const { type, name, readOnly, placeholder, data } = field;
-
+    console.log("Rendering field:", field,data, formData);
     switch (type) {
       case "text":
       case "email":
@@ -307,7 +309,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
       case "date":
         return (
           <DatePicker
-            field={field}
+            currentDate={formData[field?.name] ?? undefined}
             formData={formData}
             handleChange={(value) => handleChange(value, name, field.format, field.type, field.data, field)}
           />

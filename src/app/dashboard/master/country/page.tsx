@@ -24,6 +24,7 @@ import * as XLSX from "xlsx";
 const page = () => {
   const [importing, setImporting] = useState(false);
   const { user, status, authenticated } = useUserAuthorised();
+  console.log(user);
   const { data: countryData = [], isLoading: countryLoading }: any = useGetMasterQuery({
     db: 'COUNTRY_MASTER',
     sort: { name: 'asc' },

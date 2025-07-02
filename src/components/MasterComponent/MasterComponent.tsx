@@ -54,13 +54,13 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
     console.log("Filtered Data", config?.dataTable?.data)
     useEffect(() => {
-        let summary: any = {};
+        let summaryD: any = {};
         console.log("Config:", config);
         setFilteredData(config?.dataTable?.data);
         console.log(config?.title, "Config Title");
         switch (config?.title) {
             case "Usage Details":
-                summary = config?.dataTable?.data?.reduce(
+                summaryD = config?.dataTable?.data?.reduce(
                     (acc: any, item: any) => {
                         const packageAmount = item?.account?.package?.amount || 0;
                         const gross = item?.grossBillAmount || 0;
@@ -86,7 +86,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 );
                 break;
             case "Deduction Reports":
-                summary = config?.dataTable?.data?.reduce(
+                summaryD = config?.dataTable?.data?.reduce(
                     (acc: any, item: any) => {
                         const packageAmount = item?.account?.package?.amount || 0;
                         const gross = item?.grossBillAmount || 0;
@@ -112,7 +112,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 break;
 
             case "Deduction Summary":
-                summary = config?.dataTable?.data?.reduce(
+                summaryD = config?.dataTable?.data?.reduce(
                     (acc: any, item: any) => {
                         const packageAmount = item?.account?.package?.amount || 0;
                         const gross = item?.grossBillAmount || 0;
@@ -144,8 +144,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
         }
 
 
-        console.log(summary);
-        setSummaryData(summary);
+        console.log(summaryD);
+        setSummaryData(summaryD);
         setTitle(config?.title || "");
     }, [config, loadingState])
 
@@ -154,7 +154,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
         let value: any = "";
 
-        value = e?.target?.value;
+        value = e?.target?.value ?? e;
 
         const newSearchValues = { ...searchValues, [field]: value };
 
@@ -186,7 +186,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-
+let summaryD: any = {};
         const filtered = config?.dataTable?.data?.filter((item: { [x: string]: any; }) => {
             // Check if item matches search criteria
 
@@ -198,6 +198,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 }
 
                 if (key === 'billingPeriodStart') {
+                    console.log('billingmonth search triggered');
                     const searchQuery: any = searchValues[key]
                         ? new Date(searchValues?.[key]).toLocaleDateString("en-GB")
                         : null;
@@ -238,7 +239,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
         setFilteredData(filtered); // Update filtered data state
         switch (config?.title) {
             case "Usage Details":
-                summary = filtered?.reduce(
+                summaryD = filtered?.reduce(
                     (acc: any, item: any) => {
                         const packageAmount = item?.account?.package?.amount || 0;
                         const gross = item?.grossBillAmount || 0;
@@ -264,7 +265,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                 );
                 break;
             case "Deduction Reports":
-                summary = filtered?.reduce(
+                summaryD = filtered?.reduce(
                     (acc: any, item: any) => {
                         const packageAmount = item?.account?.package?.amount || 0;
                         const gross = item?.grossBillAmount || 0;
@@ -296,8 +297,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
         }
 
 
-        console.log(summary);
-        setSummaryData(summary);
+        console.log(summaryD);
+        setSummaryData(summaryD);
         setTitle(config?.title || "");
     };
 
@@ -339,7 +340,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className='flex flex-col gap-2 w-full h-full px-4 py-1 pt-4'>
+                <div className='flex flex-col gap-2 w-full h-full px-4 py-1 pt-5'>
 
                     {/* Filter Section */}
                     <div className='flex flex-row items-center justify-between gap-2'>
@@ -473,7 +474,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
                                 rowClassMap={rowClassMap} 
                                 summary={summary} 
                                 title={config?.dataTable?.title || config?.title || ''} // Added title prop
-                                summaryTotal={config?.dataTable?.summaryTotal} // Added summaryTotal prop
+                                summaryTotal={config?.dataTable?.summaryTotal ?? summaryData } // Added summaryTotal prop
                             /> : null
                         )}
                     </div>

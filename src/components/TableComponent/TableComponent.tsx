@@ -163,8 +163,8 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                     {table.getRowModel().rows.map((row) => (
 
                       <TableRow
-                        key={row.id}
-                        className={rowClassMap?.row?.original}
+                        key={row?.id}
+                        className={rowClassMap?.(row?.original)}
                         data-state={row.getIsSelected() && "selected"}
                       >
                         {row.getVisibleCells().map((cell) => {
@@ -189,7 +189,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                     {/* Summary Row (placed outside the map) */}
                     {summary && title === 'Usage Details' && <TableRow className="bg-gray-200 font-bold">
                       <TableCell>Total</TableCell>
-                      <TableCell colSpan={4}></TableCell>
+                      <TableCell colSpan={3}></TableCell>
                       <TableCell >{summaryTotal?.totalPackageAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       <TableCell colSpan={1}></TableCell>
                       <TableCell >{summaryTotal?.totalGrossBillAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>

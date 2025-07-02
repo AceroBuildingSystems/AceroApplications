@@ -4,6 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,11 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCreateTicketCategoryMutation, useUpdateTicketCategoryMutation } from '@/services/endpoints/ticketCategoryApi';
 import { toast } from 'react-toastify';
 import { MoreHorizontal, Plus, Edit, Search, Bookmark, Filter, X } from 'lucide-react';
-import { 
-    DropdownMenu, 
-    DropdownMenuContent, 
-    DropdownMenuItem, 
-    DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 
@@ -40,11 +41,11 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('all');
-  
+
   const [createCategory, { isLoading: isCreating }] = useCreateTicketCategoryMutation();
   const [updateCategory, { isLoading: isUpdating }] = useUpdateTicketCategoryMutation();
-  
-  const handleOpenDialog = (category:any = null) => {
+
+  const handleOpenDialog = (category: any = null) => {
     if (category) {
       setSelectedCategory(category);
       setName(category.name);
@@ -58,15 +59,15 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
     }
     setIsDialogOpen(true);
   };
-  
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedCategory(null);
   };
-  
+
   const handleSubmit = async () => {
     if (!name.trim() || !departmentId) return;
-    
+
     try {
       if (selectedCategory) {
         // Update existing category
@@ -96,33 +97,33 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
         }).unwrap();
         toast.success('Category created successfully');
       }
-      
+
       handleCloseDialog();
     } catch (error) {
       toast.error(selectedCategory ? 'Failed to update category' : 'Failed to create category');
     }
   };
-  
+
   const filteredCategories = useMemo(() => {
     return categories.filter(category => {
       // Filter by selected department if any
       const departmentMatch = !selectedDepartment || selectedDepartment === 'all' || category.department._id === selectedDepartment;
-      
+
       // Filter by search term if any
-      const searchMatch = !searchTerm || 
+      const searchMatch = !searchTerm ||
         category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()));
-      
+
       return departmentMatch && searchMatch;
     });
   }, [categories, selectedDepartment, searchTerm]);
-  
+
   const categoryCount = filteredCategories.length;
   const departmentOptions = [
     { _id: 'all', name: 'All Departments' },
     ...departments
   ];
-  
+
   return (
     <div className="space-y-6 w-full p-4">
       <div className="flex flex-col space-y-4">
@@ -136,9 +137,9 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
               className="pl-9 pr-10 border-border/50 focus:border-primary focus:ring-1 focus:ring-primary w-full bg-background/50"
             />
             {searchTerm && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
                 onClick={() => setSearchTerm('')}
               >
@@ -146,7 +147,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
               </Button>
             )}
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Select
               value={selectedDepartment}
@@ -163,9 +164,9 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                 ))}
               </SelectContent>
             </Select>
-            
-            <Button 
-              onClick={() => handleOpenDialog()} 
+
+            <Button
+              onClick={() => handleOpenDialog()}
               className="bg-primary hover:bg-primary/90 text-white shadow-sm"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -173,7 +174,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
             </Button>
           </div>
         </div>
-        
+
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center text-muted-foreground">
             <Filter className="h-4 w-4 mr-2" />
@@ -192,11 +193,11 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
               )}
             </span>
           </div>
-          
+
           {(selectedDepartment !== 'all' || searchTerm) && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               className="h-8 text-muted-foreground hover:text-foreground"
               onClick={() => {
                 setSelectedDepartment('all');
@@ -209,12 +210,12 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
           )}
         </div>
       </div>
-      
+
       {filteredCategories.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredCategories.map(category => (
-            <Card 
-              key={category._id} 
+            <Card
+              key={category._id}
               className="group bg-card border-border/40 hover:shadow-md transition-all duration-300"
             >
               <CardContent className="p-4">
@@ -223,27 +224,27 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                     <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors">
                       {category.name}
                     </h3>
-                    <Badge 
-                      variant="outline" 
+                    <Badge
+                      variant="outline"
                       className="mt-1 px-2 py-0 text-xs bg-accent/30 text-muted-foreground border-0"
                     >
                       {category?.department?.name}
                     </Badge>
                   </div>
-                  
+
                   {isAdmin && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
                         >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleOpenDialog(category)}
                           className="cursor-pointer flex items-center"
                         >
@@ -254,7 +255,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                     </DropdownMenu>
                   )}
                 </div>
-                
+
                 <div className="mt-2 text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
                   {category?.description || 'No description provided'}
                 </div>
@@ -278,7 +279,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                 <Bookmark className="h-10 w-10 text-muted-foreground/40" />
                 <h3 className="text-lg font-medium">No categories in this department</h3>
                 <p className="text-muted-foreground text-sm">
-                  This department doesn't have any categories yet. 
+                  This department doesn't have any categories yet.
                   {isAdmin && " You can create a new category by clicking the button below."}
                 </p>
               </>
@@ -292,10 +293,10 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                 </p>
               </>
             )}
-            
+
             {isAdmin && (
-              <Button 
-                onClick={() => handleOpenDialog()} 
+              <Button
+                onClick={() => handleOpenDialog()}
                 className="mt-2 bg-primary/10 text-primary hover:bg-primary/20 border-none"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -305,7 +306,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
           </div>
         </div>
       )}
-      
+
       {/* Category Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -314,13 +315,13 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
               {selectedCategory ? 'Edit Category' : 'New Category'}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground">
-              {selectedCategory 
-                ? 'Update the category details below' 
+              {selectedCategory
+                ? 'Update the category details below'
                 : 'Create a new ticket category for your department'
               }
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="department" className="text-sm font-medium">Department</Label>
@@ -329,7 +330,7 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                 onValueChange={setDepartmentId}
                 disabled={!!selectedCategory}
               >
-                <SelectTrigger className="focus:border-primary focus:ring-1 focus:ring-primary">
+                <SelectTrigger >
                   <SelectValue placeholder="Select department" />
                 </SelectTrigger>
                 <SelectContent>
@@ -341,18 +342,21 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="name" className="text-sm font-medium">Category Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter category name"
-                className="focus:border-primary focus:ring-1 focus:ring-primary"
-              />
+              <div className='w-full'>
+
+                <Input
+                  type='text'
+                  placeholder="Enter category name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="description" className="text-sm font-medium">Description (Optional)</Label>
               <Textarea
@@ -365,16 +369,16 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
               />
             </div>
           </div>
-          
+
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleCloseDialog}
               className="border-border/50"
             >
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleSubmit}
               disabled={!name.trim() || !departmentId || isCreating || isUpdating}
               className="bg-primary hover:bg-primary/90 text-white"

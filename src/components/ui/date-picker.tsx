@@ -29,6 +29,7 @@ export function DatePicker({
   placeholder
 }: DatePickerProps) {
  
+  console.log("DatePicker Rendered", currentDate, startYear, endYear, handleChange, placeholder);
   const [date, setDate]:any = React.useState<Date | undefined>(currentDate);
  
   const months = [

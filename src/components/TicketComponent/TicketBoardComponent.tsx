@@ -148,15 +148,20 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     }),
     useSensor(KeyboardSensor)
   );
-console.log(ticketToAssign?.department?._id)
+
   // Fetch users for assignment dialog
-  const { data: usersData = {data:[]}, isLoading: usersLoading } = useGetMasterQuery({
+   const { data: usersData = { data: [] }, isLoading: usersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
-    filter: ticketToAssign ? { departmentId: ticketToAssign?.department?._id, isActive: true } : {},
+    filter: {
+      isActive: true,
+
+    },
     sort: { firstName: 'asc' }
   }, { skip: !ticketToAssign });
 
- 
+  const userDataInfo = usersData?.data?.filter(
+  (user: any) => user?.departmentId === ticketToAssign?.department?._id
+);
   // Store the previous tickets ref to avoid unnecessary re-renders
   const prevTicketsRef:any = useRef(null);
   
@@ -568,13 +573,13 @@ console.log(tickets);
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md border-border">
-                  {usersData?.data?.map((user:any) => (
+                  {userDataInfo?.map((user:any) => (
                     <SelectItem key={user._id} value={user._id} className="cursor-pointer py-2 px-2">
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-xs ring-2 ring-white">
-                          {user.firstName[0]}{user.lastName[0]}
+                          {user?.firstName[0]}{user?.lastName[0]}
                         </div>
-                        <span>{`${user.firstName} ${user.lastName}`}</span>
+                        <span>{`${user?.firstName} ${user?.lastName}`}</span>
                       </div>
                     </SelectItem>
                   ))}

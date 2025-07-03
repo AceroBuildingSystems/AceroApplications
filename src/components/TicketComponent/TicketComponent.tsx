@@ -114,21 +114,22 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             </div>
             
             <div className="flex gap-1 flex-shrink-0">
-              {/* Make badges more compact in the board view */}
-              <Tooltip delayDuration={300}>
-                <TooltipTrigger asChild>
-                  <Badge className={cn(
-                    "text-xs py-0 h-5 font-medium border shadow-sm badge-hover",
-                    compactView ? "px-1.5 text-[10px]" : "",
-                    getStatusColor(ticket.status)
-                  )}>
-                    {compactView ? String(ticket.status).replace(/_/g, ' ').substring(0, 3) : String(ticket.status).replace(/_/g, ' ')}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Status: {String(ticket.status).replace(/_/g, ' ')}
-                </TooltipContent>
-              </Tooltip>
+              {/* Show status badge only in list view, priority badge in both views */}
+              {!compactView && (
+                <Tooltip delayDuration={300}>
+                  <TooltipTrigger asChild>
+                    <Badge className={cn(
+                      "text-xs py-0 h-5 font-medium border shadow-sm badge-hover",
+                      getStatusColor(ticket.status)
+                    )}>
+                      {String(ticket.status).replace(/_/g, ' ')}
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Status: {String(ticket.status).replace(/_/g, ' ')}
+                  </TooltipContent>
+                </Tooltip>
+              )}
               
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>

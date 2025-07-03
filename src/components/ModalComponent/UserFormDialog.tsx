@@ -107,7 +107,9 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
 
   // Handle form field changes
   const handleChange = (e: any, fieldName: string, format?: string, fieldType?: string, data?: any[], field?: any) => {
-    let value;
+    console.log("UserFormDialog handleChange called:", { e, fieldName, format, fieldType });
+    
+    let value: any;
 
     if (e?.target?.value !== undefined) {
       value = e.target.value;
@@ -117,13 +119,15 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
       value = null;
     }
 
+    console.log("Processed value:", value);
+
     // Special handling for certain types
     if (format === "Date" && value) {
       value = new Date(value);
       console.log(`Formatted date for ${fieldName}:`, value);
     } else if (format === "ObjectId" && value) {
       // If it's an ObjectId reference, we handle it differently
-      const dataItem = data?.find((item) => item._id === value);
+      const dataItem = data?.find((item: any) => item._id === value);
       value = dataItem?._id || value;
     }
 
@@ -136,16 +140,24 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     if (fieldName === "firstName" || fieldName === "lastName") {
       const firstName = fieldName === "firstName" ? value : formData.firstName || "";
       const lastName = fieldName === "lastName" ? value : formData.lastName || "";
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: value,
-        fullName: `${firstName} ${lastName}`.trim(),
-      }));
+      setFormData((prev) => {
+        const newData = {
+          ...prev,
+          [fieldName]: value,
+          fullName: `${firstName} ${lastName}`.trim(),
+        };
+        console.log("Updated form data (name change):", newData);
+        return newData;
+      });
     } else {
-      setFormData((prev) => ({
-        ...prev,
-        [fieldName]: value,
-      }));
+      setFormData((prev) => {
+        const newData = {
+          ...prev,
+          [fieldName]: value,
+        };
+        console.log("Updated form data:", newData);
+        return newData;
+      });
     }
 
     // Clear error when field is changed
@@ -291,7 +303,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
             name={name}
             type={type}
             placeholder={placeholder || `Enter ${field.label}`}
-            value={formData[name as keyof CompleteUserData] || ""}
+            value={String(formData[name as keyof CompleteUserData] || "")}
             onChange={(e) => handleChange(e, name, field.format, field.type, field.data, field)}
             readOnly={readOnly}
             className={errors[name] ? "border-red-500" : ""}
@@ -302,16 +314,16 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
           <Combobox
             field={field}
             formData={formData}
-            handleChange={(value) => handleChange(value, name, field.format, field.type, field.data, field)}
+            handleChange={(value: any) => handleChange(value, name, field.format, field.type, field.data, field)}
             placeholder={placeholder || `Select ${field.label}`}
           />
         );
       case "date":
         return (
           <DatePicker
-            currentDate={formData[field?.name] ?? undefined}
+            currentDate={formData[field?.name as keyof CompleteUserData] ?? undefined}
             formData={formData}
-            handleChange={(value) => handleChange(value, name, field.format, field.type, field.data, field)}
+            handleChange={(value: any) => handleChange(value, name, field.format, field.type, field.data, field)}
           />
         );
       default:
@@ -321,7 +333,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
             name={name}
             type="text"
             placeholder={placeholder || `Enter ${field.label}`}
-            value={formData[name as keyof CompleteUserData] || ""}
+            value={String(formData[name as keyof CompleteUserData] || "")}
             onChange={(e) => handleChange(e, name, field.format, field.type, field.data, field)}
             readOnly={readOnly}
             className={errors[name] ? "border-red-500" : ""}

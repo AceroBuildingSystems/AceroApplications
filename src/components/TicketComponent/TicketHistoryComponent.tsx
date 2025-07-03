@@ -70,14 +70,20 @@ const TicketHistoryComponent: React.FC<TicketHistoryComponentProps> = ({
                 <div key={entry._id} className="relative pl-10">
                   <div className="absolute left-0 flex h-8 w-8 items-center justify-center rounded-full bg-white ring-1 ring-gray-200">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback>{`${entry.user.firstName[0]}${entry.user.lastName[0]}`}</AvatarFallback>
+                      <AvatarFallback>
+                        {entry.user?.firstName && entry.user?.lastName 
+                          ? `${entry.user.firstName[0]}${entry.user.lastName[0]}` 
+                          : '??'}
+                      </AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="flex flex-col rounded-lg border p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium">
-                          {`${entry.user.firstName} ${entry.user.lastName}`}
+                          {entry.user?.firstName && entry.user?.lastName 
+                            ? `${entry.user.firstName} ${entry.user.lastName}` 
+                            : 'Unknown User'}
                         </span>
                         <span className="text-gray-500">
                           {getHistoryActionLabel(entry.action)}

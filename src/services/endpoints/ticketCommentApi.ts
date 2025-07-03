@@ -85,34 +85,14 @@ export const ticketCommentApi = baseApi.injectEndpoints({
     }),
 
     uploadFile: builder.mutation<any, FormData>({
-      query: (formData) => {
-        // Log for debugging
-        console.log('File upload attempt with:', {
-          ticketId: formData.get('ticketId'),
-          userId: formData.get('userId'),
-          file: formData.get('file')
-        });
-        
-        // Return a properly configured request
-        return {
-          url: 'api/file-upload',
-          method: 'POST',
-          body: formData,
-          // CRITICAL FIX: Don't set any Content-Type header manually!
-          // Let the browser set it automatically with boundary parameters
-          formData: true,
-          // This is important for RTK Query to not mess with the Content-Type
-          prepareHeaders: (headers: Headers) => {
-            // Explicitly REMOVE any Content-Type header that might be set
-            // The browser will add the correct one with boundary
-            headers.delete('Content-Type');
-            return headers;
-          }
-        };
-      },
+      query: (formData) => ({
+        url: 'api/file-upload',
+        method: 'POST',
+        body: formData,
+      }),
     }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 });
 
 export const {

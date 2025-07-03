@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Combobox } from "../ui/ComboBoxWrapper";
+import { Combobox } from "../ui/ComboBoxWrapperFilter";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
 import { toast } from "react-toastify";

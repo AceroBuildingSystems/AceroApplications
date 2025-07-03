@@ -44,7 +44,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                         {
                            formData && field?.data?.find((data: { _id: any }) => data._id === formData?.[field.name])?.name ||
                            formData && field?.data?.find((data: { _id: any }) => data._id === formData?.[field.name])?.displayName ||
-                            selectedValue ||
+                           
                             placeholder
                         }
                     </span>

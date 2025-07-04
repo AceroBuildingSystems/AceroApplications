@@ -144,7 +144,7 @@ const InventoryPage = () => {
         filter: { isActive: true },
         populate: ['vendor', 'warehouse', 'assets', 'assets.product', 'assets.product.category']
     });
-console.log('inventoryResponse', inventoryResponse);
+// console.log('inventoryResponse', inventoryResponse);
 
  const fieldsToAdd = [
     { fieldName: 'vendorName', path: ['vendor', 'name'] },

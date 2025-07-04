@@ -103,7 +103,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   vendors,
   initialData
 }) => {
-  console.log('BulkAddDialog initialData:', initialData, 'products:', products, 'warehouses:', warehouses, 'vendors:', vendors);
+  // console.log('BulkAddDialog initialData:', initialData, 'products:', products, 'warehouses:', warehouses, 'vendors:', vendors);
   const { user }: any = useUserAuthorised();
   const [createMaster] = useCreateMasterMutation();
   const [step, setStep] = useState(1);

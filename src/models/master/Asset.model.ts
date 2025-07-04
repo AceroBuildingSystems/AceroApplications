@@ -58,7 +58,6 @@ const AssetSchema = new mongoose.Schema({
     serialNumber: {
         type: String,
         unique: true,
-        sparse: true
     },
     product: {
         type: mongoose.Schema.Types.ObjectId,
@@ -174,13 +173,13 @@ const AssetSchema = new mongoose.Schema({
 AssetSchema.plugin(require('mongoose-autopopulate'));
 
 // Update inventory when asset is created
-AssetSchema.post('save', async function(this: IAsset) {
-    const inventory = mongoose.model('Inventory') as IInventoryModel;
-    await inventory.updateInventoryForAsset(
-        this.warehouse.toString(),
-        this._id.toString()
-    );
-});
+// AssetSchema.post('save', async function(this: IAsset) {
+//     const inventory = mongoose.model('Inventory') as IInventoryModel;
+//     await inventory.updateInventoryForAsset(
+//         this.warehouse.toString(),
+//         this._id.toString()
+//     );
+// });
 
 // Handle asset assignment
 AssetSchema.methods.assign = async function(assignedTo: string, assignedType: 'User' | 'Department', assignedBy: string, location: string, remarks?: string) {

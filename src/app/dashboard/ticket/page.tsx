@@ -361,9 +361,9 @@ const TicketDashboardPage = () => {
         >
           <motion.div 
             variants={dashboardItemVariants}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-border/30"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
-            <div className="flex items-center flex-wrap sm:flex-nowrap gap-2">
+            <div className="flex items-center flex-wrap sm:flex-nowrap gap-2 bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-border/30">
               <TabsList className="mr-2 p-1 bg-muted/40 rounded-lg backdrop-blur-md">
                 {['list', 'board', 'statistics'].map((tabValue, index) => (
                   <TabsTrigger 
@@ -431,20 +431,20 @@ const TicketDashboardPage = () => {
             
             <motion.div 
               variants={dashboardItemVariants}
-              className="relative max-w-xs sm:max-w-sm w-full group"
+              className="relative max-w-xs sm:max-w-sm w-full group flex items-center bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl px-3 py-2 shadow-sm border border-border/30"
             >
               <motion.div
                 initial={{ opacity: 0.5 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
+                <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-300 z-10" />
               </motion.div>
               <Input
-                placeholder="Search tickets..."
+                placeholder="Search tickets"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 rounded-lg border-border/30 h-9 focus:border-primary/40 transition-all duration-200 bg-white/70 dark:bg-card/70 backdrop-blur-sm focus:ring-2 focus:ring-primary/10 focus:ring-offset-0"
+                className="pl-9 pr-9 rounded-xl border-0 h-9 focus:border-primary/40 transition-all duration-200 bg-transparent focus:ring-0 focus:ring-offset-0 w-full"
               />
               <AnimatePresence>
                 {searchQuery && (
@@ -457,7 +457,7 @@ const TicketDashboardPage = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="absolute right-1 top-0 h-full px-2 text-muted-foreground hover:text-primary transition-colors duration-200"
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-primary transition-colors duration-200"
                       onClick={() => setSearchQuery('')}
                     >
                       <X className="h-4 w-4" />

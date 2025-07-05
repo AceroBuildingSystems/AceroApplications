@@ -3,7 +3,8 @@ import { UserDocument } from "@/types";
 import { Query } from "mongoose";
 
 const UserSchema: Schema<UserDocument> = new Schema({
-    empId: { type: String, unique: true },
+    // Core user information
+    empId: { type: String, sparse: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     email: { type: String, unique: true,sparse: true },

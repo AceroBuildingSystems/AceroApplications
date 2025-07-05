@@ -44,7 +44,8 @@ class HRMSWorkflowManager {
     try {
       await dbConnect();
 
-      const { workflowType, triggerFormType, triggerFormId, metadata, createdBy } = params;
+      const { workflowType, triggerFormType, metadata, createdBy } = params;
+      let triggerFormId = params.triggerFormId;
 
       // Get workflow template
       const template = this.getWorkflowTemplate(workflowType);
@@ -55,13 +56,30 @@ class HRMSWorkflowManager {
         };
       }
 
-      // Verify trigger form exists
-      const triggerForm = await HRMSManager.getFormById(triggerFormType, triggerFormId);
-      if (!triggerForm.success) {
-        return {
-          success: false,
-          message: 'Trigger form not found'
-        };
+      // Verify trigger form exists or create a new one if specified
+      let triggerForm;
+      if (triggerFormId === 'new') {
+        const newForm = await HRMSManager.createForm(triggerFormType, {
+          formData: metadata,
+          isDraft: true,
+          addedBy: createdBy,
+        });
+        if (!newForm.success) {
+          return {
+            success: false,
+            message: 'Failed to create trigger form'
+          };
+        }
+        triggerForm = newForm;
+        triggerFormId = newForm.data._id.toString();
+      } else {
+        triggerForm = await HRMSManager.getFormById(triggerFormType, triggerFormId);
+        if (!triggerForm.success) {
+          return {
+            success: false,
+            message: 'Trigger form not found'
+          };
+        }
       }
 
       // Create workflow instance

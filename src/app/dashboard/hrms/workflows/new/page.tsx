@@ -86,11 +86,14 @@ export default function NewWorkflowPage() {
         return;
       }
 
+      // The first step of the template is the trigger form
+      const triggerFormType = template.steps[0].formType;
+
       const workflowToCreate = {
         workflowType: selectedTemplate,
-        workflowName: template.workflowName,
+        triggerFormType: triggerFormType, // Pass the trigger form type
+        triggerFormId: "new", // This will be handled by the backend to create a new draft
         metadata: workflowData,
-        status: 'draft', // All new workflows start as drafts
       };
 
       const result = await createWorkflowInstance(workflowToCreate).unwrap();

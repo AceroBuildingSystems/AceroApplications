@@ -592,8 +592,8 @@ export class HRMSManager {
       case 'department_head':
         // Find department head
         const deptHead = await User.findOne({
-          'employmentDetails.department': form.department,
-          'employmentDetails.designation': { $regex: /head|manager/i }
+          'department': form.department,
+          'designation': { $regex: /head|manager/i }
         });
         if (deptHead) {
           approvers.push({
@@ -620,7 +620,7 @@ export class HRMSManager {
       case 'role_based':
         if (step.requiredRoles) {
           const users = await User.find({
-            'employmentDetails.role': { $in: step.requiredRoles },
+            'role': { $in: step.requiredRoles },
             isActive: true
           });
           for (const user of users) {

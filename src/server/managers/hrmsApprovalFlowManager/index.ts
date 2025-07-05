@@ -327,22 +327,22 @@ export class HRMSApprovalFlowManager {
       const query: any = { isActive: true };
       
       if (filters.department) {
-        query['employmentDetails.department'] = filters.department;
+        query['department'] = filters.department;
       }
       
       if (filters.role) {
-        query['employmentDetails.role'] = filters.role;
+        query['role'] = filters.role;
       }
 
       if (filters.designation) {
-        query['employmentDetails.designation'] = filters.designation;
+        query['designation'] = filters.designation;
       }
 
       const users = await User.find(query)
         .select('firstName lastName displayName email empId employmentDetails')
-        .populate('employmentDetails.department', 'name')
-        .populate('employmentDetails.designation', 'name')
-        .populate('employmentDetails.role', 'name')
+        .populate('department', 'name')
+        .populate('designation', 'name')
+        .populate('role', 'name')
         .sort('firstName lastName');
 
       return {
@@ -489,7 +489,7 @@ export class HRMSApprovalFlowManager {
         // Mock department head lookup
         if (sampleFormData.department) {
           const deptHead = await User.findOne({
-            'employmentDetails.department': sampleFormData.department,
+            'department': sampleFormData.department,
             isActive: true
           }).select('firstName lastName displayName email');
           
@@ -507,7 +507,7 @@ export class HRMSApprovalFlowManager {
       case 'role_based':
         if (step.requiredRoles && step.requiredRoles.length > 0) {
           const users = await User.find({
-            'employmentDetails.role': { $in: step.requiredRoles },
+            'role': { $in: step.requiredRoles },
             isActive: true
           }).select('firstName lastName displayName email');
 

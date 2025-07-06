@@ -19,14 +19,15 @@ import { HRMSFormField as HRMSFormFieldType } from '@/types/hrms';
 interface HRMSFormFieldProps {
   field: HRMSFormFieldType;
   disabled?: boolean;
+  data: any; // Adjust type as needed based on your data structure
 }
 
-export default function HRMSFormField({ field, disabled = false }: HRMSFormFieldProps) {
+export default function HRMSFormField({ field, disabled = false , data}: HRMSFormFieldProps) {
   const { control, formState: { errors }, watch } = useFormContext();
   
   const error = errors[field.name];
   const watchedValues = watch();
-
+console.log('inside section data', data);
   // Check if field should be shown based on dependencies
   const shouldShow = React.useMemo(() => {
     if (!field.showIf) return !field.hidden;
@@ -36,6 +37,7 @@ export default function HRMSFormField({ field, disabled = false }: HRMSFormField
   if (!shouldShow) return null;
 
   const renderField = () => {
+    console.log(`Rendering field:`, field);
     switch (field.type) {
       case 'text':
       case 'email':
@@ -63,7 +65,7 @@ export default function HRMSFormField({ field, disabled = false }: HRMSFormField
             render={({ field: controllerField }) => (
               <Input
                 {...controllerField}
-                value={controllerField.value || ''}
+                value={controllerField.value || data?.[field.name] || ''}
                 type={field.type}
                 placeholder={field.placeholder}
                 disabled={disabled || field.disabled}
@@ -150,8 +152,10 @@ export default function HRMSFormField({ field, disabled = false }: HRMSFormField
             render={({ field: controllerField }) => (
               <Select
                 onValueChange={controllerField.onChange}
-                value={controllerField.value || ""}
+                value={ controllerField.value || data?.[field.name]?._id || ""}
                 disabled={disabled || field.disabled}
+
+                
               >
                 <SelectTrigger className={cn(error && "border-destructive")}>
                   <SelectValue placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`} />
@@ -227,7 +231,7 @@ export default function HRMSFormField({ field, disabled = false }: HRMSFormField
           <Controller
             name={field.name}
             control={control}
-            defaultValue=""
+            defaultValue={data?.[field.name] || ""}
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
@@ -254,7 +258,7 @@ export default function HRMSFormField({ field, disabled = false }: HRMSFormField
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={controllerField.value ? new Date(controllerField.value) : undefined}
+                    selected={controllerField.value ? new Date(controllerField.value) : (data?.[field.name] ? new Date(data?.[field.name]) : undefined)}
                     onSelect={(date) => controllerField.onChange(date?.toISOString())}
                     disabled={disabled || field.disabled}
                     initialFocus

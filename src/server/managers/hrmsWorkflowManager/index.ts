@@ -43,7 +43,7 @@ class HRMSWorkflowManager {
   static async createWorkflowInstance(params: CreateWorkflowInstanceParams) {
     try {
       await dbConnect();
-
+console.log(params, 'params in createWorkflowInstance');
       const { workflowType, triggerFormType, metadata, createdBy } = params;
       let triggerFormId = params.triggerFormId;
 
@@ -110,7 +110,7 @@ class HRMSWorkflowManager {
 
       return {
         success: true,
-        data: savedInstance,
+        data: {savedInstance,formData:triggerForm},
         message: 'Workflow instance created successfully'
       };
 

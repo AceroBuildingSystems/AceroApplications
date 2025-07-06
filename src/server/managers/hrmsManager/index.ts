@@ -16,6 +16,7 @@ import {
 import HRMSApprovalFlow from '@/models/hrms/HRMSApprovalFlow.model';
 import HRMSApprovalInstance from '@/models/hrms/HRMSApprovalInstance.model';
 import User from '@/models/master/User.model';
+import { Department } from '@/models';
 
 export class HRMSManager {
   
@@ -88,28 +89,40 @@ export class HRMSManager {
   // === CRUD Operations ===
   
   // Create new form (draft by default)
-  static async createForm(formType: string, formData: any, userId: string) {
+  static async createForm(formType: string, {formData}: any, userId: string) {
     try {
       const Model = this.getModelByFormType(formType);
       if (!Model) {
         throw new Error(`Invalid form type: ${formType}`);
       }
+console.log('Creating form with data:', formData);
+console.log('Model:', Model);
 
-      const newForm = new Model({
+      const data = {
         ...formData,
+        requestedBy:formData.requestedById,
+        department: formData.departmentId,
+        requestedPosition: formData.position,
         addedBy: userId,
         updatedBy: userId,
         isDraft: true,
         draftSavedAt: new Date()
-      });
+      }
+      data.requestedBy = formData.requestedById
+      data.department =  formData.departmentId
+      data.requestedPosition =  formData.position
+      data.empName =  formData.employeeName;
+      console.log('Dataaa to be saved:', data);
+      const newForm = new Model(data);
 
+      console.log('New form instance created:', newForm);
       // Skip validation for draft saves
       const skipValidation = formData.isDraft !== false;
-      await newForm.save({ validateBeforeSave: !skipValidation });
-      
+      const result = await newForm.save({ validateBeforeSave: !skipValidation });
+      console.log('Saved new form:', result);
       return {
         success: true,
-        data: newForm,
+        data: result,
         message: 'Form created successfully'
       };
     } catch (error: any) {

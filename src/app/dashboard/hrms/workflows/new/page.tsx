@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Combobox } from '@/components/ui/combobox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import {
   ArrowLeftIcon,
   PlayIcon,
   InfoIcon
@@ -17,14 +17,15 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
-import { 
-  useGetDepartmentsQuery, 
+import {
+  useGetDepartmentsQuery,
   useGetUsersQuery,
   useCreateWorkflowInstanceMutation
 } from '@/services/endpoints/hrmsApi';
 import { useWorkflow } from '@/contexts/WorkflowContext';
 
 import ResumeWorkflow from './ResumeWorkflow';
+import { DatePicker } from '@/components/ui/date-picker';
 
 export default function NewWorkflowPage() {
   const router = useRouter();
@@ -55,14 +56,15 @@ export default function NewWorkflowPage() {
   const departments = departmentsData?.data || [];
   const users = usersData?.data || [];
 
-  const userOptions = useMemo(() => 
+  const userOptions = useMemo(() =>
     users.map(user => ({
       value: user._id,
-      label: `${user.firstName} ${user.lastName} (${user.email})`,
+      label: user?.displayName ? user.displayName : `${user.firstName}`,
     })), [users]
   );
 
-  const departmentOptions = useMemo(() => 
+  console.log('User Options:', userOptions);
+  const departmentOptions = useMemo(() =>
     departments.map(dept => ({
       value: dept._id,
       label: dept.name,
@@ -97,14 +99,15 @@ export default function NewWorkflowPage() {
       };
 
       const result = await createWorkflowInstance(workflowToCreate).unwrap();
-
+console.log(result?.data?.formData?.data?._id);
+const formId = result?.data?.formData?.data?._id;
       if (result.success) {
         const newWorkflow = result.data;
         const workflowInitData = { ...newWorkflow, template };
         initializeWorkflow(workflowInitData);
-        
+
         const firstStep = template.steps[0];
-        router.push(`/dashboard/hrms/forms/${firstStep.formType}/new?workflow=true`);
+        router.push(`/dashboard/hrms/forms/${firstStep.formType}/new?workflow=true&id=${formId}`);
       } else {
         throw new Error(result.message || 'Failed to create workflow instance');
       }
@@ -117,12 +120,57 @@ export default function NewWorkflowPage() {
   const getTemplateByKey = (key: string) => {
     return HRMS_WORKFLOW_TEMPLATES[key.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES] || null;
   };
-  
+
   if (workflowDataParam) {
     return <ResumeWorkflow />;
   }
 
   const selectedTemplateData = getTemplateByKey(selectedTemplate);
+
+  const handleChange = (
+    e: { target: { value: any } } | any[] | string | null,
+    fieldName: string,
+    format?: string,
+    type?: string,
+    data?: any[],
+    field?: Field,
+    customFunction = (value: any) => { },
+    setState = (updater: any) => { }  // 👈 new: allows setting any state
+  ) => {
+    let value: any = "";
+
+    if (type === "multiselect") {
+      value = (e as any[]).map((item: { value: any }) => item.value);
+    } else if (type === "select") {
+      value = e;
+    } else if (e === null) {
+      value = null;
+    } else {
+      value = (e as { target: { value: any } }).target.value ?? "";
+    }
+
+    setState((prev: any) => {
+      let formattedValue = value;
+      if (format === "ObjectId") {
+        formattedValue = mongoose.Types.ObjectId.isValid(value || "") ? value : null;
+      } else if (format === "Date") {
+        formattedValue = value ? new Date(value).toISOString() : null;
+      }
+
+      const updatedFormData: any = {
+        ...prev,
+        [fieldName]: formattedValue,
+      };
+
+      if (field?.onChange) {
+        field.onChange(formattedValue);
+      }
+
+      customFunction(updatedFormData[fieldName]);
+      return updatedFormData;
+    });
+  };
+
 
   return (
     <div className="container mx-auto p-6 max-w-4xl space-y-6">
@@ -156,11 +204,10 @@ export default function NewWorkflowPage() {
             {Object.entries(HRMS_WORKFLOW_TEMPLATES).map(([key, template]) => (
               <div
                 key={key}
-                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                  selectedTemplate === key.toLowerCase()
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedTemplate === key.toLowerCase()
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300'
+                  }`}
                 onClick={() => handleTemplateSelect(key.toLowerCase())}
               >
                 <div className="flex items-start justify-between">
@@ -176,11 +223,10 @@ export default function NewWorkflowPage() {
                       </span>
                     </div>
                   </div>
-                  <div className={`w-4 h-4 rounded-full border-2 ${
-                    selectedTemplate === key.toLowerCase()
-                      ? 'border-blue-500 bg-blue-500'
-                      : 'border-gray-300'
-                  }`} />
+                  <div className={`w-4 h-4 rounded-full border-2 ${selectedTemplate === key.toLowerCase()
+                    ? 'border-blue-500 bg-blue-500'
+                    : 'border-gray-300'
+                    }`} />
                 </div>
               </div>
             ))}
@@ -205,8 +251,8 @@ export default function NewWorkflowPage() {
                     value={workflowData.requestedById}
                     onValueChange={(value) => {
                       const selectedUser = users.find(user => user._id === value);
-                      setWorkflowData({ 
-                        ...workflowData, 
+                      setWorkflowData({
+                        ...workflowData,
                         requestedById: value,
                         requestedBy: selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : ''
                       });
@@ -260,8 +306,8 @@ export default function NewWorkflowPage() {
                     value={workflowData.departmentId}
                     onValueChange={(value) => {
                       const selectedDept = departments.find(dept => dept._id === value);
-                      setWorkflowData({ 
-                        ...workflowData, 
+                      setWorkflowData({
+                        ...workflowData,
                         departmentId: value,
                         department: selectedDept ? selectedDept.name : ''
                       });
@@ -274,12 +320,29 @@ export default function NewWorkflowPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="expectedEndDate">Expected Completion Date</Label>
-                  <Input
+                  <DatePicker
+                    currentDate={workflowData.expectedEndDate ? new Date(workflowData.expectedEndDate) : undefined}
+                    placeholder="Expected End Date"
+                    handleChange={(selectedDate: Date | undefined, setDate: any) => {
+                      const isoDate = selectedDate ? selectedDate.toISOString() : "";
+                      setWorkflowData(prev => ({
+                        ...prev,
+                        expectedEndDate: isoDate,
+                      }));
+                      setDate?.(selectedDate); // update internal calendar view
+                      return true; // indicate custom handled
+                    }}
+                  />
+
+
+
+
+                  {/* <Input
                     id="expectedEndDate"
                     type="date"
                     value={workflowData.expectedEndDate}
                     onChange={(e) => setWorkflowData({ ...workflowData, expectedEndDate: e.target.value })}
-                  />
+                  /> */}
                 </div>
 
                 <div className="space-y-2">
@@ -347,7 +410,7 @@ export default function NewWorkflowPage() {
         <Link href="/dashboard/hrms/workflows">
           <Button variant="outline">Cancel</Button>
         </Link>
-        <Button 
+        <Button
           onClick={handleStartWorkflow}
           disabled={!selectedTemplate || isLoading}
         >

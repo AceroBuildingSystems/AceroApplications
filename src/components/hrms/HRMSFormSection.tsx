@@ -12,16 +12,19 @@ import HRMSFormField from './HRMSFormField';
 interface HRMSFormSectionProps {
   section: HRMSFormSectionType;
   disabled?: boolean;
+  data: any; // Adjust type as needed based on your data structure
   className?: string;
 }
 
 export default function HRMSFormSection({ 
   section, 
   disabled = false, 
+  data,
   className 
 }: HRMSFormSectionProps) {
   const [isExpanded, setIsExpanded] = useState(section.defaultExpanded ?? true);
-
+console.log('data to show', data);
+console.log('section', section);
   if (section.collapsible) {
     return (
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
@@ -84,7 +87,7 @@ export default function HRMSFormSection({
                 field.type === 'textarea' && "md:col-span-2"
               )}
             >
-              <HRMSFormField field={field} disabled={disabled} />
+              <HRMSFormField field={field} disabled={disabled} data={data} />
             </div>
           ))}
         </div>

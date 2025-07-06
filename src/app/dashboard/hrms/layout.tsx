@@ -70,30 +70,30 @@ export default function HRMSLayout({
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Breadcrumb Navigation */}
-      <div className="border-b bg-muted/50">
-        <div className="container mx-auto px-6 py-3">
-          <Breadcrumb>
-            <BreadcrumbList>
-              {breadcrumbs.map((crumb, index) => (
-                <React.Fragment key={crumb.href}>
-                  <BreadcrumbItem>
-                    {crumb.isLast ? (
-                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                    ) : (
-                      <BreadcrumbLink href={crumb.href}>
-                        {crumb.label}
-                      </BreadcrumbLink>
-                    )}
-                  </BreadcrumbItem>
-                  {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
-                </React.Fragment>
-              ))}
-            </BreadcrumbList>
-          </Breadcrumb>
-        </div>
-      </div>
+    // <div className="min-h-screen bg-background">
+    //   {/* Breadcrumb Navigation */}
+    //   <div className="border-b bg-muted/50">
+    //     <div className="container mx-auto px-6 py-3">
+    //       <Breadcrumb>
+    //         <BreadcrumbList>
+    //           {breadcrumbs.map((crumb, index) => (
+    //             <React.Fragment key={crumb.href}>
+    //               <BreadcrumbItem>
+    //                 {crumb.isLast ? (
+    //                   <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+    //                 ) : (
+    //                   <BreadcrumbLink href={crumb.href}>
+    //                     {crumb.label}
+    //                   </BreadcrumbLink>
+    //                 )}
+    //               </BreadcrumbItem>
+    //               {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+    //             </React.Fragment>
+    //           ))}
+    //         </BreadcrumbList>
+    //       </Breadcrumb>
+    //     </div>
+    //   </div>
 
       {/* Main Content */}
       <main className="flex-1">

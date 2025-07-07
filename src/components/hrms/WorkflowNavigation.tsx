@@ -18,11 +18,12 @@ import { useWorkflow } from '@/contexts/WorkflowContext';
 
 export default function WorkflowNavigation() {
   const { 
+    workflowId,
     workflowType, 
     currentStepIndex, 
     steps, 
     navigateToStep, 
-    isStepAccessible 
+    isStepAccessible,
   } = useWorkflow();
 
   if (!workflowType || steps.length === 0) {
@@ -98,7 +99,7 @@ export default function WorkflowNavigation() {
                 <div className="flex flex-col items-center min-w-[120px]">
                   {/* Step Circle */}
                   <button
-                    onClick={() => navigateToStep(step.stepIndex)}
+                    onClick={() => navigateToStep(step.stepIndex,false , workflowId)}
                     disabled={!isStepAccessible(step.stepIndex)}
                     className={`
                       relative w-12 h-12 rounded-full border-2 flex items-center justify-center
@@ -156,7 +157,7 @@ export default function WorkflowNavigation() {
                 `}
               >
                 <button
-                  onClick={() => navigateToStep(step.stepIndex)}
+                  onClick={() => navigateToStep(step.stepIndex, false, workflowId)}
                   disabled={!isStepAccessible(step.stepIndex)}
                   className={`
                     w-10 h-10 rounded-full border-2 flex items-center justify-center mr-4
@@ -189,7 +190,7 @@ export default function WorkflowNavigation() {
               {canGoBack && (
                 <Button
                   variant="outline"
-                  onClick={() => navigateToStep(currentStepIndex - 1)}
+                  onClick={() => navigateToStep(currentStepIndex - 1, true, workflowId)}
                   className="flex items-center gap-2"
                 >
                   <ArrowLeftIcon className="h-4 w-4" />
@@ -207,7 +208,7 @@ export default function WorkflowNavigation() {
             <div>
               {canGoForward && (
                 <Button
-                  onClick={() => navigateToStep(currentStepIndex + 1)}
+                  onClick={() => navigateToStep(currentStepIndex + 1, true, workflowId)}
                   className="flex items-center gap-2"
                 >
                   Next Step

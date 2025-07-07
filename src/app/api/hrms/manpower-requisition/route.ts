@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    
+    console.log('Creating manpower requisition with body2222:', body);
     const result = await HRMSManager.createForm(
       HRMSFormTypes.MANPOWER_REQUISITION,
       body,

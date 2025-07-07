@@ -92,7 +92,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    
+    console.log('body:', body);
     const result = await HRMSManager.createForm(
       formType,
       body,

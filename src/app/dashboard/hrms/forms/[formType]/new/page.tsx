@@ -14,11 +14,11 @@ import { CheckCircleIcon, FileTextIcon, DownloadIcon } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircleIcon } from 'lucide-react';
 import { getFormConfig } from '@/configs/hrms-forms';
-import { useCreateFormMutation, useSaveDraftMutation, useUpdateWorkflowInstanceMutation, useUpdateFormMutation, useGetFormByIdQuery } from '@/services/endpoints/hrmsApi';
+import { useCreateFormMutation, useSaveDraftMutation, useUpdateWorkflowInstanceMutation, useUpdateFormMutation, useGetFormByIdQuery, useGetWorkflowByIdQuery } from '@/services/endpoints/hrmsApi';
 import { useGetDepartmentsQuery, useGetAvailableApproversQuery, useGetCountriesQuery, useGetRolesQuery, useGetOrganizationsQuery, useGetLocationsQuery } from '@/services/endpoints/hrmsApi';
 import { HRMSFormConfig } from '@/types/hrms';
 import { useWorkflow } from '@/contexts/WorkflowContext';
-
+import { skipToken } from '@reduxjs/toolkit/query';
 // Workflow Completion Dialog Component
 interface WorkflowCompletionDialogProps {
   workflow: any;
@@ -160,20 +160,30 @@ export default function NewHRMSFormPage() {
   const [updateForm, { isLoading: isUpdating }] = useUpdateFormMutation();
   const [saveDraft, { isLoading: isSavingDraft }] = useSaveDraftMutation();
   const [updateWorkflowInstance, { isLoading: isUpdatingStatus }] = useUpdateWorkflowInstanceMutation();
-  const { data: requisitionData, isLoading: requisitionDataLoading } = useGetFormByIdQuery({ formType, id });
+  
+const { data: workFlowData = {}, isLoading: WorkFlowLoading } = useGetWorkflowByIdQuery(id);
+const currentWorkflowId = workFlowData?.data?._id;
+// Extract the form ID once the workflow data is ready
+const workFlowformId = workFlowData?.data?.formsData?.[formType];
 
-  const isLoading = isCreating || isUpdating || isSavingDraft || isUpdatingStatus || requisitionDataLoading;
+// Only run query if `formId` exists
+const {
+  data: requisitionData = {},
+  isLoading: requisitionDataLoading
+} = useGetFormByIdQuery(workFlowformId ? { formType, id: workFlowformId } : skipToken);
+
+
+  console.log('📄 REQUISITION DATA:', requisitionData);
+  const isLoading = isCreating || isUpdating || isSavingDraft || isUpdatingStatus || requisitionDataLoading || WorkFlowLoading;
 
 
   console.log('📄 FORM DATA LOG:', requisitionData);
   useEffect(() => {
-    if (id) {
-      setFormId(id);
+    if (requisitionData?.data?._id) {
+      setFormId(requisitionData.data._id);
 
     }
-
-
-  }, [id, requisitionData])
+  }, [requisitionData,requisitionData?.data])
 
   // Debug: Log workflow state when component loads
   useEffect(() => {
@@ -336,21 +346,35 @@ export default function NewHRMSFormPage() {
         // Create new draft using createForm with isDraft: true
         console.log('🟡 DRAFT SAVE: Creating new draft');
         result = await createForm({ formType, data: { ...data, isDraft: true } }).unwrap();
+        console.log('🟡 DRAFT SAVE: New draft created', result);
+        const workFlowUpdate = await updateWorkflowInstance({
+          id:currentWorkflowId,data:{...workFlowData?.data?.formsData,[formType]: result.data._id}
+        })
+        console.log('🟡 DRAFT SAVE: Workflow instance updated with new draft', workFlowUpdate);
+        console.log('🟡 DRAFT SAVE: Workflow instance updated with new draft', workFlowUpdate);
         if (result.success) {
           setFormId(result.data._id);
           // Don't redirect immediately, just update the URL quietly
-          window.history.replaceState(
-            {},
-            '',
-            `/dashboard/hrms/forms/${formType}/${result.data._id}/edit${isWorkflow ? '?workflow=true' : ''}`
-          );
+          if(!isWorkflow){
+            window.history.replaceState(
+              {},
+              '',
+              `/dashboard/hrms/forms/${formType}/${result.data._id}/edit${isWorkflow ? '?workflow=true' : ''}`
+            );
+          }else{
+             window.history.replaceState(
+              {},
+              '',
+              `/dashboard/hrms/forms/${formType}/new?workflow=true&id=${currentWorkflowId}`
+            );
+          }
         }
       }
 
       // Update workflow data if in workflow mode
       if (isWorkflow && result?.success) {
         // Only update the form data, not the step status
-        workflow.updateStepData(currentStepIndex, result.data._id, data, false);
+        workflow.updateStepData(currentStepIndex, result.data._id, data, true);
       }
 
       console.log('🟡 DRAFT SAVE: Completed successfully', result);
@@ -388,20 +412,32 @@ export default function NewHRMSFormPage() {
         }).unwrap();
       }
 
+      if(!workFlowData?.data?.formsData[formType] && result?.data?._id){
+        console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', {});
+        // Update the workflow instance with the new form ID
+        const workFlowUpdate = await updateWorkflowInstance({
+          id: currentWorkflowId,
+          data: { ...workFlowData?.data?.formsData, [formType]: result.data._id }
+        }).unwrap();
+        console.log('🟢 FORM SUBMIT: Workflow instance updated', workFlowUpdate);
+      }
+
       console.log('🟢 FORM SUBMIT: API Result', result);
 
       // Only proceed with workflow logic if this was successful
       if (result.success) {
         console.log('🟢 FORM SUBMIT: Form submitted successfully, checking workflow');
-
+        toast.success(`Form ${formType} submitted successfully!`);
         // Check if this is part of a workflow - HANDLE IMMEDIATELY
         if (isWorkflow && workflow.steps.length > 0) {
           console.log('🟢 FORM SUBMIT: Workflow detected - immediate processing');
           console.log('🔄 WORKFLOW: Current step index:', currentStepIndex);
           console.log('🔄 WORKFLOW: Total steps:', workflow.steps.length);
 
+
           // Update current step data
-          updateStepData(currentStepIndex, result.data._id, data);
+          console.log('📝 WORKFLOW: Updating step data for current step', currentStepIndex, result.data._id, data);
+          updateStepData(currentStepIndex, result.data._id, data,true);
 
           if (currentStepIndex < workflow.steps.length - 1) {
             // Get next step info
@@ -417,7 +453,7 @@ export default function NewHRMSFormPage() {
             // Use a small delay to ensure the step data update completes first
             setTimeout(() => {
               console.log('🚀 WORKFLOW: Navigating to next step after data update');
-              workflow.navigateToStep(nextStepIndex);
+              workflow.navigateToStep(nextStepIndex,true,currentWorkflowId);
             }, 50);
 
             return; // Stop all further execution
@@ -434,7 +470,7 @@ export default function NewHRMSFormPage() {
         // Only if NOT in workflow mode
         if (!isWorkflow) {
           console.log('📄 NON-WORKFLOW: Redirecting to view page');
-          router.push(`/dashboard/hrms/forms/${formType}/${result.data._id}`);
+          // router.push(`/dashboard/hrms/forms/${formType}/${result.data._id}`);
         }
       } else {
         console.error('🔴 FORM SUBMIT: Form submission failed', result);

@@ -19,7 +19,13 @@ export async function GET(
     }
 
     const { formType, id } = await params;
-
+    if(!id || id === 'null') {
+      return NextResponse.json(
+        { success: true, message: 'Id is null, starting a new flow' },
+        { status: 400 }
+      );
+    }
+console.log(`Fetching form of type ${formType} with ID ${id}`);
     // Validate form type
     if (!Object.values(HRMSFormTypes).includes(formType as any)) {
       return NextResponse.json(
@@ -27,7 +33,7 @@ export async function GET(
         { status: 400 }
       );
     }
-
+    
     const result = await HRMSManager.getFormById(formType, id);
 
     if (result.success) {

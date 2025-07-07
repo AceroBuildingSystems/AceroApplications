@@ -99,15 +99,17 @@ export default function NewWorkflowPage() {
       };
 
       const result = await createWorkflowInstance(workflowToCreate).unwrap();
-console.log(result?.data?.formData?.data?._id);
-const formId = result?.data?.formData?.data?._id;
+      console.log(result?.data,"asdnasdasdasdjasd");
+      const formId = result?.data?.formData?.data?._id;
       if (result.success) {
         const newWorkflow = result.data;
-        const workflowInitData = { ...newWorkflow, template };
+        console.log('Workflow created successfully:', newWorkflow);
+        const workFlowId = result?.data.savedInstance?._id
+        const workflowInitData = { ...newWorkflow, template,workflowId:workFlowId };
         initializeWorkflow(workflowInitData);
 
         const firstStep = template.steps[0];
-        router.push(`/dashboard/hrms/forms/${firstStep.formType}/new?workflow=true&id=${formId}`);
+        router.push(`/dashboard/hrms/forms/${firstStep.formType}/new?workflow=true&id=${workFlowId}`);
       } else {
         throw new Error(result.message || 'Failed to create workflow instance');
       }

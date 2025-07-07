@@ -10,6 +10,7 @@ export interface HRMSWorkflowInstanceDocument extends Document {
   currentStep: string;
   completedSteps: string[];
   stepsData: Record<string, any>;
+  formsData?: Record<string, any>; // Optional field for storing form data
   metadata: {
     candidateName?: string;
     employeeName?: string;
@@ -99,6 +100,7 @@ const HRMSWorkflowInstanceSchema = new Schema<HRMSWorkflowInstanceDocument>({
   assignedTo: [{
     type: String
   }],
+  formsData:mongoose.Schema.Types.Mixed,
   stepLogs: [{
     stepId: String,
     stepName: String,

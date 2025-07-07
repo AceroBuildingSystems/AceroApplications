@@ -22,7 +22,7 @@ interface WorkflowContextType {
   // Actions
   initializeWorkflow: (workflowData: any) => void;
   updateStepData: (stepIndex: number, formId: string, data: any) => void;
-  navigateToStep: (stepIndex: number) => void;
+  navigateToStep: (stepIndex: number, advance:boolean, workFlowId:string ) => void;
   getStepData: (stepIndex: number) => any;
   getAllPreviousData: () => any;
   isStepAccessible: (stepIndex: number) => boolean;
@@ -49,21 +49,24 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const initializeWorkflow = useCallback((workflowData: any) => {
     console.log('🚀 CONTEXT: Initializing workflow with data:', workflowData);
 
-    const { workflowType, currentStep, steps: savedSteps = [], metadata = {} } = workflowData;
+    const { workflowType, currentStep, steps: savedSteps = [], metadata = {} } = workflowData.template;
     const template = HRMS_WORKFLOW_TEMPLATES[workflowType?.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES];
-
+    console.log('🔍 CONTEXT: Using template for workflow type:', workflowType, template);
     if (!template) {
       console.error('❌ CONTEXT: No template found for workflow type:', workflowType);
       return;
     }
-
-    const currentStepIndex = template.steps.findIndex(s => s.id === currentStep);
+    console.log('🔍 CONTEXT: Template steps:', template,steps,{currentStep});
+    let currentStepIndex = template.steps.findIndex(s => s.id === currentStep);
     console.log(`🔍 CONTEXT: Current step is "${currentStep}", which is index ${currentStepIndex}`);
-    
+    if( currentStepIndex < 0) {
+      currentStepIndex = 0; // Fallback to first step if not found
+    }
     const initialFormData: { [key: number]: any } = {};
     // The primary source of truth for form data is the `formData` property on each saved step
     savedSteps.forEach((savedStep: any) => {
       const stepIndex = template.steps.findIndex(s => s.id === savedStep.id);
+      console.log(`🔍 CONTEXT: Processing saved step "${savedStep.id}" at index ${stepIndex}`);
       if (stepIndex > -1 && savedStep.formData) {
         initialFormData[stepIndex] = savedStep.formData;
         console.log(`📝 CONTEXT: Loaded data for step ${stepIndex}:`, savedStep.formData);
@@ -133,40 +136,49 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (stepIndex < 0 || stepIndex >= steps.length) {
       return false;
     }
-    if (stepIndex === 0) {
+     if (stepIndex === 0) {
       return true;
     }
+    // console.log('🔍 WORKFLOW: Checking accessibility for step', stepIndex);
+  
     const previousStep = steps[stepIndex - 1];
+    
     return previousStep?.status === 'completed';
   }, [steps]);
 
-  const navigateToStep = useCallback((stepIndex: number) => {
-    if (!isStepAccessible(stepIndex)) {
+  const navigateToStep = useCallback((stepIndex: number,advance=false,workFlowformId="") => {
+    console.log('🔄 WORKFLOW: Navigating to step', stepIndex, { advance, workFlowformId });
+    if (!advance && !isStepAccessible(stepIndex)) {
       console.warn('🚫 WORKFLOW: Step not accessible', stepIndex);
       return;
     }
     
-    console.log('🔄 WORKFLOW: Navigating to step', stepIndex);
-    setCurrentStepIndex(stepIndex);
+
+    setCurrentStepIndex(stepIndex+1);
     
     const step = steps[stepIndex];
     if (step) {
       // ALWAYS navigate to the new form page in workflow mode
       // The workflow context will handle loading existing data if the step is completed
       console.log('🔄 WORKFLOW: Staying in workflow, navigating to new form page for step', step);
-      router.push(`/dashboard/hrms/forms/${step.formType}/new?workflow=true`);
+      router.push(`/dashboard/hrms/forms/${step.formType}/new?workflow=true&id=${workFlowformId}`);
     }
   }, [isStepAccessible, steps, router]);
 
-  const updateStepData = useCallback((stepIndex: number, formId: string, data: any, advance = true) => {
+  const updateStepData = useCallback((stepIndex: number, formId: string, data: any, advance = false) => {
     console.log('📝 WORKFLOW: Updating step data', { stepIndex, formId, data, advance });
-    
+    if(stepIndex == -1 ) {
+      setCurrentStepIndex(0);
+      return 0
+    }
+    console.log('📝 WORKFLOW: Current step index is now',{ stepIndex, formId, data, advance,steps });
     setSteps(prevSteps => {
       const newSteps = prevSteps.map((step, index) => {
+        console.log('📝 WORKFLOW: Processing step', { step, index, stepIndex, advance });
         if (index === stepIndex) {
           return { ...step, formId, status: advance ? 'completed' : 'in_progress' };
         }
-        if (advance && index === stepIndex + 1) {
+        if (index === stepIndex + 1) {
           return { ...step, status: 'in_progress' };
         }
         return step;
@@ -182,8 +194,9 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (advance) {
       setCurrentStepIndex(stepIndex + 1);
     }
+    console.log('✅ WORKFLOW: Step data updated successfully', {steps});
   }, []);
-
+console.log('STEPS STEPS STEPS', steps);
   const getStepData = useCallback((stepIndex: number) => {
     return formData[stepIndex] || {};
   }, [formData]);
@@ -211,7 +224,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     navigateToStep,
     getStepData,
     getAllPreviousData,
-    isStepAccessible
+    isStepAccessible,
+
   };
 
   return (

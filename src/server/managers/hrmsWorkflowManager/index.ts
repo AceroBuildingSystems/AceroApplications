@@ -60,7 +60,7 @@ console.log(params, 'params in createWorkflowInstance');
       let triggerForm;
       if (triggerFormId === 'new') {
         const newForm = await HRMSManager.createForm(triggerFormType, {
-          formData: metadata,
+          ...metadata,
           isDraft: true,
           addedBy: createdBy,
         });
@@ -92,6 +92,9 @@ console.log(params, 'params in createWorkflowInstance');
         status: 'active',
         currentStep: template.steps[0].id,
         completedSteps: [],
+        formsData: {
+          [triggerFormType]: triggerFormId
+        },
         stepsData: {
           [template.steps[0].id]: triggerForm.data.formData
         },

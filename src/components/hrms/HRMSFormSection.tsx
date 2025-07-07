@@ -23,8 +23,7 @@ export default function HRMSFormSection({
   className 
 }: HRMSFormSectionProps) {
   const [isExpanded, setIsExpanded] = useState(section.defaultExpanded ?? true);
-console.log('data to show', data);
-console.log('section', section);
+
   if (section.collapsible) {
     return (
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>

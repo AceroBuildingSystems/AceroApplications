@@ -27,7 +27,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
   
   const error = errors[field.name];
   const watchedValues = watch();
-console.log('inside section data', data);
+
   // Check if field should be shown based on dependencies
   const shouldShow = React.useMemo(() => {
     if (!field.showIf) return !field.hidden;
@@ -37,7 +37,7 @@ console.log('inside section data', data);
   if (!shouldShow) return null;
 
   const renderField = () => {
-    console.log(`Rendering field:`, field);
+    
     switch (field.type) {
       case 'text':
       case 'email':
@@ -46,7 +46,7 @@ console.log('inside section data', data);
           <Controller
             name={field.name}
             control={control}
-            defaultValue=""
+            defaultValue={data?.[field.name] || ''}
             rules={{
               required: field.required ? `${field.label} is required` : false,
               pattern: field.validation?.pattern ? {
@@ -145,7 +145,7 @@ console.log('inside section data', data);
           <Controller
             name={field.name}
             control={control}
-            defaultValue=""
+            defaultValue={data?.[field.name]?._id || ""}
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}

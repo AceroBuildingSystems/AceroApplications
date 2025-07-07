@@ -89,7 +89,7 @@ export class HRMSManager {
   // === CRUD Operations ===
   
   // Create new form (draft by default)
-  static async createForm(formType: string, {formData}: any, userId: string) {
+  static async createForm(formType: string, formData: any, userId: string) {
     try {
       const Model = this.getModelByFormType(formType);
       if (!Model) {
@@ -100,18 +100,18 @@ console.log('Model:', Model);
 
       const data = {
         ...formData,
-        requestedBy:formData.requestedById,
-        department: formData.departmentId,
-        requestedPosition: formData.position,
+        requestedBy:formData.requestedById || '',
+        department: formData.departmentId || '',
+        requestedPosition: formData.position || '',
         addedBy: userId,
         updatedBy: userId,
         isDraft: true,
         draftSavedAt: new Date()
       }
-      data.requestedBy = formData.requestedById
-      data.department =  formData.departmentId
-      data.requestedPosition =  formData.position
-      data.empName =  formData.employeeName;
+      data.requestedBy = formData.requestedById || ''
+      data.department =  formData.departmentId || ''
+      data.requestedPosition =  formData.position || ''
+      data.empName =  formData.employeeName || '';
       console.log('Dataaa to be saved:', data);
       const newForm = new Model(data);
 
@@ -243,6 +243,14 @@ console.log('Model:', Model);
         throw new Error('Form not found');
       }
 
+      if(!updateData.addedBy){
+        Object.assign(form, updateData, {
+        addedBy: userId,
+      });
+      }
+
+      console.log('Updating form with data:', updateData);
+
       // Update form data
       Object.assign(form, updateData, {
         updatedBy: userId,
@@ -307,8 +315,13 @@ console.log('Model:', Model);
         throw new Error('Form has already been submitted');
       }
 
+      const formData = form.toObject();
+      formData.updatedBy = userId;
+      formData.addedBy = userId;
+      console.log('Submitting form with data:', formData);
+
       // Validate required fields
-      const validationResult = await this.validateForm(formType, form.toObject());
+      const validationResult = await this.validateForm(formType, formData);
       if (!validationResult.isValid) {
         return {
           success: false,

@@ -91,10 +91,10 @@ export default function HRMSFormContainer({
           }
           
           // Set new timeout for auto-save - longer delay to reduce frequency
-          timeoutId = setTimeout(() => {
-            console.log('⏰ AUTO-SAVE: Executing auto-save after user stopped typing for 10 seconds');
-            handleSaveDraft(value, false); // Pass false for isManualSubmit
-          }, 10000); // 10 seconds - only save when user stops typing for 10 seconds
+          // timeoutId = setTimeout(() => {
+          //   console.log('⏰ AUTO-SAVE: Executing auto-save after user stopped typing for 10 seconds');
+          //   handleSaveDraft(value, false); // Pass false for isManualSubmit
+          // }, 10000); // 10 seconds - only save when user stops typing for 10 seconds
           
           console.log('⏰ AUTO-SAVE: Debounce timeout set for 10 seconds');
         }
@@ -132,6 +132,7 @@ export default function HRMSFormContainer({
   };
 
   const handleFormSubmit = async (data: any, event?: React.BaseSyntheticEvent) => {
+    console.log('📝 FORM CONTAINER: handleFormSubmit called')
     console.log('📝 FORM CONTAINER: handleFormSubmit called', { 
       mode, 
       hasHandlers: { onSubmit: !!onSubmit, onUpdate: !!onUpdate },
@@ -150,7 +151,7 @@ export default function HRMSFormContainer({
         if (mode === 'create' || mode === 'edit') {
           const handler = mode === 'create' ? onSubmit : onUpdate;
           if (handler) {
-            console.log('📝 FORM CONTAINER: Calling handler function');
+            console.log('📝 FORM CONTAINER: Calling handler function', data);
             await handler(data);
             setIsDraft(false);
             toast.success(`Form ${mode === 'create' ? 'submitted' : 'updated'} successfully`);

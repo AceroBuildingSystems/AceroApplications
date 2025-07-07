@@ -18,9 +18,9 @@ export async function GET(
     }
 
     const { id } = await params;
-
-    const result = await HRMSWorkflowManager.getWorkflowById(id);
-
+    console.log(`Fetching workflow with ID: ${id}`);
+    const result = await HRMSWorkflowManager.getWorkflowInstanceById(id);
+    console.log(`Workflow fetch result:`, result);
     if (result.success) {
       return NextResponse.json(result);
     } else {
@@ -52,7 +52,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     
-    const result = await HRMSWorkflowManager.updateWorkflow(
+    const result = await HRMSWorkflowManager.updateWorkflowInstance(
       id,
       body,
       session.user.id

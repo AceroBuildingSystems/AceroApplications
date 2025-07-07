@@ -625,27 +625,6 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           }
         ]
       },
-      {
-        id: 'linked_records',
-        title: 'Linked Records',
-        description: 'References to related forms and records',
-        collapsible: true,
-        defaultExpanded: false,
-        fields: [
-          {
-            name: 'linkedCandidateInformation',
-            type: 'select',
-            label: 'Linked Candidate Information',
-            options: [] // Will be populated from candidate forms
-          },
-          {
-            name: 'linkedManpowerRequisition',
-            type: 'select',
-            label: 'Linked Manpower Requisition',
-            options: [] // Will be populated from requisition forms
-          }
-        ]
-      }
     ]
   },
 

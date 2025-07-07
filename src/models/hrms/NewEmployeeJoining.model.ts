@@ -172,28 +172,7 @@ const NewEmployeeJoiningSchema = new Schema<NewEmployeeJoiningDocument>(
     approvalFlowId: { type: Schema.Types.ObjectId, ref: 'ApprovalFlow' },
     currentApprovalStep: { type: Number, default: 0 },
     
-    // Linked Records
-    linkedCandidateInformation: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'CandidateInformation',
-      autopopulate: {
-        select: "name email passportNo"
-      }
-    },
-    linkedManpowerRequisition: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'ManpowerRequisition',
-      autopopulate: {
-        select: "requestedPosition department"
-      }
-    },
-    createdUserRecord: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'User',
-      autopopulate: {
-        select: "firstName lastName empId email"
-      }
-    },
+
     
     // Draft Management
     isDraft: { type: Boolean, default: true },

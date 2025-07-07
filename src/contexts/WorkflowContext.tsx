@@ -49,7 +49,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const initializeWorkflow = useCallback((workflowData: any) => {
     console.log('🚀 CONTEXT: Initializing workflow with data:', workflowData);
 
-    const { workflowType, currentStep, steps: savedSteps = [], metadata = {} } = workflowData.template;
+    const { workflowType, currentStep, steps: savedSteps = [], metadata = {} } = workflowData?.template || {};
     const template = HRMS_WORKFLOW_TEMPLATES[workflowType?.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES];
     console.log('🔍 CONTEXT: Using template for workflow type:', workflowType, template);
     if (!template) {

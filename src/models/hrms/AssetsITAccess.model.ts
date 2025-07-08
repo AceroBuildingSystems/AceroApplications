@@ -7,7 +7,7 @@ export interface AssetsITAccessDocument extends Document {
   
   // Employee Information
   empName: string;
-  designation: mongoose.Types.ObjectId; // Reference to Designation
+  
   departmentSection: mongoose.Types.ObjectId; // Reference to Department
   reportingTo: mongoose.Types.ObjectId; // Reference to User
   dateOfRequest: Date;
@@ -86,12 +86,7 @@ const AssetsITAccessSchema = new Schema<AssetsITAccessDocument>(
     
     // Employee Information
     empName: { type: String, required: true },
-    designation: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'Designation', 
-      required: true,
-      autopopulate: true
-    },
+  
     departmentSection: { 
       type: Schema.Types.ObjectId, 
       ref: 'Department', 

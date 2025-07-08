@@ -68,12 +68,7 @@ const NewEmployeeJoiningSchema = new Schema<NewEmployeeJoiningDocument>(
     
     // Basic Information
     empName: { type: String, required: true },
-    designation: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'Designation', 
-      required: true,
-      autopopulate: true
-    },
+    
     departmentSection: { 
       type: Schema.Types.ObjectId, 
       ref: 'Department', 

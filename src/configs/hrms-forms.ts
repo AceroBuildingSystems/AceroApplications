@@ -563,13 +563,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Full name of the new employee'
           },
-          {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: [] // Will be populated from API
-          },
+         
           {
             name: 'departmentSection',
             type: 'select',
@@ -647,13 +641,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             label: 'Employee Name',
             required: true
           },
-          {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: []
-          },
+         
           {
             name: 'departmentSection',
             type: 'select',
@@ -725,13 +713,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Employee identification number'
           },
-          {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: []
-          },
+         
           {
             name: 'grade',
             type: 'text',
@@ -947,13 +929,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Employee identification number'
           },
-          {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: []
-          },
+        
           {
             name: 'department',
             type: 'select',

@@ -38,7 +38,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
   if (!shouldShow) return null;
 
   const renderField = () => {
-    // console.log(field)
+     console.log(field)
     switch (field.type) {
       case 'text':
       case 'email':
@@ -142,18 +142,22 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
         );
 
       case 'select':
+        const valueObject = getValueByPath(data, field.name); // safely gets the nested object
+        console.log('valueObject', valueObject);
+  const selectedValue = valueObject?._id || valueObject || "";
+  console.log('selectedValue', selectedValue);
         return (
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name]?._id || ""}
+            defaultValue={data?.[field.name]?._id || selectedValue || ""}
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
             render={({ field: controllerField }) => (
               <Select
                 onValueChange={controllerField.onChange}
-                value={ controllerField.value || data?.[field.name]?._id || ""}
+                value={ controllerField.value || data?.[field.name]?._id || selectedValue || ""}
                 disabled={disabled || field.disabled}
 
                 

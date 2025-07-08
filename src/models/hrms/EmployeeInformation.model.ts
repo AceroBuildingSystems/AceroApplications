@@ -8,7 +8,7 @@ export interface EmployeeInformationDocument extends Document {
   // Basic Information
   empName: string;
   empId: string;
-  designation: mongoose.Types.ObjectId; // Reference to Designation
+  
   grade?: string;
   department: mongoose.Types.ObjectId; // Reference to Department
   location: mongoose.Types.ObjectId; // Reference to Location
@@ -102,12 +102,7 @@ const EmployeeInformationSchema = new Schema<EmployeeInformationDocument>(
     // Basic Information
     empName: { type: String, required: true },
     empId: { type: String, required: true, unique: true },
-    designation: { 
-      type: Schema.Types.ObjectId, 
-      ref: 'Designation', 
-      required: true,
-      autopopulate: true
-    },
+    
     grade: { type: String },
     department: { 
       type: Schema.Types.ObjectId, 

@@ -132,7 +132,7 @@ export default function HRMSFormContainer({
   };
 
   const handleFormSubmit = async (data: any, event?: React.BaseSyntheticEvent) => {
-    console.log('📝 FORM CONTAINER: handleFormSubmit called')
+    console.log('📝 FORM CONTAINER: handleFormSubmit called', data)
     console.log('📝 FORM CONTAINER: handleFormSubmit called', { 
       mode, 
       hasHandlers: { onSubmit: !!onSubmit, onUpdate: !!onUpdate },

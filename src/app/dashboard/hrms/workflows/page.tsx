@@ -29,7 +29,7 @@ import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
 import { useGetWorkflowInstancesQuery } from '@/services/endpoints/hrmsApi';
 
 export default function HRMSWorkflowsPage() {
-  const [activeTab, setActiveTab] = useState('active');
+  const [activeTab, setActiveTab] = useState('draft');
 
   const queryParams = useMemo(() => {
     return { status: activeTab };
@@ -199,7 +199,7 @@ export default function HRMSWorkflowsPage() {
     if (workflowInstances.length === 0) {
       return renderEmptyState(activeTab);
     }
-
+console.log(workflowInstances, 'Workflow Instances Data');
     return (
       <div className="space-y-6">
         {workflowInstances.map((instance: any) => (
@@ -273,7 +273,7 @@ export default function HRMSWorkflowsPage() {
                       View Details
                     </Button>
                   </Link>
-                  <Link href={`/dashboard/hrms/workflows/new?workflowData=${encodeURIComponent(JSON.stringify(instance))}`}>
+                  <Link href={`/dashboard/hrms/workflows/${instance._id}`}>
                     <Button size="sm">
                       {instance.status === 'draft' ? 'Continue Draft' : 'Continue Workflow'}
                     </Button>
@@ -356,16 +356,16 @@ export default function HRMSWorkflowsPage() {
       {/* Workflows List */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          <TabsTrigger value="active">Active Workflows</TabsTrigger>
+          {/* <TabsTrigger value="active">Active Workflows</TabsTrigger> */}
           <TabsTrigger value="draft">Drafts</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="paused">Paused</TabsTrigger>
+          {/* <TabsTrigger value="paused">Paused</TabsTrigger> */}
         </TabsList>
 
-        <TabsContent value="active">{renderContent()}</TabsContent>
+        {/* <TabsContent value="active">{renderContent()}</TabsContent> */}
         <TabsContent value="draft">{renderContent()}</TabsContent>
         <TabsContent value="completed">{renderContent()}</TabsContent>
-        <TabsContent value="paused">{renderContent()}</TabsContent>
+        {/* <TabsContent value="paused">{renderContent()}</TabsContent> */}
       </Tabs>
     </div>
   );

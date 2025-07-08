@@ -318,7 +318,7 @@ export default function WorkflowDetailPage() {
                       )}
                       
                       {isCurrent && (
-                        <Link href={`/dashboard/hrms/forms/${step.formType}/new?workflowId=${workflow._id}`}>
+                        <Link href={`/dashboard/hrms/forms/${step.formType}/new?id=${workflow._id}&workflow=true`}>
                           <Button size="sm">
                             <EditIcon className="w-4 h-4 mr-1" />
                             Continue

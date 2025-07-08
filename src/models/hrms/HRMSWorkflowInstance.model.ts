@@ -6,7 +6,7 @@ export interface HRMSWorkflowInstanceDocument extends Document {
   workflowType: 'recruitment' | 'onboarding' | 'business_travel' | 'custom';
   candidateId?: string;
   employeeId?: string;
-  status: 'active' | 'completed' | 'paused' | 'cancelled';
+  status: 'draft' | 'completed';
   currentStep: string;
   completedSteps: string[];
   stepsData: Record<string, any>;
@@ -23,6 +23,7 @@ export interface HRMSWorkflowInstanceDocument extends Document {
   updatedAt: Date;
   completedAt?: Date;
   createdBy: string;
+  isActive: boolean;
   assignedTo: string[];
   stepLogs?: Array<{
     stepId: string;
@@ -60,8 +61,8 @@ const HRMSWorkflowInstanceSchema = new Schema<HRMSWorkflowInstanceDocument>({
   status: {
     type: String,
     required: true,
-    enum: ['active', 'completed', 'paused', 'cancelled'],
-    default: 'active'
+    enum: ['draft', 'completed'],
+    default: 'draft'
   },
   currentStep: {
     type: String,
@@ -97,10 +98,14 @@ const HRMSWorkflowInstanceSchema = new Schema<HRMSWorkflowInstanceDocument>({
     type: String,
     required: true
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  },
   assignedTo: [{
     type: String
   }],
-  formsData:mongoose.Schema.Types.Mixed,
+  formsData: mongoose.Schema.Types.Mixed,
   stepLogs: [{
     stepId: String,
     stepName: String,
@@ -128,10 +133,10 @@ HRMSWorkflowInstanceSchema.index({ employeeId: 1 });
 HRMSWorkflowInstanceSchema.index({ startedAt: -1 });
 
 // Update the updatedAt field before saving
-HRMSWorkflowInstanceSchema.pre('save', function(next) {
+HRMSWorkflowInstanceSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });
 
-export default (mongoose.models?.HRMSWorkflowInstance as mongoose.Model<HRMSWorkflowInstanceDocument>) || 
+export default (mongoose.models?.HRMSWorkflowInstance as mongoose.Model<HRMSWorkflowInstanceDocument>) ||
   mongoose.model<HRMSWorkflowInstanceDocument>("HRMSWorkflowInstance", HRMSWorkflowInstanceSchema);

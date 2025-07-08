@@ -89,7 +89,7 @@ console.log(params, 'params in createWorkflowInstance');
         workflowType,
         candidateId: metadata.candidateName ? `candidate_${Date.now()}` : undefined,
         employeeId: metadata.employeeName ? `employee_${Date.now()}` : undefined,
-        status: 'active',
+        status: 'draft',
         currentStep: template.steps[0].id,
         completedSteps: [],
         formsData: {

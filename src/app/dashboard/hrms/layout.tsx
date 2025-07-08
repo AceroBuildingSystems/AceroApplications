@@ -72,7 +72,7 @@ export default function HRMSLayout({
   return (
     <div className="min-h-screen bg-background">
       {/* Breadcrumb Navigation */}
-      {/* <div className="border-b bg-muted/50">
+      <div className="border-b bg-muted/50">
         <div className="container mx-auto px-6 py-3">
           <Breadcrumb>
             <BreadcrumbList>
@@ -93,7 +93,7 @@ export default function HRMSLayout({
             </BreadcrumbList>
           </Breadcrumb>
         </div>
-      </div> */}
+      </div>
 
       {/* Main Content */}
       <main className="flex-1">

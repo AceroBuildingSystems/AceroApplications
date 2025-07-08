@@ -108,10 +108,10 @@ console.log('Model:', Model);
         isDraft: true,
         draftSavedAt: new Date()
       }
-      data.requestedBy = formData.requestedById || ''
-      data.department =  formData.departmentId || ''
-      data.requestedPosition =  formData.position || ''
-      data.empName =  formData.employeeName || '';
+      data.requestedBy = formData.requestedById || formData.requestedBy || ''
+      data.department =  formData.departmentId || formData.department || ''
+      data.requestedPosition =  formData.position || formData.requestedPosition || ''
+      data.empName =  formData.employeeName || formData.empName || '';
       console.log('Dataaa to be saved:', data);
       const newForm = new Model(data);
 

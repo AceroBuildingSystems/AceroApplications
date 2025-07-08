@@ -56,13 +56,10 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
       setIsGenerating(true);
 
       let pdfData;
-      let defaultFilename;
+      let defaultFilename = `${formType}_${formId}.pdf`;
 
-      if (formData) {
-        pdfData = formData;
-        defaultFilename = `${formType}_${formId}.pdf`;
-      } else {
-        // First, get the form data from API
+      if (!formData) {
+        // First, get the form data from API if not provided
         const result = await generatePDFData({
           formType,
           id: formId,
@@ -75,18 +72,34 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
         if (!result.success) {
           throw new Error(result.message || 'Failed to get form data');
         }
-        pdfData = result.data.pdfData;
-        defaultFilename = result.data.filename;
+        pdfData = result.data?.pdfData || result.data;
+      } else {
+        // Use provided form data
+        pdfData = formData;
       }
-      
+
+      if (!pdfData) {
+        throw new Error('No form data available for PDF generation');
+      }
+
       // Generate filename
       const filename = customFilename.trim() 
         ? `${customFilename.trim()}.pdf`
         : defaultFilename;
 
+      // Ensure we have the required template data structure
+      const templateData: FormTemplateData = {
+        formType,
+        formData: pdfData,
+        submittedBy: pdfData.submittedBy,
+        submissionDate: pdfData.submissionDate || new Date(),
+        approvalHistory: pdfData.approvalHistory || [],
+        organizationName: organizationName || 'Acero Building Systems'
+      };
+
       // Use client-side PDF generation
       const pdfResult = await HRMSPDFGenerator.generateFormPDF(
-        pdfData as FormTemplateData,
+        templateData,
         {
           ...pdfOptions,
           filename
@@ -101,9 +114,9 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
         if (onGenerated) {
           onGenerated(pdfResult.pdfBlob, filename);
         }
-
-        toast.success('PDF generated and downloaded successfully!');
-        setIsOpen(false);
+        
+        toast.success('PDF generated successfully');
+        return pdfResult;
       } else {
         throw new Error(pdfResult.error || 'Failed to generate PDF');
       }

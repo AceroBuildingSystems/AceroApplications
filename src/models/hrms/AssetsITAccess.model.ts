@@ -55,7 +55,7 @@ export interface AssetsITAccessDocument extends Document {
   declarationText?: string; // Standard declaration text
   
   // Status and Workflow
-  status: 'draft' | 'pending_hod' | 'pending_hr_admin' | 'pending_it' | 'pending_coo_cfo' | 'approved' | 'rejected' | 'assets_provided';
+  status: 'draft' | 'pending_hod' | 'pending_hr_admin' | 'pending_it' | 'pending_coo_cfo' | 'approved' | 'rejected' | 'assets_provided' | 'submitted';
   approvalFlowId?: mongoose.Types.ObjectId;
   currentApprovalStep?: number;
   
@@ -213,7 +213,8 @@ const AssetsITAccessSchema = new Schema<AssetsITAccessDocument>(
         'pending_coo_cfo', 
         'approved', 
         'rejected', 
-        'assets_provided'
+        'assets_provided',
+        'submitted'
       ],
       default: 'draft'
     },

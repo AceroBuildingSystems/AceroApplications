@@ -201,19 +201,34 @@ export class HRMSPDFGenerator {
 
   // Create empty form template when no data is available
   private static createEmptyFormTemplate(formType: string, organizationName = 'Acero Building Systems', logoUrl?: string): string {
-    const formTitle = formType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    
-    return `
-      <div style="max-width: 210mm; margin: 0 auto; padding: 20px; background: white; font-family: 'Arial', sans-serif;">
-        ${this.createHeader(organizationName, logoUrl)}
-        <div style="margin-bottom: 30px; text-align: center; padding: 40px; border: 2px dashed #e5e7eb; border-radius: 10px;">
-          <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px;">${formTitle}</h2>
-          <p style="color: #6b7280; font-size: 16px; margin: 0;">No form data available to generate PDF</p>
-          <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">Please ensure the form has been properly submitted with data.</p>
+    try {
+      const formTitle = (formType || 'Form')
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      return `
+        <div style="max-width: 210mm; margin: 0 auto; padding: 20px; background: white; font-family: 'Arial', sans-serif;">
+          ${this.createHeader(organizationName, logoUrl)}
+          <div style="margin-bottom: 30px; text-align: center; padding: 40px; border: 2px dashed #e5e7eb; border-radius: 10px;">
+            <h2 style="color: #374151; font-size: 20px; margin-bottom: 15px;">${formTitle}</h2>
+            <p style="color: #6b7280; font-size: 16px; margin: 0;">No form data available to generate PDF</p>
+            <p style="color: #6b7280; font-size: 14px; margin: 10px 0 0 0;">Please ensure the form has been properly submitted with data.</p>
+          </div>
+          ${this.createFooter()}
         </div>
-        ${this.createFooter()}
-      </div>
-    `;
+      `;
+    } catch (error) {
+      console.error('Error creating empty form template:', error);
+      return `
+        <div style="max-width: 210mm; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
+          <h1>Error Generating Document</h1>
+          <p>An error occurred while generating the PDF document.</p>
+          <p>${error instanceof Error ? error.message : 'Unknown error'}</p>
+        </div>
+      `;
+    }
   }
 
   // Enhanced Manpower Requisition Template with actual data validation
@@ -637,32 +652,60 @@ export class HRMSPDFGenerator {
     return `
       <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px;">
         <p style="margin: 0;">This document was generated automatically by the HRMS system on ${new Date().toLocaleString()}</p>
-        <p style="margin: 5px 0 0 0;">© ${new Date().getFullYear()} Acero Building Systems. All rights reserved.</p>
+        <p style="margin: 5px 0 0 0;">&copy; ${new Date().getFullYear()} Acero Building Systems. All rights reserved.</p>
       </div>
     `;
   }
 
   // Helper method to format field values with better object handling
   private static formatFieldValue(value: any): string {
-    if (value === null || value === undefined) return 'N/A';
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    if (typeof value === 'object') {
-      if (value.name) return value.name;
-      if (value.title) return value.title;
-      if (value.displayName) return value.displayName;
-      if (value.firstName && value.lastName) return `${value.firstName} ${value.lastName}`;
-      if (Array.isArray(value)) return value.join(', ');
-      return JSON.stringify(value);
-    }
-    if (typeof value === 'string' && value.includes('T') && value.includes('Z')) {
-      // Likely a date string
-      try {
-        return new Date(value).toLocaleDateString();
-      } catch {
-        return value;
+    try {
+      if (value === null || value === undefined) {
+        return 'N/A';
       }
+      
+      if (typeof value === 'string') {
+        return value.trim() || 'N/A';
+      }
+      
+      if (typeof value === 'number' || typeof value === 'boolean') {
+        return String(value);
+      }
+      
+      if (value instanceof Date) {
+        return value.toLocaleDateString();
+      }
+      
+      if (Array.isArray(value)) {
+        return value.map(v => this.formatFieldValue(v)).join(', ');
+      }
+      
+      if (typeof value === 'object') {
+        // Handle Mongoose documents
+        if (value._id && typeof value.toObject === 'function') {
+          value = value.toObject();
+        }
+        
+        // Handle nested objects
+        if (value.name || value.title || value.label) {
+          return value.name || value.title || value.label || 'N/A';
+        }
+        
+        try {
+          return JSON.stringify(value, (key, val) => {
+            if (key.startsWith('_') || key === 'password') return undefined;
+            return val;
+          });
+        } catch {
+          return 'N/A';
+        }
+      }
+      
+      return String(value);
+    } catch (error) {
+      console.warn('Error formatting field value:', { value, error });
+      return 'N/A';
     }
-    return String(value);
   }
 
   // Helper method to get display value for complex objects

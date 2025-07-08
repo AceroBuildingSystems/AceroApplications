@@ -49,7 +49,7 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const initializeWorkflow = useCallback((workflowData: any) => {
     console.log('🚀 CONTEXT: Initializing workflow with data:', workflowData);
 
-    const { workflowType, currentStep, steps: savedSteps = [], metadata = {} } = workflowData?.template ?? workflowData;
+    const { workflowType, currentStep, steps: savedSteps = [], metadata = {} } = workflowData?.template ?? workflowData ?? {};
     const template = HRMS_WORKFLOW_TEMPLATES[workflowType?.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES];
     console.log('🔍 CONTEXT: Using template for workflow type:', workflowType, template);
     if (!template) {
@@ -133,35 +133,60 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [workflowId, workflowType, currentStepIndex, steps, formData]);
 
   const isStepAccessible = useCallback((stepIndex: number) => {
+    // First step is always accessible
+    if (stepIndex === 0) {
+      return true;
+    }
+    
+    // Invalid index is not accessible
     if (stepIndex < 0 || stepIndex >= steps.length) {
       return false;
     }
-     if (stepIndex === 0) {
-      return true;
-    }
-    // console.log('🔍 WORKFLOW: Checking accessibility for step', stepIndex);
-  
-    const previousStep = steps[stepIndex - 1];
     
-    return previousStep?.status === 'completed';
+    // If any previous step is not completed, this step is not accessible
+    for (let i = 0; i < stepIndex; i++) {
+      if (steps[i]?.status !== 'completed') {
+        return false;
+      }
+    }
+    
+    return true;
   }, [steps]);
 
-  const navigateToStep = useCallback((stepIndex: number,advance=false,workFlowformId="") => {
+  const navigateToStep = useCallback((stepIndex: number, advance = false, workFlowformId = '') => {
     console.log('🔄 WORKFLOW: Navigating to step', stepIndex, { advance, workFlowformId });
+    
+    // Don't allow navigation to invalid steps
+    if (stepIndex < 0 || stepIndex >= steps.length) {
+      console.warn('🚫 WORKFLOW: Invalid step index', stepIndex);
+      return;
+    }
+
+    // Only check accessibility if not advancing programmatically
     if (!advance && !isStepAccessible(stepIndex)) {
       console.warn('🚫 WORKFLOW: Step not accessible', stepIndex);
       return;
     }
     
-
-    setCurrentStepIndex(stepIndex+1);
+    // Update the current step index
+    setCurrentStepIndex(stepIndex);
+    
+    // Only update status if the step isn't already completed
+    setSteps(prevSteps => 
+      prevSteps.map((step, idx) => {
+        if (idx === stepIndex && step.status !== 'completed') {
+          return { ...step, status: 'in_progress' };
+        }
+        return step;
+      })
+    );
     
     const step = steps[stepIndex];
     if (step) {
-      // ALWAYS navigate to the new form page in workflow mode
-      // The workflow context will handle loading existing data if the step is completed
-      console.log('🔄 WORKFLOW: Staying in workflow, navigating to new form page for step', step);
-      router.push(`/dashboard/hrms/forms/${step.formType}/new?workflow=true&id=${workFlowformId}`);
+      // Navigate to the form for this step
+      const url = `/dashboard/hrms/forms/${step.formType}/new?workflow=true&id=${workFlowformId}&stepIndex=${stepIndex}`;
+      console.log('🔄 WORKFLOW: Navigating to form', url);
+      router.push(url);
     }
   }, [isStepAccessible, steps, router]);
 

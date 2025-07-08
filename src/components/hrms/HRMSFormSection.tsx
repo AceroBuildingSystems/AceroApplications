@@ -58,7 +58,7 @@ export default function HRMSFormSection({
                       field.type === 'textarea' && "md:col-span-2"
                     )}
                   >
-                    <HRMSFormField field={field} disabled={disabled} />
+                    <HRMSFormField field={field} disabled={disabled} data={data} />
                   </div>
                 ))}
               </div>

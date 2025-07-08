@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { CalendarIcon, UploadIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { HRMSFormField as HRMSFormFieldType } from '@/types/hrms';
+import { getValueByPath } from '@/utils/toSplit';
 
 interface HRMSFormFieldProps {
   field: HRMSFormFieldType;
@@ -24,7 +25,7 @@ interface HRMSFormFieldProps {
 
 export default function HRMSFormField({ field, disabled = false , data}: HRMSFormFieldProps) {
   const { control, formState: { errors }, watch } = useFormContext();
-  
+  // console.log('data', data)
   const error = errors[field.name];
   const watchedValues = watch();
 
@@ -37,7 +38,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
   if (!shouldShow) return null;
 
   const renderField = () => {
-    
+     console.log(field)
     switch (field.type) {
       case 'text':
       case 'email':
@@ -46,7 +47,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name] || ''}
+            defaultValue={data?.[field.name] ||  getValueByPath(data, field.name) || ''}
             rules={{
               required: field.required ? `${field.label} is required` : false,
               pattern: field.validation?.pattern ? {
@@ -65,7 +66,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
             render={({ field: controllerField }) => (
               <Input
                 {...controllerField}
-                value={controllerField.value || data?.[field.name] || ''}
+                value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
                 type={field.type}
                 placeholder={field.placeholder}
                 disabled={disabled || field.disabled}
@@ -80,7 +81,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue=""
+            defaultValue={data?.[field.name] || getValueByPath(data, field.name) ||''}
             rules={{
               required: field.required ? `${field.label} is required` : false,
               min: field.validation?.min ? {
@@ -95,7 +96,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
             render={({ field: controllerField }) => (
               <Input
                 {...controllerField}
-                value={controllerField.value || ''}
+                value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
                 type="number"
                 placeholder={field.placeholder}
                 disabled={disabled || field.disabled}
@@ -115,7 +116,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue=""
+            defaultValue={data?.[field.name] || getValueByPath(data, field.name)}
             rules={{
               required: field.required ? `${field.label} is required` : false,
               minLength: field.validation?.min ? {
@@ -130,7 +131,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
             render={({ field: controllerField }) => (
               <Textarea
                 {...controllerField}
-                value={controllerField.value || ''}
+                value={controllerField.value || getValueByPath(data, field.name) || ''}
                 placeholder={field.placeholder}
                 disabled={disabled || field.disabled}
                 className={cn(error && "border-destructive")}
@@ -141,18 +142,22 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
         );
 
       case 'select':
+        const valueObject = getValueByPath(data, field.name); // safely gets the nested object
+        console.log('valueObject', valueObject);
+  const selectedValue = valueObject?._id || valueObject || "";
+  console.log('selectedValue', selectedValue);
         return (
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name]?._id || ""}
+            defaultValue={data?.[field.name]?._id || selectedValue || ""}
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
             render={({ field: controllerField }) => (
               <Select
                 onValueChange={controllerField.onChange}
-                value={ controllerField.value || data?.[field.name]?._id || ""}
+                value={ controllerField.value || data?.[field.name]?._id || selectedValue || ""}
                 disabled={disabled || field.disabled}
 
                 
@@ -177,12 +182,12 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue={false}
+            defaultValue={data?.[field.name] || false}
             render={({ field: controllerField }) => (
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id={field.name}
-                  checked={controllerField.value || false}
+                  checked={controllerField.value || data?.[field.name] || false}
                   onCheckedChange={controllerField.onChange}
                   disabled={disabled || field.disabled}
                 />
@@ -202,14 +207,14 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue=""
+            defaultValue={data?.[field.name] || ""}
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
             render={({ field: controllerField }) => (
               <RadioGroup
                 onValueChange={controllerField.onChange}
-                value={controllerField.value || ""}
+                value={controllerField.value || data?.[field.name] || ""}
                 disabled={disabled || field.disabled}
                 className="flex flex-col space-y-2"
               >
@@ -231,7 +236,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name] || ""}
+            defaultValue={data?.[field.name] || getValueByPath(data, field.name) || ''}
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
@@ -258,7 +263,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={controllerField.value ? new Date(controllerField.value) : (data?.[field.name] ? new Date(data?.[field.name]) : undefined)}
+                    selected={controllerField.value ? new Date(controllerField.value) : (data?.[field.name] ? new Date(data?.[field.name]) : (getValueByPath(data, field.name) ? new Date(getValueByPath(data, field.name)) : undefined))}
                     onSelect={(date) => controllerField.onChange(date?.toISOString())}
                     disabled={disabled || field.disabled}
                     initialFocus

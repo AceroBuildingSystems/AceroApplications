@@ -354,7 +354,7 @@ console.log(params, 'params in createWorkflowInstance');
           message: 'Insufficient permissions to update workflow'
         };
       }
-
+      console.log('Updating workflow instance:', instanceId, 'with data:', updateData);
       // Update allowed fields
       const allowedFields = ['status', 'metadata', 'assignedTo'];
       allowedFields.forEach(field => {
@@ -364,6 +364,10 @@ console.log(params, 'params in createWorkflowInstance');
       });
 
       instance.updatedAt = new Date();
+      instance.formsData = {...instance.formsData,
+        ...updateData.formsData }
+
+      console.log('Updating workflow instance with data:', instance);  
       await instance.save();
 
       return {

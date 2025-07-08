@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
+import {
   ArrowLeftIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -80,7 +80,7 @@ export default function WorkflowDetailPage() {
   const params = useParams();
   const router = useRouter();
   const workflowId = params.id as string;
-  
+
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,10 +93,10 @@ export default function WorkflowDetailPage() {
   // Handle step completion
   const handleStepComplete = async (stepId: string, formData: any) => {
     if (!workflow) return;
-    
+
     try {
       setIsLoading(true);
-      
+
       // Update the workflow state
       const updatedWorkflow = {
         ...workflow,
@@ -123,10 +123,10 @@ export default function WorkflowDetailPage() {
           }
         ]
       };
-      
+
       // Update local state
       setWorkflow(updatedWorkflow);
-      
+
     } catch (error) {
       console.error('Error completing step:', error);
       setError('Failed to complete step. Please try again.');
@@ -134,11 +134,11 @@ export default function WorkflowDetailPage() {
       setIsLoading(false);
     }
   };
-  
+
   // Handle step navigation
   const navigateToStep = (stepId: string) => {
     if (!workflow) return;
-    
+
     setWorkflow({
       ...workflow,
       currentStep: stepId
@@ -249,7 +249,7 @@ export default function WorkflowDetailPage() {
   }
 
   const template = getTemplate(workflow.workflowType);
-
+  console.log('Workflow data:', workflow);
   return (
     <div className="container mx-auto p-6 max-w-6xl space-y-6">
       {/* Header */}
@@ -338,7 +338,7 @@ export default function WorkflowDetailPage() {
                   <p className="text-xs text-gray-600">Person</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <BriefcaseIcon className="w-4 h-4 text-gray-500" />
                 <div>
@@ -346,7 +346,7 @@ export default function WorkflowDetailPage() {
                   <p className="text-xs text-gray-600">Position</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <MapPinIcon className="w-4 h-4 text-gray-500" />
                 <div>
@@ -380,33 +380,31 @@ export default function WorkflowDetailPage() {
         <CardContent>
           <div className="space-y-4">
             {template?.steps.map((step: HRMSWorkflowStep, index: number) => {
-const isCompleted = isStepCompleted(step.id);
+              const isCompleted = isStepCompleted(step.id);
               const isCurrent = workflow.currentStep === step.id;
               const formConfig = HRMS_FORM_CONFIG[step.formType];
               const stepData = workflow.stepsData[step.id];
               const isLocked = step?.isLocked && !isCompleted && !isCurrent;
 
               return (
-                <div key={step.id} className={`p-4 border rounded-lg ${
-                  isCompleted 
-                    ? 'bg-green-50 border-green-200' 
-                    : isCurrent 
-                      ? 'bg-blue-50 border-blue-200' 
+                <div key={step.id} className={`p-4 border rounded-lg ${isCompleted
+                    ? 'bg-green-50 border-green-200'
+                    : isCurrent
+                      ? 'bg-blue-50 border-blue-200'
                       : isLocked
                         ? 'bg-gray-100 border-gray-200 opacity-70'
                         : 'bg-white border-gray-200'
-                }`}>
+                  }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        isCompleted 
-                          ? 'bg-green-500 text-white' 
-                          : isCurrent 
-                            ? 'bg-blue-500 text-white' 
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCompleted
+                          ? 'bg-green-500 text-white'
+                          : isCurrent
+                            ? 'bg-blue-500 text-white'
                             : isLocked
                               ? 'bg-gray-300 text-gray-600'
                               : 'bg-gray-200 text-gray-700'
-                      }`}>
+                        }`}>
                         {isCompleted ? (
                           <CheckCircleIcon className="w-6 h-6" />
                         ) : isLocked ? (
@@ -415,7 +413,7 @@ const isCompleted = isStepCompleted(step.id);
                           <span className="font-bold">{index + 1}</span>
                         )}
                       </div>
-                      
+
                       <div>
                         <h3 className="font-medium">{step.stepName}</h3>
                         <p className="text-sm text-gray-600">{formConfig?.title}</p>
@@ -432,22 +430,22 @@ const isCompleted = isStepCompleted(step.id);
                           View Data
                         </Button>
                       )}
-                      
-                      <Button 
-                        size="sm" 
+
+                      <Button
+                        size="sm"
                         variant={isCurrent ? 'default' : 'outline'}
                         onClick={() => navigateToStep(step.id)}
                         disabled={isLocked}
                       >
-                        
-                        {isCurrent ?  <Link href={`/dashboard/hrms/forms/${step.formType}/new?id=${workflow._id}&workflow=true`}>
+
+                        {isCurrent ? <Link href={`/dashboard/hrms/forms/${step.formType}/new?id=${workflow._id}&workflow=true&stepIndex=${workflow?.progress.completedSteps}`}>
                           <Button size="sm">
                             <EditIcon className="w-4 h-4 mr-1" />
                             Continue
                           </Button>
                         </Link> : isCompleted ? 'Edit' : 'Start'}
                       </Button>
-                      
+
                       {isLocked && (
                         <Button variant="ghost" size="sm" disabled>
                           <Lock className="w-4 h-4 mr-1" />

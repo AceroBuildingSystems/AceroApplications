@@ -134,8 +134,9 @@ export default function NewHRMSFormPage() {
   const searchParams = useSearchParams();
   const isWorkflow = searchParams.get('workflow') === 'true';
   const id = searchParams.get('id');
+  const stepIndex = searchParams.get('stepIndex');
 
-  console.log('NewHRMSFormPage', { params, isWorkflow, id, pathname });
+  console.log('NewHRMSFormPage', { params, isWorkflow, id, pathname, stepIndex });
   // Workflow context
   const workflow = useWorkflow();
   const {
@@ -166,6 +167,7 @@ const currentWorkflowId = workFlowData?.data?._id;
 // Extract the form ID once the workflow data is ready
 const workFlowformId = workFlowData?.data?.formsData?.[formType];
 
+console.log('📄 WORKFLOW DATA:', workFlowData, formType)
 // Only run query if `formId` exists
 const {
   data: requisitionData = {},
@@ -413,11 +415,11 @@ const {
       }
 
       if(!workFlowData?.data?.formsData[formType] && result?.data?._id){
-        console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', {});
+        console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', { ...workFlowData?.data?.formsData, formsData:{[formType]: result.data._id} });
         // Update the workflow instance with the new form ID
         const workFlowUpdate = await updateWorkflowInstance({
           id: currentWorkflowId,
-          data: { ...workFlowData?.data?.formsData, [formType]: result.data._id }
+          data: { ...workFlowData?.data?.formsData, formsData:{[formType]: result.data._id} }
         }).unwrap();
         console.log('🟢 FORM SUBMIT: Workflow instance updated', workFlowUpdate);
       }

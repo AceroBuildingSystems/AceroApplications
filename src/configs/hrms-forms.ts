@@ -857,20 +857,6 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'select',
             label: "Mother's Nationality",
             options: []
-          },
-          {
-            name: 'familyDetails.spouseName',
-            type: 'text',
-            label: "Spouse's Name",
-            placeholder: "Enter spouse name if married",
-            showIf: (values) => values.maritalStatus === 'married'
-          },
-          {
-            name: 'familyDetails.spouseNationality',
-            type: 'select',
-            label: "Spouse's Nationality",
-            options: [],
-            showIf: (values) => values.maritalStatus === 'married'
           }
         ]
       },

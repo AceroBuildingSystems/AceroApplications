@@ -657,73 +657,172 @@ export class HRMSPDFGenerator {
     `;
   }
 
-  // Helper method to format field values with better object handling
-  private static formatFieldValue(value: any): string {
+  // Helper method to check if a value is an ObjectId
+  private static isObjectId(value: any): boolean {
+    if (!value) return false;
+    // Check for MongoDB ObjectId
+    if (typeof value === 'object' && value._bsontype === 'ObjectID') return true;
+    // Check for 24 character hex string
+    const str = value.toString ? value.toString() : String(value);
+    return /^[0-9a-fA-F]{24}$/.test(str);
+  }
+
+  // Helper method to check if an object is a populated reference
+  private static isPopulatedReference(obj: any): boolean {
+    if (!obj || typeof obj !== 'object') return false;
+    // Check if it has _id and at least one display field
+    return (
+      ('_id' in obj) && (
+        'name' in obj ||
+        'displayName' in obj ||
+        'title' in obj ||
+        'label' in obj ||
+        'email' in obj
+      )
+    );
+  }
+
+  // Helper method to get the best display value from an object
+  private static getDisplayValueFromObject(obj: any): string | null {
+    if (!obj || typeof obj !== 'object') return null;
+
+    // Handle populated references
+    if (this.isPopulatedReference(obj)) {
+      // Check common display fields in order of preference
+      const displayValue = 
+        obj.displayName ||
+        (obj.firstName && obj.lastName ? `${obj.firstName} ${obj.lastName}`.trim() : null) ||
+        obj.name ||
+        obj.title ||
+        obj.label ||
+        obj.email ||
+        obj.phone ||
+        obj.fullName ||
+        obj.userName ||
+        obj.username;
+      
+      if (displayValue) return String(displayValue);
+    }
+
+    // Check for nested objects that might contain display values
+    for (const [key, val] of Object.entries(obj)) {
+      // Skip private fields and potential circular references
+      if (key.startsWith('_') || key === 'password' || key === 'hash' || key === 'salt') continue;
+      
+      // If the value is an object, recursively check it
+      if (val && typeof val === 'object' && !Array.isArray(val) && !this.isObjectId(val)) {
+        const nestedDisplay = this.getDisplayValueFromObject(val);
+        if (nestedDisplay) return nestedDisplay;
+      }
+    }
+
+    return null;
+  }
+
+  // Main method to get display value for any type
+  private static getDisplayValue(value: any): string {
     try {
+      // Handle null/undefined
       if (value === null || value === undefined) {
         return 'N/A';
       }
-      
+
+      // Handle primitive types
       if (typeof value === 'string') {
         return value.trim() || 'N/A';
       }
-      
       if (typeof value === 'number' || typeof value === 'boolean') {
         return String(value);
       }
-      
       if (value instanceof Date) {
         return value.toLocaleDateString();
       }
-      
+
+      // Handle arrays
       if (Array.isArray(value)) {
-        return value.map(v => this.formatFieldValue(v)).join(', ');
+        if (value.length === 0) return 'N/A';
+        return value.map(v => this.getDisplayValue(v)).filter(Boolean).join(', ');
       }
-      
+
+      // Handle objects
       if (typeof value === 'object') {
         // Handle Mongoose documents
         if (value._id && typeof value.toObject === 'function') {
-          value = value.toObject();
+          value = value.toObject({ virtuals: true, getters: true });
         }
-        
-        // Handle nested objects
-        if (value.name || value.title || value.label) {
-          return value.name || value.title || value.label || 'N/A';
+
+        // Check if it's a populated reference
+        const displayValue = this.getDisplayValueFromObject(value);
+        if (displayValue) return displayValue;
+
+        // Special handling for common ID fields
+        const idFields = ['_id', 'id', 'userId', 'employeeId', 'departmentId', 'locationId'];
+        for (const field of idFields) {
+          if (value[field] && !this.isObjectId(value[field])) {
+            return String(value[field]);
+          }
         }
-        
+
+        // Try to find any string value in the object
+        for (const [key, val] of Object.entries(value)) {
+          if (key.startsWith('_')) continue;
+          if (val && typeof val === 'string' && val.trim() && !this.isObjectId(val)) {
+            return val.trim();
+          }
+        }
+
+        // As a last resort, try to stringify
         try {
-          return JSON.stringify(value, (key, val) => {
-            if (key.startsWith('_') || key === 'password') return undefined;
+          const str = JSON.stringify(value, (key, val) => {
+            if (key.startsWith('_') || key === 'password' || this.isObjectId(val)) return undefined;
             return val;
           });
+          return str === '{}' ? 'N/A' : str;
         } catch {
           return 'N/A';
         }
       }
-      
+
       return String(value);
     } catch (error) {
-      console.warn('Error formatting field value:', { value, error });
+      console.warn('Error getting display value:', { value, error });
       return 'N/A';
     }
   }
 
-  // Helper method to get display value for complex objects
-  private static getDisplayValue(value: any): string {
-    if (!value) return 'N/A';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'object') {
-      // Handle user objects
-      if (value.displayName) return value.displayName;
-      if (value.firstName && value.lastName) return `${value.firstName} ${value.lastName}`;
-      if (value.name) return value.name;
-      if (value.title) return value.title;
-      // Handle department/location objects
-      if (value.departmentName) return value.departmentName;
-      if (value.locationName) return value.locationName;
-      return JSON.stringify(value);
+  // Helper method to format field values with better object handling
+  private static formatFieldValue(value: any): string {
+    // First try to get a display value
+    const displayValue = this.getDisplayValue(value);
+    if (displayValue !== 'N/A') {
+      return displayValue;
     }
-    return String(value);
+
+    // For arrays, try to format each item
+    if (Array.isArray(value) && value.length > 0) {
+      return value.map(v => this.getDisplayValue(v)).filter(Boolean).join(', ');
+    }
+
+    // For objects, try to find meaningful values
+    if (value && typeof value === 'object') {
+      // Check for common ID fields that might be useful
+      const idFields = ['_id', 'id', 'code', 'referenceNumber'];
+      for (const field of idFields) {
+        if (value[field]) {
+          return String(value[field]);
+        }
+      }
+
+      // Try to find any non-empty string value
+      for (const [key, val] of Object.entries(value)) {
+        if (key.startsWith('_')) continue;
+        if (val && typeof val === 'string' && val.trim()) {
+          return val.trim();
+        }
+      }
+    }
+
+    return displayValue; // Fall back to the display value
   }
 }
 

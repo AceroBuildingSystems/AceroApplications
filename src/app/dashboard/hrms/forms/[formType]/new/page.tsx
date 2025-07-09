@@ -19,6 +19,7 @@ import { useGetDepartmentsQuery, useGetAvailableApproversQuery, useGetCountriesQ
 import { HRMSFormConfig } from '@/types/hrms';
 import { useWorkflow } from '@/contexts/WorkflowContext';
 import { skipToken } from '@reduxjs/toolkit/query';
+import { progress } from 'framer-motion';
 // Workflow Completion Dialog Component
 interface WorkflowCompletionDialogProps {
   workflow: any;
@@ -161,18 +162,18 @@ export default function NewHRMSFormPage() {
   const [updateForm, { isLoading: isUpdating }] = useUpdateFormMutation();
   const [saveDraft, { isLoading: isSavingDraft }] = useSaveDraftMutation();
   const [updateWorkflowInstance, { isLoading: isUpdatingStatus }] = useUpdateWorkflowInstanceMutation();
-  
-const { data: workFlowData = {}, isLoading: WorkFlowLoading } = useGetWorkflowByIdQuery(id);
-const currentWorkflowId = workFlowData?.data?._id;
-// Extract the form ID once the workflow data is ready
-const workFlowformId = workFlowData?.data?.formsData?.[formType];
 
-console.log('📄 WORKFLOW DATA:', workFlowData, formType)
-// Only run query if `formId` exists
-const {
-  data: requisitionData = {},
-  isLoading: requisitionDataLoading
-} = useGetFormByIdQuery(workFlowformId ? { formType, id: workFlowformId } : skipToken);
+  const { data: workFlowData = {}, isLoading: WorkFlowLoading } = useGetWorkflowByIdQuery(id);
+  const currentWorkflowId = workFlowData?.data?._id;
+  // Extract the form ID once the workflow data is ready
+  const workFlowformId = workFlowData?.data?.formsData?.[formType];
+
+  console.log('📄 WORKFLOW DATA:', workFlowData, formType)
+  // Only run query if `formId` exists
+  const {
+    data: requisitionData = {},
+    isLoading: requisitionDataLoading
+  } = useGetFormByIdQuery(workFlowformId ? { formType, id: workFlowformId } : skipToken);
 
 
   console.log('📄 REQUISITION DATA:', requisitionData);
@@ -185,7 +186,7 @@ const {
       setFormId(requisitionData.data._id);
 
     }
-  }, [requisitionData,requisitionData?.data])
+  }, [requisitionData, requisitionData?.data])
 
   // Debug: Log workflow state when component loads
   useEffect(() => {
@@ -350,21 +351,21 @@ const {
         result = await createForm({ formType, data: { ...data, isDraft: true } }).unwrap();
         console.log('🟡 DRAFT SAVE: New draft created', result);
         const workFlowUpdate = await updateWorkflowInstance({
-          id:currentWorkflowId,data:{...workFlowData?.data?.formsData,[formType]: result.data._id}
+          id: currentWorkflowId, data: { ...workFlowData?.data?.formsData, [formType]: result.data._id, ...result.data?.candidateInfo }
         })
         console.log('🟡 DRAFT SAVE: Workflow instance updated with new draft', workFlowUpdate);
         console.log('🟡 DRAFT SAVE: Workflow instance updated with new draft', workFlowUpdate);
         if (result.success) {
           setFormId(result.data._id);
           // Don't redirect immediately, just update the URL quietly
-          if(!isWorkflow){
+          if (!isWorkflow) {
             window.history.replaceState(
               {},
               '',
               `/dashboard/hrms/forms/${formType}/${result.data._id}/edit${isWorkflow ? '?workflow=true' : ''}`
             );
-          }else{
-             window.history.replaceState(
+          } else {
+            window.history.replaceState(
               {},
               '',
               `/dashboard/hrms/forms/${formType}/new?workflow=true&id=${currentWorkflowId}`
@@ -413,13 +414,22 @@ const {
           data: { ...data, isDraft: false, status: submissionStatus }
         }).unwrap();
       }
+console.log('🟢 FORM SUBMIT: Form submission result', result);
+      if (result?.data?._id) {
+        console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', { workFlowData });
 
-      if(!workFlowData?.data?.formsData[formType] && result?.data?._id){
-        console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', { ...workFlowData?.data?.formsData, formsData:{[formType]: result.data._id} });
         // Update the workflow instance with the new form ID
         const workFlowUpdate = await updateWorkflowInstance({
           id: currentWorkflowId,
-          data: { ...workFlowData?.data?.formsData, formsData:{[formType]: result.data._id} }
+          data: {
+            ...workFlowData?.data?.formsData, formsData: { [formType]: result.data._id }, progress: {
+              ...workFlowData?.data?.progress,
+              currentStep: steps[workFlowData?.data?.progress?.completedSteps+1]?.id,
+              progress: (100/workFlowData?.data?.progress?.totalSteps)*((workFlowData?.data?.progress?.completedSteps || 0)),
+              currentStepName:steps[workFlowData?.data?.progress?.completedSteps+1]?.stepName || '',
+            },
+            ...result.data?.candidateInfo,
+          }
         }).unwrap();
         console.log('🟢 FORM SUBMIT: Workflow instance updated', workFlowUpdate);
       }
@@ -439,7 +449,7 @@ const {
 
           // Update current step data
           console.log('📝 WORKFLOW: Updating step data for current step', currentStepIndex, result.data._id, data);
-          updateStepData(currentStepIndex, result.data._id, data,true);
+          updateStepData(currentStepIndex, result.data._id, data, true);
 
           if (currentStepIndex < workflow.steps.length - 1) {
             // Get next step info
@@ -455,7 +465,7 @@ const {
             // Use a small delay to ensure the step data update completes first
             setTimeout(() => {
               console.log('🚀 WORKFLOW: Navigating to next step after data update');
-              workflow.navigateToStep(nextStepIndex,true,currentWorkflowId);
+              workflow.navigateToStep(nextStepIndex, true, currentWorkflowId);
             }, 50);
 
             return; // Stop all further execution

@@ -68,9 +68,7 @@ const HRMSWorkflowInstanceSchema = new Schema<HRMSWorkflowInstanceDocument>({
     type: String,
     required: true
   },
-  completedSteps: [{
-    type: String
-  }],
+  completedSteps: [String],
   stepsData: {
     type: Schema.Types.Mixed,
     default: {}

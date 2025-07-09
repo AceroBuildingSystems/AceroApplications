@@ -57,8 +57,8 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
 
       let pdfData;
       let defaultFilename = `${formType}_${formId}.pdf`;
-
-      if (!formData) {
+console.log('PDF GENERATOR: Starting PDF generation for', formData);
+      if (!formData || Object.keys(formData).length === 0) {
         // First, get the form data from API if not provided
         const result = await generatePDFData({
           formType,
@@ -69,9 +69,12 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
           }
         }).unwrap();
 
+        console.log('PDF GENERATOR: API result:', result);
+
         if (!result.success) {
           throw new Error(result.message || 'Failed to get form data');
         }
+        
         pdfData = result.data?.pdfData || result.data;
       } else {
         // Use provided form data
@@ -97,6 +100,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
         organizationName: organizationName || 'Acero Building Systems'
       };
 
+      console.log('PDF GENERATOR: Retrieved form data:', templateData, pdfData);
       // Use client-side PDF generation
       const pdfResult = await HRMSPDFGenerator.generateFormPDF(
         templateData,
@@ -148,7 +152,7 @@ const PDFGenerator: React.FC<PDFGeneratorProps> = ({
 
       {/* PDF Generation Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileTextIcon className="h-5 w-5" />

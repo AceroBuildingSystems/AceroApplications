@@ -146,6 +146,7 @@ console.log('Model:', Model);
       if (!form) {
         throw new Error('Form not found');
       }
+      console.log('Retrieved form:', form);
 
       return {
         success: true,

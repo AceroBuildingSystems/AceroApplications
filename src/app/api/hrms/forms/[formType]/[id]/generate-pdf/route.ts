@@ -17,12 +17,13 @@ export async function POST(
       );
     }
 
-    const { formType, id } = params;
+    const { formType, id } = await params;
     const body = await request.json();
     const { includeApprovalHistory = true, organizationLogo, organizationName } = body;
 
     // Get form data
     const formResult = await HRMSManager.getFormById(formType, id);
+    console.log('Form data retrieved:', formResult);
     if (!formResult.success) {
       return NextResponse.json(
         { success: false, message: 'Form not found' },
@@ -35,14 +36,14 @@ export async function POST(
     // Prepare PDF data
     const pdfData = {
       formType,
-      formData: formData.formData,
+      formData: formData,
       submittedBy: formData.submittedBy,
       submissionDate: formData.submittedAt,
       approvalHistory: includeApprovalHistory ? formData.approvalHistory : undefined,
       organizationLogo,
       organizationName: organizationName || 'Acero Building Systems'
     };
-
+    console.log('PDF data prepared:', pdfData);
     // Since we can't generate PDF on server side with html2canvas (browser-only),
     // we'll return the data for client-side PDF generation
     return NextResponse.json({

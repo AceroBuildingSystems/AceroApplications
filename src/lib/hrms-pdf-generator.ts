@@ -33,7 +33,7 @@ export class HRMSPDFGenerator {
         format = 'a4',
         orientation = 'portrait',
         margin = 20,
-        scale = 2,
+        scale = 1,
         quality = 0.95
       } = options;
 
@@ -76,7 +76,7 @@ export class HRMSPDFGenerator {
 
       // Calculate dimensions
       const imgWidth = format === 'a4' ? 210 : 216; // A4 or Letter width in mm
-      const pageHeight = format === 'a4' ? 297 : 279; // A4 or Letter height in mm
+      const pageHeight = format === 'a4' ? 350 : 279; // A4 or Letter height in mm
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       let heightLeft = imgHeight;
 
@@ -250,39 +250,37 @@ export class HRMSPDFGenerator {
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">MR Number:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.mrNumber || formData.requestId || 'Auto-generated'}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.mrNumber || formData?.requestId || 'Auto-generated'}</td>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Date:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.requestDate ? new Date(formData.requestDate).toLocaleDateString() : new Date().toLocaleDateString()}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.requestDate ? new Date(formData?.requestDate).toLocaleDateString() : new Date().toLocaleDateString()}</td>
           </tr>
           <tr>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Department:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData.department)}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData?.department)}</td>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Location:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData.location || formData.workLocation)}</td>
           </tr>
           <tr>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Position Title:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.positionTitle || formData.requestedPosition || 'N/A'}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.positionTitle || formData?.requestedPosition || 'N/A'}</td>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">No. of Positions:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.numberOfPositions || formData.noOfPositions || '1'}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.numberOfPositions || formData?.noOfPositions || '1'}</td>
           </tr>
           <tr>
-            <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Employment Type:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.employmentType || 'N/A'}</td>
+
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Urgency:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.urgency || formData.priority || 'Normal'}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.urgency || formData?.priority || 'Normal'}</td>
           </tr>
           <tr>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Reporting To:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData.reportingTo)}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData?.reportingTo)}</td>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Expected Join Date:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.expectedJoinDate ? new Date(formData.expectedJoinDate).toLocaleDateString() : 'N/A'}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.candidateInfo?.expectedDateOfJoining ? new Date(formData?.candidateInfo?.expectedDateOfJoining).toLocaleDateString() : 'N/A'}</td>
           </tr>
           <tr>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Requested By:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData.requestedBy)}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${this.getDisplayValue(formData?.requestedBy)}</td>
             <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Vacancy Reason:</td>
-            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.vacancyReason || 'N/A'}</td>
+            <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.vacancyReason || 'N/A'}</td>
           </tr>
         </table>
 
@@ -290,17 +288,17 @@ export class HRMSPDFGenerator {
           <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Job Description & Requirements</h3>
           <p style="margin-bottom: 10px;"><strong>Job Description:</strong></p>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb; margin-bottom: 15px; min-height: 60px;">
-            ${formData.jobDescription || 'N/A'}
+            ${formData?.jobDescription || 'N/A'}
           </div>
           
           <p style="margin-bottom: 10px;"><strong>Required Qualifications:</strong></p>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb; margin-bottom: 15px; min-height: 60px;">
-            ${formData.requiredQualifications || formData.qualifications || 'N/A'}
+            ${formData?.requiredQualifications || formData?.qualifications || 'N/A'}
           </div>
 
           <p style="margin-bottom: 10px;"><strong>Preferred Qualifications:</strong></p>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb; min-height: 60px;">
-            ${formData.preferredQualifications || formData.preferredSkills || 'N/A'}
+            ${formData?.preferredQualifications || formData?.preferredSkills || 'N/A'}
           </div>
         </div>
 
@@ -309,11 +307,11 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 50%;">Budget Allocated:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.budgetAllocated || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.budgetAllocated || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Salary Range:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.salaryRange || formData.expectedSalary || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.salaryRange || formData?.expectedSalary || 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -321,7 +319,7 @@ export class HRMSPDFGenerator {
         <div style="margin-bottom: 20px;">
           <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Justification</h3>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb; min-height: 60px;">
-            ${formData.justification || formData.businessJustification || 'N/A'}
+            ${formData?.justification || formData?.businessJustification || 'N/A'}
           </div>
         </div>
       </div>
@@ -330,6 +328,14 @@ export class HRMSPDFGenerator {
 
   // Candidate Information Template
   private static createCandidateInformationTemplate(data: any): string {
+    console.log('Creating Candidate Information Template with data:', data);
+    if (!data || typeof data !== 'object') {
+      return this.createEmptyFormTemplate('manpower_requisition');
+    }
+
+    // Extract form data - handle nested structure if needed
+    const formData = data?.formData || data;
+    
     return `
       <div style="margin-bottom: 30px;">
         <h2 style="color: #1f2937; font-size: 20px; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
@@ -341,21 +347,21 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Full Name:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.fullName || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.fullName || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Date of Birth:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.dateOfBirth ? new Date(data.dateOfBirth).toLocaleDateString() : 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.dateOfBirth ? new Date(formData?.dateOfBirth).toLocaleDateString() : 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Nationality:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.nationality || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.nationality?.name || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Gender:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.gender || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.gender || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Marital Status:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.maritalStatus || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.maritalStatus || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Religion:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.religion || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.religion || 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -365,13 +371,13 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Email:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.email || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.email || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Phone:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.phone || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.phone || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Address:</td>
-              <td colspan="3" style="padding: 8px; border: 1px solid #d1d5db;">${data.currentAddress || 'N/A'}</td>
+              <td colspan="3" style="padding: 8px; border: 1px solid #d1d5db;">${formData?.currentAddress || 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -381,15 +387,15 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Position:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.positionApplied || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.positionApplied || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Department:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.department?.name || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.department?.name || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Expected Salary:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.expectedSalary || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.expectedSalary || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Notice Period:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.noticePeriod || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.noticePeriod || 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -397,14 +403,14 @@ export class HRMSPDFGenerator {
         <div style="margin-bottom: 20px;">
           <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Educational Background</h3>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb;">
-            ${data.education || 'N/A'}
+            ${formData?.education || 'N/A'}
           </div>
         </div>
 
         <div style="margin-bottom: 20px;">
           <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Work Experience</h3>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb;">
-            ${data.workExperience || 'N/A'}
+            ${formData?.workExperience || 'N/A'}
           </div>
         </div>
       </div>
@@ -413,6 +419,12 @@ export class HRMSPDFGenerator {
 
   // Business Trip Request Template
   private static createBusinessTripRequestTemplate(data: any): string {
+    if (!data || typeof data !== 'object') {
+      return this.createEmptyFormTemplate('manpower_requisition');
+    }
+
+    // Extract form data - handle nested structure if needed
+    const formData = data?.formData || data;
     return `
       <div style="margin-bottom: 30px;">
         <h2 style="color: #1f2937; font-size: 20px; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
@@ -424,27 +436,27 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Employee Name:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.employeeName || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.employeeName || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Employee ID:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.employeeId || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.employeeId || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Department:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.department?.name || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.department?.name || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Designation:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.designation || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.designation || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Destination:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.destination || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.destination || 'N/A'}</td>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Trip Type:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.tripType || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.tripType || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Start Date:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.startDate ? new Date(data.startDate).toLocaleDateString() : 'N/A'}</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">End Date:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.endDate ? new Date(data.endDate).toLocaleDateString() : 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.startDate ? new Date(formData?.startDate).toLocaleDateString() : 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db; formData?-color: #f9fafb; font-weight: bold;">End Date:</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.endDate ? new Date(formData?.endDate).toLocaleDateString() : 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -453,11 +465,11 @@ export class HRMSPDFGenerator {
           <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Purpose & Objectives</h3>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb; margin-bottom: 15px;">
             <strong>Purpose of Trip:</strong><br>
-            ${data.purpose || 'N/A'}
+            ${formData?.purpose || 'N/A'}
           </div>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb;">
             <strong>Expected Outcomes:</strong><br>
-            ${data.expectedOutcomes || 'N/A'}
+            ${formData?.expectedOutcomes || 'N/A'}
           </div>
         </div>
 
@@ -466,23 +478,23 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 50%;">Transportation:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.transportationCost || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.transportationCost || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Accommodation:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.accommodationCost || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.accommodationCost || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Daily Allowance:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.dailyAllowance || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.dailyAllowance || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Other Expenses:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${data.otherExpenses || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.otherExpenses || 'N/A'}</td>
             </tr>
             <tr style="border-top: 2px solid #374151;">
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #1f2937; color: white; font-weight: bold;">Total Estimated Cost:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #1f2937; color: white; font-weight: bold;">${data.totalEstimatedCost || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #1f2937; color: white; font-weight: bold;">${formData?.totalEstimatedCost || 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -541,7 +553,7 @@ export class HRMSPDFGenerator {
   }
 
   private static createNonDisclosureAgreementTemplate(data: any): string {
-    const formData = data.formData || data;
+    const formData = data?.formData || data;
     return `
       <div style="margin-bottom: 30px;">
         <h2 style="color: #1f2937; font-size: 20px; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px;">
@@ -553,19 +565,19 @@ export class HRMSPDFGenerator {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold; width: 30%;">Agreement Date:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.agreementDate ? new Date(formData.agreementDate).toLocaleDateString() : 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.agreementDate ? new Date(formData?.agreementDate).toLocaleDateString() : 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Employee Name:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.employeeName || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.employeeName || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Employee ID:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.employeeId || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.employeeId || 'N/A'}</td>
             </tr>
             <tr>
               <td style="padding: 8px; border: 1px solid #d1d5db; background-color: #f9fafb; font-weight: bold;">Company Representative:</td>
-              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData.companyRepName || 'N/A'}</td>
+              <td style="padding: 8px; border: 1px solid #d1d5db;">${formData?.companyRepName || 'N/A'}</td>
             </tr>
           </table>
         </div>
@@ -573,7 +585,7 @@ export class HRMSPDFGenerator {
         <div style="margin-bottom: 20px;">
           <h3 style="color: #374151; font-size: 16px; margin-bottom: 10px; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px;">Agreement Terms</h3>
           <div style="border: 1px solid #d1d5db; padding: 10px; background-color: #f9fafb;">
-            ${formData.agreementText || 'Agreement text not available.'}
+            ${formData?.agreementText || 'Agreement text not available.'}
           </div>
         </div>
       </div>

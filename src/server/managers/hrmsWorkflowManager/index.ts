@@ -39,11 +39,11 @@ export interface AdvanceWorkflowStepParams {
 }
 
 class HRMSWorkflowManager {
-  
+
   static async createWorkflowInstance(params: CreateWorkflowInstanceParams) {
     try {
       await dbConnect();
-console.log(params, 'params in createWorkflowInstance');
+      console.log(params, 'params in createWorkflowInstance');
       const { workflowType, triggerFormType, metadata, createdBy } = params;
       let triggerFormId = params.triggerFormId;
 
@@ -103,6 +103,14 @@ console.log(params, 'params in createWorkflowInstance');
           startDate: new Date(),
           expectedEndDate: metadata.expectedEndDate || this.calculateExpectedEndDate(template.steps.length)
         },
+        progress: {
+          totalSteps: template.steps.length,
+          completedSteps: 0,
+          progressPercentage: 0,
+          currentStepName: template.steps[0].stepName,
+          isOnTrack: true,
+          daysSinceStart: 0
+        },
         startedAt: new Date(),
         updatedAt: new Date(),
         createdBy,
@@ -113,7 +121,7 @@ console.log(params, 'params in createWorkflowInstance');
 
       return {
         success: true,
-        data: {savedInstance,formData:triggerForm},
+        data: { savedInstance, formData: triggerForm },
         message: 'Workflow instance created successfully'
       };
 
@@ -131,14 +139,14 @@ console.log(params, 'params in createWorkflowInstance');
       await dbConnect();
 
       const { status, workflowType, candidateId, employeeId, page, limit, userId } = params;
-      
+
       const query: any = {};
-      
+
       if (status) query.status = status;
       if (workflowType) query.workflowType = workflowType;
       if (candidateId) query.candidateId = candidateId;
       if (employeeId) query.employeeId = employeeId;
-      
+
       // Filter by user access (created by or assigned to)
       query.$or = [
         { createdBy: userId },
@@ -184,7 +192,7 @@ console.log(params, 'params in createWorkflowInstance');
       await dbConnect();
 
       const instance = await HRMSWorkflowInstanceModel.findById(instanceId).lean();
-      
+
       if (!instance) {
         return {
           success: false,
@@ -303,12 +311,12 @@ console.log(params, 'params in createWorkflowInstance');
       }
 
       instance.updatedAt = new Date();
-      
+
       // Add step completion log
       if (!instance.stepLogs) {
         instance.stepLogs = [];
       }
-      
+
       instance.stepLogs.push({
         stepId,
         stepName: currentStep.stepName,
@@ -339,7 +347,7 @@ console.log(params, 'params in createWorkflowInstance');
     try {
       await dbConnect();
 
-      const instance = await HRMSWorkflowInstanceModel.findById(instanceId);
+      const instance: any = await HRMSWorkflowInstanceModel.findById(instanceId);
       if (!instance) {
         return {
           success: false,
@@ -354,7 +362,7 @@ console.log(params, 'params in createWorkflowInstance');
           message: 'Insufficient permissions to update workflow'
         };
       }
-      console.log('Updating workflow instance:', instanceId, 'with data:', updateData);
+      console.log('Updating workflow instance:', instance, instanceId, 'with data:', updateData);
       // Update allowed fields
       const allowedFields = ['status', 'metadata', 'assignedTo'];
       allowedFields.forEach(field => {
@@ -364,11 +372,32 @@ console.log(params, 'params in createWorkflowInstance');
       });
 
       instance.updatedAt = new Date();
-      instance.formsData = {...instance.formsData,
-        ...updateData.formsData }
+      instance.formsData = {
+        ...instance.formsData,
+        ...updateData.formsData
+      }
+      // if (!(updateData.currentStep in instance.completedSteps)) {
+      //   instance.completedSteps = [...instance.completedSteps, updateData.currentStep];
+      //   instance.currentStepName = updateData.progress.currentStepName || instance.currentStepName;
 
-      console.log('Updating workflow instance with data:', instance);  
-      await instance.save();
+      // }
+
+      if (updateData?.selectedCandidateName) {
+        instance.metadata = { ...instance.metadata, candidateName: updateData.selectedCandidateName };
+      }
+
+      if (updateData?.empName) {
+        instance.metadata = { ...instance.metadata, employeeName: updateData.empName };
+      }
+
+      if (updateData?.completedSteps + 1 === updateData?.totalSteps) {
+        instance.status = 'completed';
+      }
+      instance.currentStep = updateData.progress.currentStep || instance.currentStep;
+
+      console.log('Updating workflow instance with data:', instance);
+      const res = await instance.save();
+      console.log(res, 'res in updateWorkflowInstance');
 
       return {
         success: true,
@@ -421,7 +450,7 @@ console.log(params, 'params in createWorkflowInstance');
     const totalSteps = template.steps.length;
     const completedSteps = instance.completedSteps.length;
     const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
-    
+
     const currentStep = template.steps.find((step: any) => step.id === instance.currentStep);
     const currentStepName = currentStep ? currentStep.stepName : 'Unknown';
 

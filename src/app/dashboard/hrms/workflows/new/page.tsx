@@ -26,6 +26,7 @@ import { useWorkflow } from '@/contexts/WorkflowContext';
 
 import ResumeWorkflow from './ResumeWorkflow';
 import { DatePicker } from '@/components/ui/date-picker';
+import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 
 export default function NewWorkflowPage() {
   const router = useRouter();
@@ -51,7 +52,11 @@ export default function NewWorkflowPage() {
 
   // Fetch master data
   const { data: departmentsData } = useGetDepartmentsQuery();
-  const { data: usersData } = useGetUsersQuery();
+  const { data: usersData = [], isLoading: userLoading }: any = useGetMasterQuery({
+      db: 'USER_MASTER',
+      filter: { isActive: true },
+      sort: { empId: 'asc' },
+    });
 
   const departments = departmentsData?.data || [];
   const users = usersData?.data || [];
@@ -63,7 +68,7 @@ export default function NewWorkflowPage() {
     })), [users]
   );
 
-  console.log('User Options:', userOptions);
+  
   const departmentOptions = useMemo(() =>
     departments.map(dept => ({
       value: dept._id,
@@ -109,7 +114,7 @@ export default function NewWorkflowPage() {
         initializeWorkflow(workflowInitData);
 
         const firstStep = template.steps[0];
-        router.push(`/dashboard/hrms/forms/${firstStep.formType}/new?workflow=true&id=${workFlowId}`);
+        router.push(`/dashboard/hrms/forms/${firstStep.formType}/new?workflow=true&id=${workFlowId}&stepIndex=0`);
       } else {
         throw new Error(result.message || 'Failed to create workflow instance');
       }
@@ -253,10 +258,13 @@ export default function NewWorkflowPage() {
                     value={workflowData.requestedById}
                     onValueChange={(value) => {
                       const selectedUser = users.find(user => user._id === value);
+                      const selectedDepartment = departments.find(dep => dep._id === selectedUser?.department?._id);
+                      console.log({departments,selectedUser,selectedDepartment})
                       setWorkflowData({
                         ...workflowData,
                         requestedById: value,
-                        requestedBy: selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : ''
+                        requestedBy: selectedUser ? `${selectedUser.firstName} ${selectedUser.lastName}` : '',
+                        department:selectedDepartment?._id
                       });
                     }}
                     placeholder="Select requesting person"

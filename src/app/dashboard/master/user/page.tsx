@@ -84,9 +84,9 @@ const [designationDataNew, setDesignationdata] = useState([]);
     { fieldName: 'departmentName', path: ['department', 'name'] },
     { fieldName: 'organisationName', path: ['organisation', 'name'] }
   ];
-
+console.log(userData?.data)
   const transformedData = transformData(userData?.data, fieldsToAdd);
-
+console.log(transformedData)
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
   const roleNames = roleData?.data

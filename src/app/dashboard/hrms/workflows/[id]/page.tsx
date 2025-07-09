@@ -22,11 +22,13 @@ import {
   AlertCircleIcon,
   EditIcon,
   EyeIcon,
-  Lock
+  Lock,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { HRMSFormTypes, HRMS_FORM_CONFIG } from '@/types/hrms';
 import { HRMS_WORKFLOW_TEMPLATES, HRMSWorkflowStep } from '@/types/workflow';
+import { useGetWorkflowByIdQuery } from '@/services/endpoints/hrmsApi';
 
 interface WorkflowMetadata {
   candidateName?: string;
@@ -82,118 +84,83 @@ export default function WorkflowDetailPage() {
   const workflowId = params.id as string;
 
   const [workflow, setWorkflow] = useState<Workflow | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
 
+  const { data: workFlowData = {}, isLoading: WorkFlowLoading } = useGetWorkflowByIdQuery(workflowId);
+  console.log('workFlowData:', workFlowData);
   // Simple step status check
   const isStepCompleted = (stepId: string) => {
-    return workflow?.completedSteps.includes(stepId) || false;
+    return Object.keys(workFlowData?.data?.formsData).includes(stepId) || false;
   };
+
+  const isLoading = WorkFlowLoading;
+
 
   // Handle step completion
   const handleStepComplete = async (stepId: string, formData: any) => {
-    if (!workflow) return;
+    if (!workFlowData?.data) return;
 
     try {
-      setIsLoading(true);
 
       // Update the workflow state
-      const updatedWorkflow = {
-        ...workflow,
-        stepsData: {
-          ...workflow.stepsData,
-          [stepId]: formData
-        },
-        completedSteps: [...new Set([...workflow.completedSteps, stepId])],
-        currentStep: stepId, // Keep the current step as the one being completed
-        progress: {
-          ...workflow.progress,
-          completedSteps: new Set([...workflow.completedSteps, stepId]).size,
-          progressPercentage: Math.round((new Set([...workflow.completedSteps, stepId]).size / workflow.progress.totalSteps) * 100)
-        },
-        stepLogs: [
-          ...workflow.stepLogs,
-          {
-            stepId,
-            stepName: template?.steps.find(s => s.id === stepId)?.stepName || stepId,
-            action: 'completed',
-            userId: 'current-user',
-            timestamp: new Date(),
-            comments: 'Step completed'
-          }
-        ]
-      };
+      // const updatedWorkflow = {
+      //   ...workFlowData?.data,
+      //   stepsData: {
+      //     ...workFlowData?.data?.stepsData,
+      //     [stepId]: formData
+      //   },
+      //   completedSteps: [...new Set([...workFlowData?.data.completedSteps, stepId])],
+      //   currentStep: stepId, // Keep the current step as the one being completed
+      //   progress: {
+      //     ...workFlowData?.data.progress,
+      //     completedSteps: new Set([...workFlowData?.data.completedSteps, stepId]).size,
+      //     progressPercentage: Math.round((new Set([...workFlowData?.data.completedSteps, stepId]).size / workFlowData?.data.progress.totalSteps) * 100)
+      //   },
+      //   stepLogs: [
+      //     ...workFlowData?.data.stepLogs,
+      //     {
+      //       stepId,
+      //       stepName: template?.steps.find(s => s.id === stepId)?.stepName || stepId,
+      //       action: 'completed',
+      //       userId: 'current-user',
+      //       timestamp: new Date(),
+      //       comments: 'Step completed'
+      //     }
+      //   ]
+      // };
 
       // Update local state
-      setWorkflow(updatedWorkflow);
+      setWorkflow(workFlowData?.data);
 
     } catch (error) {
       console.error('Error completing step:', error);
       setError('Failed to complete step. Please try again.');
     } finally {
-      setIsLoading(false);
+
     }
   };
 
   // Handle step navigation
   const navigateToStep = (stepId: string) => {
-    if (!workflow) return;
+    if (!workFlowData?.data) return;
 
     setWorkflow({
-      ...workflow,
+      ...workFlowData?.data,
       currentStep: stepId
     });
   };
 
   useEffect(() => {
     // For now, use mock data - replace with actual API call
-    const mockWorkflow = {
-      _id: workflowId,
-      workflowName: 'Complete Recruitment Process',
-      workflowType: 'recruitment',
-      status: 'active',
-      currentStep: 'candidate_sourcing',
-      completedSteps: ['manpower_req'],
-      metadata: {
-        candidateName: 'John Doe',
-        position: 'Software Engineer',
-        department: 'Engineering',
-        startDate: new Date('2024-12-10'),
-        expectedEndDate: new Date('2024-12-24')
-      },
-      progress: {
-        totalSteps: 5,
-        completedSteps: 1,
-        progressPercentage: 20,
-        currentStepName: 'Candidate Information Collection',
-        isOnTrack: true,
-        daysSinceStart: 6
-      },
-      stepsData: {
-        manpower_req: {
-          positionTitle: 'Software Engineer',
-          department: 'Engineering',
-          requestedBy: 'HR Manager'
-        }
-      },
-      stepLogs: [
-        {
-          stepId: 'manpower_req',
-          stepName: 'Manpower Requisition',
-          action: 'completed',
-          userId: 'user1',
-          timestamp: new Date('2024-12-10'),
-          comments: 'Initial request submitted and approved'
-        }
-      ]
-    };
+    // const mockWorkflow = workFlowData?.data;
 
     // Simulate API call
     setTimeout(() => {
-      setWorkflow(mockWorkflow);
-      setIsLoading(false);
+      setWorkflow(workFlowData?.data);
+
     }, 1000);
-  }, [workflowId]);
+  }, [workFlowData?.data]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -236,19 +203,13 @@ export default function WorkflowDetailPage() {
     );
   }
 
-  if (error || !workflow) {
+  if (!isLoading && (error || !workflow)) {
     return (
-      <div className="container mx-auto p-6 max-w-6xl">
-        <Alert variant="destructive">
-          <AlertDescription>
-            Error loading workflow. Please try again or go back to the workflows list.
-          </AlertDescription>
-        </Alert>
-      </div>
+      <Loader2 />
     );
   }
 
-  const template = getTemplate(workflow.workflowType);
+  const template = getTemplate(workFlowData?.data.workflowType);
   console.log('Workflow data:', workflow);
   return (
     <div className="container mx-auto p-6 max-w-6xl space-y-6">
@@ -263,15 +224,15 @@ export default function WorkflowDetailPage() {
         <div className="flex-1">
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <WorkflowIcon className="h-8 w-8" />
-            {workflow.workflowName}
+            {workFlowData?.data.workflowName}
           </h1>
           <p className="text-muted-foreground">
             Track progress and manage workflow steps
           </p>
         </div>
-        <Badge className={`flex items-center gap-1 ${getStatusColor(workflow.status)}`}>
-          {getStatusIcon(workflow.status)}
-          {workflow.status.toUpperCase()}
+        <Badge className={`flex items-center gap-1 ${getStatusColor(workFlowData?.data.status)}`}>
+          {getStatusIcon(workFlowData?.data.status)}
+          {workFlowData?.data.status.toUpperCase()}
         </Badge>
       </div>
 
@@ -288,7 +249,7 @@ export default function WorkflowDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Overall Progress</span>
                 <span className="text-sm text-gray-600">
-                  {workflow.progress.completedSteps} of {workflow.progress.totalSteps} steps completed
+                  {workFlowData?.data.progress.completedSteps} of {workFlowData?.data.progress.totalSteps} steps completed
                 </span>
               </div>
               <Progress value={workflow.progress.progressPercentage} className="h-3" />
@@ -379,31 +340,31 @@ export default function WorkflowDetailPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {template?.steps.map((step: HRMSWorkflowStep, index: number) => {
-              const isCompleted = isStepCompleted(step.id);
+            {template?.steps?.map((step: HRMSWorkflowStep, index: number) => {
+              const isCompleted = isStepCompleted(step.formType);
               const isCurrent = workflow.currentStep === step.id;
               const formConfig = HRMS_FORM_CONFIG[step.formType];
-              const stepData = workflow.stepsData[step.id];
+              const stepData = workflow?.stepsData?.[step.id];
               const isLocked = step?.isLocked && !isCompleted && !isCurrent;
-
+              console.log('Step data:', isCompleted, isLocked, step, step.formType);
               return (
                 <div key={step.id} className={`p-4 border rounded-lg ${isCompleted
-                    ? 'bg-green-50 border-green-200'
-                    : isCurrent
-                      ? 'bg-blue-50 border-blue-200'
-                      : isLocked
-                        ? 'bg-gray-100 border-gray-200 opacity-70'
-                        : 'bg-white border-gray-200'
+                  ? 'bg-green-50 border-green-200'
+                  : isCurrent
+                    ? 'bg-blue-50 border-blue-200'
+                    : isLocked
+                      ? 'bg-gray-100 border-gray-200 opacity-70'
+                      : 'bg-white border-gray-200'
                   }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isCompleted
-                          ? 'bg-green-500 text-white'
-                          : isCurrent
-                            ? 'bg-blue-500 text-white'
-                            : isLocked
-                              ? 'bg-gray-300 text-gray-600'
-                              : 'bg-gray-200 text-gray-700'
+                        ? 'bg-green-500 text-white'
+                        : isCurrent
+                          ? 'bg-blue-500 text-white'
+                          : isLocked
+                            ? 'bg-gray-300 text-gray-600'
+                            : 'bg-gray-200 text-gray-700'
                         }`}>
                         {isCompleted ? (
                           <CheckCircleIcon className="w-6 h-6" />
@@ -431,20 +392,24 @@ export default function WorkflowDetailPage() {
                         </Button>
                       )}
 
-                      <Button
-                        size="sm"
-                        variant={isCurrent ? 'default' : 'outline'}
-                        onClick={() => navigateToStep(step.id)}
-                        disabled={isLocked}
-                      >
 
-                        {isCurrent ? <Link href={`/dashboard/hrms/forms/${step.formType}/new?id=${workflow._id}&workflow=true&stepIndex=${workflow?.progress.completedSteps}`}>
-                          <Button size="sm">
-                            <EditIcon className="w-4 h-4 mr-1" />
-                            Continue
-                          </Button>
-                        </Link> : isCompleted ? 'Edit' : 'Start'}
-                      </Button>
+
+                      {isCurrent &&
+                        <Button
+                          size="sm"
+                          variant={isCurrent ? 'default' : 'outline'}
+                          onClick={() => navigateToStep(step.id)}
+                          disabled={isLocked}
+                        >
+                          <Link href={`/dashboard/hrms/forms/${step.formType}/new?id=${workflow._id}&workflow=true&stepIndex=${workflow?.progress.completedSteps}`}>
+
+                            <Button size="sm">
+                              <EditIcon className="w-4 h-4 mr-1" />
+                              Continue
+                            </Button>
+                          </Link>
+                        </Button>}
+
 
                       {isLocked && (
                         <Button variant="ghost" size="sm" disabled>

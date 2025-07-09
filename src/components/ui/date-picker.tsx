@@ -164,12 +164,21 @@ export function DatePicker({
           <>
             {/* Backdrop to close when clicking outside */}
             <div 
-              className="fixed inset-0 z-40" 
+              className="fixed inset-0 z-[9998]" 
               onClick={() => setIsOpen(false)}
             />
             
-            {/* Date picker dropdown - positioned as overlay */}
-            <div className="absolute top-full left-0 mt-1 w-80 bg-white border border-gray-200 rounded-md shadow-lg z-50 p-4">
+            {/* Date picker dropdown - positioned as top-level overlay */}
+            <div 
+              className="fixed z-[9999] bg-white border border-gray-200 rounded-md shadow-lg p-4 w-80"
+              style={{
+                top: '50%',
+                left: '120%',
+                transform: 'translate(-50%, -50%)',
+                maxHeight: '80vh',
+                overflowY: 'auto'
+              }}
+            >
               <div className="flex space-x-2 mb-4">
                 <Select
                   onValueChange={handleMonthChange}

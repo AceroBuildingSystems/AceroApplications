@@ -16,11 +16,53 @@ export const getUsers = catchAsync(async ({ filter }: { filter: any }) => {
 });
 
 export const createUser = catchAsync(async (options: any) => {
-  const result = await crudManager.mongooose.create(
-    MONGO_MODELS.USER_MASTER,
-    options
-  );
-  return result;
+  console.log('userServices.createUser called with options:', options);
+  try {
+    // Validate required fields
+    if (!options.data) {
+      console.error('Invalid options format - missing data property:', options);
+      options = { data: options }; // Auto-fix the structure if possible
+    }
+    
+    // Manual validation for required fields
+    const { data } = options;
+    if (!data.firstName || !data.lastName) {
+      console.error('Missing required fields:', { firstName: data.firstName, lastName: data.lastName });
+      return { 
+        status: 'Error', 
+        message: {
+          errors: {
+            firstName: !data.firstName ? { message: "First name is required" } : undefined,
+            lastName: !data.lastName ? { message: "Last name is required" } : undefined
+          },
+          _message: "User validation failed"
+        }
+      };
+    }
+
+    // First, create the main user document
+    console.log('Creating main user with data:', JSON.stringify(options.data, null, 2));
+    const userResult = await crudManager.mongooose.create(
+      MONGO_MODELS.USER_MASTER,
+      options
+    );
+    
+    if (userResult.status !== SUCCESS) {
+      console.error('Failed to create user:', userResult);
+      return userResult;
+    }
+    
+    console.log('User created successfully:', userResult);
+    return userResult;
+  } catch (error) {
+    console.error('Error in userServices.createUser:', error);
+    // Return a better structured error response that the API can use
+    return {
+      status: 'Error',
+      message: error instanceof Error ? error.message : 'Unknown error creating user',
+      error: error
+    };
+  }
 });
 
 

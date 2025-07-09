@@ -223,6 +223,7 @@ console.log({transformedData}, "transformedData after transformation");
   const saveData = async ({ formData, action }: { formData: any; action: string }) => {
     try {
       let response;
+      console.log('saveData called with:', { action, formData });
 
       // Group fields by subdocument keys
       const subDocFields = {
@@ -243,30 +244,66 @@ console.log({transformedData}, "transformedData after transformation");
         ]
       };
 
-      // Build nested data object
+      // Build data object for submission
       const data: any = {};
-      // Copy user-level fields
-      Object.keys(formData).forEach(key => {
-        let found = false;
-        (Object.keys(subDocFields) as Array<keyof typeof subDocFields>).forEach(subKey => {
-          if (subDocFields[subKey].includes(key)) {
-            // Always assign a new object to avoid mutating a frozen object
-            data[subKey] = { ...(data[subKey] || {}), [key]: formData[key] };
-            found = true;
-          }
-        });
-        if (!found) {
+      
+      // Start with the main user fields (those not in subdocuments)
+      const coreUserFields = ['empId', 'firstName', 'lastName', 'fullName', 
+                             'displayName', 'email', 'password', 'imageUrl', 'isActive'];
+      
+      // Copy core user fields directly to data
+      coreUserFields.forEach(key => {
+        if (formData[key] !== undefined) {
           data[key] = formData[key];
         }
       });
+      
+      // Create subdocument objects
+      Object.keys(subDocFields).forEach(subKey => {
+        data[subKey] = {};
+        subDocFields[subKey].forEach(fieldKey => {
+          if (formData[fieldKey] !== undefined) {
+            data[subKey][fieldKey] = formData[fieldKey];
+          }
+        });
+      });
 
       if (action === 'Add') {
+        // Check if required fields are present
+        if (!data.firstName || !data.lastName) {
+          toast.error('First Name and Last Name are required fields');
+          return { error: 'Missing required fields' };
+        }
+        
+        // Prepare the complete request with action and proper formData structure
+        const requestBody = {
+          action: 'create',
+          formData: {
+            // Core user fields (ensure required fields are present)
+            empId: data.empId || '',
+            firstName: data.firstName,
+            lastName: data.lastName,
+            fullName: data.fullName || `${data.firstName} ${data.lastName}`.trim(),
+            displayName: data.displayName || data.firstName,
+            email: data.email || '',
+            password: '', // Set a default empty password
+            imageUrl: data.imageUrl || '',
+            isActive: data.isActive !== undefined ? data.isActive : true,
+            
+            // Include empty strings for all fields that might be required
+            addedBy: data.addedBy || '',
+            updatedBy: data.updatedBy || '',
+          }
+        };
+
+        console.log('Sending create user request:', JSON.stringify(requestBody, null, 2));
+        
         response = await fetch('/api/user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(data),
+          body: JSON.stringify(requestBody),
         });
       } else {
         response = await fetch('/api/user', {
@@ -282,11 +319,34 @@ console.log({transformedData}, "transformedData after transformation");
         });
       }
 
+      // Check if the response was successful
+      if (!response.ok) {
+        console.error(`API returned status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        let errorMessage = `Failed to ${action.toLowerCase()} user: Server returned ${response.status}`;
+        
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorMessage;
+        } catch (e) {
+          // If the error response isn't valid JSON, use the text as is
+          if (errorText) errorMessage = errorText;
+        }
+        
+        toast.error(errorMessage);
+        return { error: errorMessage };
+      }
+      
+      // Parse the successful response
       const result = await response.json();
-      if (result.status === "success") {
+      console.log('API response:', { status: response.status, result });
+      
+      if (result.status === "success" || result.status === SUCCESS) {
         toast.success(result.message || `User ${action === 'Add' ? 'created' : 'updated'} successfully`);
         return { data: result.data };
       } else {
+        console.error('Failed API response:', result);
         toast.error(result.message || result.error || `Failed to ${action.toLowerCase()} user`);
         return { error: result.message || result.error || `Failed to ${action.toLowerCase()} user` };
       }

@@ -219,6 +219,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   // Handle form submission
   const handleSubmit = async () => {
     setSubmitAttempted(true);
+    console.log("Form submission initiated with data:", formData);
     
     // Validate all tabs before submission
     let allTabsValid = true;
@@ -235,6 +236,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
         if (field.required && !formData[field.name as keyof CompleteUserData]) {
           allErrors[field.name] = `${field.label} is required`;
           allTabsValid = false;
+          console.log(`Validation error: ${field.name} (${field.label}) is required but missing`);
         }
       });
     });
@@ -243,20 +245,42 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       allErrors.email = "Please enter a valid email address";
       allTabsValid = false;
+      console.log("Validation error: Email format is invalid");
     }
     
     setErrors(allErrors);
     
     if (!allTabsValid) {
+      console.log("Form validation failed. Errors:", allErrors);
       toast.error("Please fill all required fields across all tabs");
       return;
     }
+    
+    console.log("Form validation passed, proceeding with submission");
 
     try {
+      console.log("Calling onSave with formData:", formData);
       const response = await onSave({ formData, action });
-      if (response?.data?.status === "success") {
+      console.log("Save response:", response);
+      
+      if (response?.data) {
         toast.success(`User ${action === "Add" ? "created" : "updated"} successfully`);
         closeDialog();
+      } else if (response?.error) {
+        console.error("Error in save response:", response.error);
+        toast.error(typeof response.error === 'string' ? response.error : "Failed to save user");
+        
+        // Check for validation errors
+        if (typeof response.error === 'object' && response.error !== null) {
+          const errorObj = response.error;
+          if (errorObj.errors) {
+            const validationErrors: Record<string, string> = {};
+            Object.entries(errorObj.errors).forEach(([field, error]: [string, any]) => {
+              validationErrors[field] = error.message || 'Invalid field';
+            });
+            setErrors(prev => ({ ...prev, ...validationErrors }));
+          }
+        }
       }
     } catch (error) {
       console.error("Error saving user:", error);

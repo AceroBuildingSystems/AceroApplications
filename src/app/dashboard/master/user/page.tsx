@@ -359,58 +359,263 @@ console.log({transformedData}, "transformedData after transformation");
 
   // Utility to flatten user object for dialog population
   function flattenUserForDialog(user: any) {
+    console.log("Flattening user for dialog:", JSON.stringify(user, null, 2));
     if (!user) return {};
-    const subDocFields = [
-      'personalDetails',
-      'employmentDetails',
-      'visaDetails',
-      'identification',
-      'benefits',
-    ];
+    
+    // Define mapping for field categories to subdocument properties
+    const fieldCategoryMap = {
+      'personalDetails': {
+        fields: ['gender', 'dateOfBirth', 'maritalStatus', 'nationality', 'personalMobileNo'],
+        requiredFields: []
+      },
+      'employmentDetails': {
+        fields: ['department', 'designation', 'reportingTo', 'employeeType', 'role', 
+                'reportingLocation', 'activeLocation', 'organisation', 'extension', 
+                'workMobile', 'joiningDate', 'relievingDate', 'personCode'],
+        requiredFields: ['department', 'designation', 'employeeType', 'role', 'reportingLocation', 'activeLocation', 'organisation']
+      },
+      'visaDetails': {
+        fields: ['visaType', 'visaFileNo', 'visaIssueDate', 'visaExpiryDate', 'workPermit', 
+                'labourCardExpiryDate', 'iloeExpiryDate'],
+        requiredFields: ['visaType']
+      },
+      'identification': {
+        fields: ['passportNumber', 'passportIssueDate', 'passportExpiryDate', 'emiratesId', 
+                'emiratesIdIssueDate', 'emiratesIdExpiryDate'],
+        requiredFields: []
+      },
+      'benefits': {
+        fields: ['medicalInsurance'],
+        requiredFields: []
+      }
+    };
+    
     // Fields that are selects and expect an _id
     const selectFields = [
-      'nationality', 'gender', 'maritalStatus', 'department', 'designation', 'reportingTo', 'employeeType', 'role', 'reportingLocation', 'activeLocation', 'organisation', 'visaType'
+      'nationality', 'gender', 'maritalStatus', 'department', 'designation', 'reportingTo', 
+      'employeeType', 'role', 'reportingLocation', 'activeLocation', 'organisation', 'visaType'
     ];
+    
     // Fields that are dates
     const dateFields = [
-      'dateOfBirth', 'joiningDate', 'relievingDate', 'visaIssueDate', 'visaExpiryDate', 'labourCardExpiryDate', 'iloeExpiryDate', 'passportIssueDate', 'passportExpiryDate', 'emiratesIdIssueDate', 'emiratesIdExpiryDate'
+      'dateOfBirth', 'joiningDate', 'relievingDate', 'visaIssueDate', 'visaExpiryDate', 
+      'labourCardExpiryDate', 'iloeExpiryDate', 'passportIssueDate', 'passportExpiryDate', 
+      'emiratesIdIssueDate', 'emiratesIdExpiryDate'
     ];
-    let flat: any = { ...user };
-    subDocFields.forEach((key) => {
-      if (user[key] && typeof user[key] === 'object') {
-        Object.keys(user[key]).forEach((subKey) => {
-          if (
-            subKey !== '_id' &&
-            subKey !== 'userId' &&
-            subKey !== '__v' &&
-            subKey !== 'createdAt' &&
-            subKey !== 'updatedAt' &&
-            flat[subKey] === undefined
-          ) {
-            let value = user[key][subKey];
-            // Handle select fields: set to _id if object
-            if (selectFields.includes(subKey) && value && typeof value === 'object' && value._id) {
-              flat[subKey] = value._id;
-            } else if (dateFields.includes(subKey) && value) {
-              flat[subKey] = value ? new Date(value).toISOString().slice(0, 10) : '';
-            } else {
-              flat[subKey] = value;
-            }
-          }
+    
+    // Create a new object to avoid mutations
+    let flat: any = {
+      // Copy top-level fields first
+      _id: user._id,
+      empId: user.empId || '',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      fullName: user.fullName || '',
+      displayName: user.displayName || '',
+      email: user.email || '',
+      imageUrl: user.imageUrl || '',
+      isActive: user.isActive !== undefined ? user.isActive : true,
+    };
+
+    console.log("Initial flattened user data:", flat);
+    
+    // Process each subdocument
+    Object.keys(fieldCategoryMap).forEach((key) => {
+      const subdocument = user[key];
+      console.log(`Processing ${key} subdocument:`, JSON.stringify(subdocument, null, 2));
+      
+      // Handle different subdocument states
+      if (!subdocument) {
+        console.log(`${key} is missing or null`);
+        // Initialize empty values for required fields
+        fieldCategoryMap[key].requiredFields.forEach(field => {
+          flat[field] = '';
+          console.log(`Set empty value for required field ${field}`);
         });
+        return;
+      }
+      
+      // Special handling for employmentDetails
+      if (key === 'employmentDetails' && subdocument) {
+        console.log('Special handling for employmentDetails');
+        // Ensure department is set
+        if (subdocument.department) {
+          flat.department = subdocument.department._id || subdocument.department;
+          console.log('Set department:', flat.department);
+        }
+        
+        // Ensure designation is set
+        if (subdocument.designation) {
+          flat.designation = subdocument.designation._id || subdocument.designation;
+          console.log('Set designation:', flat.designation);
+        }
+        
+        // Ensure employeeType is set
+        if (subdocument.employeeType) {
+          flat.employeeType = subdocument.employeeType._id || subdocument.employeeType;
+          console.log('Set employeeType:', flat.employeeType);
+        }
+        
+        // Ensure role is set
+        if (subdocument.role) {
+          flat.role = subdocument.role._id || subdocument.role;
+          console.log('Set role:', flat.role);
+        }
+      }
+      
+      // Handle case where subdocument might be just an ID string
+      if (typeof subdocument === 'string') {
+        console.log(`${key} is just an ID string: ${subdocument}`);
+        return;
+      }
+      
+      // Process all fields in the subdocument
+      fieldCategoryMap[key].fields.forEach((fieldName) => {
+        if (subdocument[fieldName] !== undefined) {
+          let value = subdocument[fieldName];
+          console.log(`Processing field ${key}.${fieldName}:`, value);
+          
+          // Handle select fields: set to _id if object
+          if (selectFields.includes(fieldName) && value && typeof value === 'object' && value._id) {
+            flat[fieldName] = value._id;
+            console.log(`Converted select field ${fieldName} to ID:`, flat[fieldName]);
+          } 
+          // Handle date fields
+          else if (dateFields.includes(fieldName) && value) {
+            try {
+              // Handle both string dates and Date objects
+              if (typeof value === 'string') {
+                flat[fieldName] = value;
+              } else {
+                const dateObj = new Date(value);
+                if (!isNaN(dateObj.getTime())) {
+                  flat[fieldName] = dateObj.toISOString().slice(0, 10);
+                } else {
+                  flat[fieldName] = '';
+                }
+              }
+              console.log(`Converted date field ${fieldName}:`, flat[fieldName]);
+            } catch (error) {
+              console.error(`Error converting date for ${fieldName}:`, error);
+              flat[fieldName] = '';
+            }
+          } 
+          // Handle all other fields
+          else {
+            flat[fieldName] = value;
+            console.log(`Copied field ${fieldName}:`, flat[fieldName]);
+          }
+        } else {
+          console.log(`Field ${fieldName} not found in ${key}`);
+          // For required fields, set empty default
+          if (fieldCategoryMap[key].requiredFields.includes(fieldName)) {
+            flat[fieldName] = '';
+            console.log(`Set empty value for missing required field ${fieldName}`);
+          }
+        }
+      });
+    });
+
+    // Special handling for workMobile that might be at employmentDetails.workMobile or just mobile
+    if (user.employmentDetails?.workMobile && !flat.workMobile) {
+      flat.workMobile = user.employmentDetails.workMobile;
+      console.log(`Set workMobile from employmentDetails:`, flat.workMobile);
+    } else if (user.mobile && !flat.workMobile) {
+      flat.workMobile = user.mobile;
+      console.log(`Set workMobile from user.mobile:`, flat.workMobile);
+    } else if (user.employmentDetails?.mobile && !flat.workMobile) {
+      flat.workMobile = user.employmentDetails.mobile;
+      console.log(`Set workMobile from employmentDetails.mobile:`, flat.workMobile);
+    }
+
+    // Special handling for personalMobileNo that might be at personalDetails.personalMobileNo or personalNumber
+    if (user.personalDetails?.personalMobileNo && !flat.personalMobileNo) {
+      flat.personalMobileNo = user.personalDetails.personalMobileNo;
+      console.log(`Set personalMobileNo from personalDetails:`, flat.personalMobileNo);
+    } else if (user.personalNumber && !flat.personalMobileNo) {
+      flat.personalMobileNo = user.personalNumber;
+      console.log(`Set personalMobileNo from user.personalNumber:`, flat.personalMobileNo);
+    }
+    
+    // Check for any required fields that might still be missing
+    console.log("Checking for missing required fields...");
+    const allRequiredFields = [
+      'department', 'designation', 'employeeType', 'role', 'reportingLocation', 
+      'activeLocation', 'organisation', 'visaType', 'nationality'
+    ];
+    
+    allRequiredFields.forEach(field => {
+      if (!flat[field] || flat[field] === '') {
+        // Try to find the field in the top level object or any subdocument
+        if (user[field] && typeof user[field] === 'object' && user[field]._id) {
+          flat[field] = user[field]._id;
+          console.log(`Set missing required field ${field} from top level:`, flat[field]);
+        } else if (typeof user[field] === 'string') {
+          flat[field] = user[field];
+          console.log(`Set missing required field ${field} from top level string:`, flat[field]);
+        }
+        // Try to find in subdocuments
+        if (!flat[field] || flat[field] === '') {
+          Object.keys(fieldCategoryMap).forEach(subDocKey => {
+            const subDoc = user[subDocKey];
+            if (subDoc && subDoc[field]) {
+              if (typeof subDoc[field] === 'object' && subDoc[field]._id) {
+                flat[field] = subDoc[field]._id;
+              } else if (typeof subDoc[field] === 'string') {
+                flat[field] = subDoc[field];
+              }
+              console.log(`Set missing required field ${field} from ${subDocKey}:`, flat[field]);
+            }
+          });
+        }
       }
     });
-    // Also handle top-level select/date fields if any
-    selectFields.forEach((field) => {
-      if (flat[field] && typeof flat[field] === 'object' && flat[field]._id) {
-        flat[field] = flat[field]._id;
+
+    // Final pass to handle any top-level fields that might have been missed
+    Object.keys(user).forEach(key => {
+      if (
+        !['_id', '__v', 'createdAt', 'updatedAt', 'access', 'personalDetails', 'employmentDetails', 
+          'visaDetails', 'identification', 'benefits', 'empId', 'firstName', 'lastName', 'fullName', 
+          'displayName', 'email', 'password', 'imageUrl', 'isActive', 'addedBy', 'updatedBy'].includes(key)
+      ) {
+        if (flat[key] === undefined) {
+          let value = user[key];
+          
+          // Handle select fields: set to _id if object
+          if (selectFields.includes(key) && value && typeof value === 'object' && value._id) {
+            flat[key] = value._id;
+            console.log(`[Top level] Converted select field ${key} to ID:`, flat[key]);
+          } 
+          // Handle date fields
+          else if (dateFields.includes(key) && value) {
+            try {
+              // Handle both string dates and Date objects
+              if (typeof value === 'string') {
+                flat[key] = value;
+              } else {
+                const dateObj = new Date(value);
+                if (!isNaN(dateObj.getTime())) {
+                  flat[key] = dateObj.toISOString().slice(0, 10);
+                } else {
+                  flat[key] = '';
+                }
+              }
+              console.log(`[Top level] Converted date field ${key}:`, flat[key]);
+            } catch (error) {
+              console.error(`[Top level] Error converting date for ${key}:`, error);
+              flat[key] = '';
+            }
+          } 
+          // Handle all other fields
+          else {
+            flat[key] = value;
+            console.log(`[Top level] Copied field ${key}:`, flat[key]);
+          }
+        }
       }
     });
-    dateFields.forEach((field) => {
-      if (flat[field]) {
-        flat[field] = new Date(flat[field]).toISOString().slice(0, 10);
-      }
-    });
+
+    console.log("Final flattened user data:", flat);
     return flat;
   }
 

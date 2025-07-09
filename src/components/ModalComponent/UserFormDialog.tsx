@@ -75,11 +75,11 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
       "displayName", "password", "imageUrl", "isActive"
     ],
     personal: [
-      "gender", "dateOfBirth", "maritalStatus", "nationality", "personalNumber"
+      "gender", "dateOfBirth", "maritalStatus", "nationality", "personalMobileNo"
     ],
     employment: [
       "department", "designation", "reportingTo", "employeeType", "role", 
-      "reportingLocation", "activeLocation", "extension", "mobile", 
+      "reportingLocation", "activeLocation", "extension", "workMobile", 
       "joiningDate", "relievingDate", "organisation", "personCode", "status", "availability"
     ],
     visa: [
@@ -98,12 +98,29 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   // Initialize form data with initial values
   useEffect(() => {
     if (initialData && Object.keys(initialData).length > 0) {
+      console.log("Initializing form with data:", initialData);
+      
+      // Log each category of fields
+      const categories = ['core', 'personal', 'employment', 'visa', 'identification', 'benefits'];
+      categories.forEach(category => {
+        const categoryFields = fields.filter((field: any) => field.category === category);
+        const categoryValues: Record<string, any> = {};
+        
+        categoryFields.forEach((field: any) => {
+          if (initialData[field.name] !== undefined) {
+            categoryValues[field.name] = initialData[field.name];
+          }
+        });
+        
+        console.log(`${category} category fields:`, categoryValues);
+      });
+      
       setFormData({ ...initialData });
     } else {
       setFormData({} as CompleteUserData);
+      console.log("Initialized empty form data");
     }
-    console.log("Form data initialized:", initialData);
-  }, [initialData, isOpen]);
+  }, [initialData, isOpen, fields]);
 
   // Handle form field changes
   const handleChange = (e: any, fieldName: string, format?: string, fieldType?: string, data?: any[], field?: any) => {
@@ -316,7 +333,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   // Render appropriate input field based on type
   const renderField = (field: any) => {
     const { type, name, readOnly, placeholder, data } = field;
-    console.log("Rendering field:", field,data, formData);
+    console.log(`Rendering field: ${name} (${type}) - Value:`, formData[name], field);
     switch (type) {
       case "text":
       case "email":

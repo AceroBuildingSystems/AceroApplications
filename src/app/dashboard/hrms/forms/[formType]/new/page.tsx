@@ -20,6 +20,7 @@ import { HRMSFormConfig } from '@/types/hrms';
 import { useWorkflow } from '@/contexts/WorkflowContext';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { progress } from 'framer-motion';
+import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
 // Workflow Completion Dialog Component
 interface WorkflowCompletionDialogProps {
   workflow: any;
@@ -140,17 +141,7 @@ export default function NewHRMSFormPage() {
   console.log('NewHRMSFormPage', { params, isWorkflow, id, pathname, stepIndex });
   // Workflow context
   const workflow = useWorkflow();
-  const {
-    workflowId,
-    currentStepIndex,
-    getAllPreviousData,
-    updateStepData,
-    getStepData,
-    formData,
-    steps,
-    navigateToStep
-  } = workflow;
-  console.log('formID', steps, currentStepIndex, formData, workflowId, isWorkflow);
+
   const formType = params.formType as string;
   const [formId, setFormId] = useState<string | null>(null);
   const [formConfig, setFormConfig] = useState<HRMSFormConfig | null>(null);
@@ -187,7 +178,11 @@ export default function NewHRMSFormPage() {
 
     }
   }, [requisitionData, requisitionData?.data])
+  const {
 
+    initializeWorkflow
+  } = workflow;
+  // console.log('formID', steps, currentStepIndex, formData, workflowId, isWorkflow);
   // Debug: Log workflow state when component loads
   useEffect(() => {
     if (isWorkflow && steps.length > 0 && Object.keys(formData).length > 0) {
@@ -208,8 +203,32 @@ export default function NewHRMSFormPage() {
         setFormId(null);
       }
     }
-  }, [isWorkflow, formType, currentStepIndex, steps, formData]);
+    if(workFlowData?.data){
+      console.log('WORKFLOW: Workflow data loaded', workFlowData.data);
 
+      const getTemplateByKey = (key: string) => {
+        console.log('WORKFLOW: Getting template for key', key);
+          return HRMS_WORKFLOW_TEMPLATES[key.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES] || null;
+        };
+        const template = getTemplateByKey(workFlowData?.data?.template?.workflowType);
+        console.log('WORKFLOW: Template loaded', {template,formType});
+       
+        const workflowInitData = { ...workFlowData.data, template,workflowId:id,formType };
+        initializeWorkflow(workflowInitData)
+    }
+
+  }, [workFlowData,id]);
+const {
+  workflowId,
+  currentStepIndex,
+  getAllPreviousData,
+  updateStepData,
+  getStepData,
+  formData,
+  steps,
+  navigateToStep,
+} = workflow;
+console.log('formID', steps, currentStepIndex, formData, workflowId, isWorkflow);
   // Get prefill data from previous workflow steps
   const getInitialFormData = () => {
     if (!isWorkflow) return {};
@@ -417,7 +436,7 @@ export default function NewHRMSFormPage() {
 console.log('🟢 FORM SUBMIT: Form submission result', result);
       if (result?.data?._id) {
         console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', { workFlowData });
-
+const completedSTeps = Object.keys(workFlowData?.data?.formsData).length || 0;
         // Update the workflow instance with the new form ID
         const workFlowUpdate = await updateWorkflowInstance({
           id: currentWorkflowId,
@@ -425,7 +444,7 @@ console.log('🟢 FORM SUBMIT: Form submission result', result);
             ...workFlowData?.data?.formsData, formsData: { [formType]: result.data._id }, progress: {
               ...workFlowData?.data?.progress,
               currentStep: steps[workFlowData?.data?.progress?.completedSteps+1]?.id,
-              progress: (100/workFlowData?.data?.progress?.totalSteps)*((workFlowData?.data?.progress?.completedSteps || 0)),
+              progressPercentage: (100/workFlowData?.data?.progress?.totalSteps)*(completedSTeps),
               currentStepName:steps[workFlowData?.data?.progress?.completedSteps+1]?.stepName || '',
             },
             ...result.data?.candidateInfo,

@@ -448,7 +448,7 @@ class HRMSWorkflowManager {
     }
 
     const totalSteps = template.steps.length;
-    const completedSteps = instance.completedSteps.length;
+    const completedSteps = Object.keys(instance.formsData).length;
     const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
 
     const currentStep = template.steps.find((step: any) => step.id === instance.currentStep);

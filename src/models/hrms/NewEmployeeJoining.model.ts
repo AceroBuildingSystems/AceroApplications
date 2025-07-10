@@ -202,20 +202,20 @@ const NewEmployeeJoiningSchema = new Schema<NewEmployeeJoiningDocument>(
 NewEmployeeJoiningSchema.plugin(require('mongoose-autopopulate'));
 
 // Generate unique joining form ID and employee ID
-NewEmployeeJoiningSchema.pre('save', async function(next) {
-  if (this.isNew && !this.formId.includes('-')) {
-    const count = await mongoose.model('NewEmployeeJoining').countDocuments();
-    this.formId = `NEJ-${String(count + 1).padStart(6, '0')}`;
-  }
+// NewEmployeeJoiningSchema.pre('save', async function(next) {
+//   if (this.isNew && !this.formId.includes('-')) {
+//     const count = await mongoose.model('NewEmployeeJoining').countDocuments();
+//     this.formId = `NEJ-${String(count + 1).padStart(6, '0')}`;
+//   }
   
-  // Generate employee ID if not provided
-  if (!this.empId && this.status === 'approved') {
-    const empCount = await mongoose.model('User').countDocuments();
-    this.empId = `EMP-${String(empCount + 1).padStart(6, '0')}`;
-  }
+//   // Generate employee ID if not provided
+//   if (!this.empId && this.status === 'approved') {
+//     const empCount = await mongoose.model('User').countDocuments();
+//     this.empId = `EMP-${String(empCount + 1).padStart(6, '0')}`;
+//   }
   
-  next();
-});
+//   next();
+// });
 
 // Validation: dateOfReporting should be in future or today
 NewEmployeeJoiningSchema.pre('save', function(next) {

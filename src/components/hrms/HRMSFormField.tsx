@@ -37,17 +37,25 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
 
   if (!shouldShow) return null;
 
+  const generateTempId = () => {
+    return Math.random().toString(36).substring(2, 9);
+  }
+
   const renderField = () => {
-     console.log(field)
+    if(field.type === 'tempId'){
+      console.log(`${field.name} is tempId`)
+    }
     switch (field.type) {
       case 'text':
       case 'email':
       case 'tel':
+      case 'tempId':
         return (
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name] ||  getValueByPath(data, field.name) || ''}
+            disabled= {field.type === 'tempId'}
+            defaultValue={data?.[field.name] ||  getValueByPath(data, field.name) || (field.type === 'tempId' ? generateTempId() : '')}
             rules={{
               required: field.required ? `${field.label} is required` : false,
               pattern: field.validation?.pattern ? {

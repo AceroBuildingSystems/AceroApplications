@@ -62,18 +62,19 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
               { label: 'Replacement', value: 'replacement' }
             ]
           },
+
           {
-            name: 'newPositionBudgeted',
-            type: 'checkbox',
-            label: 'New Position (Budgeted)',
+            name: 'Budget',
+            type: 'radio',
+            label: 'New Position Budgeted',
+            required: true,
+            options: [
+              { label: 'Budgeted', value: 'budgeted' },
+              { label: 'Non-Budgeted', value: 'non_budgeted' }
+            ],
             showIf: (values) => values.vacancyReason === 'new_position'
           },
-          {
-            name: 'newPositionNonBudgeted',
-            type: 'checkbox',
-            label: 'New Position (Non-Budgeted)',
-            showIf: (values) => values.vacancyReason === 'new_position'
-          },
+          
           {
             name: 'noOfVacantPositions',
             type: 'number',
@@ -190,7 +191,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           },
           {
             name: 'name',
-            type: 'text',
+            type: 'tempId',
             label: 'Full Name',
             required: true,
             placeholder: 'Enter your full name as per passport'
@@ -363,27 +364,31 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         defaultExpanded: false,
         fields: [
           {
-            name: 'joinDirectlyAfterCancellation',
-            type: 'checkbox',
-            label: 'Join directly after visa cancellation'
-          },
-          {
-            name: 'travelToHomeCountry',
-            type: 'checkbox',
-            label: 'Need to travel to home country first'
+            name: 'VisaCancellation',
+            type: 'radio',
+            label: 'Visa Cacellation',
+            required: true,
+            options: [
+              { label: 'Join directly after visa cancellation', value: 'joinDirectlyAfterCancellation' },
+              { label: 'Travel to home country first', value: 'travelToHomeCountry'  }
+            ]
+            
           },
           {
             name: 'reasonForTravel',
             type: 'text',
             label: 'Reason for Travel',
-            showIf: (values) => values.travelToHomeCountry,
+            showIf: (values) => {
+           
+             return values.VisaCancellation === 'travelToHomeCountry'
+            },
             placeholder: 'Specify reason for travel'
           },
           {
             name: 'daysStayHomeCountry',
             type: 'number',
             label: 'Days to Stay in Home Country',
-            showIf: (values) => values.travelToHomeCountry,
+            showIf: (values) => values.VisaCancellation === 'travelToHomeCountry',
             validation: { min: 1, max: 365 }
           }
         ]
@@ -563,7 +568,13 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Full name of the new employee'
           },
-         
+          {
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            required: true,
+            options: [] // Will be populated from API
+          },
           {
             name: 'departmentSection',
             type: 'select',
@@ -641,7 +652,13 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             label: 'Employee Name',
             required: true
           },
-         
+          {
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            required: true,
+            options: []
+          },
           {
             name: 'departmentSection',
             type: 'select',
@@ -668,18 +685,6 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'email',
             label: 'Email ID',
             placeholder: 'Corporate email address'
-          }
-        ]
-      },
-      {
-        id: 'it_access',
-        title: 'IT Access Requirements',
-        description: 'Systems and applications access needed',
-        fields: [
-          {
-            name: 'budgetedPosition',
-            type: 'checkbox',
-            label: 'This is a budgeted position'
           }
         ]
       }
@@ -713,7 +718,13 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Employee identification number'
           },
-         
+          {
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            required: true,
+            options: []
+          },
           {
             name: 'grade',
             type: 'text',
@@ -839,7 +850,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'select',
             label: "Mother's Nationality",
             options: []
-          }
+          },
         ]
       },
       {
@@ -915,7 +926,13 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Employee identification number'
           },
-        
+          {
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            required: true,
+            options: []
+          },
           {
             name: 'department',
             type: 'select',

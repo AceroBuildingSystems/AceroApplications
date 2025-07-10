@@ -67,7 +67,7 @@ export default function WorkflowNavigation() {
             <div>
               <CardTitle className="text-xl flex items-center gap-2">
                 <MapPinIcon className="h-5 w-5 text-blue-600" />
-                {workflowType} Workflow
+                {workflowType.toProperCase()} Workflow
               </CardTitle>
               <p className="text-sm text-gray-600 mt-1">
                 Step {currentStepIndex + 1} of {steps.length}: {currentStep?.stepName}

@@ -2,9 +2,9 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Input } from "@/components/ui/inputSearch";
+import { Input } from "@/components/ui/input";
 import { Button } from '../ui/button';
-import { ChevronsUpDown, Check, ListFilter } from 'lucide-react';
+import { ChevronsUpDown, Check } from 'lucide-react';
 
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
@@ -16,8 +16,6 @@ import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import * as XLSX from "xlsx";
 import { Combobox } from '../ui/ComboBoxWrapper';
-import { DatePicker } from '../ui/date-picker';
-import { set } from 'lodash';
 
 // Interface for individual Input and Select field configurations
 interface FieldConfig {
@@ -41,128 +39,24 @@ interface MasterComponentProps {
     loadingState: boolean;
     rowClassMap: any;
     summary: boolean;
-    children?: React.ReactNode;
 }
 
-const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary, children }) => {
+
+
+
+const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
-    const [summaryData, setSummaryData] = useState([]);
-    const [title, setTitle] = useState(config?.title || "");
-
-    console.log("Filtered Data", config?.dataTable?.data)
+console.log("Filtered Data", config?.dataTable?.data)
     useEffect(() => {
-        let summaryD: any = {};
-        console.log("Config:", config);
-        setFilteredData(config?.dataTable?.data);
-        console.log(config?.title, "Config Title");
-        switch (config?.title) {
-            case "Usage Details":
-                summaryD = config?.dataTable?.data?.reduce(
-                    (acc: any, item: any) => {
-                        const packageAmount = item?.account?.package?.amount || 0;
-                        const gross = item?.grossBillAmount || 0;
-                        const vat = item?.vat || 0;
-                        const oneTime = item?.oneTimeCharge || 0;
-                        const net = item?.netBillAmount || 0;
-
-                        acc.totalPackageAmount += packageAmount;
-                        acc.totalGrossBillAmount += gross;
-                        acc.totalVAT += vat;
-                        acc.totalOneTimeCharges += oneTime;
-                        acc.totalNetBillAmount += net;
-
-                        return acc;
-                    },
-                    {
-                        totalPackageAmount: 0,
-                        totalGrossBillAmount: 0,
-                        totalVAT: 0,
-                        totalOneTimeCharges: 0,
-                        totalNetBillAmount: 0
-                    }
-                );
-                break;
-            case "Deduction Reports":
-                summaryD = config?.dataTable?.data?.reduce(
-                    (acc: any, item: any) => {
-                        const packageAmount = item?.account?.package?.amount || 0;
-                        const gross = item?.grossBillAmount || 0;
-                        const waivedAmount = item?.waivedAmount || 0;
-                        const deductionAmount = item?.finalDeduction || 0;
-
-                        acc.totalPackageAmount += packageAmount;
-                        acc.totalGrossBillAmount += gross;
-                        acc.totalWaivedAMount += waivedAmount;
-                        acc.totalDeductionAmount += deductionAmount;
-
-
-                        return acc;
-                    },
-                    {
-                        totalPackageAmount: 0,
-                        totalGrossBillAmount: 0,
-                        totalWaivedAMount: 0,
-                        totalDeductionAmount: 0
-
-                    }
-                );
-                break;
-
-            case "Deduction Summary":
-                summaryD = config?.dataTable?.data?.reduce(
-                    (acc: any, item: any) => {
-                        const packageAmount = item?.account?.package?.amount || 0;
-                        const gross = item?.grossBillAmount || 0;
-                        const waivedAmount = item?.waivedAmount || 0;
-                        const deductionAmount = item?.finalDeduction || 0;
-
-                        acc.totalPackageAmount += packageAmount;
-                        acc.totalGrossBillAmount += gross;
-                        acc.totalWaivedAMount += waivedAmount;
-                        acc.totalDeductionAmount += deductionAmount;
-
-
-                        return acc;
-                    },
-                    {
-                        totalPackageAmount: 0,
-                        totalGrossBillAmount: 0,
-                        totalWaivedAMount: 0,
-                        totalDeductionAmount: 0
-
-                    }
-                );
-                break;
-
-            default:
-                return;
-
-
-        }
-
-
-        console.log(summaryD);
-        setSummaryData(summaryD);
-        setTitle(config?.title || "");
+        setFilteredData(config?.dataTable?.data)
     }, [config, loadingState])
 
     // Handle input field change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
-
-        let value: any = "";
-
-        value = e?.target?.value ?? e;
-
-        const newSearchValues = { ...searchValues, [field]: value };
-
-        if (value === '') {
-            delete newSearchValues[field]; // Remove field if empty
-        } else {
-            newSearchValues[field] = value;
-        }
+        const newSearchValues = { ...searchValues, [field]: e.target.value };
 
         setSearchValues(newSearchValues);
         // filterData(newSearchValues, filterValues); // Trigger filterData after search change
@@ -170,9 +64,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
-        if (field === 'currentMonth') {
-            return;
-        }
+
         const newFilterValues = { ...filterValues, [field]: value };
 
         setFilterValues(newFilterValues);
@@ -180,46 +72,22 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     };
 
     useEffect(() => {
-        console.log(searchValues, filterValues)
+
         filterData(searchValues, filterValues); // Trigger filtering after search/filter change
     }, [searchValues, filterValues]);
 
     // Filter data based on search and filter criteria
     const filterData = (searchValues: any, filterValues: any) => {
-let summaryD: any = {};
-        const filtered = config?.dataTable?.data?.filter((item: { [x: string]: any; }) => {
-            // Check if item matches search criteria
 
+        const filtered = config?.dataTable?.data?.filter((item: { [x: string]: string; }) => {
+            // Check if item matches search criteria
             const matchesSearch = Object.keys(searchValues).every((key) => {
 
-                if (key === 'month') {
-                    console.log('month search triggered');
-                    return true; // Skip date filtering for now
-                }
+                const searchQuery = searchValues[key]?.toLowerCase() || ''; // Get search query, default to empty string
 
-                if (key === 'billingPeriodStart') {
-                    console.log('billingmonth search triggered');
-                    const searchQuery: any = searchValues[key]
-                        ? new Date(searchValues?.[key]).toLocaleDateString("en-GB")
-                        : null;
+                const value = item[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
 
-                    const value = item[key]
-                        ? new Date(item[key]).toLocaleDateString("en-GB")
-                        : null;
-                    if (!searchQuery) return true;
-                    return value && value?.includes(searchQuery);
-                }
-                else {
-                    console.log("Search Key:", key);
-                    console.log("Search Value:", searchValues);
-                    const rawSearch = searchValues?.[key];
-                    const searchQuery = typeof rawSearch === 'string' ? rawSearch.toLowerCase() : '';
-
-                    const value = item?.[key]?.toString().toLowerCase() || ''; // Convert the item value to string and make it lowercase
-
-                    return value.includes(searchQuery);
-                }
-
+                return value.includes(searchQuery);
             });
 
             // Check if item matches filter criteria
@@ -231,75 +99,13 @@ let summaryD: any = {};
                 // If no filter value, pass the filter
                 if (filterValue === null) return true;
 
+
                 return typeof item[key] === 'string' && item[key].toLowerCase() === filterValue?.toLowerCase();
             });
 
             return matchesSearch && matchesFilter;
         });
         setFilteredData(filtered); // Update filtered data state
-        switch (config?.title) {
-            case "Usage Details":
-                summaryD = filtered?.reduce(
-                    (acc: any, item: any) => {
-                        const packageAmount = item?.account?.package?.amount || 0;
-                        const gross = item?.grossBillAmount || 0;
-                        const vat = item?.vat || 0;
-                        const oneTime = item?.oneTimeCharge || 0;
-                        const net = item?.netBillAmount || 0;
-
-                        acc.totalPackageAmount += packageAmount;
-                        acc.totalGrossBillAmount += gross;
-                        acc.totalVAT += vat;
-                        acc.totalOneTimeCharges += oneTime;
-                        acc.totalNetBillAmount += net;
-
-                        return acc;
-                    },
-                    {
-                        totalPackageAmount: 0,
-                        totalGrossBillAmount: 0,
-                        totalVAT: 0,
-                        totalOneTimeCharges: 0,
-                        totalNetBillAmount: 0
-                    }
-                );
-                break;
-            case "Deduction Reports":
-                summaryD = filtered?.reduce(
-                    (acc: any, item: any) => {
-                        const packageAmount = item?.account?.package?.amount || 0;
-                        const gross = item?.grossBillAmount || 0;
-                        const waivedAmount = item?.waivedAmount || 0;
-                        const deductionAmount = item?.finalDeduction || 0;
-
-                        acc.totalPackageAmount += packageAmount;
-                        acc.totalGrossBillAmount += gross;
-                        acc.totalWaivedAMount += waivedAmount;
-                        acc.totalDeductionAmount += deductionAmount;
-
-
-                        return acc;
-                    },
-                    {
-                        totalPackageAmount: 0,
-                        totalGrossBillAmount: 0,
-                        totalWaivedAMount: 0,
-                        totalDeductionAmount: 0
-
-                    }
-                );
-                break;
-
-            default:
-                return;
-
-
-        }
-
-
-        console.log(summaryD);
-        setSummaryData(summaryD);
-        setTitle(config?.title || "");
     };
 
 
@@ -340,81 +146,41 @@ let summaryD: any = {};
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className='flex flex-col gap-2 w-full h-full px-4 py-1 pt-5'>
+                <div className='flex flex-col gap-1 w-full h-full px-4 pt-0.5'>
 
                     {/* Filter Section */}
-                    <div className='flex flex-row items-center justify-between gap-2'>
-                        <div className="flex items-center gap-1 w-full">
+                    <div className='flex flex-row items-center justify-between'>
+                        <div className="flex flex-row items-center gap-2 w-full">
                             {/* Render search fields */}
-                            <div className='flex items-center '>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => {
+                            <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
+                                <div key={index} className='w-full'>
 
-                                if (field?.type === 'date') {
-                                    return (
-                                        <div key={index} className='w-full'>
-
-                                            <DatePicker
-                                                currentDate={undefined}
-                                                handleChange={(e) => handleSearchChange(e, field.label)}
-
-                                                placeholder={field.placeholder}
-                                            />
-
-                                        </div>
-                                    )
-                                }
-                                else {
-                                    return (
-
-                                        <div key={index} className='w-full'>
-
-                                            <Input
-                                                type={field.type}
-                                                placeholder={field.placeholder}
-                                                value={searchValues[field.label] || ''}
-                                                onChange={(e) => handleSearchChange(e, field.label)}
-                                            />
-                                        </div>
-                                    )
-                                }
-
-                            })}
+                                    <Input
+                                        type={field.type}
+                                        placeholder={field.placeholder}
+                                        value={searchValues[field.label] || ''}
+                                        onChange={(e) => handleSearchChange(e, field.label)}
+                                    />
+                                </div>
+                            ))}
                             </div>
 
 
                             <div className='flex items-center gap-1'>
                                 {config.filterFields?.map((field: FieldObject, index: number) => {
 
-                                    if (field?.type === 'date') {
-                                        return (
-                                            <div key={index} className='w-full'>
+                                    return (
+                                        <div key={index} className='w-full'>
+                                        <Combobox
+                                            key={field.key || index}
+                                            field={field}
+                                            formData={[]}
+                                            handleChange={handleFilterChange}
+                                            placeholder={field.placeholder || ""}
 
-                                                <DatePicker
-                                                    currentDate={undefined}
-                                                    handleChange={handleFilterChange}
-
-                                                    placeholder={field.placeholder}
-                                                />
-
-                                            </div>
-                                        )
-                                    }
-                                    else {
-                                        return (
-
-                                            <div key={index} className='w-full'>
-
-                                                <Combobox
-                                                    key={field.key || index}
-                                                    field={field}
-                                                    formData={[]}
-                                                    handleChange={handleFilterChange}
-                                                    placeholder={field.placeholder || ""}
-
-                                                />
-                                            </div>
-                                        );
-                                    }
-
+                                        />
+                                        </div>
+                                    );
                                 })}
                             </div>
                         </div>
@@ -444,13 +210,13 @@ let summaryD: any = {};
                                     {/* Dropdown (only if dropdownOptions are provided and active) */}
                                     {button.dropdownOptions && activeDropdown === index && (
                                         <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
-                                            {button.dropdownOptions.map((option: any, optionIndex) => (
+                                            {button.dropdownOptions.map((option:any, optionIndex) => (
                                                 <div
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"
                                                     onClick={() => {
                                                         console.log(option)
-                                                        option.action(option.value, (filteredData && filteredData?.length > 0) ? filteredData : (filteredData ? [] : config?.dataTable?.data)); // Execute the action for this dropdown option
+                                                        option.action(option.value, (filteredData !== undefined && filteredData?.length > 0) ? filteredData : filteredData?.length === 0 ? [] : config?.dataTable?.data); // Execute the action for this dropdown option
                                                         setActiveDropdown(null); // Close the dropdown after selection
                                                     }}
                                                 >
@@ -465,18 +231,9 @@ let summaryD: any = {};
 
                     </div>
 
-                    <div className="flex-grow overflow-auto">
-                        {children ? children : (
-                            (config?.dataTable?.columns && config?.dataTable?.data) ?
-                            <DataTable 
-                                data={filteredData && filteredData.length > 0 ? filteredData : (filteredData && filteredData.length === 0) ? [] : config.dataTable.data} 
-                                columns={config.dataTable.columns}
-                                rowClassMap={rowClassMap} 
-                                summary={summary} 
-                                title={config?.dataTable?.title || config?.title || ''} // Added title prop
-                                summaryTotal={config?.dataTable?.summaryTotal ?? summaryData } // Added summaryTotal prop
-                            /> : null
-                        )}
+                    <div className="h-[85%]">
+                        {<DataTable data={filteredData && filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
+                            rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
                     </div>
                 </div>
 

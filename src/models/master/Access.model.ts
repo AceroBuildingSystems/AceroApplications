@@ -1,6 +1,7 @@
 import { Model, Schema, models, model } from "mongoose";
 import { access } from "@/types";
 
+
 const AccessSchema: Schema<access> = new Schema(
   {
     name: { type: String, required: true, unique: true },
@@ -12,6 +13,7 @@ const AccessSchema: Schema<access> = new Schema(
     addedBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
     order: { type: Number, default : 1},
+    icon: { type: String},
   },
   { timestamps: true }
 );

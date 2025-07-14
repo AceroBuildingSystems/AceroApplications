@@ -10,6 +10,47 @@ import moment from 'moment';
 import { Department, Organisation } from '@/models';
 import { exportToExcel } from '@/utils/copyToClipboard';
 import { skip } from 'node:test';
+import { Package } from 'lucide-react';
+import Provider from '@/components/provider/Provider';
+
+import { Types } from 'mongoose';
+
+export function sanitizeUserDocs(docs: any[]): any[] {
+  return docs.map((doc: any) => {
+    const plainDoc = doc.toObject ? doc.toObject() : { ...doc };
+    const employment = plainDoc.employmentDetails || {};
+
+    // Safely extract and simplify necessary fields
+    return {
+      ...simplify(plainDoc),
+      department: simplify(employment?.department),
+      designation: simplify(employment?.designation),
+      reportingTo: employment?.reportingTo,
+      role: simplify(employment?.role),
+      mobile: employment?.workMobile || '',
+      extension: employment?.extension || '',
+      activeLocation: simplify(employment?.activeLocation),
+      reportingLocation: simplify(employment?.reportingLocation),
+      organisation: simplify(employment?.organisation),
+    };
+  });
+}
+
+// Recursive simplifier to flatten ObjectIds and subdocuments
+function simplify(obj: any): any {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  if (obj instanceof Types.ObjectId) return obj.toString();
+
+  const result: any = {};
+  for (const key in obj) {
+    const value = obj[key];
+    result[key] = simplify(value);
+  }
+
+  return result;
+}
+
 
 export const createMongooseObjectId = (id: any) => {
     if (mongoose.Types.ObjectId.isValid(id) && new mongoose.Types.ObjectId(id).toString() === id.toString()) {
@@ -95,10 +136,10 @@ interface BulkImportParams {
     employeeTypeData: any;
     organisationData: any;
     onStart: () => void;
-     onFinish: () => void;
+    onFinish: () => void;
 }
 
-export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, teamData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName,onStart, onFinish }: BulkImportParams) => {
+export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, teamData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName, onStart, onFinish }: BulkImportParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
@@ -106,7 +147,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
     input.onchange = async (event) => {
         onStart?.();
         const file = (event.target as HTMLInputElement)?.files?.[0];
-        if (!file){
+        if (!file) {
             onFinish?.();
             return;
         };
@@ -125,7 +166,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
             const masterRequiredFields: Record<string, string[]> = {
                 User: ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role'],
-                Asset: ['Asset ID', 'Name', 'Category'], // example
+                Asset: ['Vendor Name', 'Invoice No', 'Purchase Date', 'Warehouse', 'Model'], // example
                 Vendor: ['Name'], // example
                 Category: ['name', 'description', 'specsRequired'], // example
                 Department: ['Department Id', 'Department'],
@@ -137,11 +178,34 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 State: ['City', 'Country'],
                 ProjectType: ['Project Type'],
                 Location: ['Location', 'City'],
+                Region: ['Region', 'Continent'],
+                Product: ['Name', 'Category'],
+                ProductType: ['Product Type'],
+                Team: ['Team Name', 'Team Head', 'Department'],
+                TeamRole: ['Name'],
+                TeamMember: ['Name', 'Team Role', 'Reporting To', 'Team'],
+                CustomerType: ['Customer Type'],
+                Sector: ['Sector'],
+                PaintType: ['Paint Type'],
+                Incoterm: ['Name', 'Description'],
+                QuoteStatus: ['Quote Status'],
+                Currency: ['Currency'],
+                Continent: ['Continent'],
+                Country: ['Country Code', 'Country', 'Region'],
+                VisaType: ['Visa Type'],
+                SmlGroup: ['Group Name'],
+                SmlSubGroup: ['Sub Group Name', 'Group Name'],
+                PackageMaster: ['Package Name', 'Description', 'Amount'],
+                AccountMaster: ['Account Number', 'Company', 'Provider'],
+                PrinterUsage: ['Account Id', 'Printer', 'Date'],
+                JobAccount: ['Account Id', 'Employee'],
+                PrinterMaster: ['Printer Name'],
+
                 // Add other masters as needed
             };
 
             const requiredFields = masterRequiredFields[masterName] || [];
-         
+
             const rowsWithMissingData = sheetData
                 .map((row: any, index: number) => {
                     const missingFields = requiredFields.filter(field => {
@@ -154,7 +218,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 })
                 .filter(Boolean); // Remove nulls
 
-               
+
             if (rowsWithMissingData.length > 0) {
                 const rowNumbers = rowsWithMissingData.map((_, i) => i + 2).join(', '); // +2 to match Excel rows (header + 1-based index)
                 const errorMessage = rowsWithMissingData
@@ -165,12 +229,11 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                 return;
             }
 
-           
             // Transform the sheet data based on the entity
             const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
             const successful: any[] = [];
             const skipped: any[] = [];
-console.log(formData, "formData")
+
             const referenceData = {
                 roleData: roleData?.data || [],
                 continentData: continentData?.data || [],
@@ -192,27 +255,164 @@ console.log(formData, "formData")
             };
 
             const finalData = mapFieldsToIds(formData, masterName, referenceData);
-
+            console.log(finalData, 'final data')
             let enrichedData = finalData.map((item: any) => ({
                 ...item,
                 addedBy: user?._id,
                 updatedBy: user?._id,
             }));
-
             if (masterName === 'Asset') {
-                enrichedData = finalData.map((item: any) => ({
-                    ...item,
-                    specifications: JSON.parse(item?.specifications),
-                    purchaseDate: moment(item?.purchaseDate, "DD-MM-YYYY").toDate(),
-                    warrantyStartDate: moment(item?.warrantyStartDate, "DD-MM-YYYY").toDate(),
-                    warrantyEndDate: moment(item?.warrantyEndDate, "DD-MM-YYYY").toDate(),
-                }));
-            };
+                const grouped: any = {};
+                let allInsertedAssets = [];
+                let allSkippedAssets = [];
+                let insertedInventories = [];
+                let skippedInventories = [];
+                // Group rows by invoiceNumber
+                for (const row of enrichedData) {
+
+                    const invoice = row?.invoiceNumber?.toString()?.trim();
+                    if (!grouped[invoice]) grouped[invoice] = [];
+                    grouped[invoice].push(row);
+                }
+                console.log(grouped, 'grouped');
+                for (const invoiceNumber in grouped) {
+                    const rowsForInvoice = grouped[invoiceNumber];
+                    const firstRow = rowsForInvoice[0];
+
+                    const inventory = {
+                        vendor: firstRow.vendor,
+                        warehouse: firstRow.warehouse,
+                        purchaseDate: parseExcelDate(firstRow?.purchaseDate),
+                        poNumber: firstRow.poNumber,
+                        prNumber: firstRow.prNumber,
+                        invoiceNumber: firstRow.invoiceNumber,
+                        addedBy: user?._id,
+                        updatedBy: user?._id,
+                    };
+
+
+                    const formattedData = {
+                        action: action === 'Add' ? 'create' : 'update',
+                        db: db,
+                        bulkInsert: true,
+                        data: [inventory],
+                    };
+                    const inventoryRes = await createUser(formattedData);
+
+                    if (inventoryRes?.data?.data?.inserted?.length) {
+                        insertedInventories.push(...inventoryRes.data.data.inserted);
+                    }
+
+                    if (inventoryRes?.data?.data?.skipped?.length) {
+                        skippedInventories.push(...inventoryRes.data.data.skipped);
+                    }
+
+                    const inventoryId = inventoryRes?.data?.data?.inserted?.[0]?._id;
+                    console.log(inventoryId, 'inventoryid');
+                    const assetEntries = rowsForInvoice.map((row: any) => ({
+                        serialNumber: row.serialNumber,
+                        product: row.product,
+                        warrantyStartDate: parseExcelDate(row?.warrantyStartDate),
+                        warrantyEndDate: parseExcelDate(row?.warrantyEndDate),
+
+                        inventory: inventoryId,
+                        warehouse: row.warehouse,
+                        specifications: JSON.parse(row?.specifications),
+                        addedBy: user?._id,
+                        updatedBy: user?._id,
+                    }));
+
+                    console.log(assetEntries, 'assetEntries');
+                    const formattedData1 = {
+                        action: action === 'Add' ? 'create' : 'update',
+                        db: "ASSET_MASTER",
+                        bulkInsert: true,
+                        data: assetEntries,
+                    };
+                    const assetRes = inventoryId && await createUser(formattedData1);
+
+
+                    if (assetRes?.data?.data?.inserted?.length) {
+                        allInsertedAssets.push(...assetRes.data.data.inserted);
+                        const insertedAssets = assetRes.data.data.inserted;
+
+                        // If inserted contains full docs
+                        const assetIds = insertedAssets.map((asset: any) => asset._id);
+                        console.log(assetIds, 'assetids');
+                        const inventory = {
+                            assets: assetIds,
+                        };
+
+
+                        const formattedData = {
+                            action: 'update',
+                            db: db,
+                            filter: { "_id": inventoryId },
+                            data: inventory,
+                        };
+                        const inventoryRes = await createUser(formattedData);
+                        console.log(inventoryRes, 'invetroryupdate')
+                    }
+
+                    if (assetRes?.data?.data?.skipped?.length) {
+                        allSkippedAssets.push(...assetRes.data.data.skipped);
+                    }
+                }
+
+                if (insertedInventories.length > 0) {
+                    toast.success(`${insertedInventories.length} invoices added successfully.`);
+                }
+                if (skippedInventories.length > 0) {
+                    toast.warning(`${skippedInventories.length} invoices were skipped.`);
+                    exportToExcel(skippedInventories);
+                }
+
+                if (allInsertedAssets.length > 0) {
+                    toast.success(`${allInsertedAssets.length} assets created successfully.`);
+                }
+                if (allSkippedAssets.length > 0) {
+                    toast.warning(`${allSkippedAssets.length} assets were skipped.`);
+                    exportToExcel(allSkippedAssets);
+                }
+                onFinish?.();
+
+                return;
+            }
+
 
             if (masterName === 'User') {
                 enrichedData = finalData.map((item: any) => ({
                     ...item,
                     joiningDate: parseExcelDate(item?.joiningDate),
+                }));
+            };
+
+            if (masterName === 'PrinterUsage') {
+                enrichedData = finalData.map((item: any) => ({
+                    ...item,
+                    date: parseExcelDate(item?.date),
+                }));
+            };
+
+            if (masterName === 'Team') {
+                enrichedData = finalData.map((item: any) => ({
+                    name: item?.name,
+                    teamHead: [item?.teamHead],
+                    department: item?.department,
+
+                    addedBy: user?._id,
+                    updatedBy: user?._id,
+                }));
+            };
+
+            if (masterName === 'TeamMember') {
+                enrichedData = finalData.map((item: any) => ({
+                    user: item?.user,
+                    teamRole: [item?.teamRole],
+                    teamReportingTo: [item?.teamReportingTo],
+                    team: item?.team,
+                    addedBy: user?._id,
+                    updatedBy: user?._id,
                 }));
             };
 
@@ -298,6 +498,8 @@ interface BulkImportQuotationParams {
     createUser: (data: any) => Promise<any>;
     db: string;
     masterName: string;
+    onStart: () => void;
+    onFinish: () => void;
 }
 
 export const bulkImportQuotation = async ({ roleData, continentData, regionData, countryData,
@@ -315,14 +517,18 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
     projectTypeData,
     paintTypeData,
     currencyData,
-    incotermData, quotationData, locationData, action, user, createUser, db, masterName }: BulkImportQuotationParams) => {
+    incotermData, quotationData, locationData, action, user, createUser, db, masterName, onFinish, onStart }: BulkImportQuotationParams) => {
 
     const input = document.createElement("input");
     input.type = "file";
     input.accept = ".xlsx, .xls";
     input.onchange = async (event) => {
+        onStart?.();
         const file = (event.target as HTMLInputElement)?.files?.[0];
-        if (!file) return;
+        if (!file) {
+            onFinish?.();
+            return;
+        };
 
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -333,6 +539,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
 
             if (!sheetData || sheetData.length === 0) {
                 toast.error("The uploaded Excel sheet is empty.");
+                onFinish?.();
                 return;
             }
 
@@ -362,6 +569,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     .join(" | ");
 
                 toast.error(`Missing required fields - ${errorMessage}`);
+                onFinish?.();
                 return;
             }
 
@@ -416,6 +624,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                         return false;
                     }
                     uniqueSet.add(key);
+
                     return true;
                 });
 
@@ -423,11 +632,17 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     if (skipped.length > 0) {
                         exportToExcel(skipped);
                         toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
+
                     } else {
+
                         toast.warning("No unique records found for import.");
+
                     }
+                    onFinish?.();
                     return;
                 }
+
+
                 // Step 1: Insert ProposalRevision Entries (Bulk Insert)
                 const revisionData = uniqueEnrichedData.map((item: { revNo: any; sentToEstimation: any; receivedFromEstimation: any; cycleTime: any; sentToCustomer: any; addedBy: any; updatedBy: any; }) => [
                     {
@@ -463,8 +678,9 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                     throw new Error(revisionResponse.error.data.message);
                 }
 
-                const insertedRevisions = revisionResponse?.data?.data?.map((item: { _id: any; }) => item._id).filter(Boolean);
+                const insertedRevisions = revisionResponse?.data?.data?.inserted?.map((item: { _id: any; }) => item._id).filter(Boolean);
                 if (insertedRevisions.length !== revisionData.length) {
+                    onFinish?.();
                     throw new Error("Mismatch in inserted ProposalRevision records.");
                 }
 
@@ -494,7 +710,7 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 if (proposalResponse.error) {
                     throw new Error(proposalResponse.error.data.message);
                 }
-                const insertedProposals = proposalResponse?.data?.data?.map((item: { _id: any; }) => item._id).filter(Boolean);
+                const insertedProposals = proposalResponse?.data?.data?.inserted?.map((item: { _id: any; }) => item._id).filter(Boolean);
 
                 if (insertedProposals.length !== proposalData.length) {
                     throw new Error("Mismatch in inserted Proposal records.");
@@ -523,58 +739,34 @@ export const bulkImportQuotation = async ({ roleData, continentData, regionData,
                 }));
 
 
+                const formattedData = {
+                    action: action === 'Add' ? 'create' : 'update',
+                    db: db,
+                    bulkInsert: true,
+                    data: quotationDataImport,
+                };
+                const response = await createUser(formattedData);// Replace this with your actual insert logic
 
-                try {
-                    for (const row of quotationDataImport) {
-                        try {
-                            const formattedData = {
-                                action: action === 'Add' ? 'create' : 'update',
-                                db: db,
-                                bulkInsert: false,
-                                data: row,
-                            };
-                            const response = await createUser(formattedData);// Replace this with your actual insert logic
-
-                            if (response?.error?.data?.status === ERROR || response?.error?.data?.status === "ERROR") {
-                                skipped.push(row);
-                            }
-                            else {
-                                successful.push(row);
-
-                            }
-                           
-                        } catch (err: any) {
-
-                            const isDuplicate = err?.response?.status === 409 || err?.message?.toLowerCase().includes("duplicate");
-                            if (isDuplicate) {
-                                skipped.push(row);
-                            } else {
-                                console.error("Unexpected error:", err);
-                                toast.error("An unexpected error occurred during import.");
-                                return;
-                            }
-                        }
-                    }
-
-                    if (successful.length > 0) {
-                        toast.success(`${successful.length} records imported successfully.`);
-                    }
-
-                    if (skipped.length > 0) {
-
-                        exportToExcel(skipped);
-
-                        toast.warning(`${skipped.length} duplicates were skipped and exported to excel.`);
-                    }
-
-
-                } catch (err: any) {
-                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                    toast.error(`Error during import: ${errorMessage}`);
+                if (response?.data?.data?.inserted.length > 0) {
+                    toast.success(`${response?.data?.data?.inserted.length} records imported successfully.`);
                 }
 
+                if (skipped.length > 0) {
+                    const combinedData = [...response?.data?.data?.skipped, ...skipped];
+                    exportToExcel(combinedData);
+                    toast.warning(`${combinedData.length} duplicates were skipped and exported to excel.`);
+
+                }
+
+                // if (response?.data?.data?.skipped.length > 0) {
+                //     exportToExcel(response?.data?.data?.skipped);
+                //     toast.warning(`${response?.data?.data?.skipped.length} duplicates were skipped and exported to Excel.`);
+                // }
+
+                onFinish?.();
 
             } catch (err) {
+                onFinish?.();
                 const errorMessage = err instanceof Error ? err.message : 'Unknown error';
                 toast.error(`Error during import: ${errorMessage}`);
             }
@@ -697,7 +889,7 @@ const fieldMappingConfig: { [key: string]: any } = {
     },
     Asset: {
         vendor: { source: "vendorData", key: "name", value: "_id" },
-        product: { source: "productData", key: "name", value: "_id" },
+        product: { source: "productData", key: "model", value: "_id" },
         warehouse: { source: "warehouseData", key: "name", value: "_id" },
     },
     Customer: {
@@ -709,151 +901,43 @@ const fieldMappingConfig: { [key: string]: any } = {
     Role: {
         role: { source: "roleData", key: "name", value: "_id" },
     },
-   
+    Team: {
+        teamHead: { source: "userData", key: "displayName", value: "_id" },
+        department: { source: "departmentData", key: "name", value: "_id" },
+    },
+    TeamMember: {
+        user: { source: "userData", key: "displayName", value: "_id" },
+        teamRole: { source: "roleData", key: "name", value: "_id" },
+        teamReportingTo: { source: "userData", key: "displayName", value: "_id" },
+        team: { source: "teamData", key: "name", value: "_id" },
+    },
+    Location: {
+        state: { source: "locationData", key: "name", value: "_id" },
+
+    },
+    SmlSubGroup: {
+        group: { source: "categoryData", key: "name", value: "_id" },
+    },
+    AccountMaster: {
+        employee: { source: "userData", key: "displayName", value: "_id" },
+        others: { source: "teamData", key: "name", value: "_id" },
+        company: { source: "organisationData", key: "name", value: "_id" },
+        provider: { source: "vendorData", key: "name", value: "_id" },
+        package: { source: "productData", key: "name", value: "_id" },
+    },
+    PrinterUsage: {
+        jobAccount: { source: "userData", key: "name", value: "_id" },
+        printer: { source: "teamData", key: "name", value: "_id" },
+
+    },
+    JobAccount: {
+        employee: { source: "userData", key: "displayName", value: "_id" },
+
+    },
+
+
     // Add more entity mappings if needed
 };
-
-
-const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; locationData?: any; }) => {
-
-    const mappings = fieldMappingConfig[entityType as keyof typeof fieldMappingConfig];
-    return data.map((item) => {
-        const transformedItem = { ...item };
-        if (mappings) {
-            Object.entries(mappings).forEach(([field, mapping]) => {
-                const { source, key, value, transform } = mapping as { source: string, key: string, value: string, transform?: Function };
-
-                const referenceArray = referenceData[source]?.data || referenceData[source];
-
-                if (!Array.isArray(referenceArray)) {
-                    console.error(`Invalid reference data for source: ${source}`, referenceData[source]);
-                    transformedItem[field] = undefined; // Default to empty if reference data is invalid
-                    return;
-                }
-
-                if (transform) {
-                    // Apply transform function if defined
-
-                    transformedItem[field] = transform(item[field], referenceArray);
-                } else {
-                    // Default mapping lookup
-                    const reference = referenceArray.find((ref) => ref[key] === item[field]);
-                    transformedItem[field] = reference ? reference[value] : undefined;
-                }
-
-                if (!transformedItem[field]) {
-                    console.warn(`No reference found for field: ${field} with value: ${item[field]}`);
-                }
-            });
-        }
-
-        return transformedItem;
-    });
-};
-
-
-const monthMap = {
-    January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
-    July: 7, August: 8, September: 9, October: 10, November: 11, December: 12,
-};
-export const validate = {
-    required: (value: string) => (value ? undefined : "Required"),
-    text: (value: string) => {
-        if (value.length < 3) return "Must be at least 3 characters";
-        if (value.length > 100) return "Must be less than 100 characters";
-        return undefined;
-    },
-    textSmall: (value: string) => {
-        if (value.length < 2) return "Must be at least 2 characters";
-        if (value.length > 50) return "Must be less than 50 characters";
-        return undefined;
-    },
-    number: (value: string) => {
-        if (isNaN(Number(value))) return "Invalid number";
-        return undefined;
-    },
-    greaterThanZero: (value: string) => {
-        if (isNaN(Number(value)) || Number(value) <= 0) return "Must be greater than 0";
-        return undefined;
-    },
-    phone: (value: string) => {
-        const phoneRegex = /^\d{10}$/;
-        return phoneRegex.test(value) ? undefined : "Invalid phone number";
-    },
-    email: (value: string) => {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) return "Invalid email address";
-        if (value.length < 5) return "Email must be at least 5 characters";
-        if (value.length > 100) return "Email must be less than 100 characters";
-        return undefined;
-    },
-    desription: (value: string) => {
-        if (value && value.length > 500) return "Description must be less than 500 characters";
-        return undefined;
-    },
-    specification: (value: Record<string, string>) => {
-        if (Object.keys(value).length === 0) return "At least one specification is required";
-        return undefined;
-    },
-    mixString: (value: string) => {
-        if (!/^[A-Z0-9-]+$/.test(value)) {
-            return "Must contain only uppercase letters, numbers, and hyphens";
-        }
-        if (value.length < 4) {
-            return "Must be at least 4 characters";
-        }
-        if (value.length > 50) {
-            return "Must be less than 50 characters";
-        }
-        return undefined;
-    },
-    notFutureDate: (value: string) => {
-        const purchaseDate = new Date(value);
-        if (purchaseDate > new Date()) {
-            return "Dateate cannot be in the future";
-        }
-        return undefined;
-    },
-    locationSelected: (value: string) => {
-        if (!value) return "Location must be selected";
-        return undefined;
-    }
-}
-
-export const generateTicketId = async () => {
-    // Get today's date in format YYYYMMDD
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
-
-    // Get tickets from today to determine the sequence number
-    const dbEngine = (await import('@/server/Engines/DbEngine')).dbEngine;
-    const result = await dbEngine.mongooose.find('TICKET_MASTER', {
-        filter: {
-            ticketId: { $regex: `^TKT-${dateStr}` }
-        },
-        sort: { createdAt: 'asc' }
-    });
-
-    // Determine the next sequence number
-    let sequence = 1;
-    if (result.status === 'SUCCESS' && result.data.length > 0) {
-        // Extract the sequence number from the last ticket ID
-        const lastTicketId = result.data[0].ticketId;
-        const lastSequence = parseInt(lastTicketId.split('-')[2]);
-        sequence = lastSequence + 1;
-    }
-
-    // Format the sequence number with leading zeros
-    const sequenceStr = String(sequence).padStart(3, '0');
-
-    // Return the generated ticket ID
-    return `TKT-${dateStr}-${sequenceStr}`;
-};
-
-
 
 const entityFieldMappings = {
     User: {
@@ -1061,13 +1145,12 @@ const entityFieldMappings = {
         'PR Number': 'prNumber',
         'Purchase Date': 'purchaseDate',
         'Warehouse': 'warehouse',
-        'Product Name': 'product',
-        'Serial No': 'serialNumber',
-        'Specifications': 'specifications',
-        'Status': 'status',
-        'Warranty Details': 'warrantyDetails',
+
+        'Serial Number': 'serialNumber',
+        'Model': 'product',
         'Warranty Start Date': 'warrantyStartDate',
-        'Warranty End Date': 'warrantyEndDate'
+        'Warranty End Date': 'warrantyEndDate',
+        'Specifications': 'specifications'
     },
     Customer: {
         "Name": "name",
@@ -1086,12 +1169,247 @@ const entityFieldMappings = {
         "Customer Name": "customer",
         // Add more mappings for Country
     },
+    ProductType: {
+        "Product Type": "name",
+
+    },
+    Team: {
+        "Team Name": "name",
+        "Team Head": "teamHead",
+        "Department": "department",
+
+    },
+    TeamRole: {
+        "Name": "name",
+
+    },
+    TeamMember: {
+        "Name": "user",
+        "Team Role": "teamRole",
+        "Reporting To": "teamReportingTo",
+        "Team": "team",
+
+    },
+    CustomerType: {
+        "Customer Type": "name",
+
+    },
+    Sector: {
+        "Sector": "name",
+
+    },
+    Incoterm: {
+        "Name": "name",
+        "Description": "description",
+
+    },
+    Location: {
+        "Location": "name",
+        "Address": "address",
+        "Pin Code": "pincode",
+        "City": "state",
+
+    },
+    VisaType: {
+        "Visa Type": "name"
+    },
+    SmlGroup: {
+        "Group Name": "name"
+    },
+    SmlSubGroup: {
+        "Sub Group Name": "name",
+        "Group Name": "group"
+    },
+    PackageMaster: {
+        "Package Name": "name",
+        "Description": "description",
+        "Amount": "amount",
+    },
+    AccountMaster: {
+        "Account Number": "name",
+        "Provider": "provider",
+        "Employee": "employee",
+        "Others": "others",
+        "Company": "company",
+        "Package Name": "package",
+    },
+    PrinterUsage: {
+        "Account Id": "jobAccount",
+        "Printer": "printer",
+        "Date": "date",
+        "Copy Color": "copyColor",
+        "Copy BW": "copyBw",
+        "Print Color": "printColor",
+        "Print BW": "printBw",
+    },
+    JobAccount: {
+        "Account Id": "name",
+        "Employee": "employee",
+       
+    },
+    PrinterMaster: {
+        "Printer Name": "name",
+        "Printer Location": "printerLocation",
+       
+    },
+
+
     // Add mappings for other entities
 };
+
+
+const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; locationData?: any; }) => {
+
+    const mappings = fieldMappingConfig[entityType as keyof typeof fieldMappingConfig];
+    return data.map((item) => {
+        const transformedItem = { ...item };
+        if (mappings) {
+            Object.entries(mappings).forEach(([field, mapping]) => {
+                const { source, key, value, transform } = mapping as { source: string, key: string, value: string, transform?: Function };
+
+                const referenceArray = referenceData[source]?.data || referenceData[source];
+
+                if (!Array.isArray(referenceArray)) {
+                    console.error(`Invalid reference data for source: ${source}`, referenceData[source]);
+                    transformedItem[field] = undefined; // Default to empty if reference data is invalid
+                    return;
+                }
+
+                if (transform) {
+                    // Apply transform function if defined
+
+                    transformedItem[field] = transform(item[field], referenceArray);
+                } else {
+                    // Default mapping lookup
+                    const reference = referenceArray.find((ref) => ref[key]?.toLowerCase() === item[field]?.toLowerCase());
+                    // const reference = referenceArray.find((ref) => {
+                    //     const refValue = ref[key];
+
+                    //     const itemValue = item[field];
+                    //     return refValue?.toLowerCase() === itemValue?.toLowerCase();
+                    // });
+                    transformedItem[field] = reference ? reference[value] : undefined;
+                }
+
+                if (!transformedItem[field]) {
+                    console.warn(`No reference found for field: ${field} with value: ${item[field]}`);
+                }
+            });
+        }
+
+        return transformedItem;
+    });
+};
+
+
+const monthMap = {
+    January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
+    July: 7, August: 8, September: 9, October: 10, November: 11, December: 12,
+};
+export const validate = {
+    required: (value: string) => (value ? undefined : "Required"),
+    text: (value: string) => {
+        if (value.length < 3) return "Must be at least 3 characters";
+        if (value.length > 100) return "Must be less than 100 characters";
+        return undefined;
+    },
+    textSmall: (value: string) => {
+        if (value.length < 2) return "Must be at least 2 characters";
+        if (value.length > 50) return "Must be less than 50 characters";
+        return undefined;
+    },
+    number: (value: string) => {
+        if (isNaN(Number(value))) return "Invalid number";
+        return undefined;
+    },
+    greaterThanZero: (value: string) => {
+        if (isNaN(Number(value)) || Number(value) <= 0) return "Must be greater than 0";
+        return undefined;
+    },
+    phone: (value: string) => {
+        const phoneRegex = /^\d{10}$/;
+        return phoneRegex.test(value) ? undefined : "Invalid phone number";
+    },
+    email: (value: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) return "Invalid email address";
+        if (value.length < 5) return "Email must be at least 5 characters";
+        if (value.length > 100) return "Email must be less than 100 characters";
+        return undefined;
+    },
+    desription: (value: string) => {
+        if (value && value.length > 500) return "Description must be less than 500 characters";
+        return undefined;
+    },
+    specification: (value: Record<string, string>) => {
+        if (Object.keys(value).length === 0) return "At least one specification is required";
+        return undefined;
+    },
+    mixString: (value: string) => {
+        if (!/^[A-Z0-9-]+$/.test(value)) {
+            return "Must contain only uppercase letters, numbers, and hyphens";
+        }
+        if (value.length < 4) {
+            return "Must be at least 4 characters";
+        }
+        if (value.length > 50) {
+            return "Must be less than 50 characters";
+        }
+        return undefined;
+    },
+    notFutureDate: (value: string) => {
+        const purchaseDate = new Date(value);
+        if (purchaseDate > new Date()) {
+            return "Dateate cannot be in the future";
+        }
+        return undefined;
+    },
+    locationSelected: (value: string) => {
+        if (!value) return "Location must be selected";
+        return undefined;
+    }
+}
+
+export const generateTicketId = async () => {
+    // Get today's date in format YYYYMMDD
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
+
+    // Get tickets from today to determine the sequence number
+    const dbEngine = (await import('@/server/Engines/DbEngine')).dbEngine;
+    const result = await dbEngine.mongooose.find('TICKET_MASTER', {
+        filter: {
+            ticketId: { $regex: `^TKT-${dateStr}` }
+        },
+        sort: { createdAt: 'asc' }
+    });
+
+    // Determine the next sequence number
+    let sequence = 1;
+    if (result.status === 'SUCCESS' && result.data.length > 0) {
+        // Extract the sequence number from the last ticket ID
+        const lastTicketId = result.data[0].ticketId;
+        const lastSequence = parseInt(lastTicketId.split('-')[2]);
+        sequence = lastSequence + 1;
+    }
+
+    // Format the sequence number with leading zeros
+    const sequenceStr = String(sequence).padStart(3, '0');
+
+    // Return the generated ticket ID
+    return `TKT-${dateStr}-${sequenceStr}`;
+};
+
+
+
 
 const mapExcelToEntity = (excelData: any[], entityType: keyof typeof entityFieldMappings) => {
 
     const mappings = entityFieldMappings[entityType];
+    console.log("mappings", mappings);
     return excelData.map((row) =>
         Object.keys(row).reduce((acc: Record<string, any>, key) => {
             const mappedKey = (mappings as Record<string, string>)[key];

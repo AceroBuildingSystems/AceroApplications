@@ -81,7 +81,12 @@ function DynamicDialog<T extends BaseFormData>({
   const [selectedStatus, setSelectedStatus] = useState('');
 
   useEffect(() => {
-    const formattedData = Object.keys(initialData).reduce((acc: Record<string, any>, key: string) => {
+    if (!initialData) {
+      setFormData({});
+      return;
+    }
+
+    const formattedData = Object.keys(initialData || {}).reduce((acc: Record<string, any>, key: string) => {
       if (typeof initialData[key] === "object" && initialData[key]?._id) {
         acc[key] = initialData[key]._id;
       } else {
@@ -149,7 +154,7 @@ function DynamicDialog<T extends BaseFormData>({
       if (fieldName === 'quoteStatus' && quoteStatusData?.find((data:any) => data._id === formattedValue)?.name === 'L - Lost') {
         updatedFormData['lostDate'] = new Date().toISOString();
       }
-     console.log('updatedFormData', updatedFormData)
+
       return updatedFormData;
     });
   };
@@ -211,7 +216,7 @@ function DynamicDialog<T extends BaseFormData>({
         updatedData.addedBy = user._id;
       }
       const response: any = await onSave({ formData: updatedData, action });
-      console.log(response);
+     
       if (!response || response?.error) {
         toast.error(response?.error.message || "Something Went Wrong!");
         return;

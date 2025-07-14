@@ -6,6 +6,8 @@ const TeamMemberSchema: Schema<teamMember> = new Schema({
     user:{
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",  // based on department
+        required: true, // Make this field required
+        unique: true, // Make this field unique
         autopopulate: true, // Automatically populate this field
     },
     teamRole:[{

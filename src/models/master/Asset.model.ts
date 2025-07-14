@@ -25,16 +25,12 @@ interface IAsset extends Document {
     serialNumber: string;
     product: mongoose.Types.ObjectId;
     warehouse: mongoose.Types.ObjectId;
+    inventory: mongoose.Types.ObjectId; // Reference to the inventory record
     status: 'available' | 'assigned' | 'maintenance' | 'retired';
-    purchaseDate: Date;
-    purchasePrice: number;
-    vendor: mongoose.Types.ObjectId;
-    poNumber: string;
-    prNumber?: string;
-    invoiceNumber: string;
+    // Warranty Information
     warrantyStartDate: Date;
     warrantyEndDate: Date;
-    warrantyDetails?: string;
+    // Asset Details
     specifications: Map<string, any>;
     currentAssignment?: IAssignment;
     assignmentHistory: IAssignment[];
@@ -61,51 +57,31 @@ const AssetSchema = new mongoose.Schema({
     // Basic Information
     serialNumber: {
         type: String,
-        required: true,
         unique: true,
-        sparse:true
+        sparse: true
     },
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
         required: true,
-        autopopulate:true
+        autopopulate: true
     },
     warehouse: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Warehouse',
         required: true
     },
+    inventory: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Inventory',
+        required: true,
+        autopopulate: true
+    },
     status: {
         type: String,
         enum: ['available', 'assigned', 'maintenance', 'retired'],
         default: 'available'
     },
-
-    // Purchase Information
-    purchaseDate: {
-        type: Date,
-        required: true
-    },
-    purchasePrice: {
-        type: Number,
-    
-    },
-    vendor: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Vendor',
-        required: true
-    },
-    poNumber: {
-        type: String,
-        required: true
-    },
-    prNumber: String,
-    invoiceNumber: {
-        type: String,
-        required: true
-    },
-
     // Warranty Information
     warrantyStartDate: {
         type: Date,
@@ -115,69 +91,59 @@ const AssetSchema = new mongoose.Schema({
         type: Date,
         required: true
     },
-    warrantyDetails: String,
-
-    // Specifications (based on product category)
+    // Asset Details
     specifications: {
         type: Map,
-        of: mongoose.Schema.Types.Mixed,
-        required: true
+        of: mongoose.Schema.Types.Mixed
     },
 
     // Assignment Information
     currentAssignment: {
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
-
-            refPath: 'currentAssignment.assignedType'
+            refPath: 'currentAssignment.assignedType',
+            autopopulate: true
         },
         assignedType: {
             type: String,
-            enum: ['User', 'Department'],
-
+            enum: ['User', 'Department']
         },
         assignedDate: {
-            type: Date,
-
+            type: Date
         },
         assignedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-
+            ref: 'User'
         },
         location: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Location',
+            ref: 'Location'
         },
-        remarks: String
+        remarks: String,
+       
     },
 
     // Assignment History
     assignmentHistory: [{
         assignedTo: {
             type: mongoose.Schema.Types.ObjectId,
-
             refPath: 'assignmentHistory.assignedType'
         },
         assignedType: {
             type: String,
-            enum: ['User', 'Department'],
-
+            enum: ['User', 'Department']
         },
         assignedDate: {
-            type: Date,
-
+            type: Date
         },
         returnedDate: Date,
         assignedBy: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-
+            ref: 'User'
         },
         location: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'Location',
-
+            ref: 'Location'
         },
         remarks: String
     }],
@@ -200,7 +166,7 @@ const AssetSchema = new mongoose.Schema({
         default: true
     },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
 }, {
     timestamps: true
 });
@@ -294,6 +260,8 @@ AssetSchema.methods.retire = async function(remarks?: string) {
     }
     await this.save();
 };
+
+AssetSchema.plugin(require('mongoose-autopopulate'));
 
 const Asset = mongoose.models.Asset || mongoose.model<IAsset, IAssetModel>('Asset', AssetSchema);
 

@@ -30,11 +30,22 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   TicketComment,
   TicketTask,
   TicketHistory,
-  UserSkill, TeamRole, SmlGroup, SmlSubGroup, SmlFile, ProductType,VisaType
+  UserSkill, TeamRole, SmlGroup, SmlSubGroup, SmlFile, ProductType,VisaType,
+  ProviderType, DeductionType,
+  PackageMaster,
+  AccountMaster,
+  AccountHistory,
+  OtherMaster,
+  UsageDetail,
+  ThresholdAmount,
+  JobAccount,
+  PrinterMaster,
+  PrinterUsage,
+  Notification,
+  ApprovalFlow, // Added ApprovalFlow import
+UserBenefits
+, UserPersonalDetails, UserEmploymentDetails, UserVisaDetails, UserIdentification
 } from '@/models';
-
-
-
 
 
 
@@ -95,6 +106,25 @@ function getMongooseAdapter(): MongooseAdapter {
     SML_FILE_MASTER: SmlFile,
     VISA_TYPE_MASTER: VisaType,
     PRODUCT_TYPE_MASTER: ProductType,
+
+    PROVIDER_TYPE_MASTER: ProviderType,
+    DEDUCTION_TYPE_MASTER: DeductionType,
+    PACKAGE_MASTER: PackageMaster,
+    ACCOUNT_MASTER: AccountMaster,
+    ACCOUNT_HISTORY: AccountHistory,
+    OTHER_MASTER: OtherMaster,
+    USAGE_DETAIL: UsageDetail,
+    THRESHOLD_AMOUNT: ThresholdAmount,
+    JOB_ACCOUNT: JobAccount,
+    PRINTER_MASTER: PrinterMaster,
+    PRINTER_USAGE: PrinterUsage ,
+    NOTIFICATION_MASTER: Notification,
+    [MONGO_MODELS.APPROVAL_FLOW_MASTER]: ApprovalFlow, // Added ApprovalFlow to the adapter config
+    USER_PERSONAL_DETAILS: UserPersonalDetails,
+    USER_BENEFITS: UserBenefits,
+    USER_EMPLOYMENT_DETAILS: UserEmploymentDetails,
+    USER_VISA_DETAILS: UserVisaDetails,
+    USER_IDENTIFICATION: UserIdentification
     });
   }
   return dbEngineInstance;

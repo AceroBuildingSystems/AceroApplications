@@ -42,13 +42,13 @@ const MultiSelectAccess = ({
   onSelect, 
   placeholder,
   buttonText
-}) => {
+}:any) => {
   const [open, setOpen] = useState(false);
-  const [checkedItems, setCheckedItems] = useState({});
+  const [checkedItems, setCheckedItems]:any = useState({});
   
-  const handleSelect = (item) => {
+  const handleSelect = (item:any) => {
     // Toggle selection without closing dropdown
-    setCheckedItems(prev => ({
+    setCheckedItems((prev:any) => ({
       ...prev,
       [item._id]: !prev[item._id]
     }));
@@ -101,7 +101,7 @@ const MultiSelectAccess = ({
             <CommandList className="max-h-52 overflow-auto">
               <CommandEmpty>No access found</CommandEmpty>
               <CommandGroup>
-                {options.map(item => (
+                {options.map((item:any) => (
                   <CommandItem
                     key={item._id}
                     value={item.name}
@@ -132,10 +132,10 @@ const Access = () => {
     refetch: refetchAccess
   } = useGetMasterQuery({ 
     db: "ACCESS_MASTER",
-    filter: { isActive: true }, 
+   
     sort: { name: 'asc' }, 
   });
-
+console.log("accessData", accessData)
   const [updateUser, { isLoading: updateUserAccessLoading }] = useUserOperationsMutation();
   
   const { 
@@ -157,7 +157,7 @@ const Access = () => {
   const [selectedMaster, setSelectedMaster] = useState("");
   const [initialData, setInitialData] = useState({});
   const [action, setAction] = useState("Add");
-  
+
   // User Access Tab State
   const [selectedUser, setSelectedUser] = useState(null);
   const [userSidebarOpen, setUserSidebarOpen] = useState(false);
@@ -178,20 +178,20 @@ const Access = () => {
 
   const getAvailableAccess = useMemo(() => {
     return distinctAccessOptions.filter(
-      (option) => !userAccessList.some((userAccess) => userAccess._id === option._id)
+      (option:any) => !userAccessList.some((userAccess:any) => userAccess?._id === option?._id)
     );
   }, [distinctAccessOptions, userAccessList]);
 
   // Modified to allow tracking multiple selections without immediately adding
-  const handleAccessSelect = (accessId) => {
+  const handleAccessSelect = (accessId:any) => {
     if (!accessId) return;
     
-    const accessToSelect = distinctAccessOptions.find(option => option._id === accessId);
+    const accessToSelect = distinctAccessOptions.find((option:any) => option?._id === accessId);
     if (!accessToSelect) return;
     
     setSelectedAccessItems(prev => {
       // If already selected, do nothing
-      if (prev.some(item => item._id === accessId)) {
+      if (prev.some((item:any) => item?._id === accessId)) {
         return prev;
       }
       return [...prev, accessToSelect];
@@ -205,7 +205,7 @@ const Access = () => {
       return;
     }
 
-    const newAccessItems = selectedAccessItems.map(access => ({
+    const newAccessItems = selectedAccessItems.map((access:any) => ({
       ...access,
       hasAccess: true,
       permissions: {
@@ -242,9 +242,9 @@ const Access = () => {
     // Process Access Data to create distinct options
     if (accessData?.data) {
       const processedAccess = accessData.data.map((access) => ({
-        _id: access._id,
-        name: access.name,
-        category: access.category,
+            _id: access._id,
+            name: access.name,
+            category: access.category,
       }));
       
       setDistinctAccessOptions(processedAccess);
@@ -267,10 +267,10 @@ const Access = () => {
       
       const processedUsers = userData.data.map((user) => {
         const accessMap = user.access?.map((access) => ({
-          name: access?.accessId?.name,
-          _id: access?.accessId?._id,
-          permissions: access?.permissions,
-          hasAccess: access?.hasAccess,
+              name: access?.accessId?.name,
+              _id: access?.accessId?._id,
+              permissions: access?.permissions,
+              hasAccess: access?.hasAccess,
         })) ?? [];
         
         return {
@@ -381,7 +381,7 @@ const Access = () => {
       } else {
         toast.error(`Failed to ${action.toLowerCase()} access`);
       }
-      return response;
+    return response;
     } catch (error) {
       const errorMessage = error.message || "An error occurred";
       toast.error(`Error: ${errorMessage}`);
@@ -413,30 +413,46 @@ const Access = () => {
       enableSorting: false,
       enableHiding: false,
     },
-    {
-      accessorKey: "_id",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Access Id</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("_id")}</div>,
-    },
+    // {
+    //   accessorKey: "_id",
+    //   header: ({ column }: { column: any }) => {
+    //           const isSorted = column.getIsSorted();
+      
+    //           return (
+    //             <button
+    //               className="group  flex items-center space-x-2 w-[100px]"
+    //               onClick={() => column.toggleSorting(isSorted === "asc")}
+    //             >
+    //               <span>Access Id</span>
+    //               <ChevronsUpDown
+    //                 size={15}
+    //                 className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+    //                   }`}
+    //               />
+    //             </button>
+    //           );
+    //         },
+    //   cell: ({ row }) => <div>{row.getValue("_id")}</div>,
+    // },
     {
       accessorKey: "name",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Name</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Name</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => (
         <div 
           onClick={() => editAccess(row.original)} 
@@ -448,55 +464,87 @@ const Access = () => {
     },
     {
       accessorKey: "category",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Category</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Category</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => <div>{row.getValue("category")}</div>,
     },
     {
       accessorKey: "url",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>URL</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>URL</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => <div>{row.getValue("url")}</div>,
     },
     {
       accessorKey: "isActive",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Active</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Active</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
       cell: ({ row }) => <div>{row.getValue("isActive")?.toString()}</div>,
     },
     {
       accessorKey: "parent",
-      header: ({ column }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          <span>Parent Id</span>
-          <ArrowUpDown size={15} />
-        </button>
-      ),
-      cell: ({ row }) => <div>{row.getValue("parent")?._id}</div>,
+      header: ({ column }: { column: any }) => {
+              const isSorted = column.getIsSorted();
+      
+              return (
+                <button
+                  className="group  flex items-center space-x-2 w-[100px]"
+                  onClick={() => column.toggleSorting(isSorted === "asc")}
+                >
+                  <span>Parent</span>
+                  <ChevronsUpDown
+                    size={15}
+                    className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  />
+                </button>
+              );
+            },
+      cell: ({ row }) => <div>{row.getValue("parent")?.name}</div>,
     },
   ];
 
@@ -608,8 +656,8 @@ const Access = () => {
         <div className="flex gap-2 flex-wrap">
           {row.getValue("access")?.map((data, index) => (
             <div key={index} className="bg-slate-700 rounded-md p-1 px-2 text-white text-xs">
-              {data.name}
-            </div>
+                {data.name}
+              </div>
           ))}
         </div>
       ),
@@ -657,6 +705,7 @@ const Access = () => {
       format: "ObjectId",
     },
     { label: "Order", name: "order", type: "number" },
+    { label: "Icon", name: "icon", type: "text" },
   ];
 
   // User Access Management Functions
@@ -667,19 +716,19 @@ const Access = () => {
     if (!accessToAdd) return;
     
     setUserAccessList(prev => [
-      {
+            {
         ...accessToAdd,
-        hasAccess: true,
-        permissions: {
-          view: true,
-          create: true,
-          update: true,
-          delete: true,
-          import: true,
-          export: true,
-        },
-      },
-      ...prev,
+              hasAccess: true,
+              permissions: {
+                view: true,
+                create: true,
+                update: true,
+                delete: true,
+                import: true,
+                export: true,
+              },
+            },
+            ...prev,
     ]);
     setIsDirty(true);
   };
@@ -720,7 +769,7 @@ const Access = () => {
       .map(access => ({
         ...access,
         hasAccess: true,
-        permissions: {
+          permissions: {
           view: true,
           create: true,
           update: true,
@@ -735,7 +784,7 @@ const Access = () => {
     setUserAccessList(prev => [...newAccessItems, ...prev]);
     setIsDirty(true);
     toast.success(`Added ${newAccessItems.length} access permissions`);
-  };
+    };
 
   const handlePermissionToggle = (accessId, permissionKey) => {
     setUserAccessList(prev => 
@@ -757,7 +806,7 @@ const Access = () => {
   const handleRemoveAccess = (accessId) => {
     setUserAccessList(prev => prev.filter(access => access._id !== accessId));
     setIsDirty(true);
-  };
+    };
 
   const saveUserAccess = async () => {
     if (!selectedUser || !selectedUser._id) {
@@ -852,7 +901,7 @@ const Access = () => {
                   onSelect={handleMultiSelectAccess}
                   placeholder="Select multiple access permissions..."
                   buttonText="Add Selected Access"
-                />
+          />
                 
                 <Button
                   variant="secondary"
@@ -863,7 +912,7 @@ const Access = () => {
                   <Plus className="h-4 w-4 mr-1" />
                   Add All Access ({getAvailableAccess.length})
                 </Button>
-              </div>
+        </div>
             </div>
             
             {/* List of current access */}
@@ -876,13 +925,13 @@ const Access = () => {
                 </div>
               ) : (
                 userAccessList.map((access, index) => (
-                  <div
-                    key={index}
+            <div
+              key={index}
                     className="bg-white rounded-md border p-3 shadow-sm"
-                  >
+            >
                     <div className="flex justify-between items-center mb-2">
                       <div className="font-medium">{access.name}</div>
-                      <Button
+              <Button
                         variant="destructive"
                         size="sm"
                         onClick={() => handleRemoveAccess(access._id)}
@@ -895,25 +944,25 @@ const Access = () => {
                     
                     <div className="grid grid-cols-3 gap-2 mt-3">
                       {Object.entries(access?.permissions || {}).map(([key, value]) => (
-                        <div
+                  <div
                           key={`${key}_${access._id}`}
                           className="flex flex-col gap-1 items-center rounded-md p-2 bg-slate-50"
-                        >
-                          <Label
+                  >
+                    <Label
                             className="font-medium text-sm text-slate-700 mb-1"
                             htmlFor={`${key}_${access._id}`}
-                          >
-                            {key}
-                          </Label>
-                          <Switch
+                    >
+                      {key}
+                    </Label>
+                    <Switch
                             id={`${key}_${access._id}`}
-                            checked={Boolean(value)}
+                      checked={Boolean(value)}
                             onCheckedChange={() => handlePermissionToggle(access._id, key)}
-                          />
-                        </div>
-                      ))}
-                    </div>
+                    />
                   </div>
+                ))}
+              </div>
+            </div>
                 ))
               )}
             </div>
@@ -984,19 +1033,19 @@ const Access = () => {
   };
 
   return (
-    <div className="w-full h-full px-4">
-      <Tabs defaultValue="Access" className="h-full">
-        <TabsList width="full">
-          <TabsTrigger value="Access" width="full">
+    <div className="w-full h-full px-4 py-1">
+      <Tabs defaultValue="Access" className="h-full ">
+        <TabsList width="full" className="bg-slate-300 text-slate-800">
+          <TabsTrigger value="Access" width="full" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
             Access Management
           </TabsTrigger>
-          <TabsTrigger value="User" width="full">
+          <TabsTrigger value="User" width="full" className="data-[state=active]:bg-red-700 data-[state=active]:text-white">
             User Access
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="Access" className="h-5/6">
-          <div className="pt-4 overflow-auto h-full">
+          <div className=" overflow-auto h-full">
             <MasterComponent
               config={accessConfig}
               loadingState={loading}
@@ -1007,7 +1056,7 @@ const Access = () => {
         </TabsContent>
         
         <TabsContent value="User" className="h-5/6">
-          <div className="pt-4 overflow-auto h-full flex">
+          <div className=" overflow-auto h-full flex">
             {/* Left side: User list */}
             <div className="w-1/4 pr-4">
               {renderUserListSidebar()}
@@ -1035,15 +1084,15 @@ const Access = () => {
 
       {/* Access Tab Dialog */}
       {selectedMaster === "Access" && (
-        <DynamicDialog
-          isOpen={isDialogOpen}
-          closeDialog={closeDialog}
-          selectedMaster={selectedMaster}
+            <DynamicDialog
+              isOpen={isDialogOpen}
+              closeDialog={closeDialog}
+              selectedMaster={selectedMaster}
           onSave={saveAccessData}
           fields={accessFields}
-          initialData={initialData}
-          action={action}
-        />
+              initialData={initialData}
+              action={action}
+            />
       )}
     </div>
   );

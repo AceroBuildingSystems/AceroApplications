@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -21,7 +21,7 @@ import { bulkImport } from '@/shared/functions';
 import * as XLSX from "xlsx";
 
 const page = () => {
-
+    const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
     const { data: teamMemberData = [], isLoading: teamMemberLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.TEAM_MEMBERS_MASTER,
@@ -76,7 +76,6 @@ const page = () => {
 
     ]
 
-
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
@@ -109,20 +108,7 @@ const page = () => {
 
         const response = await createMaster(formattedData);
 
-
-        if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Team member added successfully');
-
-        }
-        else {
-            if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Team member added updated successfully');
-            }
-        }
-
-        if (response?.error?.data?.message?.message) {
-            toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-        }
+return response;
 
     };
 
@@ -149,8 +135,37 @@ const page = () => {
 
     };
 
+
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember" });
+        bulkImport({
+            roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: userData, teamData: teamData, designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.TEAM_MEMBERS_MASTER, masterName: "TeamMember", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
+    };
+
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                'Name': data?.user?.displayName?.toProperCase(),
+                'Team Role': data?.teamRole?.[0]?.name?.toProperCase(),
+                'Reporting To': data?.teamReportingTo?.[0]?.displayName?.toProperCase(),
+                'Team': data?.team?.name?.toProperCase(),
+
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                'Name': '',
+                'Team Role': '',
+                'Reporting To': '',
+                'Team': '',
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
     };
 
     const exportToExcel = (data: any[]) => {
@@ -164,20 +179,6 @@ const page = () => {
         XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
-    const handleExport = (type: string) => {
-           console.log(teamMemberData?.data);
-        const formattedData = teamMemberData?.data.map((data: any) => {
-            return {
-                User: data?.user?.displayName,
-                'Team Role': data?.teamRole[0]?.name,
-                'Reporting To':data?.teamReportingTo[0]?.displayName,
-                Team:data?.team?.name,
-
-            };
-        })
-        type === 'excel' && exportToExcel(formattedData);
-
-    };
 
     const handleDelete = () => {
         console.log('UserPage Delete button clicked');
@@ -210,72 +211,107 @@ const page = () => {
 
         {
             accessorKey: "user",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Team Member</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Team Member</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("user")?.displayName?.toProperCase()}</div>,
         },
         {
             accessorKey: "teamRole",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Team Role</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                    const isSorted = column.getIsSorted();
+            
+                    return (
+                      <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                      >
+                        <span>Team Role</span>
+                        <ChevronsUpDown
+                          size={15}
+                          className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            }`}
+                        />
+                      </button>
+                    );
+                  },
             cell: ({ row }: { row: any }) => <div className='' >{row?.getValue("teamRole")?.[0]?.name?.toProperCase()}</div>,
         },
         {
             accessorKey: "teamReportingTo",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Reporting To</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Reporting To</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div className='' >{row?.getValue("teamReportingTo")?.[0]?.displayName?.toProperCase()}</div>,
         },
         {
             accessorKey: "team",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Team</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2 w-[100px]"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Team</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div className='' >{row.getValue("team")?.name?.toProperCase()}</div>,
         },
         {
             accessorKey: "isActive",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-
-                >
-                    <span>Status</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2 w-[100px]"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Status</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
         },
 
@@ -297,11 +333,11 @@ const page = () => {
             data: transformedData,
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
                 ]
             },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
@@ -322,6 +358,7 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height='auto'
+                onchangeData={() => { }}
             />
         </>
 

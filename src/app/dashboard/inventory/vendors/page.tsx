@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Download, Import, Plus, Save } from 'lucide-react';
+import { ChevronsUpDown, Download, Import, Plus, Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -150,7 +150,6 @@ const VendorsPage = () => {
             name: city?.name
         }));
 
-
     const fieldsToAdd = [
         { fieldName: 'cityName', path: ['city', 'name'] }
     ];
@@ -177,7 +176,7 @@ const VendorsPage = () => {
             name: "email",
             label: "Email",
             type: "email",
-            required: true,
+            required: false,
             placeholder: "Enter email address",
             validate: validate.email
         },
@@ -185,7 +184,7 @@ const VendorsPage = () => {
             name: "phone",
             label: "Phone",
             type: "number",
-            required: true,
+            required: false,
             placeholder: "Enter phone number",
             validate: validate.phone
         },
@@ -199,7 +198,7 @@ const VendorsPage = () => {
             name: "city",
             label: "City",
             type: "select",
-            required: true,
+            required: false,
             placeholder: "Select city",
             data: cityResponse?.data?.map((city: any) => ({
                 name: city.name,
@@ -231,7 +230,23 @@ const VendorsPage = () => {
     const columns = [
         {
             accessorKey: "name",
-            header: "Name",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Name</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => (
                 <div className='text-red-700' onClick={() => editVendors(row.original)}>
                     {row.original.name}
@@ -240,7 +255,23 @@ const VendorsPage = () => {
         },
         {
             accessorKey: "email",
-            header: "Email",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Email</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
         },
         {
             accessorKey: "phone",
@@ -248,7 +279,23 @@ const VendorsPage = () => {
         },
         {
             accessorKey: "city",
-            header: "City",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>City</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
             cell: ({ row }: any) => row.original.city?.name || ''
         },
         {
@@ -310,7 +357,7 @@ const VendorsPage = () => {
                 Name: data.name,
                 Email: data?.email,
                 'Contact Number': data?.phone,
-                Location: data?.location?.name,
+                City: data?.location?.name,
                 'Contact Person': data?.contactPersons[0]?.name,
                 Designation: data?.contactPersons[0]?.designation,
                 'Contact Email': data?.contactPersons[0]?.email,
@@ -323,7 +370,7 @@ const VendorsPage = () => {
                 Name: '',
                 Email: '',
                 'Contact Number': '',
-                Location: '',
+                City: '',
                 'Contact Person': '',
                 Designation: '',
                 'Contact Email': '',
@@ -334,7 +381,7 @@ const VendorsPage = () => {
         type === 'excel' && exportToExcel(formattedData);
 
     };
-    
+
     const exportToExcel = (data: any[]) => {
         // Convert JSON data to a worksheet
         const worksheet = XLSX.utils.json_to_sheet(data);

@@ -33,17 +33,17 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}
-                    className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${(field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
+                    className={`w-full bg-white px-2 py-2 flex items-center justify-between text-left ${(formData && field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
                             selectedValue ||
-                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName)
+                            formData && field?.data?.find((data: { _id: any }) => data._id === formData?.[field.name])?.displayName)
                             ? "text-black"
                             : "text-gray-400"
                         }`}
                 >
                     <span className="text-sm truncate whitespace-nowrap overflow-hidden max-w-[calc(100%-1.5rem)]">
                         {
-                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.name ||
-                            field?.data?.find((data: { _id: any }) => data._id === formData[field.name])?.displayName ||
+                           formData && field?.data?.find((data: { _id: any }) => data._id === formData?.[field.name])?.name ||
+                           formData && field?.data?.find((data: { _id: any }) => data._id === formData?.[field.name])?.displayName ||
                             selectedValue ||
                             placeholder
                         }
@@ -80,7 +80,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                 <Check
                                     className={cn(
                                         "mr-2 h-4 w-4",
-                                        (formData[field.name] === null || selectedValue === null) ? "opacity-100" : "opacity-0"
+                                        (formData?.[field.name] === null || selectedValue === null) ? "opacity-100" : "opacity-0"
                                     )}
                                 />
                                 All
@@ -89,7 +89,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                             {field?.data?.map((data: { _id: React.Key | null | undefined; name: string | undefined; displayName: any }) => (
                                 <CommandItem
                                     className="cursor-pointer"
-                                    key={data._id}
+                                    key={data?._id}
                                     value={data.name}
                                     onSelect={(value) => {
                                         setSelectedValue(value);
@@ -112,7 +112,7 @@ export function Combobox({ field, formData, handleChange, placeholder, selectedR
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            (formData[field.name] === data._id || selectedValue === data._id) ? "opacity-100" : "opacity-0"
+                                            (formData?.[field.name] === data._id || selectedValue === data._id) ? "opacity-100" : "opacity-0"
                                         )}
                                     />
                                     {data.name || data.displayName}

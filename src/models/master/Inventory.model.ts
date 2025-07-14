@@ -2,8 +2,16 @@ import mongoose, { Document, Model } from 'mongoose';
 
 interface IInventory extends Document {
     warehouse: mongoose.Types.ObjectId;
-    totalQuantity: number;
+    // Invoice Information
+    purchaseDate: Date;
+    vendor: mongoose.Types.ObjectId;
+    poNumber: string;
+    prNumber?: string;
+    invoiceNumber: string;
+    // Assets in this invoice
     assets: mongoose.Types.ObjectId[];
+    // Status
+    status: 'draft' | 'pending' | 'received' | 'cancelled';
     isActive: boolean;
     addedBy: mongoose.Types.ObjectId;
     updatedBy: mongoose.Types.ObjectId;
@@ -12,6 +20,8 @@ interface IInventory extends Document {
 }
 
 interface IInventoryMethods {
+    addAssets(assetIds: string[]): Promise<void>;
+    removeAssets(assetIds: string[]): Promise<void>;
 }
 
 interface IInventoryModel extends Model<IInventory, {}, IInventoryMethods> {
@@ -26,88 +36,118 @@ const InventorySchema = new mongoose.Schema({
         ref: 'Warehouse',
         required: true
     },
-    totalQuantity: {
-        type: Number,
-        default: 0
+    // Invoice Information
+    purchaseDate: {
+        type: Date,
+        required: true
     },
+    vendor: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vendor',
+        required: true
+    },
+    poNumber: {
+        type: String,
+        required: true
+    },
+    prNumber: String,
+    invoiceNumber: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    // Assets in this invoice
     assets: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Asset'
     }],
+    // Status
+    status: {
+        type: String,
+        enum: ['draft', 'pending', 'received', 'cancelled'],
+        default: 'draft'
+    },
     isActive: {
         type: Boolean,
         default: true
     },
     addedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'User'
     },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'User'
     }
 }, {
     timestamps: true
 });
+
+// Add assets to inventory
+InventorySchema.methods.addAssets = async function(assetIds: string[]) {
+    this.assets.push(...assetIds);
+    await this.save();
+};
+
+// Remove assets from inventory
+InventorySchema.methods.removeAssets = async function(assetIds: string[]) {
+    this.assets = this.assets.filter((id: mongoose.Types.ObjectId) => 
+        !assetIds.includes(id.toString())
+    );
+    await this.save();
+};
 
 // Create or update inventory when an asset is added
 InventorySchema.statics.updateInventoryForAsset = async function(warehouseId: string, assetId: string) {
     const inventory = await this.findOne({ warehouse: warehouseId });
     
     if (inventory) {
-        // Update existing inventory
         await this.findByIdAndUpdate(inventory._id, {
-            $inc: { totalQuantity: 1 },
             $push: { assets: assetId }
         });
     } else {
-        // Create new inventory
         await this.create({
             warehouse: warehouseId,
-            totalQuantity: 1,
             assets: [assetId],
-
+            status: 'received'
         });
     }
 };
 
 // Update inventory when an asset is transferred
 InventorySchema.statics.transferAsset = async function(assetId: string, fromWarehouseId: string, toWarehouseId: string) {
-    // Decrease quantity in source warehouse
+    // Remove from source warehouse inventory
     await this.findOneAndUpdate(
         { warehouse: fromWarehouseId },
-        {
-            $inc: { totalQuantity: -1 },
-            $pull: { assets: assetId }
-        }
+        { $pull: { assets: assetId } }
     );
 
-    // Increase quantity in destination warehouse
+    // Add to destination warehouse inventory
     const toInventory = await this.findOne({ warehouse: toWarehouseId });
     if (toInventory) {
         await this.findByIdAndUpdate(toInventory._id, {
-            $inc: { totalQuantity: 1 },
             $push: { assets: assetId }
         });
     } else {
         await this.create({
             warehouse: toWarehouseId,
-            totalQuantity: 1,
-            assets: [assetId]
+            assets: [assetId],
+            status: 'received'
         });
     }
 };
 
 // Get inventory levels for a warehouse
 InventorySchema.statics.getWarehouseInventory = async function(warehouseId: string) {
-    return this.findOne({ warehouse: warehouseId })
+    return this.find({ warehouse: warehouseId })
         .populate({
             path: 'assets',
             populate: {
                 path: 'product',
                 model: 'Product'
             }
-        });
+        })
+        .populate('vendor');
 };
 
 const Inventory = mongoose.models.Inventory || mongoose.model<IInventory, IInventoryModel>('Inventory', InventorySchema);

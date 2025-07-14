@@ -38,7 +38,8 @@ import ProductCategory from "./master/ProductCategory.model"
 import Product from "./master/Product.model"
 import Warehouse from "./master/Warehouse.model"
 import Inventory from "./master/Inventory.model"
-import UnitMeasurement from "./master/UnitMeasurement"
+import { default as UnitMeasurement } from "./master/UnitMeasurement";
+import { default as ApprovalFlow } from "./approvals/ApprovalFlow.model";
 import Option from "./aqm/OptionsModel.model"
 import Ticket from "./ticket/Ticket.model";
 import TicketCategory from "./ticket/TicketCategory.model";
@@ -52,7 +53,23 @@ import SmlSubGroup from "./sml/SmlSubGroup.model";
 import SmlFile from "./sml/SMLFile.model"
 import VisaType from "./master/VisaType.model"
 import ProductType from "./master/ProductType.model";
-
+import ProviderType from "./itapplications/ProviderType.model";
+import DeductionType from "./itapplications/DeductionType.model"
+import PackageMaster from "./itapplications/PackageMaster.model"
+import AccountMaster from "./itapplications/AccountMaster.model"
+import AccountHistory from "./itapplications/AccountHistory.model"
+import OtherMaster from "./itapplications/OtherMaster.model"
+import UsageDetail from "./itapplications/UsageDetail.model"
+import ThresholdAmount from "./itapplications/ThresholdAmount.model"
+import JobAccount from "./itapplications/JobAccount.model"
+import PrinterMaster from "./itapplications/PrinterMaster.model"
+import PrinterUsage from "./itapplications/PrinterUsage.model"
+import Notification from "./notification/Notification";
+import UserPersonalDetails from "./master/UserPersonalDetails.model";
+import UserBenefits from "./master/UserBenefits.model"
+import UserEmploymentDetails from "./master/UserEmploymentDetails.model";
+import UserVisaDetails from "./master/UserVisaDetails.model";
+import UserIdentification from "./master/UserIdentification.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -61,7 +78,8 @@ export {
     PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
     ProposalRevisions, Proposal, Quotation,Option,
     // Asset and Inventory exports
-    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory,UnitMeasurement,
+    Asset, Vendor, ProductCategory, Product, Warehouse, Inventory, UnitMeasurement,
+    ApprovalFlow,
     // Tickets
     Ticket,
     TicketCategory,
@@ -74,5 +92,26 @@ export {
     SmlSubGroup,
     SmlFile,
     VisaType,
-    ProductType
+    ProductType,
+
+    // itapplications
+
+    ProviderType,
+    DeductionType,
+    PackageMaster,
+    AccountMaster,
+    AccountHistory,
+    OtherMaster,
+    UsageDetail,
+    ThresholdAmount,
+    JobAccount,
+    PrinterMaster,
+    PrinterUsage,
+    Notification,
+    UserPersonalDetails,
+    UserBenefits,
+    UserEmploymentDetails,
+    UserVisaDetails,
+    UserIdentification
+    
 }

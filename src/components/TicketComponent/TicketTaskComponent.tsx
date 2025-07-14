@@ -8,8 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
-  Plus, Trash, Loader2, AlertCircle, CheckSquare, Badge, Edit, Calendar, 
+import {
+  Plus, Trash, Loader2, AlertCircle, CheckSquare, Badge, Edit, Calendar,
   Clock, RefreshCw, X, AlertTriangle, CheckCircle, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -72,22 +72,22 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   const [userSearchQuery, setUserSearchQuery] = useState('');
   const [taskHistory, setTaskHistory] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Update localTasks when tasks prop changes
   useEffect(() => {
     setTasks(tasks);
   }, [tasks]);
-  
+
   const [createTask, { isLoading: isCreating }] = useCreateTicketTaskMutation();
   const [updateTask, { isLoading: isUpdating }] = useUpdateTicketTaskMutation();
   const [changeStatus, { isLoading: isChangingStatus }] = useChangeTaskStatusMutation();
-  
+
   const { data: usersData, isLoading: usersLoading } = useGetUsersQuery();
   const availableUsers = usersData || [];
 
   const handleOpenDialog = (task: any = null) => {
     setFormError(null);
-    
+
     if (task && typeof task === 'object') {
       setSelectedTask(task);
       setTaskTitle(task.title || '');
@@ -115,37 +115,37 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
     }
     setIsDialogOpen(true);
   };
-  
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedTask(null);
     setFormError(null);
   };
-  
+
   const validateForm = () => {
     if (!taskTitle.trim()) {
       setFormError("Task title is required");
       return false;
     }
-    
+
     if (!taskDueDate) {
       setFormError("Due date is required");
       return false;
     }
-    
+
     if (!ticketId) {
       setFormError("Ticket ID is missing");
       console.error("Ticket ID is missing");
       return false;
     }
-    
+
     return true;
   };
-  
+
   // Calculate next recurring date based on current settings
   const calculateNextRecurringDate = (baseDate: Date = new Date(), type = recurringType, intervalValue = recurringInterval) => {
     const interval = parseInt(recurringInterval) || 1;
-    
+
     switch (type) {
       case 'DAILY': return addDays(baseDate, interval);
       case 'WEEKLY': return addWeeks(baseDate, interval);
@@ -155,13 +155,13 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       default: return addWeeks(baseDate, interval);
     }
   };
-  
+
   const handleSubmitTask = async () => {
     if (!validateForm()) return;
-    
+
     try {
       setIsSubmitting(true);
-      
+
       if (selectedTask) {
         // Update existing task
         const updatePayload = {
@@ -182,7 +182,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           todayCompleted,
           updatedBy: userId
         };
-        
+
         await updateTask(updatePayload).unwrap();
         toast.success('Task updated successfully');
       } else {
@@ -207,40 +207,40 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
           addedBy: userId,
           updatedBy: userId
         };
-        
+
         await createTask(createPayload).unwrap();
         toast.success('Task created successfully');
       }
-      
+
       handleCloseDialog();
     } catch (error) {
       console.error("Task operation error:", error);
-      
+
       // Extract the error message for better user feedback
       let errorMsg = "Failed to save task";
-      
+
       // Safely extract error message
       const errorObj = error as any;
       if (errorObj?.data?.message) {
-        errorMsg = typeof errorObj.data.message === 'string' 
-          ? errorObj.data.message 
+        errorMsg = typeof errorObj.data.message === 'string'
+          ? errorObj.data.message
           : JSON.stringify(errorObj.data.message);
       } else if (errorObj?.message) {
         errorMsg = errorObj.message;
       }
-      
+
       setFormError(errorMsg);
       toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleToggleTaskStatus = async (task: any) => {
     try {
       const newStatus = task.status === 'COMPLETED' ? 'IN_PROGRESS' : 'COMPLETED';
       const progress = newStatus === 'COMPLETED' ? 100 : task.progress || 0;
-      
+
       const statusPayload = {
         _id: task._id,
         status: newStatus,
@@ -248,16 +248,16 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
         updatedBy: userId,
         ticket: ticketId
       };
-      
+
       await changeStatus(statusPayload).unwrap();
-      
+
       toast.success(`Task marked as ${newStatus}`);
     } catch (error) {
       console.error("Status change error:", error);
       toast.error('Failed to update task status');
     }
   };
-  
+
   const handleChangeProgress = async (task: any, progress: number) => {
     try {
       await updateTask({
@@ -265,51 +265,51 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
         progress,
         updatedBy: userId
       }).unwrap();
-      
+
       toast.success(`Progress updated to ${progress}%`);
     } catch (error) {
       console.error("Progress update error:", error);
       toast.error('Failed to update progress');
     }
   };
-  
+
   const handleToggleTodayCompleted = async (task: any, completed: boolean) => {
     try {
       // Update the task locally for immediate UI feedback
-      const updatedTasks = localTasks.map(t => 
-        t._id === task._id ? {...t, todayCompleted: completed} : t
+      const updatedTasks = localTasks.map(t =>
+        t._id === task._id ? { ...t, todayCompleted: completed } : t
       );
-      
+
       // Update the tasks state with the new array
       setTasks(updatedTasks);
-      
+
       // If task is marked as completed and is recurring, add to history
       if (completed && task.isRecurring) {
         // Find the task in our local state
         const taskToUpdate = updatedTasks.find(t => t._id === task._id);
-        
+
         if (taskToUpdate) {
           // Add to completion history if it doesn't exist already
           if (!taskToUpdate.completionHistory) {
             taskToUpdate.completionHistory = [];
           }
-          
+
           // Add new completion record
           taskToUpdate.completionHistory.push({
             date: new Date().toISOString(),
             status: 'COMPLETED'
           });
-          
+
           // Calculate next occurrence date
           const nextDate = calculateNextRecurringDate(new Date());
-          
+
           // Update the next recurring date
           if (nextDate) {
             taskToUpdate.nextRecurringDate = nextDate.toISOString();
           }
         }
       }
-      
+
       // Send API request
       await updateTask({
         _id: task._id,
@@ -317,7 +317,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
         updatedBy: userId,
         completionHistory: task.completionHistory || []
       }).unwrap();
-      
+
       // Show success message
       toast.success(completed ? 'Today\'s task marked as completed' : 'Today\'s task marked as incomplete');
     } catch (error) {
@@ -325,69 +325,69 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       toast.error('Failed to update task completion status');
     }
   };
-  
+
   // Check if a task is overdue
   const isTaskOverdue = (task: any) => {
     if (!task.dueDate || task.status === 'COMPLETED') return false;
     const dueDate = new Date(task.dueDate);
     return isPast(dueDate) && !isToday(dueDate);
   };
-  
+
   // Get due date status text and color
   const getDueDateStatus = (task: any) => {
     if (!task.dueDate) return { text: 'No due date', color: 'text-muted-foreground' };
-    
+
     const dueDate = new Date(task.dueDate);
     const today = new Date();
     const daysRemaining = differenceInDays(dueDate, today);
-    
+
     if (task.status === 'COMPLETED') {
       return { text: 'Completed', color: 'text-emerald-600' };
     }
-    
+
     if (isToday(dueDate)) {
       return { text: 'Due today', color: 'text-amber-600 font-medium' };
     }
-    
+
     if (isPast(dueDate)) {
-      return { 
-        text: `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? 's' : ''}`, 
-        color: 'text-red-600 font-medium' 
+      return {
+        text: `Overdue by ${Math.abs(daysRemaining)} day${Math.abs(daysRemaining) !== 1 ? 's' : ''}`,
+        color: 'text-red-600 font-medium'
       };
     }
-    
+
     if (daysRemaining <= 2) {
-      return { 
-        text: `Due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`, 
-        color: 'text-amber-600' 
+      return {
+        text: `Due in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`,
+        color: 'text-amber-600'
       };
     }
-    
-    return { 
-      text: `Due in ${daysRemaining} days`, 
-      color: 'text-primary' 
+
+    return {
+      text: `Due in ${daysRemaining} days`,
+      color: 'text-primary'
     };
   };
-  
+
   // Toggle task expanded state
   const toggleTaskExpanded = (taskId: string) => {
     setExpandedTaskId(expandedTaskId === taskId ? null : taskId);
   };
-  
+
   // Can create tasks based on ticket status
   const canCreateTasks = canEdit && ['NEW', 'ASSIGNED', 'IN_PROGRESS'].includes(ticketStatus);
-  
+
   // Calculate total progress
   const calculateTotalProgress = (taskList: any[] = localTasks) => {
     if (taskList.length === 0) return 0;
-    
+
     const totalTasks = taskList.length;
     const completedTasks = taskList.filter(task => task.status === 'COMPLETED').length;
     const progressSum = taskList.reduce((sum, task) => sum + (task.progress || 0), 0);
-    
+
     return Math.round(progressSum / totalTasks);
   };
-  
+
   return (
     <TooltipProvider>
       <div className="space-y-4">
@@ -396,10 +396,10 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
             <h3 className="text-base font-medium">Tasks and Subtasks</h3>
             <p className="text-sm text-muted-foreground">Break down this ticket into manageable tasks</p>
           </div>
-          
+
           {canCreateTasks && (
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button 
+              <Button
                 onClick={() => handleOpenDialog()}
                 className="gap-2 text-xs"
                 size="sm"
@@ -410,11 +410,11 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
             </motion.div>
           )}
         </div>
-        
+
         <DashboardLoader loading={isLoading}>
           <div className="divide-y divide-border/40">
             {localTasks.length === 0 ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-12 px-4"
@@ -427,7 +427,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                   Break down this ticket into smaller, manageable tasks to track progress more effectively.
                 </p>
                 {canCreateTasks && (
-                  <Button 
+                  <Button
                     onClick={() => handleOpenDialog()}
                     variant="outline"
                     className="gap-2"
@@ -440,7 +440,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
             ) : (
               <div>
                 {/* Overall progress */}
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="p-4 rounded-lg bg-card/50 border border-border/50 mb-4"
@@ -450,27 +450,27 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                     <span className="text-sm font-medium text-primary">{calculateTotalProgress(localTasks)}%</span>
                   </div>
                   <div className="w-full bg-muted/60 rounded-full h-2">
-                    <motion.div 
+                    <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${calculateTotalProgress(localTasks)}%` }}
                       transition={{ duration: 0.8, ease: "easeOut" }}
                       className="bg-primary h-2 rounded-full"
                     ></motion.div>
                   </div>
-                  
+
                   <div className="flex justify-between text-xs text-muted-foreground mt-2">
                     <span>{localTasks.filter(t => t.status === 'COMPLETED').length} of {localTasks.length} tasks completed</span>
                     <span>Total effort: {localTasks.reduce((sum, task) => sum + (task.efforts || 1), 0)} points</span>
                   </div>
                 </motion.div>
-                
+
                 {/* Task list */}
                 <div className="rounded-lg border border-border/50 overflow-hidden">
                   <div className="space-y-0 divide-y divide-border/30">
                     {localTasks.map((task, index) => {
                       const dueDateStatus = getDueDateStatus(task);
                       return (
-                        <motion.div 
+                        <motion.div
                           key={task._id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -483,7 +483,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                         >
                           <div className="flex items-start gap-3">
                             <div className="pt-1">
-                              <Checkbox 
+                              <Checkbox
                                 checked={task.status === 'COMPLETED'}
                                 onCheckedChange={() => handleToggleTaskStatus(task)}
                                 disabled={!canEdit || isChangingStatus}
@@ -494,7 +494,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between">
-                                <button 
+                                <button
                                   className="text-left group flex items-center gap-2"
                                   onClick={() => toggleTaskExpanded(task._id)}
                                 >
@@ -513,8 +513,8 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                 <div className="flex items-center space-x-2 ml-2">
                                   <div className={cn(
                                     "text-xs font-medium h-5 px-2 py-0.5 rounded-full border",
-                                    task.status === 'COMPLETED' 
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                                    task.status === 'COMPLETED'
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                       : "bg-amber-50 text-amber-700 border-amber-200"
                                   )}>
                                     {task.status || 'In Progress'}
@@ -522,8 +522,8 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                   {canEdit && (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
-                                        <Button 
-                                          variant="ghost" 
+                                        <Button
+                                          variant="ghost"
                                           size="sm"
                                           onClick={() => handleOpenDialog(task)}
                                           className="h-7 w-7 rounded-full p-0 hover:bg-muted"
@@ -538,7 +538,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                   )}
                                 </div>
                               </div>
-                              
+
                               {/* Due date and recurring status */}
                               <div className="flex items-center gap-3 mt-1.5 text-xs">
                                 <div className={cn(
@@ -552,7 +552,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                   )}
                                   <span>{task.dueDate ? format(new Date(task.dueDate), 'MMM d, yyyy') : 'No date'} - {dueDateStatus.text}</span>
                                 </div>
-                                
+
                                 {task.isRecurring && (
                                   <div className="flex items-center gap-1.5 text-primary">
                                     <RefreshCw className="h-3.5 w-3.5" />
@@ -567,7 +567,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                   </div>
                                 )}
                               </div>
-                              
+
                               {/* Task description and details */}
                               <AnimatePresence>
                                 {expandedTaskId === task._id && (
@@ -583,7 +583,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                         {task.description}
                                       </div>
                                     )}
-                                    
+
                                     {/* Recurring task completion status */}
                                     {task.isRecurring && (
                                       <div className="mt-3 p-3 bg-primary/5 rounded-md border border-primary/10">
@@ -591,8 +591,8 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                           <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                                           Recurring Task Status
                                         </h5>
-                                        
-                                        <RadioGroup 
+
+                                        <RadioGroup
                                           value={task.todayCompleted ? "completed" : "incomplete"}
                                           onValueChange={(value) => handleToggleTodayCompleted(task, value === "completed")}
                                           className="flex gap-4 mt-2"
@@ -610,7 +610,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                             <Label htmlFor={`incomplete-${task._id}`} className="text-sm cursor-pointer">Not completed</Label>
                                           </div>
                                         </RadioGroup>
-                                        
+
                                         <div className="text-xs text-muted-foreground mt-2">
                                           {task.nextRecurringDate && (
                                             <>
@@ -657,7 +657,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                   </motion.div>
                                 )}
                               </AnimatePresence>
-                              
+
                               <div className="mt-2.5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                                   <div className="inline-flex items-center gap-1.5">
@@ -665,14 +665,14 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                     <span className="font-medium text-foreground/80">{task.efforts || 1} pts</span>
                                   </div>
                                 </div>
-                                
+
                                 <div className="flex-1">
                                   <div className="flex justify-between items-center text-xs mb-1">
                                     <span className="text-muted-foreground">Progress:</span>
                                     <span className="font-medium text-foreground/80">{task.progress || 0}%</span>
                                   </div>
                                   <div className="w-full bg-muted/60 rounded-full h-1.5">
-                                    <div 
+                                    <div
                                       className={cn(
                                         "h-1.5 rounded-full transition-all duration-300",
                                         task.status === 'COMPLETED' ? "bg-emerald-500" : "bg-primary"
@@ -681,7 +681,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                                     ></div>
                                   </div>
                                 </div>
-                                
+
                                 {canEdit && task.status !== 'COMPLETED' && (
                                   <Select
                                     value={task.progress?.toString()}
@@ -711,20 +711,20 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
             )}
           </div>
         </DashboardLoader>
-      
+
         {/* Task Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
               <DialogDescription>
-                {selectedTask 
-                  ? 'Update the task details below' 
+                {selectedTask
+                  ? 'Update the task details below'
                   : 'Break down your ticket into manageable tasks'
                 }
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4 py-4">
               {formError && (
                 <Alert variant="destructive" className="rounded-md">
@@ -733,7 +733,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                   <AlertDescription>{formError}</AlertDescription>
                 </Alert>
               )}
-              
+
               <div className="space-y-2">
                 <Label htmlFor="title">
                   Task Title <span className="text-red-500">*</span>
@@ -755,7 +755,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                   </p>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
@@ -767,7 +767,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                   className="rounded-md resize-none"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="efforts">Effort Points (1-10)</Label>
                 <Select
@@ -789,7 +789,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                   Higher points indicate more complex tasks
                 </p>
               </div>
-              
+
 
               {/* Due Date Section */}
               <div className="space-y-2">
@@ -811,14 +811,14 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0 z-50" align="start">
 
-                    <DatePicker
-                      currentDate={taskDueDate}
-                      handleChange={((selectedDate:any)=>{
-                        setTaskDueDate(selectedDate)
-                      })}
-                      placeholder='Please select date'
+                      <DatePicker
+                        currentDate={taskDueDate}
+                        handleChange={((selectedDate: any) => {
+                          setTaskDueDate(selectedDate)
+                        })}
+                        placeholder='Please select date'
                       />
- 
+
                       {/* <CalendarComponent
                         mode="single"
                         selected={taskDueDate}
@@ -828,37 +828,37 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                     </PopoverContent>
                   </Popover>
                 </div>
-                
+
                 <div className="flex gap-2 mt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs h-7 rounded-md" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7 rounded-md"
                     onClick={() => setTaskDueDate(addDays(new Date(), 1))}
                   >
                     Tomorrow
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs h-7 rounded-md" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7 rounded-md"
                     onClick={() => setTaskDueDate(addDays(new Date(), 7))}
                   >
                     Next Week
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs h-7 rounded-md" 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7 rounded-md"
                     onClick={() => setTaskDueDate(addMonths(new Date(), 1))}
                   >
                     Next Month
                   </Button>
                 </div>
               </div>
-              
+
               <Separator className="my-4" />
-              
+
               {/* Recurring Task Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -869,7 +869,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                     onCheckedChange={setIsRecurring}
                   />
                 </div>
-                
+
                 {isRecurring && (
                   <div className="space-y-4 pl-2 border-l-2 border-primary/10">
                     <div className="space-y-2">
@@ -889,7 +889,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="interval">Repeat Every</Label>
                       <div className="flex items-center gap-2">
@@ -910,7 +910,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>End Date (Optional)</Label>
                       <Popover>
@@ -926,21 +926,25 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                             {recurringEndDate ? format(recurringEndDate, "PPP") : <span>No end date</span>}
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0 z-50" align="start">
+                        <PopoverContent className="w-auto p-0 rounded-md shadow-md bg-white dark:bg-zinc-900 z-50"
+                          align="start">
                           <CalendarComponent
                             mode="single"
                             selected={recurringEndDate || undefined}
                             onSelect={(date) => setRecurringEndDate(date || null)}
                             initialFocus
+                            disabled={(date) => date < new Date()}
+                            className="rounded-md border-none bg-white dark:bg-zinc-900"
                           />
                         </PopoverContent>
+                        
                       </Popover>
                     </div>
-                    
+
                     {selectedTask && selectedTask.isRecurring && (
                       <div className="space-y-2 mt-4">
                         <Label>Today's Completion Status</Label>
-                        <RadioGroup 
+                        <RadioGroup
                           value={todayCompleted ? "completed" : "incomplete"}
                           onValueChange={(value: string) => setTodayCompleted(value === "completed")}
                           className="flex gap-4"
@@ -963,12 +967,12 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 )}
               </div>
             </div>
-            
+
             <DialogFooter className="mt-6">
               <Button variant="outline" onClick={handleCloseDialog} className="rounded-md">
                 Cancel
               </Button>
-              <Button 
+              <Button
                 onClick={handleSubmitTask}
                 disabled={!taskTitle.trim() || isCreating || isUpdating || isSubmitting}
                 className="rounded-md"

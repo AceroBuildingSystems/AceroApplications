@@ -36,6 +36,22 @@ const page = () => {
     sort: { name: 'asc' },
   });
 
+ const uniqueActiveLocations = [
+  ...new Map(
+    userData?.data
+      ?.map((user: { activeLocation?: { _id?: string; name?: string } }) =>
+        user.activeLocation?._id
+          ? [user.activeLocation._id, {
+              _id: user.activeLocation.name,
+              name: user.activeLocation.name
+            }]
+          : null
+      )
+      .filter(Boolean) // remove null entries
+  ).values()
+].sort((a:any, b:any) => a.name.localeCompare(b.name));
+
+
   const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
     db: "LOCATION_MASTER", filter: { isActive: true },
     sort: { name: 'asc' }
@@ -143,19 +159,7 @@ const page = () => {
     const response = await createUser(formattedData);
 
 
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('User added successfully');
-
-    }
-    else {
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('User updated successfully');
-      }
-    }
-
-    if (response?.error?.data?.message?.message) {
-      toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-    }
+    return response;
 
   };
 
@@ -213,13 +217,13 @@ const page = () => {
       accessorKey: "displayName",
       header: ({ column }: { column: any }) => {
         const isSorted = column.getIsSorted();
-
+    
         return (
           <button
-            className="group  flex items-center space-x-2 pl-3"
+            className="group flex items-center space-x-2 pl-3"
             onClick={() => column.toggleSorting(isSorted === "asc")}
           >
-            <span>Employee Name</span>
+            <span className="truncate">Employee Name</span>
             <ChevronsUpDown
               size={15}
               className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -230,16 +234,17 @@ const page = () => {
       },
       cell: ({ row }: { row: any }) => {
         const firstName = row.getValue("displayName");
-        const designation = row.original?.designation?.name || ""; // Adjust based on your actual data structure
-
+        const designation = row.original?.designation?.name || "";
+    
         return (
           <div className="pl-3">
-            <div className="">{firstName}</div>
-            <div className="text-sm text-gray-500">{designation}</div>
+            <div className="font-medium ">{firstName}</div>
+            <div className="text-sm text-gray-500 ">{designation}</div>
           </div>
         );
       },
     },
+    
     {
       accessorKey: "department",
       header: ({ column }: { column: any }) => {
@@ -403,7 +408,7 @@ const page = () => {
     filterFields: [
 
       { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name: 'departmentName' },
-      { key: "activeLocation", label: 'locationName', type: "select" as const, data: locNames, placeholder: 'Search by Location', name: 'locationName' },
+      { key: "activeLocation", label: 'locationName', type: "select" as const, data: uniqueActiveLocations, placeholder: 'Search by Location', name: 'locationName' },
 
     ],
     dataTable: {

@@ -262,7 +262,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-          
+
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
@@ -278,7 +278,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
             if (Number(filterYear) < 1) return true; // Skip if date is missing
 
             const receivedDate = new Date(q.rcvdDateFromCustomer);
-           
+
             return (
                 receivedDate.getFullYear() === filterYear &&
                 (filterMonth === 0 || receivedDate.getMonth() + 1 === filterMonth) // If filterMonth is 0, include all months
@@ -638,7 +638,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                 <div className='flex flex-col gap-1 w-full h-full'>
 
                     {/* Filter Section */}
-                    <div className='flex flex-row items-center justify-between'>
+                    <div className='flex flex-row items-center justify-between py-1'>
                         <div className="flex flex-row items-center">
                             {/* Render search fields */}
                             <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
@@ -702,7 +702,7 @@ const ReportMasterComponent: React.FC<MasterComponentProps> = ({ config, loading
                                     {/* Dropdown (only if dropdownOptions are provided and active) */}
                                     {button.dropdownOptions && activeDropdown === index && (
                                         <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
-                                            {button.dropdownOptions.map((option:any, optionIndex) => (
+                                            {button.dropdownOptions.map((option: any, optionIndex) => (
                                                 <div
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"

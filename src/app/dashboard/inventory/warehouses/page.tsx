@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Download, Import, Plus, Upload } from 'lucide-react';
+import { ChevronsUpDown, Download, Import, Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -23,6 +23,7 @@ interface WarehouseFormData {
 }
 
 const WarehousesPage = () => {
+    const [importing, setImporting] = useState(false);
     const router = useRouter();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
@@ -116,7 +117,23 @@ const WarehousesPage = () => {
     const columns = [
         {
             accessorKey: "name",
-            header: "Name",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Name</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
             cell: ({ row }: any) => (
                 <div className='text-red-700' onClick={() => editWarehouse(row.original)}>
                     {row.original.name}
@@ -126,12 +143,44 @@ const WarehousesPage = () => {
 
         {
             accessorKey: "location",
-            header: "Location",
+            header: ({ column }: { column: any }) => {
+                            const isSorted = column.getIsSorted();
+                    
+                            return (
+                              <button
+                                className="group  flex items-center space-x-2"
+                                onClick={() => column.toggleSorting(isSorted === "asc")}
+                              >
+                                <span>Location</span>
+                                <ChevronsUpDown
+                                  size={15}
+                                  className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                    }`}
+                                />
+                              </button>
+                            );
+                          },
             cell: ({ row }: any) => row.original.location?.name || ''
         },
         {
             accessorKey: "contactPerson",
-            header: "Contact Person",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+        
+                return (
+                  <button
+                    className="group  flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(isSorted === "asc")}
+                  >
+                    <span>Contact Person</span>
+                    <ChevronsUpDown
+                      size={15}
+                      className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                    />
+                  </button>
+                );
+              },
         },
         {
             accessorKey: "contactNumber",
@@ -167,19 +216,36 @@ const WarehousesPage = () => {
         }
     };
 
-    const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse,categoryData:[],vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "WAREHOUSE_MASTER", masterName: "Warehouse" });
+
+    const handleImport = async () => {
+        await bulkImport({
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: locationsResponse, categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.WAREHOUSE_MASTER, masterName: "Warehouse", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
     };
 
-    const handleExport = (type: string) => {
-        const formattedData = warehousesResponse?.data.map((data: any) => {
-            return {
-                name: data.name,
-                location: data?.location?.name,
-                contactPerson: data?.contactPerson,
-                contactNumber: data?.contactNumber
-            };
-        })
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                Name: data.name,
+                Location: data?.location?.name,
+                'Contact Person': data?.contactPerson,
+                'Contact Number': data?.contactNumber,
+
+
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                Name: '',
+                Location: '',
+                'Contact Person': '',
+                'Contact Number': '',
+            }];
+        }
+
         type === 'excel' && exportToExcel(formattedData);
 
     };
@@ -229,12 +295,11 @@ const WarehousesPage = () => {
             }
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
                 ]
             },
 
@@ -275,6 +340,7 @@ const WarehousesPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
+                onchangeData={() => { }}
             />
         </div>
     );

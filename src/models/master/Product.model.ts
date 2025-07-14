@@ -1,10 +1,7 @@
 import mongoose from 'mongoose';
+import { unique } from 'next/dist/build/utils';
 
 const ProductSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true
-    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'ProductCategory',
@@ -17,9 +14,9 @@ const ProductSchema = new mongoose.Schema({
     },
     model: {
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
-    description: String,
     isActive: {
         type: Boolean,
         default: true

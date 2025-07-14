@@ -7,5 +7,7 @@ export interface smlfile {
     revNo: number,
     subGroup: mongoose.ObjectId,
     fileId: mongoose.ObjectId,
+    addedBy: string,
+    updatedBy: string,
     isActive:boolean,
 } 

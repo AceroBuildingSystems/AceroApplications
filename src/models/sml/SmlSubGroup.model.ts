@@ -9,6 +9,8 @@ const SubGroupSchema: Schema<smlsubgroup> = new Schema(
       ref: "SmlGroup", // Reference to the Group model
       autopopulate: true
     },
+    addedBy: { type: String },
+    updatedBy: { type: String },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

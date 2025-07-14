@@ -19,6 +19,7 @@ import useUserAuthorised from '@/hooks/useUserAuthorised';
 import * as XLSX from "xlsx";
 
 const page = () => {
+    const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
     const { data: customerData = [], isLoading: customerLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_MASTER,
@@ -120,21 +121,18 @@ const page = () => {
 
     };
 
+
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData:[], userData:[], teamData:[],designationData: [], departmentData: [], employeeTypeData:[], organisationData:[], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_MASTER, masterName: "Customer" });
+        bulkImport({
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData, customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.CUSTOMER_MASTER, masterName: "Customer", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
     };
 
     const exportToExcel = (data: any[]) => {
-        const formattedData = data.map(data => ({
-            "Name": data?.name,
-            "Website": data?.website,
-            "Email": data?.email,
-            "Phone": data?.phone,
-            "Address": data?.address,
-            "Customer Type": data?.customerType?.name,
-        }));
+
         // Convert JSON data to a worksheet
-        const worksheet = XLSX.utils.json_to_sheet(formattedData);
+        const worksheet = XLSX.utils.json_to_sheet(data);
         // Create a new workbook
         const workbook = XLSX.utils.book_new();
         // Append the worksheet to the workbook
@@ -143,9 +141,33 @@ const page = () => {
         XLSX.writeFile(workbook, 'exported_data.xlsx');
     };
 
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
 
-    const handleExport = (type: string) => {
-        type === 'excel' && exportToExcel(customerData?.data);
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+                "Name": data?.name,
+                "Website": data?.website,
+                "Email": data?.email,
+                "Phone": data?.phone,
+                "Address": data?.address,
+                "Customer Type": data?.customerType?.name,
+
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                "Name": '',
+                "Website": '',
+                "Email": '',
+                "Phone": '',
+                "Address": '',
+                "Customer Type": '',
+
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
 
     };
 
@@ -294,11 +316,11 @@ const page = () => {
             data: customerData?.data,
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+                    { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
                 ]
             },
             { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
@@ -319,8 +341,8 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height='auto'
-                onchangeData={()=>{}}
-                
+                onchangeData={() => { }}
+
             />
         </>
 

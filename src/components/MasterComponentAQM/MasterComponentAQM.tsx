@@ -2,9 +2,9 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/inputSearch";
 import { Button } from '../ui/button';
-import { Check, Filter, FilterX } from 'lucide-react';
+import { Check, Filter, FilterX, ListFilter } from 'lucide-react';
 import { DataTable } from '../TableComponent/TableComponent';
 import { useState } from 'react';
 import { useEffect } from 'react';
@@ -53,7 +53,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
-
+console.log(filteredData, 'filteredData')
     const availableFilters: FieldConfig[] = [
         ...(config?.filterFields || []),
         { key: "status", label: 'status', type: "select" as const, options: config?.filterData?.statusNames, placeholder: 'Select Status', filterBy: "name", name: 'Status By Color' },
@@ -74,7 +74,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
 
     useEffect(() => {
-        
+
         setFilteredData(config?.dataTable?.data)
     }, [config, loadingState])
 
@@ -88,15 +88,17 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
     // Handle filter field change (select)
     const handleFilterChange = (value: string | null, field: string) => {
-
+      
         const newFilterValues = { ...filterValues, [field]: value };
-
+    
+        // Check if the filter is already active
         setFilterValues(newFilterValues);
         // filterData(searchValues, newFilterValues); // Trigger filterData after filter change
     };
 
     // Toggle filters dynamically
     const toggleFilter = (filter: FieldConfig) => {
+       
         setActiveFilters(prev => {
             if (prev.some(f => f.key === filter.key)) {
                 // Remove filter
@@ -127,7 +129,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                 const value: any = item[field];
                 const searchQuery = searchValues['name'] || '';
-                
+
                 if (value) {
                     const fieldValue = typeof value === 'object' && value !== null && 'name' in value ? value.name : value;
                     return fieldValue.toString().toLowerCase().includes(searchQuery.toString().toLowerCase());
@@ -147,8 +149,16 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
 
                 // Use filterBy to determine comparison
                 if (field?.filterBy === "id") {
+                  
+                    if (item[key] && typeof item[key] === "string") {
+                        return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
 
-                    return typeof item[key] === "object" && item[key] !== null && "name" in (item[key] as { name: string }) && (item[key] as { name: string }).name === filterValue;
+                    }
+                    else {
+
+                        return typeof item[key] === "object" && item[key] !== null && "name" in (item[key] as { name: string }) && (item[key] as { name: string }).name === filterValue;
+
+                    }
                 } else {
                     return typeof item[key] === "string" && item[key].toLowerCase() === filterValue?.toLowerCase(); // Compare Name for status
                 }
@@ -158,6 +168,7 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
         });
 
         setFilteredData(filtered); // Update filtered data state
+      
     };
 
 
@@ -172,135 +183,16 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className="flex flex-col gap-1 w-full h-full px-4 pt-0.5">
+                <div className="flex flex-col gap-1 w-full h-full px-4 py-1">
 
                     {/* Filter Section */}
-                    <div className="flex flex-row justify-between gap-2">
+                    <div className="flex flex-row justify-between gap-2 pb-1">
                         <div className="flex flex-row items-center gap-2  w-full">
 
-                            {/* Add Filter & Reset Buttons */}
-                            <Popover>
-                                <PopoverTrigger asChild>
 
-                                    <div>
-                                        <TooltipProvider>
-                                            <Tooltip>
-                                                <TooltipTrigger asChild>
-                                                    <Filter className="h-5 w-5 mr-2 cursor-pointer" />
-                                                </TooltipTrigger>
-                                                <TooltipContent>
-                                                    Add Filter
-                                                </TooltipContent>
-                                            </Tooltip>
-                                        </TooltipProvider>
-
-                                    </div>
-                                </PopoverTrigger>
-                                {/* Popover Content */}
-                                <PopoverContent className="fixed top-1/2 w-[600px] mt-2 left-[-15]">
-
-                                    <div className="flex items-center gap-2 flex-wrap ">
-                                        {/* Render Filter Buttons */}
-                                        {config?.filterFields?.map((filter: FieldConfig, index: React.Key | null | undefined) => (
-                                            <React.Fragment key={index}>
-                                                <Button
-                                                    variant={activeFilters.some((f) => f.key === filter.key) ? "default" : "outline"}
-                                                    onClick={() => toggleFilter(filter)}
-                                                    className="text-sm px-3 py-1"
-                                                >
-                                                    {filter.name}
-                                                </Button>
-
-                                                {/* Render Separator if it's not the last button */}
-                                                {index !== config?.filterFields.length - 1 && (
-                                                    <Separator className="h-7 w-[1px] bg-slate-400" orientation="vertical" />
-                                                )}
-                                            </React.Fragment>
-                                        ))}
-
-                                    </div>
-                                    <Separator className="my-3" />
-                                    {/* Render Filter Dropdowns inside Popover */}
-                                    <div className="px-0 space-y-2 max-h-80 overflow-y-auto overflow-x-hidden">
-
-                                        {activeFilters.map((field, index) => (
-                                            <div key={index} className="flex w-[250px] flex-col">
-                                                <span className="text-sm font-medium">{field.label}</span>
-
-                                                {/* Dropdown */}
-                                                <Popover>
-                                                    <PopoverTrigger asChild>
-                                                        <Button variant="outline" className="w-full justify-between">
-                                                            {filterValues[field.key] || "Select..."}
-                                                            <Check className="ml-2 h-4 w-4 opacity-50" />
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-[200px] p-0">
-                                                        <Command>
-                                                            <CommandInput placeholder={`Search ${field.label}`} />
-                                                            <CommandList>
-                                                                <CommandEmpty>No {field.label} found.</CommandEmpty>
-                                                                <CommandGroup>
-                                                                    {field.options?.map((option: any) => (
-                                                                        field.filterBy === 'id' ?
-                                                                            <CommandItem
-                                                                                key={option?.id}
-                                                                                onSelect={() => {
-                                                                                    handleFilterChange(option?.name, field.label);
-                                                                                    toggleFilterOpen(field.key, false); // Close Popover
-                                                                                }}
-                                                                            >
-                                                                                <Check
-                                                                                    className={cn(
-                                                                                        "mr-2 h-4 w-4",
-                                                                                        filterValues[field.label] === option.name ? "opacity-100" : "opacity-0"
-                                                                                    )}
-                                                                                />
-                                                                                {option.name}
-                                                                            </CommandItem>
-                                                                            :
-                                                                            <CommandItem
-                                                                                key={option}
-                                                                                onSelect={() => {
-                                                                                    handleFilterChange(option, field.label);
-                                                                                    toggleFilterOpen(field.key, false); // Close Popover
-                                                                                }}
-                                                                            >
-                                                                                <Check
-                                                                                    className={cn(
-                                                                                        "mr-2 h-4 w-4",
-                                                                                        filterValues[field.label] === option ? "opacity-100" : "opacity-0"
-                                                                                    )}
-                                                                                />
-                                                                                {option}
-                                                                            </CommandItem>
-                                                                    ))}
-                                                                </CommandGroup>
-                                                            </CommandList>
-                                                        </Command>
-                                                    </PopoverContent>
-                                                </Popover>
-
-                                            </div>
-
-                                        ))}
-                                        <div className='flex justify-end'>
-                                            {activeFilters.length > 0 && (<Button
-                                                effect="expandIcon"
-                                                icon={FilterX}
-                                                iconPlacement="right"
-                                                className={`h-7 px-2 bg-red-600 hover:bg-red-700 duration-300`}
-                                                onClick={resetFilters}
-                                            >
-                                                Reset
-                                            </Button>)}
-                                        </div>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
 
                             {/* Search Text Bar & Filters (Now filters start from here) */}
-                            <div className="flex items-center gap-1  flex-grow">
+                            <div className="flex items-center gap-3  flex-grow">
                                 {/* Search Fields */}
                                 {config.searchFields?.map((field: FieldConfig, index: number) => (
                                     <div key={index} className="flex-1 max-w-[200px]">
@@ -315,7 +207,134 @@ const MasterComponentAQM: React.FC<MasterComponentProps> = ({ config, loadingSta
                                 ))}
 
 
+                                {/* Add Filter & Reset Buttons */}
+                                <Popover>
+                                    <PopoverTrigger asChild>
+
+                                        <div>
+                                            <TooltipProvider>
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <div className='flex items-center gap-1 cursor-pointer text-slate-800 text-sm'>
+                                                            <ListFilter size={17} className="text-red-700" /> Filters
+                                                        </div>
+
+                                                    </TooltipTrigger>
+                                                    {/* <TooltipContent>
+                                                        Add Filter
+                                                    </TooltipContent> */}
+                                                </Tooltip>
+                                            </TooltipProvider>
+
+                                        </div>
+                                    </PopoverTrigger>
+                                    {/* Popover Content */}
+                                    <PopoverContent className="fixed top-1/2 w-[600px] mt-2 left-[-15] bg-white">
+
+                                        <div className="flex items-center gap-2 flex-wrap ">
+                                            {/* Render Filter Buttons */}
+                                            {config?.filterFields?.map((filter: FieldConfig, index: React.Key | null | undefined) => (
+                                                <React.Fragment key={index}>
+                                                    <Button
+                                                        variant={activeFilters.some((f) => f.key === filter.key) ? "default" : "outline"}
+                                                        onClick={() => toggleFilter(filter)}
+                                                        className="text-sm px-3 py-1"
+                                                    >
+                                                        {filter.name}
+                                                    </Button>
+
+                                                    {/* Render Separator if it's not the last button */}
+                                                    {index !== config?.filterFields.length - 1 && (
+                                                        <Separator className="h-7 w-0.5 bg-slate-200" orientation="vertical" />
+                                                    )}
+                                                </React.Fragment>
+                                            ))}
+
+                                        </div>
+                                        <Separator className="my-3 bg-slate-200 h-0.5" />
+                                        {/* Render Filter Dropdowns inside Popover */}
+                                        <div className="px-0 space-y-2 max-h-80 overflow-y-auto overflow-x-hidden">
+
+                                            {activeFilters.map((field, index) => (
+                                                <div key={index} className="flex w-[250px] flex-col">
+                                                    <span className="text-sm font-medium">{field.label}</span>
+
+                                                    {/* Dropdown */}
+                                                    <Popover>
+                                                        <PopoverTrigger asChild>
+                                                            <Button variant="outline" className="w-full justify-between">
+                                                                {filterValues[field.key] || "Select..."}
+                                                                <Check className="ml-2 h-4 w-4 opacity-50" />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-[200px] p-0">
+                                                            <Command className='bg-white'>
+                                                                <CommandInput placeholder={`Search ${field.label}`} />
+                                                                <CommandList>
+                                                                    <CommandEmpty>No {field.label} found.</CommandEmpty>
+                                                                    <CommandGroup>
+                                                                        {field.options?.map((option: any) => (
+                                                                            field.filterBy === 'id' ?
+                                                                                <CommandItem
+                                                                                    className={option?.color}
+                                                                                    key={option?.id}
+                                                                                    onSelect={() => {
+                                                                                        handleFilterChange(option?.name, field.label);
+                                                                                        toggleFilterOpen(field.key, false); // Close Popover
+                                                                                    }}
+                                                                                >
+                                                                                    <Check
+                                                                                        className={cn(
+                                                                                            "mr-2 h-4 w-4",
+                                                                                            filterValues[field.label] === option.name ? "opacity-100" : "opacity-0"
+                                                                                        )}
+                                                                                    />
+                                                                                    {option.name}
+                                                                                </CommandItem>
+                                                                                :
+                                                                                <CommandItem
+                                                                                    className=''
+                                                                                    key={option}
+                                                                                    onSelect={() => {
+                                                                                        handleFilterChange(option, field.label);
+                                                                                        toggleFilterOpen(field.key, false); // Close Popover
+                                                                                    }}
+                                                                                >
+                                                                                    <Check
+                                                                                        className={cn(
+                                                                                            "mr-2 h-4 w-4",
+                                                                                            filterValues[field.label] === option ? "opacity-100" : "opacity-0"
+                                                                                        )}
+                                                                                    />
+                                                                                    {option}
+                                                                                </CommandItem>
+                                                                        ))}
+                                                                    </CommandGroup>
+                                                                </CommandList>
+                                                            </Command>
+                                                        </PopoverContent>
+                                                    </Popover>
+
+                                                </div>
+
+                                            ))}
+                                            <div className='flex justify-end'>
+                                                {activeFilters.length > 0 && (<Button
+                                                    effect="expandIcon"
+                                                    icon={FilterX}
+                                                    iconPlacement="right"
+                                                    className={`h-7 px-2 bg-red-600 hover:bg-red-700 duration-300`}
+                                                    onClick={resetFilters}
+                                                >
+                                                    Reset
+                                                </Button>)}
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
                             </div>
+
+
                         </div>
 
                         {/* Button Section */}

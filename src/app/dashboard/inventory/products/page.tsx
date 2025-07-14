@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import MasterComponent from '@/components/MasterComponent/MasterComponent';
-import { Download, Import, Plus } from 'lucide-react';
+import { ChevronsUpDown, Download, Import, Plus, Upload } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useGetMasterQuery, useCreateMasterMutation } from '@/services/endpoints/masterApi';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
@@ -20,17 +20,16 @@ import * as XLSX from "xlsx";
 
 interface ProductFormData {
     _id?: string;
-    name: string;
     category: string;
     brand: string;
     model: string;
-    description?: string;
     unitOfMeasure?: string;
     isActive: boolean;
     vendor?: string;
 }
 
 const ProductsPage = () => {
+    const [importing, setImporting] = useState(false);
     const router = useRouter();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [dialogAction, setDialogAction] = useState<"Add" | "Update">("Add");
@@ -62,14 +61,6 @@ const ProductsPage = () => {
     ];
     // Form fields configuration with validation
     const formFields = [
-        {
-            name: "name",
-            label: "Name",
-            type: "text",
-            required: true,
-            placeholder: "Enter product name",
-            validate: validate.text
-        },
 
         {
             name: "category",
@@ -86,7 +77,7 @@ const ProductsPage = () => {
             name: "brand",
             label: "Brand",
             type: "text",
-            required: true,
+            required: false,
             placeholder: "Enter brand name",
             validate: validate.textSmall
         },
@@ -94,16 +85,9 @@ const ProductsPage = () => {
             name: "model",
             label: "Model",
             type: "text",
-            required: true,
+            required: false,
             placeholder: "Enter model number",
             validate: validate.textSmall
-        },
-        {
-            name: "description",
-            label: "Description",
-            type: "textarea",
-            placeholder: "Enter product description",
-            validate: validate.desription
         },
         {
             name: "isActive",
@@ -124,34 +108,69 @@ const ProductsPage = () => {
     // Configure table columns
     const columns = [
         {
-            accessorKey: "name",
-            header: "Name",
-            cell: ({ row }: any) => (
-                <div className='text-red-700' onClick={() => editProducts(row.original)}>
-                    {row.original.name}
-                </div>
-            )
-        },
-        {
-            accessorKey: "description",
-            header: "Description",
-        },
-        {
             accessorKey: "category",
-            header: "Category",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Category</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
             cell: ({ row }: any) => (
-                <Badge variant="outline">
+                <Badge variant="default"  onClick={() => editProducts(row.original)}>
                     {row.original.category?.name || ''}
                 </Badge>
             )
         },
         {
             accessorKey: "brand",
-            header: "Brand",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Brand</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
         },
         {
             accessorKey: "model",
-            header: "Model",
+            header: ({ column }: { column: any }) => {
+                                        const isSorted = column.getIsSorted();
+                                
+                                        return (
+                                          <button
+                                            className="group  flex items-center space-x-2"
+                                            onClick={() => column.toggleSorting(isSorted === "asc")}
+                                          >
+                                            <span>Model</span>
+                                            <ChevronsUpDown
+                                              size={15}
+                                              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                                }`}
+                                            />
+                                          </button>
+                                        );
+                                      },
         },
         {
             accessorKey: "isActive",
@@ -167,6 +186,7 @@ const ProductsPage = () => {
     // Handle dialog save
     const handleSave = async ({ formData, action }: { formData: ProductFormData; action: string }) => {
         try {
+            console.log('Saving product:', formData, action);
             const response = await createMaster({
                 db: MONGO_MODELS.PRODUCT_MASTER,
                 action: action === 'Add' ? 'create' : 'update',
@@ -183,45 +203,51 @@ const ProductsPage = () => {
         }
     };
 
-    const handleImport = () => {
-            bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [],categoryData: categoriesResponse,vendorData:[], productData:[], warehouseData:[],customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "PRODUCT_MASTER", masterName: "Product" });
-        };
-    
-        const handleExport = (type: string) => {
-            const formattedData = productsResponse?.data.map((data: any) => {
-                return {
-                    'Name': data.name,
-                    'Description': data?.description,
-                    'Category': data?.category?.name,
-                    'Brand': data?.brand,
-                    'Model': data?.model
-                };
-            })
-            type === 'excel' && exportToExcel(formattedData);
-    
-        };
-    
-        const exportToExcel = (data: any[]) => {
-            // Convert JSON data to a worksheet
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            // Create a new workbook
-            const workbook = XLSX.utils.book_new();
-            // Append the worksheet to the workbook
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
-            // Write the workbook and trigger a download
-            XLSX.writeFile(workbook, 'exported_data.xlsx');
-        };
+
+    const handleImport = async () => {
+        await bulkImport({
+            roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: categoriesResponse, vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], designationData: [], departmentData: [], employeeTypeData: [], organisationData: [], action: "Add", user, createUser: createMaster, db: MONGO_MODELS.PRODUCT_MASTER, masterName: "Product", onStart: () => setImporting(true),
+            onFinish: () => setImporting(false)
+        });
+    };
+
+    const handleExport = (type: string, data: any) => {
+        let formattedData: any[] = [];
+
+        if (data?.length > 0) {
+            formattedData = data?.map((data: any) => ({
+
+                'Category': data?.category?.name,
+                'Brand': data?.brand,
+                'Model': data?.model
+            }));
+        } else {
+            // Create a single empty row with keys only (for header export)
+            formattedData = [{
+                'Category': '',
+                'Brand': '',
+                'Model': ''
+            }];
+        }
+
+        type === 'excel' && exportToExcel(formattedData);
+
+    };
+
+
+    const exportToExcel = (data: any[]) => {
+        // Convert JSON data to a worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        // Create a new workbook
+        const workbook = XLSX.utils.book_new();
+        // Append the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+        // Write the workbook and trigger a download
+        XLSX.writeFile(workbook, 'exported_data.xlsx');
+    };
 
     // Configure page layout
     const pageConfig = {
-        searchFields: [
-            {
-                key: "name",
-                label: "name",
-                type: "text" as const,
-                placeholder: "Search by name..."
-            }
-        ],
         filterFields: [
             {
                 key: "category",
@@ -252,20 +278,20 @@ const ProductsPage = () => {
             }
         },
         buttons: [
-            { label: 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-
+            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
             {
-                label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string) => handleExport(type) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string) => handleExport(type) },
+                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+
                 ]
             },
+
             {
                 label: "Add",
                 action: () => {
                     setDialogAction("Add");
                     setSelectedItem({
-                        name: '',
+                     
                         category: '',
                         brand: '',
                         model: '',
@@ -297,6 +323,7 @@ const ProductsPage = () => {
                 initialData={selectedItem || {}}
                 action={dialogAction}
                 height="auto"
+                onchangeData={() => { }}
             />
         </div>
     );

@@ -3,7 +3,7 @@
 import React from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
 import DashboardLoader from '@/components/ui/DashboardLoader'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, MoreHorizontal } from "lucide-react"
 import { DataTable } from '@/components/TableComponent/TableComponent'
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -189,58 +189,86 @@ const page = () => {
 
     {
       accessorKey: "name",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Location</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 "
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Location</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
     },
     {
       accessorKey: "address",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Address</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 "
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Address</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("address")}</div>,
     },
     {
       accessorKey: "state",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>State / City</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 "
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>State / City</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("state")?.name}</div>,
     },
     {
       accessorKey: "isActive",
-      header: ({ column }: { column: any }) => (
-        <button
-          className="flex items-center space-x-2"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      header: ({ column }: { column: any }) => {
+        const isSorted = column.getIsSorted();
 
-        >
-          <span>Status</span> {/* Label */}
-          <ArrowUpDown size={15} /> {/* Sorting Icon */}
-        </button>
-      ),
+        return (
+          <button
+            className="group  flex items-center space-x-2 "
+            onClick={() => column.toggleSorting(isSorted === "asc")}
+          >
+            <span>Status</span>
+            <ChevronsUpDown
+              size={15}
+              className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+            />
+          </button>
+        );
+      },
       cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
     },
 
@@ -250,7 +278,7 @@ const page = () => {
 
   const locationConfig = {
     searchFields: [
-      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by region' },
+      { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by location' },
 
     ],
     filterFields: [
@@ -263,9 +291,9 @@ const page = () => {
     },
     buttons: [
 
-      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Import, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+      { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
       {
-        label: 'Export', action: handleExport, icon: Download, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+        label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
           { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
           { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
         ]

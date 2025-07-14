@@ -60,6 +60,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+
+    delete body.organisation
+    console.log({body})
     
     const result = await HRMSApprovalFlowManager.createApprovalFlow(
       body,

@@ -141,8 +141,8 @@ export default function NewApprovalFlowPage() {
       const flowData = {
         ...data,
         steps,
-        organisation: 'default' // This should come from session/context
       };
+      // organisation: 'default' // This should come from session/context
 
       const result = await createFlow(flowData).unwrap();
       

@@ -17,12 +17,12 @@ export class HRMSApprovalFlowManager {
         await HRMSApprovalFlow.updateMany(
           { 
             formType: flowData.formType, 
-            organisation: flowData.organisation,
             isDefault: true 
           },
           { isDefault: false }
         );
       }
+      // organisation: new mongoose.Schema.ObjectId(flowData.organisation),
 
       const approvalFlow = new HRMSApprovalFlow({
         ...flowData,

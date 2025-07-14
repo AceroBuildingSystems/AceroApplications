@@ -25,7 +25,7 @@ const CreateTicketPage = () => {
       }).unwrap();
       
       toast.success('Ticket created successfully');
-      router.push(`/dashboard/ticket/${response.data._id}`);
+      router.push('/dashboard/ticket'); // Redirect to Kanban board
     } catch (error) {
       toast.error('Failed to create ticket');
     }

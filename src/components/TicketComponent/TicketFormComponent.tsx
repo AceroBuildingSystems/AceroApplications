@@ -127,7 +127,8 @@ const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
       creator: userId,
       addedBy: userId,
       updatedBy: userId,
-      ...(isEdit && initialData ? { _id: initialData._id } : {})
+      ...(isEdit && initialData ? { _id: initialData._id } : {}),
+      ...(!isEdit ? { status: 'NEW' } : {}) // Always set status NEW for new tickets
     };
     onSubmit(formData);
   };

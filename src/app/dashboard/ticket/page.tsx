@@ -441,6 +441,7 @@ const TicketDashboardPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                
               />
+              
               <AnimatePresence>
                 {searchQuery && (
                   <motion.div

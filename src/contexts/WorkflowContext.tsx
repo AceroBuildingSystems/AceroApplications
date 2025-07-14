@@ -1,6 +1,7 @@
 import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { getFormConfig } from '@/configs/hrms-forms';
 
 interface WorkflowStep {
   stepIndex: number;
@@ -46,10 +47,10 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [formData, setFormData] = useState<Record<string, any>>({});
   const router = useRouter();
   const params = useParams();
-  
+  const formType = params.formType as string;
   const flowId = params.id as string;
   const curStepIndex = params.stepIndex as string;
-console.log("curStepIndex", curStepIndex)
+console.log("formType", formType)
   const initializeWorkflow = useCallback((workflowData: any) => {
     console.log('🚀 CONTEXT: Initializing workflow with data:', workflowData);
 
@@ -131,8 +132,18 @@ console.log("curStepIndex", curStepIndex)
     });
   }, []);
 
+  const getDependencyFeildMappings = (steps, feilds)=>{
+    const formTypes = steps.map(step=>step.formType)
+    let dependecyArray = {}
+    formTypes.forEach(formType=>{
+      const formConfig = getFormConfig(formType)
+    })
+  }
+
   // Initialize workflow from sessionStorage on load
   useEffect(() => {
+     const config = getFormConfig(formType);
+     console.log('config',config)
     const workflowData = sessionStorage.getItem('workflowData');
     if (workflowData) {
       try {
@@ -144,6 +155,7 @@ console.log("curStepIndex", curStepIndex)
     }
   }, [initializeWorkflow]);
 
+  
   // Save workflow data to sessionStorage whenever it changes
   useEffect(() => {
     if (workflowId) {

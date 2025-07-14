@@ -203,32 +203,32 @@ export default function NewHRMSFormPage() {
         setFormId(null);
       }
     }
-    if(workFlowData?.data){
+    if (workFlowData?.data) {
       console.log('WORKFLOW: Workflow data loaded', workFlowData.data);
 
       const getTemplateByKey = (key: string) => {
         console.log('WORKFLOW: Getting template for key', key);
-          return HRMS_WORKFLOW_TEMPLATES[key.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES] || null;
-        };
-        const template = getTemplateByKey(workFlowData?.data?.template?.workflowType);
-        console.log('WORKFLOW: Template loaded', {template,formType});
-       
-        const workflowInitData = { ...workFlowData.data, template,workflowId:id,formType };
-        initializeWorkflow(workflowInitData)
+        return HRMS_WORKFLOW_TEMPLATES[key.toUpperCase() as keyof typeof HRMS_WORKFLOW_TEMPLATES] || null;
+      };
+      const template = getTemplateByKey(workFlowData?.data?.template?.workflowType);
+      console.log('WORKFLOW: Template loaded', { template, formType });
+
+      const workflowInitData = { ...workFlowData.data, template, workflowId: id, formType };
+      initializeWorkflow(workflowInitData)
     }
 
-  }, [workFlowData,id]);
-const {
-  workflowId,
-  currentStepIndex,
-  getAllPreviousData,
-  updateStepData,
-  getStepData,
-  formData,
-  steps,
-  navigateToStep,
-} = workflow;
-console.log('formID', steps, currentStepIndex, formData, workflowId, isWorkflow);
+  }, [workFlowData, id]);
+  const {
+    workflowId,
+    currentStepIndex,
+    getAllPreviousData,
+    updateStepData,
+    getStepData,
+    formData,
+    steps,
+    navigateToStep,
+  } = workflow;
+  console.log('formID', steps, currentStepIndex, formData, workflowId, isWorkflow);
   // Get prefill data from previous workflow steps
   const getInitialFormData = () => {
     if (!isWorkflow) return {};
@@ -433,19 +433,19 @@ console.log('formID', steps, currentStepIndex, formData, workflowId, isWorkflow)
           data: { ...data, isDraft: false, status: submissionStatus }
         }).unwrap();
       }
-console.log('🟢 FORM SUBMIT: Form submission result', result);
+      console.log('🟢 FORM SUBMIT: Form submission result', result);
       if (result?.data?._id) {
         console.log('🟢 FORM SUBMIT: Updating workflow instance with new form ID', { workFlowData });
-const completedSTeps = Object.keys(workFlowData?.data?.formsData).length || 0;
+        const completedSTeps = Object.keys(workFlowData?.data?.formsData).length || 0;
         // Update the workflow instance with the new form ID
         const workFlowUpdate = await updateWorkflowInstance({
           id: currentWorkflowId,
           data: {
             ...workFlowData?.data?.formsData, formsData: { [formType]: result.data._id }, progress: {
               ...workFlowData?.data?.progress,
-              currentStep: steps[workFlowData?.data?.progress?.completedSteps+1]?.id,
-              progressPercentage: (100/workFlowData?.data?.progress?.totalSteps)*(completedSTeps),
-              currentStepName:steps[workFlowData?.data?.progress?.completedSteps+1]?.stepName || '',
+              currentStep: steps[workFlowData?.data?.progress?.completedSteps + 1]?.id,
+              progressPercentage: (100 / workFlowData?.data?.progress?.totalSteps) * (completedSTeps),
+              currentStepName: steps[workFlowData?.data?.progress?.completedSteps + 1]?.stepName || '',
             },
             ...result.data?.candidateInfo,
           }

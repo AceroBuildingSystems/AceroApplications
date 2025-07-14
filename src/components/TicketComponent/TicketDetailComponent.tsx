@@ -57,6 +57,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
   userId,
   userRole
 }) => {
+  console.log('ticket', ticket);
   const router = useRouter();
   const { data: tasksData = {data:[]}, isLoading: tasksLoading } = useGetTicketTasksQuery({ 
     ticketId: ticket._id 
@@ -126,6 +127,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
     }
   };
 
+  
   // Check if due date is past or today
   const isDueDateCritical = ticket.dueDate && isPast(new Date(ticket.dueDate)) && !isToday(new Date(ticket.dueDate));
   const isDueDateToday = ticket.dueDate && isToday(new Date(ticket.dueDate));
@@ -321,7 +323,7 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
               
               <TabsContent value="tasks" className="mt-6 animate-slide-in">
                 <TicketTaskComponent 
-                  ticketId={ticket._id} 
+                  ticketId={ticket?._id} 
                   tasks={tasksData?.data || []} 
                   isLoading={tasksLoading}
                   userId={userId}
@@ -332,8 +334,8 @@ const TicketDetailComponent: React.FC<TicketDetailComponentProps> = ({
               
               <TabsContent value="attachments" className="mt-6 animate-slide-in">
                 <TicketAttachmentComponent
-                  ticketId={ticket._id}
-                  attachments={[]} // This would normally come from an API call
+                  ticketId={ticket?._id}
+                  attachments={ticket?.attachments|| []} // This would normally come from an API call
                   isLoading={false}
                   userId={userId}
                   canEdit={canEdit && ticket.status !== 'CLOSED'}

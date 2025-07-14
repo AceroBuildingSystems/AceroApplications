@@ -52,12 +52,12 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const [summaryData, setSummaryData] = useState([]);
     const [title, setTitle] = useState(config?.title || "");
 
-    console.log("Filtered Data", config?.dataTable?.data)
+    // console.log("Filtered Data", config?.dataTable?.data)
     useEffect(() => {
         let summaryD: any = {};
-        console.log("Config:", config);
+        // console.log("Config:", config);
         setFilteredData(config?.dataTable?.data);
-        console.log(config?.title, "Config Title");
+        // console.log(config?.title, "Config Title");
         switch (config?.title) {
             case "Usage Details":
                 summaryD = config?.dataTable?.data?.reduce(
@@ -180,7 +180,7 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     };
 
     useEffect(() => {
-        console.log(searchValues, filterValues)
+        // console.log(searchValues, filterValues)
         filterData(searchValues, filterValues); // Trigger filtering after search/filter change
     }, [searchValues, filterValues]);
 

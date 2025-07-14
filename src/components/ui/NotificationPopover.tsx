@@ -19,33 +19,33 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
   const userId = user?._id;
   const [open, setOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('unread');
-  
+
   // Get unread notification count
   const { data: countData, refetch: refetchCount } = useGetNotificationCountQuery(
     { userId, isRead: false },
     { skip: !userId, pollingInterval: 30000 } // Refresh every 30 seconds
   );
-  
+
   // Get notifications based on active tab
   const { data: notifications, refetch: refetchNotifications } = useGetNotificationsQuery(
-    { 
-      userId, 
+    {
+      userId,
       isRead: activeTab === 'read' ? true : activeTab === 'unread' ? false : undefined,
       limit: 20
     },
     { skip: !userId }
   );
-  
+
   const [markAsRead] = useMarkAsReadMutation();
-  
+
   // Count of unread notifications
   const unreadCount = countData?.data?.count || 0;
-  
+
   // Handle tab change
   const handleTabChange = (value: string) => {
     setActiveTab(value);
   };
-  
+
   // Handle mark all as read
   const handleMarkAllAsRead = async () => {
     if (userId) {
@@ -54,19 +54,19 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
       refetchCount();
     }
   };
-  
+
   // Handle individual notification marking as read
   const handleMarkAsRead = (id: string) => {
     refetchNotifications();
     refetchCount();
   };
-  
+
   // Handle notification delete
   const handleDelete = (id: string) => {
     refetchNotifications();
     refetchCount();
   };
-  
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -79,13 +79,15 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-80 p-0 bg-white shadow-lg z-[9999] border border-gray-200"
+        align="end"
+        style={{ zIndex: 9999 }}>
         <div className="flex items-center justify-between p-3 border-b">
           <h3 className="font-medium">Notifications</h3>
           {activeTab === 'unread' && unreadCount > 0 && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleMarkAllAsRead}
               className="text-xs"
             >
@@ -93,14 +95,14 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
             </Button>
           )}
         </div>
-        
+
         <Tabs defaultValue="unread" value={activeTab} onValueChange={handleTabChange}>
           <TabsList className="w-full rounded-none border-b">
             <TabsTrigger value="unread" className="flex-1">Unread</TabsTrigger>
             <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
             <TabsTrigger value="read" className="flex-1">Read</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="unread" className="p-0">
             <ScrollArea style={{ height: maxHeight }}>
               {notifications?.data?.length === 0 ? (
@@ -109,9 +111,9 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
                 </div>
               ) : (
                 notifications?.data?.map((notification: any) => (
-                  <NotificationItem 
-                    key={notification._id} 
-                    notification={notification} 
+                  <NotificationItem
+                    key={notification._id}
+                    notification={notification}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />
@@ -119,7 +121,7 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
               )}
             </ScrollArea>
           </TabsContent>
-          
+
           <TabsContent value="all" className="p-0">
             <ScrollArea style={{ height: maxHeight }}>
               {notifications?.data?.length === 0 ? (
@@ -128,9 +130,9 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
                 </div>
               ) : (
                 notifications?.data?.map((notification: any) => (
-                  <NotificationItem 
-                    key={notification._id} 
-                    notification={notification} 
+                  <NotificationItem
+                    key={notification._id}
+                    notification={notification}
                     onMarkAsRead={handleMarkAsRead}
                     onDelete={handleDelete}
                   />
@@ -138,7 +140,7 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
               )}
             </ScrollArea>
           </TabsContent>
-          
+
           <TabsContent value="read" className="p-0">
             <ScrollArea style={{ height: maxHeight }}>
               {notifications?.data?.length === 0 ? (
@@ -147,8 +149,8 @@ const NotificationPopover: React.FC<NotificationPopoverProps> = ({ maxHeight = '
                 </div>
               ) : (
                 notifications?.data?.map((notification: any) => (
-                  <NotificationItem 
-                    key={notification._id} 
+                  <NotificationItem
+                    key={notification._id}
                     notification={notification}
                     onDelete={handleDelete}
                   />

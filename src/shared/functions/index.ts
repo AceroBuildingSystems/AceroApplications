@@ -16,39 +16,39 @@ import Provider from '@/components/provider/Provider';
 import { Types } from 'mongoose';
 
 export function sanitizeUserDocs(docs: any[]): any[] {
-  return docs.map((doc: any) => {
-    const plainDoc = doc.toObject ? doc.toObject() : { ...doc };
-    const employment = plainDoc.employmentDetails || {};
+    return docs.map((doc: any) => {
+        const plainDoc = doc.toObject ? doc.toObject() : { ...doc };
+        const employment = plainDoc.employmentDetails || {};
 
-    // Safely extract and simplify necessary fields
-    return {
-      ...simplify(plainDoc),
-      department: simplify(employment?.department),
-      designation: simplify(employment?.designation),
-      reportingTo: employment?.reportingTo,
-      role: simplify(employment?.role),
-      mobile: employment?.workMobile || '',
-      extension: employment?.extension || '',
-      activeLocation: simplify(employment?.activeLocation),
-      reportingLocation: simplify(employment?.reportingLocation),
-      organisation: simplify(employment?.organisation),
-    };
-  });
+        // Safely extract and simplify necessary fields
+        return {
+            ...simplify(plainDoc),
+            department: simplify(employment?.department),
+            designation: simplify(employment?.designation),
+            reportingTo: employment?.reportingTo,
+            role: simplify(employment?.role),
+            mobile: employment?.workMobile || '',
+            extension: employment?.extension || '',
+            activeLocation: simplify(employment?.activeLocation),
+            reportingLocation: simplify(employment?.reportingLocation),
+            organisation: simplify(employment?.organisation),
+        };
+    });
 }
 
 // Recursive simplifier to flatten ObjectIds and subdocuments
 function simplify(obj: any): any {
-  if (!obj || typeof obj !== 'object') return obj;
+    if (!obj || typeof obj !== 'object') return obj;
 
-  if (obj instanceof Types.ObjectId) return obj.toString();
+    if (obj instanceof Types.ObjectId) return obj.toString();
 
-  const result: any = {};
-  for (const key in obj) {
-    const value = obj[key];
-    result[key] = simplify(value);
-  }
+    const result: any = {};
+    for (const key in obj) {
+        const value = obj[key];
+        result[key] = simplify(value);
+    }
 
-  return result;
+    return result;
 }
 
 
@@ -140,6 +140,7 @@ interface BulkImportParams {
 }
 
 export const bulkImport = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, teamData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName, onStart, onFinish }: BulkImportParams) => {
+
 
     const input = document.createElement("input");
     input.type = "file";
@@ -275,6 +276,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                     grouped[invoice].push(row);
                 }
                 console.log(grouped, 'grouped');
+                const inventoryAssetMap: Record<string, Set<string>> = {}
                 for (const invoiceNumber in grouped) {
                     const rowsForInvoice = grouped[invoiceNumber];
                     const firstRow = rowsForInvoice[0];
@@ -298,7 +300,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         data: [inventory],
                     };
                     const inventoryRes = await createUser(formattedData);
-
+                    console.log(inventoryRes, 'inventoryRes');
                     if (inventoryRes?.data?.data?.inserted?.length) {
                         insertedInventories.push(...inventoryRes.data.data.inserted);
                     }
@@ -317,7 +319,7 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
 
                         inventory: inventoryId,
                         warehouse: row.warehouse,
-                        specifications: JSON.parse(row?.specifications),
+                        specifications: row?.specifications ? JSON.parse(row?.specifications) : null,
                         addedBy: user?._id,
                         updatedBy: user?._id,
                     }));
@@ -330,10 +332,11 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         data: assetEntries,
                     };
                     const assetRes = inventoryId && await createUser(formattedData1);
-
+                    console.log(assetRes, 'assetRes');
 
                     if (assetRes?.data?.data?.inserted?.length) {
                         allInsertedAssets.push(...assetRes.data.data.inserted);
+                        console.log(allInsertedAssets, 'allInsertedAssets');
                         const insertedAssets = assetRes.data.data.inserted;
 
                         // If inserted contains full docs
@@ -352,6 +355,9 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
                         };
                         const inventoryRes = await createUser(formattedData);
                         console.log(inventoryRes, 'invetroryupdate')
+
+
+
                     }
 
                     if (assetRes?.data?.data?.skipped?.length) {
@@ -461,6 +467,9 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
     };
     input.click();
 };
+
+
+
 
 function convertToCSV(data: any[]): string {
     if (!data.length) return "";
@@ -1245,12 +1254,12 @@ const entityFieldMappings = {
     JobAccount: {
         "Account Id": "name",
         "Employee": "employee",
-       
+
     },
     PrinterMaster: {
         "Printer Name": "name",
         "Printer Location": "printerLocation",
-       
+
     },
 
 

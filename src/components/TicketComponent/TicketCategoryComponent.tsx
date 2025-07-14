@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 import { Input } from '@/components/ui/input';
+import { Input as InputComp } from '@/components/ui/inputSearch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -129,13 +130,17 @@ const TicketCategoryComponent: React.FC<TicketCategoryComponentProps> = ({
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div className="relative flex-grow max-w-lg">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-10 border-border/50 focus:border-primary focus:ring-1 focus:ring-primary w-full bg-background/50"
-            />
+          
+            <div className='w-full'>
+
+              <InputComp
+                type='text'
+                placeholder="Search categories..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
             {searchTerm && (
               <Button
                 variant="ghost"

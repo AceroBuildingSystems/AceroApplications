@@ -71,7 +71,7 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
     name: status,
     value: statusCounts[status]
   }));
-  
+ 
   // Priority distribution data
   const priorityCounts = filteredTickets.reduce((acc, ticket) => {
     const priority = ticket.priority;
@@ -86,7 +86,7 @@ const TicketStatisticsComponent: React.FC<TicketStatisticsComponentProps> = ({
   
   // Department distribution data
   const departmentCounts = filteredTickets.reduce((acc, ticket) => {
-    const department = ticket.department.name;
+    const department = ticket?.department?.name;
     acc[department] = (acc[department] || 0) + 1;
     return acc;
   }, {});

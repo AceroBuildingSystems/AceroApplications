@@ -160,6 +160,7 @@ if (modelName === 'USER_MASTER') {
 
     return {
       ...plainDoc,
+      departmentId: employmentDetails?.department?._id,
       department: employmentDetails?.department,
       designation: employmentDetails?.designation,
       reportingTo: employmentDetails?.reportingTo,

@@ -9,7 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Combobox } from "../ui/ComboBoxWrapper";
+import { Combobox } from "../ui/ComboBoxWrapperFilter";
 import { DatePicker } from "../ui/date-picker";
 import useUserAuthorised from "@/hooks/useUserAuthorised";
 import { toast } from "react-toastify";
@@ -103,33 +103,34 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   vendors,
   initialData
 }) => {
-  const { user }:any = useUserAuthorised();
+  // console.log('BulkAddDialog initialData:', initialData, 'products:', products, 'warehouses:', warehouses, 'vendors:', vendors);
+  const { user }: any = useUserAuthorised();
   const [createMaster] = useCreateMasterMutation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saveResults, setSaveResults] = useState<SaveResult[]>([]);
 
-  const [countCalls,setCountCalls] = useState(0);
-  
+  const [countCalls, setCountCalls] = useState(0);
+
   // Common data for all items
-  const [commonData, setCommonData]:any = useState<CommonData>({
+  const [commonData, setCommonData]: any = useState<CommonData>({
     warehouse: '',
   });
-  
+
   // Product items
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
   const [currentProductItem, setCurrentProductItem] = useState<ProductItem>({
     product: '',
-    quantity: 1,
+    quantity: '',
     serialNumbers: [''],
     specifications: {},
     warrantyStartDate: new Date().toISOString().split('T')[0],
-    warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+    // warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
   });
-  
+
   // Selected product for specifications
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  
+
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -143,12 +144,12 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
       setProductItems([]);
       setCurrentProductItem({
         product: '',
-        quantity: 1,
+        quantity: '',
         serialNumbers: [''],
         specifications: {},
         purchasePrice: 0,
         warrantyStartDate: new Date().toISOString().split('T')[0],
-        warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+        // warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
         warrantyDetails: '',
       });
       setSelectedProduct(null);
@@ -160,14 +161,14 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
 
   // Handle common data changes
   const handleCommonDataChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
     field: keyof CommonData
   ) => {
     setCommonData({
       ...commonData,
       [field]: e.target.value,
     });
-    
+
     // Clear error when field is changed
     if (errors[field]) {
       setErrors(prev => {
@@ -178,7 +179,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     }
   };
 
- 
+
   // Handle product selection
   const handleProductChange = (productId: string) => {
     const product = products.find((p: any) => p._id === productId);
@@ -195,14 +196,14 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
 
   // Handle product item changes
   const handleProductItemChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>, 
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
     field: keyof ProductItem
   ) => {
     setCurrentProductItem({
       ...currentProductItem,
       [field]: e.target.value,
     });
-    
+
     // Clear error when field is changed
     if (errors[field]) {
       setErrors(prev => {
@@ -215,11 +216,11 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
 
   // Handle quantity change
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const quantity = parseInt(e.target.value) || 1;
-    const serialNumbers = Array(quantity).fill('').map((_, i) => 
+    const quantity = parseInt(e.target.value) || '';
+    const serialNumbers = Array(quantity).fill('').map((_, i) =>
       currentProductItem.serialNumbers[i] || ''
     );
-    
+
     setCurrentProductItem({
       ...currentProductItem,
       quantity,
@@ -231,12 +232,12 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   const handleSerialNumberChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const newSerialNumbers = [...currentProductItem.serialNumbers];
     newSerialNumbers[index] = e.target.value;
-    
+
     setCurrentProductItem({
       ...currentProductItem,
       serialNumbers: newSerialNumbers,
     });
-    
+
     // Clear error for this serial number
     if (errors[`serialNumber${index}`]) {
       setErrors(prev => {
@@ -253,12 +254,12 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
       ...currentProductItem.specifications,
       [key]: { type, value }
     };
-    
+
     setCurrentProductItem({
       ...currentProductItem,
       specifications: newSpecs,
     });
-    
+
     // Clear specification error
     if (errors.specifications) {
       setErrors(prev => {
@@ -272,50 +273,50 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   // Validate product item
   const validateProductItem = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!currentProductItem.product) {
       newErrors.product = "Product is required";
     }
-    
+
     if (currentProductItem.quantity < 1) {
       newErrors.quantity = "Quantity must be at least 1";
     }
-    
+
     // if (currentProductItem.purchasePrice <= 0) {
     //   newErrors.purchasePrice = "Purchase price must be greater than 0";
     // }
-    
+
     // Validate warranty dates
     if (!currentProductItem.warrantyStartDate) {
       newErrors.warrantyStartDate = "Warranty start date is required";
     }
-    
+
     if (!currentProductItem.warrantyEndDate) {
       newErrors.warrantyEndDate = "Warranty end date is required";
     }
-    
+
     const purchaseDate = new Date(commonData.purchaseDate);
     const warrantyStartDate = new Date(currentProductItem.warrantyStartDate);
     const warrantyEndDate = new Date(currentProductItem.warrantyEndDate);
-    
+
     if (warrantyStartDate < purchaseDate) {
       newErrors.warrantyStartDate = "Warranty start date cannot be before purchase date";
     }
-    
+
     if (warrantyEndDate <= warrantyStartDate) {
       newErrors.warrantyEndDate = "Warranty end date must be after warranty start date";
     }
-    
+
     // Validate specifications
     if (selectedProduct?.category?.specsRequired) {
       const missingSpecs = Object.keys(selectedProduct.category.specsRequired)
         .filter(key => !currentProductItem.specifications[key]);
-      
+
       if (missingSpecs.length > 0) {
         newErrors.specifications = `Missing specifications: ${missingSpecs.join(", ")}`;
       }
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -323,20 +324,20 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   // Validate serial numbers
   const validateSerialNumbers = () => {
     const newErrors: Record<string, string> = {};
-    
+
     let isValid = true;
     // Validate serial numbers
     const emptySerialIndex = currentProductItem.serialNumbers.findIndex(sn => !sn);
     if (emptySerialIndex >= 0) {
       newErrors[`serialNumber${emptySerialIndex}`] = "Serial number is required";
     }
-    
+
     // Check for duplicate serial numbers
     const uniqueSerials = new Set(currentProductItem.serialNumbers);
     if (uniqueSerials.size !== currentProductItem.serialNumbers.length) {
       newErrors.serialNumbers = "Duplicate serial numbers are not allowed";
     }
-    
+
     // Validate all product items' serial numbers
     productItems.forEach((item, productIndex) => {
       const emptySerialIndex = item.serialNumbers.findIndex(sn => !sn);
@@ -344,7 +345,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
         newErrors[`product${productIndex}_serialNumber${emptySerialIndex}`] = "Serial number is required";
         isValid = false;
       }
-      
+
       // Check for duplicate serial numbers within this product
       const uniqueSerials = new Set(item.serialNumbers);
       if (uniqueSerials.size !== item.serialNumbers.length) {
@@ -352,7 +353,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
         isValid = false;
       }
     });
-    
+
     setErrors(newErrors);
     if (currentProductItem.product) {
       return Object.keys(newErrors).length === 0;
@@ -364,7 +365,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   const checkForDuplicateSerialNumbers = () => {
     const allSerialNumbers: string[] = [];
     const duplicates: string[] = [];
-    
+
     productItems.forEach(item => {
       item.serialNumbers.forEach(sn => {
         if (allSerialNumbers.includes(sn)) {
@@ -374,7 +375,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
         }
       });
     });
-    
+
     if (duplicates.length > 0) {
       toast.error(`Duplicate serial numbers found across products: ${duplicates.join(', ')}`);
       return false;
@@ -385,22 +386,22 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   // Add current product item to list
   const addProductItem = () => {
     if (!validateProductItem()) {
-      
+
       return;
     }
-    
+
     // Add to product items
     setProductItems([...productItems, currentProductItem]);
-    
+
     // Reset current product item
     setCurrentProductItem({
       product: '',
-      quantity: 1,
+      quantity: '',
       serialNumbers: [''],
       specifications: {},
       purchasePrice: 0,
       warrantyStartDate: new Date().toISOString().split('T')[0],
-      warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+      // warrantyEndDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
       warrantyDetails: '',
     });
     setSelectedProduct(null);
@@ -416,27 +417,27 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
   // Validate step 1
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!commonData.vendor) {
       newErrors.vendor = "Vendor is required";
     }
-    
+
     if (!commonData.poNumber) {
       newErrors.poNumber = "PO Number is required";
     }
-    
+
     if (!commonData.invoiceNumber) {
       newErrors.invoiceNumber = "Invoice Number is required";
     }
-    
+
     if (!commonData.warehouse) {
       newErrors.warehouse = "Warehouse is required";
     }
-    
+
     if (!commonData.purchaseDate) {
       newErrors.purchaseDate = "Purchase Date is required";
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -446,27 +447,27 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     if (step === 1 && !validateStep1()) {
       return;
     }
-    
+
     if (step === 2 && currentProductItem.product) {
       if (!validateProductItem()) {
         return;
       }
-      
+
       // If there's a product selected but not added, ask user if they want to add it
       if (window.confirm("You have a product selected but not added. Do you want to add it before proceeding?")) {
         addProductItem();
       }
     }
-    
+
     if (step === 2 && productItems.length === 0) {
       toast.error("Please add at least one product");
       return;
     }
-    
+
     if (step === 3 && !validateSerialNumbers()) {
       return;
     }
-    
+
     setStep(step + 1);
   };
 
@@ -475,7 +476,7 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     const updatedItems = [...productItems];
     updatedItems[productIndex].serialNumbers[serialIndex] = value;
     setProductItems(updatedItems);
-    
+
     // Clear error for this serial number
     if (errors[`product${productIndex}_serialNumber${serialIndex}`]) {
       setErrors(prev => {
@@ -499,226 +500,226 @@ const BulkAddDialog: React.FC<BulkAddDialogProps> = ({
     setIsSubmitting(true);
     const failedItems = saveResults.filter(r => !r.success).map(r => r.item);
     const newResults = [...saveResults.filter(r => r.success)];
-    
+
     for (const item of failedItems) {
       try {
         const updatedData = { ...item, updatedBy: user._id, addedBy: user._id };
         const response = await onSave({ formData: updatedData as AssetFormData, action: "Add" });
-        newResults.push({ 
+        newResults.push({
           id: Math.random().toString(36).substring(7),
-          item, 
-          success: !response?.error, 
-          message: response?.error?.message 
+          item,
+          success: !response?.error,
+          message: response?.error?.message
         });
       } catch (error: any) {
-        newResults.push({ 
+        newResults.push({
           id: Math.random().toString(36).substring(7),
-          item, 
-          success: false, 
-          message: error.message || "Error saving item" 
+          item,
+          success: false,
+          message: error.message || "Error saving item"
         });
       }
     }
-    
+
     setSaveResults(newResults);
     setIsSubmitting(false);
-    
+
     const successCount = newResults.filter(r => r.success).length;
     toast.info(`Retry complete: ${successCount} of ${newResults.length} items successful`);
   };
 
-const handleSubmit = async (e:any) => {
-  if (e && typeof e.preventDefault === 'function') {
-    e.preventDefault();
-  }
-  
-  if (isSubmitting) {
-    return;
-  }
-  
-  setIsSubmitting(true);
+  const handleSubmit = async (e: any) => {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
 
-  if (!checkForDuplicateSerialNumbers()) {
-    setIsSubmitting(false);
-    return;
-  }
+    if (isSubmitting) {
+      return;
+    }
 
-  const results: SaveResult[] = [];
-  
-  try {
-    // Validate required inventory fields
-    const requiredFields = ['invoiceNumber', 'vendor', 'poNumber', 'warehouse', 'purchaseDate'];
-    const missingFields = requiredFields.filter(field => 
-      !commonData[field as keyof CommonData]
-    );
-    
-    if (missingFields.length > 0) {
-      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+    setIsSubmitting(true);
+
+    if (!checkForDuplicateSerialNumbers()) {
       setIsSubmitting(false);
       return;
     }
 
-    console.log('Creating inventory with data:', JSON.stringify(commonData, null, 2));
+    const results: SaveResult[] = [];
 
-    // First create/update the inventory record
-    let inventoryId = commonData._id;
-    if (!inventoryId) {
-      const inventoryData = {
-        invoiceNumber: commonData.invoiceNumber,
-        vendor: commonData.vendor,
-        poNumber: commonData.poNumber,
-        prNumber: commonData.prNumber || undefined, // Only include if not empty
-        warehouse: commonData.warehouse,
-        purchaseDate: commonData.purchaseDate,
-        assets: [], // Will be populated with asset IDs
-        isActive: true,
-        addedBy: user._id,
-        updatedBy: user._id
-      };
+    try {
+      // Validate required inventory fields
+      const requiredFields = ['invoiceNumber', 'vendor', 'poNumber', 'warehouse', 'purchaseDate'];
+      const missingFields = requiredFields.filter(field =>
+        !commonData[field as keyof CommonData]
+      );
 
-      try {
-        const inventoryResponse = await createMaster({
-          db: MONGO_MODELS.INVENTORY_MASTER,
-          action: 'create',
-          data: inventoryData
-        }).unwrap();
+      if (missingFields.length > 0) {
+        toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+        setIsSubmitting(false);
+        return;
+      }
 
-        if (!inventoryResponse || inventoryResponse.error) {
-          const errorMsg = inventoryResponse?.error?.message || 'Failed to create inventory record';
-          console.error('Inventory creation error:', errorMsg);
+      console.log('Creating inventory with data:', JSON.stringify(commonData, null, 2));
+
+      // First create/update the inventory record
+      let inventoryId = commonData._id;
+      if (!inventoryId) {
+        const inventoryData = {
+          invoiceNumber: commonData.invoiceNumber,
+          vendor: commonData.vendor,
+          poNumber: commonData.poNumber,
+          prNumber: commonData.prNumber || undefined, // Only include if not empty
+          warehouse: commonData.warehouse,
+          purchaseDate: commonData.purchaseDate,
+          assets: [], // Will be populated with asset IDs
+          isActive: true,
+          addedBy: user._id,
+          updatedBy: user._id
+        };
+
+        try {
+          const inventoryResponse = await createMaster({
+            db: MONGO_MODELS.INVENTORY_MASTER,
+            action: 'create',
+            data: inventoryData
+          }).unwrap();
+
+          if (!inventoryResponse || inventoryResponse.error) {
+            const errorMsg = inventoryResponse?.error?.message || 'Failed to create inventory record';
+            console.error('Inventory creation error:', errorMsg);
+            toast.error(errorMsg);
+            setIsSubmitting(false);
+            return;
+          }
+
+          inventoryId = inventoryResponse.data._id;
+          console.log('Successfully created inventory with ID:', inventoryId);
+        } catch (error: any) {
+          const errorMsg = error?.data?.message || error?.message || 'An unknown error occurred creating inventory';
+          console.error('Error creating inventory:', error);
           toast.error(errorMsg);
           setIsSubmitting(false);
           return;
         }
+      }
 
-        inventoryId = inventoryResponse.data._id;
-        console.log('Successfully created inventory with ID:', inventoryId);
-      } catch (error: any) {
-        const errorMsg = error?.data?.message || error?.message || 'An unknown error occurred creating inventory';
-        console.error('Error creating inventory:', error);
-        toast.error(errorMsg);
+      // Create asset items from product items
+      const assetItems: AssetFormData[] = [];
+
+      for (const item of productItems) {
+        for (const serialNumber of item.serialNumbers) {
+          if (!serialNumber.trim()) {
+            continue; // Skip empty serial numbers
+          }
+
+          const assetData = {
+            serialNumber,
+            product: item.product,
+            warehouse: commonData.warehouse,
+            inventory: inventoryId, // Add inventory reference
+            status: 'available',
+            warrantyStartDate: item.warrantyStartDate,
+            warrantyEndDate: item.warrantyEndDate,
+            specifications: item.specifications,
+            isActive: true,
+            addedBy: user._id,
+            updatedBy: user._id,
+          };
+          console.log(assetData, 'assetData');
+          // If editing an existing asset
+          if (item._id) {
+            assetData._id = item._id;
+          }
+
+          assetItems.push(assetData);
+        }
+      }
+
+      if (assetItems.length === 0) {
+        toast.error('No valid assets to create');
         setIsSubmitting(false);
         return;
       }
-    }
 
-    // Create asset items from product items
-    const assetItems: AssetFormData[] = [];
-    
-    for (const item of productItems) {
-      for (const serialNumber of item.serialNumbers) {
-        if (!serialNumber.trim()) {
-          continue; // Skip empty serial numbers
-        }
-        
-        const assetData = {
-          serialNumber,
-          product: item.product,
-          warehouse: commonData.warehouse,
-          inventory: inventoryId, // Add inventory reference
-          status: 'available',
-          warrantyStartDate: item.warrantyStartDate,
-          warrantyEndDate: item.warrantyEndDate,
-          specifications: item.specifications,
-          isActive: true,
-          addedBy: user._id,
-          updatedBy: user._id,
-        };
-console.log(assetData,'assetData');
-        // If editing an existing asset
-        if (item._id) {
-          assetData._id = item._id;
-        }
+      // Move to results step before starting save operations
+      setStep(5);
 
-        assetItems.push(assetData);
+      // Initialize results array
+      for (const item of assetItems) {
+        const tempId = Math.random().toString(36).substring(7);
+        results.push({ id: tempId, item, success: false, message: "Waiting..." });
       }
-    }
-    
-    if (assetItems.length === 0) {
-      toast.error('No valid assets to create');
-      setIsSubmitting(false);
-      return;
-    }
-    
-    // Move to results step before starting save operations
-    setStep(5);
-    
-    // Initialize results array
-    for (const item of assetItems) {
-      const tempId = Math.random().toString(36).substring(7);
-      results.push({ id: tempId, item, success: false, message: "Waiting..." });
-    }
-    setSaveResults([...results]);
-
-    const newAssetIds: string[] = [];
-
-    // Save items one by one
-    for (let i = 0; i < assetItems.length; i++) {
-      const item = assetItems[i];
-      
-      results[i].message = "Saving...";
       setSaveResults([...results]);
-      
-      try {
-        console.log(`Saving asset ${i+1}/${assetItems.length}:`, JSON.stringify(item, null, 2));
-        
-        const response = await onSave({ 
-          formData: item as AssetFormData, 
-          action: item._id ? "Update" : "Add" 
-        });
-        
-        if (!response || response.error) {
+
+      const newAssetIds: string[] = [];
+
+      // Save items one by one
+      for (let i = 0; i < assetItems.length; i++) {
+        const item = assetItems[i];
+
+        results[i].message = "Saving...";
+        setSaveResults([...results]);
+
+        try {
+          console.log(`Saving asset ${i + 1}/${assetItems.length}:`, JSON.stringify(item, null, 2));
+
+          const response = await onSave({
+            formData: item as AssetFormData,
+            action: item._id ? "Update" : "Add"
+          });
+
+          if (!response || response.error) {
+            results[i].success = false;
+            results[i].message = response?.error?.message || "Failed to save";
+            console.error(`Failed to save asset ${i + 1}:`, response?.error);
+          } else {
+            results[i].success = true;
+            results[i].message = "";
+            if (!item._id) {
+              newAssetIds.push(response.data._id);
+            }
+          }
+        } catch (error: any) {
           results[i].success = false;
-          results[i].message = response?.error?.message || "Failed to save";
-          console.error(`Failed to save asset ${i+1}:`, response?.error);
-        } else {
-          results[i].success = true;
-          results[i].message = "";
-          if (!item._id) {
-            newAssetIds.push(response.data._id);
-          }
+          results[i].message = error.message || "Error saving item";
+          console.error(`Error saving asset ${i + 1}:`, error);
         }
-      } catch (error:any) {
-        results[i].success = false;
-        results[i].message = error.message || "Error saving item";
-        console.error(`Error saving asset ${i+1}:`, error);
-      }
-      
-      setSaveResults([...results]);
-    }
 
-    // Update inventory with new asset IDs
-    if (newAssetIds.length > 0) {
-      try {
-        console.log('Updating inventory with new asset IDs:', newAssetIds);
-        
-        await createMaster({
-          db: MONGO_MODELS.INVENTORY_MASTER,
-          action: 'update',
-          filter: { _id: inventoryId },
-          data: {
-            $push: { assets: { $each: newAssetIds } }
-          }
-        });
-      } catch (error) {
-        console.error('Error updating inventory:', error);
-        toast.error('Failed to update inventory with new assets');
+        setSaveResults([...results]);
       }
-    }
 
-    const successCount = results.filter(r => r.success).length;
-    if (successCount === assetItems.length) {
-      toast.success(`Successfully ${commonData._id ? 'updated' : 'added'} ${successCount} items`);
-    } else {
-      toast.warning(`${commonData._id ? 'Updated' : 'Added'} ${successCount} of ${assetItems.length} items`);
+      // Update inventory with new asset IDs
+      if (newAssetIds.length > 0) {
+        try {
+          console.log('Updating inventory with new asset IDs:', newAssetIds);
+
+          await createMaster({
+            db: MONGO_MODELS.INVENTORY_MASTER,
+            action: 'update',
+            filter: { _id: inventoryId },
+            data: {
+              $push: { assets: { $each: newAssetIds } }
+            }
+          });
+        } catch (error) {
+          console.error('Error updating inventory:', error);
+          toast.error('Failed to update inventory with new assets');
+        }
+      }
+
+      const successCount = results.filter(r => r.success).length;
+      if (successCount === assetItems.length) {
+        toast.success(`Successfully ${commonData._id ? 'updated' : 'added'} ${successCount} items`);
+      } else {
+        toast.warning(`${commonData._id ? 'Updated' : 'Added'} ${successCount} of ${assetItems.length} items`);
+      }
+    } catch (error) {
+      console.error("Error saving data:", error);
+      toast.error("Error adding items");
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error("Error saving data:", error);
-    toast.error("Error adding items");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
 
   // Render step content
   const renderStepContent = () => {
@@ -759,7 +760,7 @@ console.log(assetData,'assetData');
                 />
                 {errors.vendor && <span className="text-sm text-destructive">{errors.vendor}</span>}
               </div>
-              
+
               <div>
                 <Label>Warehouse</Label>
                 <Combobox
@@ -790,7 +791,7 @@ console.log(assetData,'assetData');
                 />
                 {errors.warehouse && <span className="text-sm text-destructive">{errors.warehouse}</span>}
               </div>
-              
+
               <div>
                 <Label>PO Number</Label>
                 <Input
@@ -802,7 +803,7 @@ console.log(assetData,'assetData');
                 />
                 {errors.poNumber && <span className="text-sm text-destructive">{errors.poNumber}</span>}
               </div>
-              
+
               <div>
                 <Label>PR Number</Label>
                 <Input
@@ -812,7 +813,7 @@ console.log(assetData,'assetData');
                   placeholder="Enter PR number"
                 />
               </div>
-              
+
               <div>
                 <Label>Invoice Number</Label>
                 <Input
@@ -824,7 +825,7 @@ console.log(assetData,'assetData');
                 />
                 {errors.invoiceNumber && <span className="text-sm text-destructive">{errors.invoiceNumber}</span>}
               </div>
-              
+
               <div>
                 <Label>Purchase Date</Label>
                 <DatePicker
@@ -833,6 +834,17 @@ console.log(assetData,'assetData');
                     setCommonData({
                       ...commonData,
                       purchaseDate: selectedDate?.toISOString().split('T')[0] || ''
+                    });
+                    let oneYearLater: Date | null = null;
+                    if (selectedDate) {
+                      oneYearLater = new Date(selectedDate);
+                      oneYearLater.setFullYear(oneYearLater.getFullYear() + 1);
+                    }
+
+                    setCurrentProductItem({
+                      ...currentProductItem,
+                      warrantyStartDate: selectedDate?.toISOString().split('T')[0] || '',
+                      warrantyEndDate: oneYearLater ? oneYearLater.toISOString().split('T')[0] : ''
                     });
                     if (errors.purchaseDate) {
                       setErrors(prev => {
@@ -849,9 +861,9 @@ console.log(assetData,'assetData');
             </div>
           </div>
         );
-        
+
       case 2:
-        console.log(currentProductItem)
+        console.log(currentProductItem, 'currentitem')
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Step 2: Product Selection</h3>
@@ -873,20 +885,20 @@ console.log(assetData,'assetData');
                 />
                 {errors.product && <span className="text-sm text-destructive">{errors.product}</span>}
               </div>
-              
+
               <div>
                 <Label>Quantity</Label>
                 <Input
                   type="number"
-                  min="1"
-                  value={currentProductItem.quantity}
+
+                  value={currentProductItem?.quantity}
                   onChange={handleQuantityChange}
                   placeholder="Enter quantity"
                   className={errors.quantity ? "border-destructive" : ""}
                 />
                 {errors.quantity && <span className="text-sm text-destructive">{errors.quantity}</span>}
               </div>
-              
+
               {/* <div>
                 <Label>Purchase Price</Label>
                 <Input
@@ -900,16 +912,19 @@ console.log(assetData,'assetData');
                 />
                 {errors.purchasePrice && <span className="text-sm text-destructive">{errors.purchasePrice}</span>}
               </div> */}
-              
+
               <div>
                 <Label>Warranty Start Date</Label>
                 <DatePicker
                   currentDate={currentProductItem.warrantyStartDate}
                   handleChange={(selectedDate: Date | null) => {
+                   
                     setCurrentProductItem({
                       ...currentProductItem,
-                      warrantyStartDate: selectedDate?.toISOString().split('T')[0] || ''
+                      warrantyStartDate: selectedDate?.toISOString().split('T')[0] || '',
+                      
                     });
+
                     if (errors.warrantyStartDate) {
                       setErrors(prev => {
                         const newErrors = { ...prev };
@@ -922,7 +937,7 @@ console.log(assetData,'assetData');
                 />
                 {errors.warrantyStartDate && <span className="text-sm text-destructive">{errors.warrantyStartDate}</span>}
               </div>
-              
+
               <div>
                 <Label>Warranty End Date</Label>
                 <DatePicker
@@ -944,7 +959,7 @@ console.log(assetData,'assetData');
                 />
                 {errors.warrantyEndDate && <span className="text-sm text-destructive">{errors.warrantyEndDate}</span>}
               </div>
-              
+
               <div className="col-span-2">
                 <Label>Warranty Details</Label>
                 <textarea
@@ -956,7 +971,7 @@ console.log(assetData,'assetData');
                 />
               </div>
             </div>
-            
+
             {selectedProduct && (
               <div className="mt-4">
                 <Label>Specifications</Label>
@@ -979,7 +994,7 @@ console.log(assetData,'assetData');
                             type={value.type === "number" ? "number" : "text"}
                             value={String(currentProductItem.specifications[key]?.value || "")}
                             onChange={(e) => handleSpecificationChange(
-                              key, 
+                              key,
                               value.type === "number" ? Number(e.target.value) : e.target.value,
                               value.type
                             )}
@@ -993,14 +1008,14 @@ console.log(assetData,'assetData');
                 {errors.specifications && <span className="text-sm text-destructive">{errors.specifications}</span>}
               </div>
             )}
-            
+
             <div className="flex justify-end mt-4">
               <Button onClick={addProductItem} disabled={!selectedProduct}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
             </div>
-            
+
             {productItems.length > 0 && (
               <div className="mt-6">
                 <h4 className="font-medium mb-2">Added Products</h4>
@@ -1034,12 +1049,12 @@ console.log(assetData,'assetData');
             )}
           </div>
         );
-        
+
       case 3:
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Step 3: Serial Numbers</h3>
-            
+
             <ScrollArea className="h-[400px]">
               {productItems.length > 0 ? (
                 <div className="space-y-6">
@@ -1056,7 +1071,7 @@ console.log(assetData,'assetData');
                               <Badge>Quantity: {item.quantity}</Badge>
                             </div>
                           </div>
-                          
+
                           <div className="space-y-2">
                             {item.serialNumbers.map((serialNumber, serialIndex) => (
                               <div key={serialIndex} className="flex gap-2 items-center">
@@ -1074,7 +1089,7 @@ console.log(assetData,'assetData');
                               </div>
                             ))}
                           </div>
-                          
+
                           {errors[`product${productIndex}_serialNumbers`] && (
                             <div className="text-sm text-destructive">{errors[`product${productIndex}_serialNumbers`]}</div>
                           )}
@@ -1091,12 +1106,12 @@ console.log(assetData,'assetData');
             </ScrollArea>
           </div>
         );
-        
+
       case 4:
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Step 4: Review</h3>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Common Information</CardTitle>
@@ -1127,7 +1142,7 @@ console.log(assetData,'assetData');
                 </div>
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Products</CardTitle>
@@ -1144,7 +1159,7 @@ console.log(assetData,'assetData');
                               <h4 className="font-medium">{product?.name || "Product"}</h4>
                               <Badge>Quantity: {item.quantity}</Badge>
                             </div>
-                            
+
                             {/* <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <span className="font-medium">Purchase Price:</span> {item.purchasePrice}
@@ -1155,9 +1170,9 @@ console.log(assetData,'assetData');
                                 {new Date(item.warrantyEndDate).toLocaleDateString()}
                               </div>
                             </div> */}
-                            
+
                             <Separator />
-                            
+
                             <div>
                               <h5 className="font-medium mb-1">Specifications:</h5>
                               <div className="grid grid-cols-2 gap-2">
@@ -1169,7 +1184,7 @@ console.log(assetData,'assetData');
                                 ))}
                               </div>
                             </div>
-                            
+
                             <div>
                               <h5 className="font-medium mb-1">Serial Numbers:</h5>
                               <div className="grid grid-cols-2 gap-2">
@@ -1188,18 +1203,18 @@ console.log(assetData,'assetData');
                 </ScrollArea>
               </CardContent>
             </Card>
-            
+
             <div className="text-right text-sm text-muted-foreground">
               Total items to add: {productItems.reduce((sum, item) => sum + item.quantity, 0)}
             </div>
           </div>
         );
-        
+
       case 5:
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Step 5: Results</h3>
-            
+
             <ScrollArea className="h-[400px]">
               <div className="space-y-2">
                 {saveResults.map((result) => (
@@ -1212,7 +1227,7 @@ console.log(assetData,'assetData');
                       )}
                       <div>
                         <div className="font-medium">
-                          {products.find((p: any) => p._id === result.item.product)?.name || "Product"} - 
+                          {products.find((p: any) => p._id === result.item.product)?.name || "Product"} -
                           {result.item.serialNumber}
                         </div>
                         {!result.success && (
@@ -1224,7 +1239,7 @@ console.log(assetData,'assetData');
                 ))}
               </div>
             </ScrollArea>
-            
+
             <div className="flex justify-between items-center mt-4">
               <div>
                 <Badge variant="outline" className="mr-2">
@@ -1248,7 +1263,7 @@ console.log(assetData,'assetData');
             </div>
           </div>
         );
-        
+
       default:
         return null;
     }
@@ -1264,21 +1279,19 @@ console.log(assetData,'assetData');
             className={`flex items-center ${s < 5 ? "flex-1" : ""}`}
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                s === step
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${s === step
                   ? "bg-primary text-white"
                   : s < step
-                  ? "bg-primary/20 text-primary"
-                  : "bg-gray-200 text-gray-500"
-              }`}
+                    ? "bg-primary/20 text-primary"
+                    : "bg-gray-200 text-gray-500"
+                }`}
             >
               {s}
             </div>
             {s < 5 && (
               <div
-                className={`h-1 flex-1 ${
-                  s < step ? "bg-primary/20" : "bg-gray-200"
-                }`}
+                className={`h-1 flex-1 ${s < step ? "bg-primary/20" : "bg-gray-200"
+                  }`}
               ></div>
             )}
           </div>
@@ -1293,13 +1306,13 @@ console.log(assetData,'assetData');
         <DialogHeader>
           <DialogTitle>Bulk Add Assets</DialogTitle>
         </DialogHeader>
-        
+
         {renderStepIndicator()}
-        
+
         <div className="bg-white h-full max-h-[450px] overflow-y-auto p-2 rounded-md">
           {renderStepContent()}
         </div>
-        
+
         <DialogFooter>
           {step > 1 && step < 5 && (
             <Button variant="outline" onClick={prevStep} disabled={isSubmitting}>
@@ -1307,26 +1320,26 @@ console.log(assetData,'assetData');
               Back
             </Button>
           )}
-          
+
           {step < 4 && (
             <Button onClick={nextStep} disabled={isSubmitting}>
               Next
               <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
           )}
-          
+
           {step === 4 && (
-  <Button 
-    type="button" 
-    onClick={(e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      handleSubmit(e);
-    }} 
-    disabled={isSubmitting}
-  >
-    {isSubmitting ? "Saving..." : "Save All"}
-  </Button>
-)}
+            <Button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                handleSubmit(e);
+              }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save All"}
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

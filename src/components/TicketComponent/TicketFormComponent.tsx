@@ -202,13 +202,11 @@ export const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                 </label>
                 <div className="relative">
                   <Input
+                  type='text'
                     id="title"
                     placeholder="Enter a clear title for your issue"
                     {...register('title')}
-                    className={cn(
-                      "rounded-md border-input focus:border-primary focus:ring-primary",
-                      errors.title ? "border-destructive focus:border-destructive focus:ring-destructive" : ""
-                    )}
+                  
                     aria-invalid={errors.title ? "true" : "false"}
                   />
                   {errors.title && (

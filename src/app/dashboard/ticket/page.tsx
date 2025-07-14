@@ -446,6 +446,7 @@ const TicketDashboardPage = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 pr-9 rounded-xl border-0 h-9 focus:border-primary/40 transition-all duration-200 bg-transparent focus:ring-0 focus:ring-offset-0 w-full"
               />
+              
               <AnimatePresence>
                 {searchQuery && (
                   <motion.div

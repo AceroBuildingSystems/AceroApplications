@@ -232,7 +232,7 @@ const handleImport = async () => {
         ],
         
         filterFields: [
-             { key: "name", label: 'name', type: "select" as const, options: productTypeData?.data , placeholder: 'Search by Product Type'},
+            //  { key: "name", label: 'name', type: "select" as const, options: productTypeData?.data , placeholder: 'Search by Product Type'},
 
         ],
         dataTable: {

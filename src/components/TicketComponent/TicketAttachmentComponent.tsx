@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import DashboardLoader from '@/components/ui/DashboardLoader';
+import { useUpdateTicketMutation } from '@/services/endpoints/ticketApi'; // adjust import as needed
 
 interface Attachment {
   _id: string;
@@ -32,6 +33,7 @@ interface TicketAttachmentComponentProps {
   isLoading: boolean;
   userId: string;
   canEdit: boolean;
+  // Function to refetch attachments after upload
 }
 
 const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
@@ -39,74 +41,129 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
   attachments = [],
   isLoading,
   userId,
-  canEdit
+  canEdit,
+
 }) => {
+  console.log(attachments, 'attachments');
+  const currentAttachments = attachments || [];
+  const [updateTicket] = useUpdateTicketMutation();
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
   };
-  
+
   // Handle file upload (simulate for now)
   const handleUpload = async () => {
     if (!selectedFile) return;
-    
+    console.log('upoading file:', selectedFile.name);
     setIsUploading(true);
     setUploadProgress(0);
-    
-    // Simulate upload progress
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 10;
+
+    // Prepare API endpoint with ticketId and userId
+    const endpoint = `/api/upload?ticketId=${ticketId}&userId=${userId}`;
+
+    // Prepare headers
+    const headers: HeadersInit = {
+      "Content-Type": selectedFile.type || "application/octet-stream",
+      "Content-Disposition": `attachment; filename="${selectedFile.name}"`
+    };
+
+    // Optional: Track upload progress (for UI only)
+    const reader = selectedFile.stream().getReader();
+    let uploaded = 0;
+    const total = selectedFile.size;
+    let chunks: Uint8Array[] = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        chunks.push(value);
+        uploaded += value.length;
+        setUploadProgress(Math.min(100, Math.round((uploaded / total) * 100)));
+      }
+    }
+    const fileBuffer = new Blob(chunks);
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers,
+        body: fileBuffer
       });
-    }, 300);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      clearInterval(interval);
+
+      const result = await res.json();
+      console.log('Upload result:', result);
+      if (res.ok && result.status === "success") {
+        const newAttachment = {
+          url: result.data.url,
+          fileName: result.data.fileName,
+          fileType: result.data.fileType,
+          fileSize: result.data.fileSize,
+          attachedBy: result.data.userId,
+          attachedAt: result.data.uploadedAt,
+          originalName: result.data.originalName,
+          storedFileName: result.data.storedFileName,
+          ticketId: result.data.ticketId,
+        };
+
+        // Create the new array
+        const updatedAttachments = [...currentAttachments, newAttachment];
+
+        // Call the mutation
+        await updateTicket({
+          action: 'update',
+          data: { _id: ticketId, attachments: updatedAttachments }
+        }).unwrap();
+
+
+        toast.success("File uploaded successfully");
+        setIsUploadDialogOpen(false);
+        setSelectedFile(null);
+        // Optionally: refresh attachments list here
+      } else {
+        toast.error(result.message || "Upload failed");
+      }
+    } catch (err: any) {
+      toast.error("Upload failed: " + err.message);
+    } finally {
       setIsUploading(false);
-      setIsUploadDialogOpen(false);
-      setSelectedFile(null);
-      toast.success('File uploaded successfully');
-      // Here you would typically call an API to upload the file
-    }, 3000);
+      setUploadProgress(0);
+    }
   };
-  
+
   // Get icon based on file type
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) {
+    if (fileType?.startsWith('image/')) {
       return <Image className="h-8 w-8 text-blue-500" />;
-    } else if (fileType.includes('pdf')) {
+    } else if (fileType?.includes('pdf')) {
       return <FileText className="h-8 w-8 text-red-500" />;
     } else {
       return <File className="h-8 w-8 text-gray-500" />;
     }
   };
-  
+
   // Format file size
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / 1048576).toFixed(1) + ' MB';
   };
-  
+
   return (
     <Card>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-center">
           <CardTitle className="text-lg">Attachments</CardTitle>
           {canEdit && (
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setIsUploadDialogOpen(true)}
             >
@@ -127,9 +184,9 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
             </div>
           ) : (
             <div className="space-y-3">
-              {attachments.map(attachment => (
-                <div 
-                  key={attachment._id} 
+              {attachments.map((attachment:any) => (
+                <div
+                  key={attachment._id}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -139,30 +196,32 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
                       <div className="flex items-center gap-3 text-xs text-gray-500">
                         <span>{formatFileSize(attachment.fileSize)}</span>
                         <span>•</span>
-                        <span>{format(new Date(attachment.createdAt), 'MMM d, yyyy')}</span>
+                        <span>
+                          {format(new Date(attachment.attachedAt), 'MMM d, yyyy, hh:mm a')}
+                        </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     <span className="flex items-center text-xs text-gray-600">
                       <Avatar className="h-5 w-5 mr-1">
                         <AvatarFallback className="text-[9px]">
-                          {`${attachment.uploadedBy.firstName[0]}${attachment.uploadedBy.lastName[0]}`}
+                          {`${attachment.attachedBy?.firstName?.[0] ?? ''}${attachment.attachedBy?.lastName?.[0] ?? ''}`}
                         </AvatarFallback>
                       </Avatar>
-                      {attachment.uploadedBy.firstName}
+                      {attachment.attachedBy?.firstName}
                     </span>
-                    
+
                     <Button variant="ghost" size="icon" asChild>
                       <a href={attachment.url} download target="_blank">
                         <Download className="h-4 w-4" />
                       </a>
                     </Button>
-                    
-                    {canEdit && userId === attachment.uploadedBy._id && (
+
+                    {canEdit && userId === attachment.attachedBy?._id && (
                       <Button variant="ghost" size="icon">
-                        <Trash className="h-4 w-4 text-red-500" />
+                        {/* <Trash className="h-4 w-4 text-red-500" /> */}
                       </Button>
                     )}
                   </div>
@@ -172,7 +231,7 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
           )}
         </DashboardLoader>
       </CardContent>
-      
+
       {/* Upload Dialog */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
         <DialogContent>
@@ -182,21 +241,21 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
               Attach a file to this ticket
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center">
               <Paperclip className="h-8 w-8 text-gray-400 mb-2" />
               <p className="text-sm text-gray-500 mb-4">
                 Drag and drop a file here, or click to select
               </p>
-              <Input 
-                id="file-upload" 
-                type="file" 
+              <Input
+                id="file-upload"
+                type="file"
                 className="max-w-xs"
                 onChange={handleFileChange}
               />
             </div>
-            
+
             {selectedFile && (
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex items-center gap-3">
@@ -208,7 +267,7 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
                     </div>
                   </div>
                 </div>
-                
+
                 {isUploading && (
                   <div className="mt-2">
                     <div className="flex justify-between items-center text-xs mb-1">
@@ -216,8 +275,8 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
                       <span>{uploadProgress}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-1.5">
-                      <div 
-                        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300" 
+                      <div
+                        className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                     </div>
@@ -226,12 +285,12 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
               </div>
             )}
           </div>
-          
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)} disabled={isUploading}>
               Cancel
             </Button>
-            <Button 
+            <Button
               onClick={handleUpload}
               disabled={!selectedFile || isUploading}
             >

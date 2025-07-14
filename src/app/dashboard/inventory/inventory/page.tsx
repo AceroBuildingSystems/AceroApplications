@@ -144,7 +144,16 @@ const InventoryPage = () => {
         filter: { isActive: true },
         populate: ['vendor', 'warehouse', 'assets', 'assets.product', 'assets.product.category']
     });
-console.log(inventoryResponse, 'inventorydata')
+// console.log('inventoryResponse', inventoryResponse);
+
+ const fieldsToAdd = [
+    { fieldName: 'vendorName', path: ['vendor', 'name'] },
+    { fieldName: 'warehouseName', path: ['warehouse', 'name'] },
+   
+];
+
+const transformedData = transformData(inventoryResponse?.data, fieldsToAdd);
+
     const { data: vendorsResponse, isLoading: vendorLoading } = useGetMasterQuery({
         db: MONGO_MODELS.VENDOR_MASTER,
         filter: { isActive: true }
@@ -691,31 +700,31 @@ console.log(inventoryResponse, 'inventorydata')
         ],
         filterFields: [
             {
-                key: "vendor",
+                key: "vendorName",
                 label: "vendor",
                 type: "select" as const,
                 placeholder: "Filter by vendor",
                 data: vendorsResponse?.data?.map((vendor: any) => ({
-                    _id: vendor._id,
+                    _id: vendor.name,
                     name: vendor.name
                 })),
-                name: "vendor",
+                name: "vendorName",
             },
             {
-                key: "warehouse",
+                key: "warehouseName",
                 label: "warehouse",
                 type: "select" as const,
                 placeholder: "Filter by warehouse",
                 data: warehousesResponse?.data?.map((wh: any) => ({
-                    _id: wh._id,
+                    _id: wh.name,
                     name: wh.name
                 })),
-                name: "warehouse",
+                name: "warehouseName",
             },
         ],
         dataTable: {
             columns: columns,
-            data: inventoryResponse?.data || [],
+            data: transformedData || [],
             onRowClick: handleEdit,
             enableRowClick: true
         },

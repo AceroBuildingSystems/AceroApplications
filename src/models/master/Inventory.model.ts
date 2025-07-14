@@ -84,10 +84,10 @@ const InventorySchema = new mongoose.Schema({
 });
 
 // Add assets to inventory
-InventorySchema.methods.addAssets = async function(assetIds: string[]) {
-    this.assets.push(...assetIds);
-    await this.save();
-};
+// InventorySchema.methods.addAssets = async function(assetIds: string[]) {
+//     this.assets.push(...assetIds);
+//     await this.save();
+// };
 
 // Remove assets from inventory
 InventorySchema.methods.removeAssets = async function(assetIds: string[]) {

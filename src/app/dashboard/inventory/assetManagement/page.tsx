@@ -182,6 +182,10 @@ const AssetManagementPage = () => {
         db: MONGO_MODELS.LOCATION_MASTER,
         filter: { isActive: true }
     });
+    const { data: warehouseData, isLoading: warehouseLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.WAREHOUSE_MASTER,
+        filter: { isActive: true }
+    });
     const { data: productsResponse, isLoading: productsLoading } = useGetMasterQuery({
         db: MONGO_MODELS.PRODUCT_MASTER,
         filter: { isActive: true },
@@ -198,7 +202,7 @@ const AssetManagementPage = () => {
         filter: { isActive: true }
     });
     const fieldsToAdd = [
-        { fieldName: 'productName', path: ['product', 'name'] },
+        { fieldName: 'productName', path: ['product', 'brand'] },
         { fieldName: 'categoryName', path: ['product', 'category', 'name'] },
         { fieldName: 'warehouseName', path: ['warehouse', 'name'] },
         { fieldName: 'assigneeName', path: ['currentAssignment', 'assignedTo'], transform: (assignedTo: any) => 
@@ -209,8 +213,8 @@ const AssetManagementPage = () => {
     ];
     const transformedData = transformData(assetsResponse?.data || [], fieldsToAdd);
 
-
-    const loading = productsLoading || assetsLoading || locationLoading;
+console.log('transformedData', transformedData);
+    const loading = productsLoading || assetsLoading || locationLoading || warehouseLoading;
     const [createMaster] = useCreateMasterMutation();
 
     const statusData = [
@@ -371,7 +375,7 @@ const AssetManagementPage = () => {
             cell: ({ row }: any) => (
                 <div>
                     <div className="font-medium">{row.original.categoryName}</div>
-                    <div className="text-sm text-muted-foreground">{row.original.product?.model}</div>
+                    <div className="text-sm text-muted-foreground">{row.original.product?.brand}</div>
                 </div>
             )
         },
@@ -649,13 +653,13 @@ const AssetManagementPage = () => {
         searchFields: [
             { 
                 name: 'serialNumber', 
-                label: 'Serial Number', 
+                label: 'serialNumber', 
                 type: 'text',
                 placeholder: 'Search by serial number...'
             },
             { 
                 name: 'productName', 
-                label: 'Product', 
+                label: 'productName', 
                 type: 'text',
                 placeholder: 'Search by product name...'
             }
@@ -666,21 +670,21 @@ const AssetManagementPage = () => {
                 label: 'Status',
                 type: 'select',
                 placeholder: 'Select status...',
-                options: [
-                    { value: 'available', label: 'Available' },
-                    { value: 'assigned', label: 'Assigned' },
-                    { value: 'maintenance', label: 'Maintenance' },
-                    { value: 'retired', label: 'Retired' }
+                data: [
+                    { _id: 'available', name: 'Available' },
+                    { _id: 'assigned', name: 'Assigned' },
+                    { _id: 'maintenance', name: 'Maintenance' },
+                    { _id: 'retired', name: 'Retired' }
                 ]
             },
             {
-                name: 'warehouse',
-                label: 'Warehouse',
+                name: 'warehouseName',
+                label: 'warehouseName',
                 type: 'select',
                 placeholder: 'Select warehouse...',
-                options: locationResponse?.data?.map((warehouse: any) => ({
-                    value: warehouse._id,
-                    label: warehouse.name
+                data: warehouseData?.data?.map((warehouse: any) => ({
+                    _id: warehouse.name,
+                    name: warehouse.name
                 })) || []
             }
         ],

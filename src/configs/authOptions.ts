@@ -6,7 +6,6 @@ import { dbConnect } from "@/lib/mongoose";
 import { Access, User } from "@/models";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
-import { sanitizeUserDocs } from "@/shared/functions";
 
 declare module "next-auth" {
   interface Session {
@@ -34,13 +33,9 @@ export const authOptions: AuthOptions = {
         const { email, password } = credentials as { email: string; password: string };
         await dbConnect();
         const user = await User.findOne({ email });
-        console.log("DB User:", user, "Email:", email);
-        const sanitizedDocs = sanitizeUserDocs([user]); // dbUser is your DB user object
-
         const isPasswordValid = await bcrypt.compare(password, user?.password || "");
-        console.log("DB User:", user, "Email:", email,isPasswordValid ? "Password valid" : "Password invalid");
         if (!user || !isPasswordValid) return null;
-        return sanitizedDocs[0] as any;
+        return user as any;
       },
     }),
   ],
@@ -49,7 +44,6 @@ export const authOptions: AuthOptions = {
       await dbConnect();
       const email = user.email;
       const dbUser = await User.findOne({ email });
-      console.log("DB User:", dbUser, "Email:", email);
       if (!dbUser) return false;
       return true;
     },
@@ -59,16 +53,12 @@ export const authOptions: AuthOptions = {
         console.error("Session user is undefined");
         return session;
       }
-      const user:any = await User.findOne({ email: session.user.email });
+      const user = await User.findOne({ email: session.user.email });
       if (!user) {
         console.error("User not found");
         return session;
       }
-      
-      const sanitizedDocs = sanitizeUserDocs([user]); // dbUser is your DB user object
-
-     session.user = sanitizedDocs[0];
-   
+      session.user = user;
       const accessIdsUnfiltered = Array.isArray(user.access) ? user.access.map((data: { accessId: any }) => data.accessId) : [];
       const accessIds = accessIdsUnfiltered.filter((id: any) => id);
       const accessMap = new Map(
@@ -97,21 +87,17 @@ export const authOptions: AuthOptions = {
         { $sort: { order: 1 } },
       ]);
       const allAncestors = trees.flatMap((tree) => [...tree.ancestors, tree]);
-      // console.log("All Ancestors:", allAncestors);
       const uniqueAncestors = Array.from(
         new Map(allAncestors.map((ancestor) => [ancestor._id.toString(), ancestor])).values()
       );
-     
       const menuItems = buildNavStructure(
         uniqueAncestors.map((ancestor) => ({
           ...ancestor,
           _id: ancestor?._id?.toString(),
           parent: ancestor.parent ? ancestor?.parent?.toString() : null,
-          icon: ancestor?.icon
         })),
         accessMap
       );
-      
       session.menuItems = menuItems;
       return session;
     },
@@ -140,7 +126,7 @@ function buildNavStructure(ancestors: any[], accessMap: Map<string, any>) {
         title: ancestor.name,
         url: ancestor.url || "#",
         category: ancestor.category,
-        icon: ancestor?.icon,
+        icon: "",
         isActive: ancestor.isActive || false,
         permissions,
         items: [],

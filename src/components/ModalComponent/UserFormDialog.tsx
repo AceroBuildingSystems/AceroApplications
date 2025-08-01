@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "react-toastify";
 import { CompleteUserData } from "@/utils/userUtils";
 import { ChevronRight, ChevronLeft, Save, X } from "lucide-react";
+import { SUCCESS } from "@/shared/constants";
 
 interface UserFormDialogProps {
   isOpen: boolean;
@@ -242,7 +243,8 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
 
     try {
       const response = await onSave({ formData, action });
-      if (response?.data?.status === "success") {
+      
+      if (response?.data?.status === SUCCESS) {
         toast.success(`User ${action === "Add" ? "created" : "updated"} successfully`);
         closeDialog();
       }
@@ -280,7 +282,7 @@ const UserFormDialog: React.FC<UserFormDialogProps> = ({
   // Render appropriate input field based on type
   const renderField = (field: any) => {
     const { type, name, readOnly, placeholder, data } = field;
-    console.log("Rendering field:", field,data, formData);
+    
     switch (type) {
       case "text":
       case "email":

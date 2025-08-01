@@ -7,7 +7,7 @@ import DashboardLoader from '@/components/ui/DashboardLoader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/inputSearch';
 import { Button } from '@/components/ui/button';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import { 
@@ -202,7 +202,7 @@ const TicketDashboardPage = () => {
     setPriorityFilter('');
     setSearchQuery('');
   };
-  
+  console.log("Filtered Tickets:", filteredTickets);
   return (
     <DashboardLoader loading={loading}>
       <motion.div 
@@ -232,7 +232,7 @@ const TicketDashboardPage = () => {
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.3 }}
                   >
-                    <Badge className="ml-2 badge-status bg-primary/10 text-primary font-medium px-2.5 py-0.5 text-xs">
+                    <Badge className="ml-2 badge-status bg-primary/10 text-primary font-medium px-2.5 py-0.5 text-xs hover:bg-white/80 dark:hover:bg-secondary/80 transition-colors duration-200">
                       {filteredTickets.length} {filteredTickets.length === 1 ? 'ticket' : 'tickets'}
                     </Badge>
                   </motion.div>
@@ -320,13 +320,13 @@ const TicketDashboardPage = () => {
                     >
                       User Skills
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-border/30" />
-                    <DropdownMenuItem 
+                    {/* <DropdownMenuSeparator className="bg-border/30" /> */}
+                    {/* <DropdownMenuItem 
                       onClick={() => setShowFilters(!showFilters)}
                       className="cursor-pointer hover:bg-muted focus:bg-muted rounded-md transition-all duration-200"
                     >
                       {showFilters ? 'Hide Filters' : 'Show Filters'}
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </motion.div>
@@ -361,9 +361,9 @@ const TicketDashboardPage = () => {
         >
           <motion.div 
             variants={dashboardItemVariants}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl p-3 shadow-sm border border-border/30"
           >
-            <div className="flex items-center flex-wrap sm:flex-nowrap gap-2 bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-border/30">
+            <div className="flex items-center flex-wrap sm:flex-nowrap gap-2">
               <TabsList className="mr-2 p-1 bg-muted/40 rounded-lg backdrop-blur-md">
                 {['list', 'board', 'statistics'].map((tabValue, index) => (
                   <TabsTrigger 
@@ -431,22 +431,16 @@ const TicketDashboardPage = () => {
             
             <motion.div 
               variants={dashboardItemVariants}
-              className="relative max-w-xs sm:max-w-sm w-full group flex items-center bg-white/80 dark:bg-card/80 backdrop-blur-sm rounded-xl px-3 py-2 shadow-sm border border-border/30"
+              className="relative max-w-xs sm:max-w-sm w-full group"
             >
-              <motion.div
-                initial={{ opacity: 0.5 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-300 z-10" />
-              </motion.div>
+             
               <Input
-                placeholder="Search tickets"
+              type='text'
+                placeholder="Search tickets..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-9 rounded-xl border-0 h-9 focus:border-primary/40 transition-all duration-200 bg-transparent focus:ring-0 focus:ring-offset-0 w-full"
+               
               />
-              
               <AnimatePresence>
                 {searchQuery && (
                   <motion.div
@@ -458,7 +452,7 @@ const TicketDashboardPage = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 text-muted-foreground hover:text-primary transition-colors duration-200"
+                      className="absolute right-1 top-0 h-full px-2 text-muted-foreground hover:text-primary transition-colors duration-200"
                       onClick={() => setSearchQuery('')}
                     >
                       <X className="h-4 w-4" />

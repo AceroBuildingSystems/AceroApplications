@@ -150,34 +150,9 @@ export class MongooseAdapter implements DatabaseAdapter {
       query = query.skip(skip).limit(limit);
     }
 
-    const [docs, total]:any = await Promise.all([query.exec(), countQuery]);
+    const [docs, total]: any = await Promise.all([query.exec(), countQuery]);
     let sanitizedDocs = docs;
-if (modelName === 'USER_MASTER') {
-   sanitizedDocs = docs.map((doc:any) => {
-    const plainDoc = doc.toObject(); // ensure we work with a plain JS object
-
-    const { employmentDetails } = plainDoc;
-
-    return {
-      ...plainDoc,
-      departmentId: employmentDetails?.department?._id,
-      department: employmentDetails?.department,
-      designation: employmentDetails?.designation,
-      reportingTo: employmentDetails?.reportingTo,
-      role: employmentDetails?.role,
-      mobile: employmentDetails?.workMobile,
-      extension: employmentDetails?.extension,
-      activeLocation: employmentDetails?.activeLocation,
-      reportingLocation: employmentDetails?.reportingLocation,
-      organisation: employmentDetails?.organisation,
-      joiningDate: employmentDetails?.joiningDate,
-      relievingDate: employmentDetails?.relievingDate,
    
-    };
-  });
-
-  
-}
     return {
       status: SUCCESS,
       data: sanitizedDocs,
@@ -229,10 +204,10 @@ if (modelName === 'USER_MASTER') {
           }
 
           doc = await model.create(item);
-         
+
           inserted.push(doc);
         } catch (err: any) {
-        
+
           const reason = err.code === 11000
             ? "Duplicate entry"
             : err.message || "Unknown error";
@@ -243,7 +218,7 @@ if (modelName === 'USER_MASTER') {
           });
         }
       }
-      return { status: SUCCESS, data: {doc, skipped, inserted} };
+      return { status: SUCCESS, data: { doc, skipped, inserted } };
       // doc = await model.insertMany(options.data);
     } else {
       if (options.data.password) {
@@ -257,7 +232,7 @@ if (modelName === 'USER_MASTER') {
 
     if (!doc) return { status: ERROR, message: "Failed to create document" };
 
-    
+
   }
 
 

@@ -16,7 +16,7 @@ export const phaseUserSanitization = (user:any,iEncryptPassword:boolean)=>{
         email: user.email,
         password: iEncryptPassword && user.password ? bcrypt.hashSync(user.password, 10) : (user.password || ""), // Encrypt if flag true and password exists
         role1: user.role, // Role
-        displayName: user.displayName || "", // Optional Display Name
+        displayName: user.name || "", // Optional Display Name
         fullName: user.fullname, // Full name
         designation1: user.designation, // Designation
         employeeType1: user.employeeType, // Employee type

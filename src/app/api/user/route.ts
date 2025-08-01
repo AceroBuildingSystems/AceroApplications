@@ -29,6 +29,7 @@ export async function POST(request:NextRequest) {
   if(!body) return NextResponse.json({status:ERROR, message:BODY_REQUIRED,data:{}}, { status: 400 })
 
   let response:any = {};
+ 
   switch(body.action){
     case 'create':
       response = await userManager.createUser(body)

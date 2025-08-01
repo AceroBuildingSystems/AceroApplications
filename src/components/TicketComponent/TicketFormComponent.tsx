@@ -116,11 +116,11 @@ export const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
       creator: userId,
       addedBy: userId,
       updatedBy: userId,
-      ...(isEdit && initialData ? { _id: initialData._id } : {}),
-      ...(!isEdit ? { status: 'NEW' } : {}) // Always set status NEW for new tickets
+      ...(isEdit && initialData ? { _id: initialData._id } : {})
     };
 
     // Submit the form data
+
     await onSubmit(formData);
   };
 
@@ -322,38 +322,11 @@ export const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent className="rounded-md">
-                      {categoryLoading ? (
-                        <SelectItem value="loading" disabled className="text-muted-foreground">
-                          Loading categories...
+                      {categoryData?.data?.map((cat: any) => (
+                        <SelectItem key={cat._id} value={cat._id} className="cursor-pointer">
+                          {cat.name}
                         </SelectItem>
-                      ) : (() => {
-                        // Filter categories by selected department
-                        const filteredCategories = selectedDepartment 
-                          ? categoryData?.data?.filter((cat: any) => {
-                              // Handle both string and object department references
-                              const catDepartmentId = typeof cat.department === 'string' 
-                                ? cat.department 
-                                : cat.department?._id;
-                              return catDepartmentId === selectedDepartment;
-                            }) || []
-                          : [];
-                        
-                        return filteredCategories.length > 0 ? (
-                          filteredCategories.map((cat: any) => (
-                            <SelectItem key={cat._id} value={cat._id} className="cursor-pointer">
-                              {cat.name}
-                            </SelectItem>
-                          ))
-                        ) : selectedDepartment ? (
-                          <SelectItem value="no-categories" disabled className="text-muted-foreground">
-                            No categories available for this department
-                          </SelectItem>
-                        ) : (
-                          <SelectItem value="select-department" disabled className="text-muted-foreground">
-                            Select a department first
-                          </SelectItem>
-                        );
-                      })()}
+                      ))}
                     </SelectContent>
                   </Select>
                   {errors.category && (

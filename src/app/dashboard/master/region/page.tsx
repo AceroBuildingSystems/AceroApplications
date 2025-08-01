@@ -90,15 +90,7 @@ const page = () => {
     const response = await createMaster(formattedData);
 
     
-    if (response.data?.status === SUCCESS && action === 'Add') {
-      toast.success('Region added successfully');
-
-    }
-    else{
-      if (response.data?.status === SUCCESS && action === 'Update') {
-        toast.success('Region updated successfully');
-      }
-    }
+    return response;
 
     if(response?.error?.data?.message?.message){
       toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);

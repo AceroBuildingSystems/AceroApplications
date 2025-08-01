@@ -3,10 +3,9 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { useMotionTemplate, useMotionValue, motion } from "framer-motion";
-import { Search } from 'lucide-react';
 
 export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> { }
+  extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, ...props }, ref) => {
@@ -23,7 +22,6 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       mouseY.set(clientY - top);
     }
     return (
-
       <motion.div
         style={{
           width: "100%",
@@ -40,30 +38,21 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         onMouseLeave={() => setVisible(false)}
         className="p-[1px] rounded-lg transition duration-300 group/input"
       >
-        <div
+        <input
+          type={type}
           className={cn(
-            `flex gap-2 items-center h-[35px] w-full border-2 border-gray-300 bg-white dark:bg-zinc-800 
-     text-black dark:text-white rounded-md px-2 text-sm 
-     focus-within:ring-1 focus-within:ring-gray-300 dark:focus-within:ring-neutral-600
-     transition duration-300`
+            `flex h-[34px] w-full border border-input bg-white dark:bg-zinc-800 text-black dark:text-white rounded-md px-3 py-2 text-sm  file:border-0 file:bg-transparent 
+          file:text-sm file:font-medium placeholder:text-neutral-400 dark:placeholder-text-neutral-600 
+          focus-visible:outline-none focus-visible:ring-[2px]  focus-visible:ring-gray-300 dark:focus-visible:ring-neutral-600
+           disabled:cursor-not-allowed disabled:opacity-50
+           dark:shadow-[0px_0px_1px_1px_var(--neutral-700)]
+           group-hover/input:shadow-none transition duration-400
+           `,
+            className
           )}
-        >
-          
-          {/* <Search size={17} className="text-gray-400" /> */}
-          <input
-            type={type}
-            className={cn(
-              `flex-1 bg-transparent outline-none placeholder:text-neutral-400 
-       dark:placeholder:text-neutral-600 dark:text-white text-black`,
-              className
-            )}
-            ref={ref}
-            {...props}
-          />
-        </div>
-
-
-
+          ref={ref}
+          {...props}
+        />
       </motion.div>
     );
   }

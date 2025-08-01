@@ -23,10 +23,6 @@
 # misc
 .DS_Store
 *.pem
-*.bson
-*.turtle
-*.wt
-/data
 
 # debug
 npm-debug.log*

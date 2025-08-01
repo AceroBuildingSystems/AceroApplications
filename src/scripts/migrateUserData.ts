@@ -12,7 +12,9 @@ import UserBenefits from "../models/master/UserBenefits.model";
 const MONGODB_URI =  "mongodb://localhost:27017/AceroDB1?replicaSet=rs";
 
 async function connectToDatabase() {
+
   try {
+    
     if (mongoose.connection.readyState === 1) {
       console.log("Already connected to MongoDB");
       return;
@@ -20,10 +22,12 @@ async function connectToDatabase() {
     
     await mongoose.connect(MONGODB_URI);
     console.log("Connected to MongoDB");
+
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
     throw error;
   }
+
 }
 
 // Helper to extract ObjectId string from { $oid: ... } or return as is

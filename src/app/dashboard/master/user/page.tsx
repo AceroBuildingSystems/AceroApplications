@@ -11,8 +11,8 @@ import { useState, useEffect } from 'react';
 import { useUserOperationsMutation, useGetUsersQuery } from '@/services/endpoints/usersApi';
 import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
-import { useGetMasterQuery } from '@/services/endpoints/masterApi';
-import { SUCCESS } from '@/shared/constants';
+import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import * as XLSX from "xlsx";
@@ -32,7 +32,7 @@ const page = () => {
 
     sort: { empId: 'asc' },
   });
-console.log("userData", userData);
+  console.log("userData", userData);
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -70,7 +70,8 @@ console.log("userData", userData);
     sort: { name: 'asc' }
   });
 
-  const [createUser, { isLoading: isCreatingUser }]: any = useUserOperationsMutation();
+ 
+  const [createMaster, { isLoading: isCreatingUser }]: any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
@@ -146,7 +147,7 @@ console.log("userData", userData);
     }
 
   }
-console.log({transformedData}, "transformedData after transformation");
+  console.log({ transformedData }, "transformedData after transformation");
 
   // Reorganize fields to match new database model structure
   const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string; category?: string }> = [
@@ -158,14 +159,14 @@ console.log({transformedData}, "transformedData after transformation");
     { label: 'Full Name', name: "fullName", type: "text", readOnly: true, placeholder: 'Full Name', category: 'core' },
     { label: 'Display Name', name: "displayName", type: "text", required: true, placeholder: 'Display Name', category: 'core' },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status', category: 'core' },
-    
+
     // Personal details fields
     { label: 'Gender', name: "gender", type: "select", data: genderData, required: false, placeholder: 'Select Gender', category: 'personal' },
     { label: 'Date Of Birth', name: "dateOfBirth", type: "date", format: 'Date', placeholder: 'Select Birth Date', category: 'personal' },
     { label: 'Marital Status', name: "maritalStatus", type: "select", data: maritalStatusData, required: false, placeholder: 'Select Marital Status', category: 'personal' },
     { label: 'Nationality', name: "nationality", type: "select", data: nationalityData?.data, format: 'ObjectId', required: true, placeholder: 'Select Nationality', category: 'personal' },
     { label: 'Personal Number', name: "personalMobileNo", type: "text", placeholder: 'Personal Number', category: 'personal' },
-    
+
     // Employment details fields
     { label: 'Department', name: "department", type: "select", data: departmentData?.data, format: 'ObjectId', required: true, placeholder: 'Select Department', category: 'employment' },
     { label: 'Designation', name: "designation", type: "select", data: designationDataNew?.length > 0 ? designationDataNew : designationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Designation', category: 'employment' },
@@ -180,7 +181,7 @@ console.log({transformedData}, "transformedData after transformation");
     { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Select Joining Date', category: 'employment' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Select Leaving Date', category: 'employment' },
     { label: 'Person Code', name: "personCode", type: "text", placeholder: 'Person Code', category: 'employment' },
-    
+
     // Visa details fields
     { label: 'Visa Type', name: "visaType", type: "select", data: visTypeData?.data, format: 'ObjectId', required: true, placeholder: 'Select Visa Type', category: 'visa' },
     { label: 'Visa File No', name: "visaFileNo", type: "text", placeholder: 'Visa File No', category: 'visa' },
@@ -189,7 +190,7 @@ console.log({transformedData}, "transformedData after transformation");
     { label: 'Work Permit', name: "workPermit", type: "text", placeholder: 'Work Permit', category: 'visa' },
     { label: 'Labour Card Expiry Date', name: "labourCardExpiryDate", type: "date", format: 'Date', placeholder: 'Select Labour Card Expiry Date', category: 'visa' },
     { label: 'ILOE Expiry Date', name: "iloeExpiryDate", type: "date", format: 'Date', placeholder: 'Select ILOE Expiry Date', category: 'visa' },
-    
+
     // Identification fields
     { label: 'Passport Number', name: "passportNumber", type: "text", placeholder: 'Passport Number', category: 'identification' },
     { label: 'Passport Issue Date', name: "passportIssueDate", type: "date", format: 'Date', placeholder: 'Select Passport Issue Date', category: 'identification' },
@@ -197,7 +198,7 @@ console.log({transformedData}, "transformedData after transformation");
     { label: 'Emirates ID', name: "emiratesId", type: "text", placeholder: 'Emirates ID', category: 'identification' },
     { label: 'Emirates ID Issue Date', name: "emiratesIdIssueDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Issue Date', category: 'identification' },
     { label: 'Emirates ID Expiry Date', name: "emiratesIdExpiryDate", type: "date", format: 'Date', placeholder: 'Select Emirates ID Expiry Date', category: 'identification' },
-    
+
     // Benefits fields
     { label: 'Medical Insurance', name: "medicalInsurance", type: "text", placeholder: 'Medical Insurance', category: 'benefits' },
   ]
@@ -222,74 +223,18 @@ console.log({transformedData}, "transformedData after transformation");
   // Save function to send data to an API or database
   const saveData = async ({ formData, action }: { formData: any; action: string }) => {
     try {
-      let response;
 
-      // Group fields by subdocument keys
-      const subDocFields = {
-        personalDetails: [
-          'gender', 'dateOfBirth', 'maritalStatus', 'nationality', 'personalMobileNo'
-        ],
-        employmentDetails: [
-          'department', 'designation', 'reportingTo', 'employeeType', 'role', 'reportingLocation', 'activeLocation', 'organisation', 'extension', 'workMobile', 'joiningDate', 'relievingDate', 'personCode'
-        ],
-        visaDetails: [
-          'visaType', 'visaFileNo', 'visaIssueDate', 'visaExpiryDate', 'workPermit', 'labourCardExpiryDate', 'iloeExpiryDate'
-        ],
-        identification: [
-          'passportNumber', 'passportIssueDate', 'passportExpiryDate', 'emiratesId', 'emiratesIdIssueDate', 'emiratesIdExpiryDate'
-        ],
-        benefits: [
-          'medicalInsurance'
-        ]
+   
+      const formattedData = {
+        db: MONGO_MODELS.USER_MASTER,
+        action: action === 'Add' ? 'create' : 'update',
+        filter: { "_id": formData._id },
+        data: formData,
       };
+      const response = await createMaster(formattedData);
 
-      // Build nested data object
-      const data: any = {};
-      // Copy user-level fields
-      Object.keys(formData).forEach(key => {
-        let found = false;
-        (Object.keys(subDocFields) as Array<keyof typeof subDocFields>).forEach(subKey => {
-          if (subDocFields[subKey].includes(key)) {
-            // Always assign a new object to avoid mutating a frozen object
-            data[subKey] = { ...(data[subKey] || {}), [key]: formData[key] };
-            found = true;
-          }
-        });
-        if (!found) {
-          data[key] = formData[key];
-        }
-      });
+      return response;
 
-      if (action === 'Add') {
-        response = await fetch('/api/user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-      } else {
-        response = await fetch('/api/user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            action: 'update',
-            filter: { _id: formData._id },
-            data
-          }),
-        });
-      }
-
-      const result = await response.json();
-      if (result.status === "success") {
-        toast.success(result.message || `User ${action === 'Add' ? 'created' : 'updated'} successfully`);
-        return { data: result.data };
-      } else {
-        toast.error(result.message || result.error || `Failed to ${action.toLowerCase()} user`);
-        return { error: result.message || result.error || `Failed to ${action.toLowerCase()} user` };
-      }
     } catch (error) {
       console.error('Error saving user:', error);
       toast.error(`Failed to ${action.toLowerCase()} user`);
@@ -368,30 +313,30 @@ console.log({transformedData}, "transformedData after transformation");
   };
 
   const handleImport = () => {
-    bulkImport({ 
-      roleData, 
-      continentData: [], 
-      regionData: [], 
-      countryData: [], 
-      locationData, 
-      categoryData: [], 
-      vendorData: [], 
-      productData: [], 
-      warehouseData: [], 
-      customerTypeData: [], 
-      customerData: [], 
-      userData, 
-      teamData: [], 
-      designationData, 
-      departmentData, 
-      employeeTypeData, 
-      organisationData, 
-      action: "Add", 
-      user, 
-      createUser, 
-      db: 'USER_DB', 
+    bulkImport({
+      roleData,
+      continentData: [],
+      regionData: [],
+      countryData: [],
+      locationData,
+      categoryData: [],
+      vendorData: [],
+      productData: [],
+      warehouseData: [],
+      customerTypeData: [],
+      customerData: [],
+      userData,
+      teamData: [],
+      designationData,
+      departmentData,
+      employeeTypeData,
+      organisationData,
+      action: "Add",
+      user,
+      createUser: createMaster,
+      db: 'USER_DB',
       masterName: "User",
-      onStart: () => { console.log('Import started'); }, 
+      onStart: () => { console.log('Import started'); },
       onFinish: () => { console.log('Import finished'); }
     });
   };

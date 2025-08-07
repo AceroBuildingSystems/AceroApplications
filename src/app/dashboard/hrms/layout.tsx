@@ -70,7 +70,7 @@ export default function HRMSLayout({
   const breadcrumbs = generateBreadcrumbs();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-white">
       {/* Breadcrumb Navigation */}
       {/* <div className="border-b bg-muted/50">
         <div className="container mx-auto px-6 py-3">

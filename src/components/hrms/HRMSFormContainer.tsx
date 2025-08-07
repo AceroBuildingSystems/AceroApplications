@@ -54,21 +54,21 @@ export default function HRMSFormContainer({
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const methods = useForm({
-    defaultValues: useMemo(() => {
-      const defaults = { ...initialData };
-      // Ensure all fields have default values to prevent controlled/uncontrolled issues
-      if (defaults) {
-        Object.keys(defaults).forEach(key => {
-          if (defaults[key] === undefined || defaults[key] === null) {
-            defaults[key] = '';
-          }
-        });
-      }
-      return defaults || {};
-    }, [initialData]),
-    mode: 'onChange'
+ const defaultValues = useMemo(() => {
+  const processed = { ...initialData };
+  Object.keys(processed || {}).forEach((key) => {
+    if (processed[key] === undefined || processed[key] === null) {
+      processed[key] = '';
+    }
   });
+  return processed;
+}, [initialData]);
+
+const methods = useForm({
+  defaultValues,
+  mode: 'onChange',
+});
+
 
   const { handleSubmit, formState: { errors, isDirty }, watch, reset } = methods;
 

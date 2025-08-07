@@ -82,11 +82,11 @@ export interface HRMSWorkflowInstance {
 }
 
 // Predefined Workflow Templates
-export const HRMS_WORKFLOW_TEMPLATES = {
+export const HRMS_WORKFLOW_TEMPLATES:any = {
   RECRUITMENT: {
-    workflowName: 'Complete Recruitment Process',
+    workflowName: 'Recruitment Process',
     workflowType: 'recruitment' as const,
-    description: 'Full recruitment workflow from manpower requisition to hiring decision',
+    description: 'Full recruitment process from manpower requisition to offer acceptance',
     steps: [
       {
         id: 'manpower_req',
@@ -98,41 +98,33 @@ export const HRMS_WORKFLOW_TEMPLATES = {
         nextSteps: ['candidate_sourcing']
       },
       {
-        id: 'candidate_sourcing',
+        id: 'candidate_information',
         formType: HRMSFormTypes.CANDIDATE_INFORMATION,
-        stepName: 'Candidate Information Collection',
+        stepName: 'Candidate Information',
         stepOrder: 2,
         isRequired: true,
         dependencies: ['manpower_req'],
-        nextSteps: ['interview_process']
+        nextSteps: ['interview_assessment']
       },
       {
-        id: 'interview_process',
+        id: 'interview_assessment',
         formType: HRMSFormTypes.EMPLOYEE_INFORMATION, // For detailed evaluation and interview notes
-        stepName: 'Interview & Evaluation',
+        stepName: 'Interview Assessment',
         stepOrder: 3,
         isRequired: true,
-        dependencies: ['candidate_sourcing'],
-        nextSteps: ['hiring_decision']
+        dependencies: ['candidate_information'],
+        nextSteps: ['offer_acceptance']
       },
       {
-        id: 'hiring_decision',
+        id: 'offer_acceptance',
         formType: HRMSFormTypes.NEW_EMPLOYEE_JOINING, // For hiring decision and joining details
-        stepName: 'Hiring Decision',
+        stepName: 'Offer Acceptance',
         stepOrder: 4,
         isRequired: true,
-        dependencies: ['interview_process'],
-        nextSteps: ['onboarding_prep']
-      },
-      {
-        id: 'onboarding_prep',
-        formType: HRMSFormTypes.ASSETS_IT_ACCESS, // For onboarding preparation - IT setup, etc.
-        stepName: 'Onboarding Preparation',
-        stepOrder: 5,
-        isRequired: true,
-        dependencies: ['hiring_decision'],
+        dependencies: ['interview_assessment'],
         nextSteps: []
       }
+     
     ],
     triggers: [
       {
@@ -147,7 +139,7 @@ export const HRMS_WORKFLOW_TEMPLATES = {
   ONBOARDING: {
     workflowName: 'Employee Onboarding Process',
     workflowType: 'onboarding' as const,
-    description: 'Complete onboarding workflow for new employees',
+    description: 'Complete onboarding process for new employees',
     steps: [
       {
         id: 'employee_info',
@@ -193,6 +185,33 @@ export const HRMS_WORKFLOW_TEMPLATES = {
         isRequired: true,
         dependencies: ['employee_info'],
         nextSteps: []
+      },
+      {
+        id: 'accommodation_transport1',
+        formType: HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT,
+        stepName: 'Accommodation & Transport Setup',
+        stepOrder: 3,
+        isRequired: false,
+        dependencies: ['employee_info'],
+        nextSteps: ['beneficiary_declaration']
+      },
+      {
+        id: 'beneficiary_declaration1',
+        formType: HRMSFormTypes.BENEFICIARY_DECLARATION,
+        stepName: 'Beneficiary Information',
+        stepOrder: 4,
+        isRequired: true,
+        dependencies: ['employee_info'],
+        nextSteps: ['nda_signing']
+      },
+      {
+        id: 'nda_signing1',
+        formType: HRMSFormTypes.NON_DISCLOSURE_AGREEMENT,
+        stepName: 'NDA & Legal Documents',
+        stepOrder: 5,
+        isRequired: true,
+        dependencies: ['employee_info'],
+        nextSteps: []
       }
     ],
     triggers: [
@@ -205,6 +224,57 @@ export const HRMS_WORKFLOW_TEMPLATES = {
     ]
   },
 
+  OFFBOARDING: {
+    workflowName: 'Employee Offboarding Process',
+    workflowType: 'offboarding' as const,
+    description: 'Complete offboarding process for departing employees',
+    steps: [
+      {
+        id: 'offboarding',
+        formType: HRMSFormTypes.MANPOWER_REQUISITION,
+        stepName: 'Offboarding Process',
+        stepOrder: 1,
+        isRequired: true,
+        dependencies: [],
+        nextSteps: []
+      },
+      
+     
+    ],
+    triggers: [
+      {
+        id: 'start_recruitment',
+        triggerType: 'form_submission' as const,
+        formType: HRMSFormTypes.MANPOWER_REQUISITION,
+        action: 'start_workflow' as const
+      }
+    ]
+  },
+
+   PERFORMANCE_APPRAISAL: {
+    workflowName: 'Performamnce Appraisal Request',
+    workflowType: 'appraisal' as const,
+    description: 'Employee performance appraisal process',
+    steps: [
+      {
+        id: 'appraisal_request',
+        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
+        stepName: 'Performance Appraisal Request',
+        stepOrder: 1,
+        isRequired: true,
+        dependencies: [],
+        nextSteps: []
+      }
+    ],
+    triggers: [
+      {
+        id: 'start_travel_request',
+        triggerType: 'form_submission' as const,
+        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
+        action: 'start_workflow' as const
+      }
+    ]
+  },
   BUSINESS_TRAVEL: {
     workflowName: 'Business Travel Request Process',
     workflowType: 'custom' as const,
@@ -229,6 +299,8 @@ export const HRMS_WORKFLOW_TEMPLATES = {
       }
     ]
   }
+
+
 };
 
 // Workflow Status and Progress Types

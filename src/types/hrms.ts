@@ -127,6 +127,7 @@ export const HRMS_WORKFLOW_STAGES = {
 // Common field types for forms
 export interface HRMSFormField {
   id: string;
+
   type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'file';
   label: string;
   required?: boolean;

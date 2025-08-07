@@ -289,85 +289,87 @@ console.log(workflowInstances, 'Workflow Instances Data');
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
+    <div className="container mx-auto p-6 max-w-7xl space-y-6 bg-white">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <WorkflowIcon className="h-8 w-8" />
+          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <WorkflowIcon className="h-6 w-6" />
             HRMS Workflows
           </h1>
           <p className="text-muted-foreground">
             Track and manage HR process workflows from start to finish
           </p>
         </div>
-        <div className="space-x-2">
+        {/* <div className="space-x-2">
           <Link href="/dashboard/hrms/workflows/new">
             <Button>
               <PlayIcon className="h-4 w-4 mr-2" />
               Start New Workflow
             </Button>
           </Link>
-        </div>
+        </div> */}
       </div>
 
       {/* Workflow Templates */}
-      <Card>
+      <Card className='bg-white border-gray-100'>
         <CardHeader>
-          <CardTitle>Available Workflow Templates</CardTitle>
-          <CardDescription>
+          <CardTitle>Available Process To Proceed</CardTitle>
+          {/* <CardDescription>
             Pre-configured workflows for common HR processes
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Object.entries(HRMS_WORKFLOW_TEMPLATES).map(([key, template]) => (
-              <Card key={key} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
+              <Link key={key} href={`/dashboard/hrms/workflows/${key.toLowerCase()}`}>
+              <Card className="bg-gray-50 hover:shadow-lg transition-shadow border-gray-300 cursor-pointer h-[180px]" >
+                <CardHeader className="pb-3 h-[110px]">
                   <CardTitle className="text-base">{template.workflowName}</CardTitle>
                   <CardDescription className="text-sm">
                     {template.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex flex-col flex-grow justify-between">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Steps:</span>
-                      <Badge variant="outline">{template.steps.length}</Badge>
+                      <Badge>{template.steps.length}</Badge>
                     </div>
-                    <div className="flex items-center justify-between text-sm">
+                    {/* <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Type:</span>
                       <Badge variant="secondary" className="capitalize">
                         {template.workflowType.replace('_', ' ')}
                       </Badge>
-                    </div>
-                    <Link href={`/dashboard/hrms/workflows/new?template=${key.toLowerCase()}`}>
+                    </div> */}
+                    {/* <Link href={`/dashboard/hrms/workflows/new?template=${key.toLowerCase()}`}>
                       <Button size="sm" className="w-full mt-3">
                         Start Workflow
                       </Button>
-                    </Link>
+                    </Link> */}
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             ))}
           </div>
         </CardContent>
       </Card>
 
       {/* Workflows List */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+      {/* <Tabs value={activeTab} onValueChange={setActiveTab}> */}
+        {/* <TabsList> */}
           {/* <TabsTrigger value="active">Active Workflows</TabsTrigger> */}
-          <TabsTrigger value="draft">Drafts</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
+          {/* <TabsTrigger value="draft">Drafts</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger> */}
           {/* <TabsTrigger value="paused">Paused</TabsTrigger> */}
-        </TabsList>
+        {/* </TabsList> */}
 
         {/* <TabsContent value="active">{renderContent()}</TabsContent> */}
-        <TabsContent value="draft">{renderContent()}</TabsContent>
-        <TabsContent value="completed">{renderContent()}</TabsContent>
+        {/* <TabsContent value="draft">{renderContent()}</TabsContent>
+        <TabsContent value="completed">{renderContent()}</TabsContent> */}
         {/* <TabsContent value="paused">{renderContent()}</TabsContent> */}
-      </Tabs>
+      {/* </Tabs> */}
     </div>
   );
 }

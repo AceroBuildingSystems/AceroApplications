@@ -139,7 +139,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
             </DropdownMenu>
 
           </div>
-          <div>
+          {/* <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -172,7 +172,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                   })}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </div> */}
         </div>
 
         <div className="h-full w-full pb-6">

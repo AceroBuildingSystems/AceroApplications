@@ -43,7 +43,6 @@ interface MasterComponentProps {
 
 
 
-
 const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
 
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
@@ -146,7 +145,7 @@ console.log("Filtered Data", config?.dataTable?.data)
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className='flex flex-col gap-1 w-full h-full px-4 pt-0.5'>
+                <div className='flex flex-col gap-1 w-full h-full px-4 pt-1'>
 
                     {/* Filter Section */}
                     <div className='flex flex-row items-center justify-between'>

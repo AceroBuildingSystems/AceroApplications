@@ -5,9 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  CheckCircleIcon, 
-  ClockIcon, 
+import {
+  CheckCircleIcon,
+  ClockIcon,
   CircleIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
@@ -17,12 +17,12 @@ import {
 import { useWorkflow } from '@/contexts/WorkflowContext';
 
 export default function WorkflowNavigation() {
-  const { 
+  const {
     workflowId,
-    workflowType, 
-    currentStepIndex, 
-    steps, 
-    navigateToStep, 
+    workflowType,
+    currentStepIndex,
+    steps,
+    navigateToStep,
     isStepAccessible,
   } = useWorkflow();
 
@@ -59,9 +59,9 @@ export default function WorkflowNavigation() {
   };
 
   return (
-    <div className="space-y-6 mb-8">
+    <div className="mb-2">
       {/* Progress Header */}
-      <Card className="border-l-4 border-l-blue-500">
+      {/* <Card className="border-l-4 border-l-blue-500">
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <div>
@@ -76,10 +76,10 @@ export default function WorkflowNavigation() {
             <Badge variant="secondary" className="text-sm">
               {completedSteps}/{steps.length} Complete
             </Badge>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="mt-4">
+          </div> */}
+
+      {/* Progress Bar */}
+      {/* <div className="mt-4">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Progress</span>
               <span>{Math.round(progressPercentage)}%</span>
@@ -87,11 +87,15 @@ export default function WorkflowNavigation() {
             <Progress value={progressPercentage} className="h-2" />
           </div>
         </CardHeader>
-      </Card>
+      </Card> */}
 
       {/* Step Navigation */}
       <Card>
-        <CardContent className="p-6">
+        <div className='px-4 py-2 font-bold text-lg border-b'>
+          {workflowType.toProperCase()} Process
+        </div>
+
+        <CardContent className="p-4">
           {/* Desktop View - Horizontal Steps */}
           <div className="hidden md:flex items-center justify-between relative">
             {steps.map((step, index) => (
@@ -99,7 +103,7 @@ export default function WorkflowNavigation() {
                 <div className="flex flex-col items-center min-w-[120px]">
                   {/* Step Circle */}
                   <button
-                    onClick={() => navigateToStep(step.stepIndex,false , workflowId)}
+                     onClick={() => navigateToStep(step.stepIndex, false, workflowId)}
                     disabled={!isStepAccessible(step.stepIndex)}
                     className={`
                       relative w-12 h-12 rounded-full border-2 flex items-center justify-center
@@ -110,15 +114,15 @@ export default function WorkflowNavigation() {
                     `}
                   >
                     {getStepIcon(step, index)}
-                    
+
                     {/* Step Number Badge */}
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}
                     </div>
                   </button>
-                  
+
                   {/* Step Label */}
-                  <div className="mt-3 text-center">
+                  <div className="mt-2 text-center">
                     <p className={`
                       text-sm font-medium
                       ${step.stepIndex === currentStepIndex ? 'text-blue-600' : 'text-gray-700'}
@@ -130,15 +134,14 @@ export default function WorkflowNavigation() {
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Connector Line */}
                 {index < steps.length - 1 && (
                   <div className="flex-1 h-0.5 mx-4 relative">
                     <div className="absolute inset-0 bg-gray-200"></div>
-                    <div 
-                      className={`absolute inset-0 bg-green-500 transition-all duration-300 ${
-                        step.status === 'completed' ? 'w-full' : 'w-0'
-                      }`}
+                    <div
+                      className={`absolute inset-0 bg-green-500 transition-all duration-300 ${step.status === 'completed' ? 'w-full' : 'w-0'
+                        }`}
                     ></div>
                   </div>
                 )}
@@ -147,9 +150,9 @@ export default function WorkflowNavigation() {
           </div>
 
           {/* Mobile View - Vertical Steps */}
-          <div className="md:hidden space-y-4">
+          <div className="md:hidden space-y-3">
             {steps.map((step, index) => (
-              <div 
+              <div
                 key={step.stepIndex}
                 className={`
                   flex items-center p-4 rounded-lg border transition-all
@@ -167,7 +170,7 @@ export default function WorkflowNavigation() {
                 >
                   {getStepIcon(step, index)}
                 </button>
-                
+
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">
                     {index + 1}. {step.stepName}
@@ -176,7 +179,7 @@ export default function WorkflowNavigation() {
                     {step.status.replace('_', ' ')}
                   </p>
                 </div>
-                
+
                 {step.stepIndex === currentStepIndex && (
                   <Badge className="bg-blue-500">Current</Badge>
                 )}
@@ -185,8 +188,8 @@ export default function WorkflowNavigation() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-6 pt-4 border-t">
-            <div>
+          <div className="flex justify-between items-center mt-4 pt-3 border-t">
+            {/* <div>
               {canGoBack && (
                 <Button
                   variant="outline"
@@ -197,7 +200,11 @@ export default function WorkflowNavigation() {
                   Previous Step
                 </Button>
               )}
-            </div>
+            </div> */}
+
+            <p className="text-sm text-gray-600">
+              Step {currentStepIndex + 1} of {steps.length}: {currentStep?.stepName}
+            </p>
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
@@ -205,7 +212,7 @@ export default function WorkflowNavigation() {
               </p>
             </div>
 
-            <div>
+            {/* <div>
               {canGoForward && (
                 <Button
                   onClick={() => navigateToStep(currentStepIndex + 1, true, workflowId)}
@@ -215,7 +222,7 @@ export default function WorkflowNavigation() {
                   <ArrowRightIcon className="h-4 w-4" />
                 </Button>
               )}
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>

@@ -331,6 +331,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
       </div>
     );
   }
+console.log("Current form values:", watchedValues);
 
   return (
     <div className="space-y-2">

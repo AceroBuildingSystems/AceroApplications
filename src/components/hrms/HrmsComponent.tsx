@@ -29,7 +29,7 @@ import { useSendEmailMutation } from "@/services/endpoints/emailApi";
 import moment from "moment";
 import WorkflowNavigation from "./NewWorkflowNavigation";
 import FormContainer from "./FormContainer";
-import { getFormConfig } from "@/configs/hrms-forms";
+import { deepCloneWithOptionsInjection, getFormConfig, injectOptionsIntoFormConfig } from "@/configs/hrms-forms";
 
 interface HrmsDialogProps {
     isOpen: boolean;
@@ -37,6 +37,13 @@ interface HrmsDialogProps {
     formConfig: any;
     workflowType?: string; // Optional, default to 'recruitment'
     initialFormConfig?: any; // Optional, for default form config
+    departments?: Option[]; // Optional, for department options
+    users?: Option[]; // Optional, for user options
+    designations?: Option[]; // Optional, for designation options
+    employeeTypes?: Option[]; // Optional, for employee type options
+    action?: string; // Optional, for action type (Add/Update)
+    locationData?: Option[]; // Optional, for location options
+    recruitymentTypes: any; // Optional, for recruitment types
 }
 
 const HrmsDialog: React.FC<HrmsDialogProps> = ({
@@ -44,9 +51,19 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     closeDialog,
     workflowType,
     initialFormConfig, // Default to 'recruitment' if not provided
+    departments,
+    users,
+    designations,
+    employeeTypes,
+    action,
+    locationData,
+    recruitymentTypes
 
 }) => {
     const { user }: any = useUserAuthorised();
+    const [employeeType, setEmployeeType] = useState<any>(null);
+    const [isEmployeeTypeSelected, setIsEmployeeTypeSelected] = useState(false);
+    const [isStaff, setIsStaff] = useState(false);
 
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [formConfig, setFormConfig] = useState(initialFormConfig);
@@ -61,34 +78,116 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     console.log('Form Config:', initialFormConfig);
 
     useEffect(() => {
+        if (!employeeType) return;
+
+        // Find selected employee
+        const employeeTypeName: any = employeeTypes?.find(emp => emp._id === employeeType)?.name;
+
+
+        if (employeeTypeName?.toLowerCase() === 'staff') {
+            setIsStaff(true);
+        } else {
+            setIsStaff(false);
+        }
+
+    }, [employeeType, employeeTypes]);
+
+    useEffect(() => {
         if (!initialFormConfig || !initialFormConfig.steps) return;
 
-        // Assume each step has an id or formType to fetch detailed config
         const step = initialFormConfig.steps[currentStepIndex];
 
-        if (step) {
-            // Your method to get form config for this step's formType or id
-            // For example, getFormConfig(step.formType) or step.formConfig if already embedded
-            const configForStep = getFormConfig(step.formType); // replace with your actual fetch
+        const loadStepConfig = async () => {
+            const baseConfig = getFormConfig(step.formType);
+            if (!baseConfig) return;
 
-            setFormConfig(configForStep);
-        }
-    }, [currentStepIndex, initialFormConfig]);
+            const optionsMap = {
+                department: departments,
+                requestedBy: users,
+                requiredPosition: designations,
+                workingLocation: locationData,
+                recruitmentType: recruitymentTypes,
+                prevEmployee: users,
+            };
 
-    if (!formConfig) return null;
+            const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
+            setFormConfig(updatedConfig);
+        };
+
+        loadStepConfig();
+    }, [currentStepIndex, initialFormConfig, users, departments, designations, employeeTypes, recruitymentTypes, locationData]);
+
+
+    // if (!formConfig) return null;
+    console.log('formconfig', formConfig);
+
+    console.log('employeeTypes', employeeType);
+
+    const handleSave = async (data: any) => {
+        console.log('Form Data:', data);
+        const formattedData = {
+            db: MONGO_MODELS.CUSTOMER_MASTER,
+            action: action === 'Add' ? 'create' : 'update',
+            filter: { "_id": data?._id },
+            data: { ...data, employeeType: employeeType },
+        };
+        console.log('Formatted Data:', formattedData);
+        return;
+        const response = await createMaster(formattedData);
+
+
+
+    };
 
     return (
         <>
 
-            <Dialog open={isOpen} onOpenChange={closeDialog}>
+            <Dialog open={isOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        // Reset everything when dialog closes
+                        closeDialog();
+
+                        setIsStaff(false);
+
+                    }
+                }}>
                 <DialogContent
                     className="bg-white max-w-full pointer-events-auto mx-2 max-h-[95vh] w-[75%] h-[95%]"
                     onInteractOutside={(e) => e.preventDefault()}
                 >
                     <DialogTitle className="pl-1 hidden">Test</DialogTitle>
 
+
                     <div className="h-full flex flex-col min-h-0 pt-4">
-                        {!loading && formConfig && (
+
+                        {!isStaff && (
+                            <div className="w-[200px] mb-4">
+                                <Label className="mb-1 block">Select Employee Type</Label>
+                                <Combobox
+                                    field={{
+                                        name: 'employeeType',
+                                        label: 'Employee Type',
+                                        data: employeeTypes, // this should come from props or fetched API (with _id and name)
+                                        key: 'employeeType',
+                                    }}
+                                    formData={formData}
+                                    handleChange={(value: any) => {
+                                        setEmployeeType(value); // value = _id of selected employee type
+                                        setIsEmployeeTypeSelected(true);
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            employeeType: value,
+                                        }));
+
+                                        // Optionally: update form config if needed
+                                    }}
+                                    placeholder="Choose employee type"
+                                />
+                            </div>
+                        )}
+
+                        {isStaff && !loading && formConfig && (
                             <>
                                 {/* Fixed WorkflowNavigation inside dialog */}
                                 <div className="fixed top-8 left-0 right-0 z-40 flex justify-center bg-white">
@@ -105,9 +204,9 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                 </div>
 
                                 {/* Scrollable Form container below header */}
-                                <div className="pt-[235px] flex-1 overflow-y-auto flex justify-center ">
+                                <div className="pt-[220px] flex-1 overflow-y-auto flex justify-center ">
                                     <div className="w-full max-w-5xl p-4 pr-2">
-                                        <FormContainer formConfig={formConfig} onSubmit={() => { }} />
+                                        <FormContainer formConfig={formConfig} onSubmit={handleSave} />
                                     </div>
                                 </div>
                             </>

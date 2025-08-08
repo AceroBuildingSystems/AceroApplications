@@ -5,157 +5,165 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  PlusIcon, 
-  FileTextIcon, 
-  UserPlusIcon, 
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  AlertCircleIcon,
-  TrendingUpIcon,
-  EyeIcon,
-  WorkflowIcon,
-  UserIcon,
-  SettingsIcon
+import {
+    PlusIcon,
+    FileTextIcon,
+    UserPlusIcon,
+    ClockIcon,
+    CheckCircleIcon,
+    XCircleIcon,
+    AlertCircleIcon,
+    TrendingUpIcon,
+    EyeIcon,
+    WorkflowIcon,
+    UserIcon,
+    SettingsIcon,
+    Plus,
+    BriefcaseBusiness,
+    ClipboardCheck,
+    BookmarkX
 } from 'lucide-react';
 import { useGetHRMSDashboardQuery } from '@/services/endpoints/hrmsApi';
 import { HRMSFormTypes, HRMS_FORM_CONFIG } from '@/types/hrms';
 import Link from 'next/link';
 
 export default function HRMSDashboardPage() {
-  const { 
-    data: dashboardData, 
-    isLoading, 
-    error 
-  } = useGetHRMSDashboardQuery({});
+    const {
+        data: dashboardData,
+        isLoading,
+        error
+    } = useGetHRMSDashboardQuery({});
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                    <AlertCircleIcon className="h-16 w-16 text-destructive mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold">Error Loading Dashboard</h3>
+                    <p className="text-muted-foreground">Please try refreshing the page</p>
+                </div>
+            </div>
+        );
+    }
+
+    const formStats = dashboardData?.data?.formStats || {};
+    const approvalStats = dashboardData?.data?.approvalStats || [];
+
+    // Calculate overall statistics
+    const overallStats = Object.values(formStats).reduce(
+        (acc: any, stats: any) => ({
+            total: acc.total + stats.total,
+            drafts: acc.drafts + stats.drafts,
+            submitted: acc.submitted + stats.submitted,
+            approved: acc.approved + stats.approved,
+            rejected: acc.rejected + stats.rejected,
+            pending: acc.pending + stats.pending
+        }),
+        { total: 0, drafts: 0, submitted: 0, approved: 0, rejected: 0, pending: 0 }
     );
-  }
 
-  if (error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <AlertCircleIcon className="h-16 w-16 text-destructive mx-auto mb-4" />
-          <h3 className="text-lg font-semibold">Error Loading Dashboard</h3>
-          <p className="text-muted-foreground">Please try refreshing the page</p>
-        </div>
-      </div>
-    );
-  }
+        <div className="container mx-auto p-6 space-y-6 bg-white">
+            {/* Header */}
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight">HRMS Dashboard</h1>
+                    <p className="text-muted-foreground">
+                        Manage HR processes from recruitment to offboarding
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <Link href="/dashboard/newhrms/workflows">
+                      
+                        <Button
+                            effect="expandIcon"
+                            icon={Plus}
+                            iconPlacement="right">
+                            {/* <PlusIcon className="h-4 w-4 mr-2" /> */}
+                            New Process
+                        </Button>
+                    </Link>
+                    {/* <Link href="/dashboard/hrms/approval-flows">
+                        <Button variant="outline">
+                            Approval Flows
+                        </Button>
+                    </Link> */}
+                </div>
+            </div>
 
-  const formStats = dashboardData?.data?.formStats || {};
-  const approvalStats = dashboardData?.data?.approvalStats || [];
+            {/* Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="bg-gray-100 hover:shadow-lg transition-shadow border-gray-300" >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Active Recruitment Process</CardTitle>
+                        <FileTextIcon className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{overallStats.total}</div>
+                        {/* <p className="text-xs text-muted-foreground">
+                            All HR forms in system
+                        </p> */}
+                    </CardContent>
+                </Card>
 
-  // Calculate overall statistics
-  const overallStats = Object.values(formStats).reduce(
-    (acc: any, stats: any) => ({
-      total: acc.total + stats.total,
-      drafts: acc.drafts + stats.drafts,
-      submitted: acc.submitted + stats.submitted,
-      approved: acc.approved + stats.approved,
-      rejected: acc.rejected + stats.rejected,
-      pending: acc.pending + stats.pending
-    }),
-    { total: 0, drafts: 0, submitted: 0, approved: 0, rejected: 0, pending: 0 }
-  );
+                <Card className="bg-gray-100 hover:shadow-lg transition-shadow border-gray-300" >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Active Onboarding Process</CardTitle>
+                        <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-orange-600">{overallStats.pending}</div>
+                        {/* <p className="text-xs text-muted-foreground">
+                            Awaiting approval
+                        </p> */}
+                    </CardContent>
+                </Card>
 
-  return (
-    <div className="container mx-auto p-6 space-y-6 bg-white">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">HRMS Dashboard</h1>
-          <p className="text-muted-foreground">
-            Manage HR processes from recruitment to onboarding
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/dashboard/hrms/forms/new">
-            <Button>
-              <PlusIcon className="h-4 w-4 mr-2" />
-              New Form
-            </Button>
-          </Link>
-          <Link href="/dashboard/hrms/approval-flows">
-            <Button variant="outline">
-              Approval Flows
-            </Button>
-          </Link>
-        </div>
-      </div>
+                <Card className="bg-gray-100 hover:shadow-lg transition-shadow border-gray-300" >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Active Business Trip Requests</CardTitle>
+                        <BriefcaseBusiness className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-green-600">{overallStats.approved}</div>
+                        {/* <p className="text-xs text-muted-foreground">
+                            Successfully approved
+                        </p> */}
+                    </CardContent>
+                </Card>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Forms</CardTitle>
-            <FileTextIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{overallStats.total}</div>
-            <p className="text-xs text-muted-foreground">
-              All HR forms in system
-            </p>
-          </CardContent>
-        </Card>
+                <Card className="bg-gray-100 hover:shadow-lg transition-shadow border-gray-300" >
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Active Offboarding Process</CardTitle>
+                        <BookmarkX className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold text-blue-600">{overallStats.drafts}</div>
+                        {/* <p className="text-xs text-muted-foreground">
+                            Saved as drafts
+                        </p> */}
+                    </CardContent>
+                </Card>
+            </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approval</CardTitle>
-            <ClockIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{overallStats.pending}</div>
-            <p className="text-xs text-muted-foreground">
-              Awaiting approval
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            <CheckCircleIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{overallStats.approved}</div>
-            <p className="text-xs text-muted-foreground">
-              Successfully approved
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-            <FileTextIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{overallStats.drafts}</div>
-            <p className="text-xs text-muted-foreground">
-              Saved as drafts
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content Tabs */}
-      {/* <Tabs defaultValue="forms" className="space-y-4">
+            {/* Main Content Tabs */}
+            {/* <Tabs defaultValue="forms" className="space-y-4">
         <TabsList>
           <TabsTrigger value="forms">Forms Overview</TabsTrigger>
           <TabsTrigger value="approvals">Pending Approvals</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList> */}
 
-        {/* Forms Overview Tab */}
-        {/* <TabsContent value="forms">
+            {/* Forms Overview Tab */}
+            {/* <TabsContent value="forms">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {Object.values(HRMSFormTypes).map((formType) => {
               const config = HRMS_FORM_CONFIG[formType];
@@ -217,8 +225,8 @@ export default function HRMSDashboardPage() {
           </div>
         </TabsContent> */}
 
-        {/* Pending Approvals Tab */}
-        {/* <TabsContent value="approvals">
+            {/* Pending Approvals Tab */}
+            {/* <TabsContent value="approvals">
           <Card>
             <CardHeader>
               <CardTitle>Pending Approvals</CardTitle>
@@ -236,8 +244,8 @@ export default function HRMSDashboardPage() {
           </Card>
         </TabsContent> */}
 
-        {/* Analytics Tab */}
-        {/* <TabsContent value="analytics">
+            {/* Analytics Tab */}
+            {/* <TabsContent value="analytics">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -372,7 +380,7 @@ export default function HRMSDashboardPage() {
             </Card>
           </div>
         </TabsContent> */}
-      {/* </Tabs> */}
-    </div>
-  );
+            {/* </Tabs> */}
+        </div>
+    );
 }

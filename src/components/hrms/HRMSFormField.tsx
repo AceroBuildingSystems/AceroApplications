@@ -16,6 +16,7 @@ import { CalendarIcon, UploadIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { HRMSFormField as HRMSFormFieldType } from '@/types/hrms';
 import { getValueByPath } from '@/utils/toSplit';
+import { Combobox } from '../ui/ComboBoxWrapper';
 
 interface HRMSFormFieldProps {
   field: HRMSFormFieldType;
@@ -23,7 +24,8 @@ interface HRMSFormFieldProps {
   data: any; // Adjust type as needed based on your data structure
 }
 
-export default function HRMSFormField({ field, disabled = false , data}: HRMSFormFieldProps) {
+export default function HRMSFormField({ field, disabled = false, data }: HRMSFormFieldProps) {
+  console.log('HRMSFormField', field, data);
   const { control, formState: { errors }, watch } = useFormContext();
   // console.log('data', data)
   const error = errors[field.name];
@@ -42,7 +44,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
   }
 
   const renderField = () => {
-    if(field.type === 'tempId'){
+    if (field.type === 'tempId') {
       console.log(`${field.name} is tempId`)
     }
     switch (field.type) {
@@ -51,235 +53,238 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
       case 'tel':
       case 'tempId':
         return (
-          <Controller
-            name={field.name}
-            control={control}
-            disabled= {field.type === 'tempId'}
-            defaultValue={data?.[field.name] ||  getValueByPath(data, field.name) || (field.type === 'tempId' ? generateTempId() : '')}
-            rules={{
-              required: field.required ? `${field.label} is required` : false,
-              pattern: field.validation?.pattern ? {
-                value: new RegExp(field.validation.pattern),
-                message: field.validation.message || 'Invalid format'
-              } : undefined,
-              minLength: field.validation?.minLength ? {
-                value: field.validation.minLength,
-                message: `Minimum ${field.validation.minLength} characters required`
-              } : undefined,
-              maxLength: field.validation?.maxLength ? {
-                value: field.validation.maxLength,
-                message: `Maximum ${field.validation.maxLength} characters allowed`
-              } : undefined
-            }}
-            render={({ field: controllerField }) => (
-              <Input
-                {...controllerField}
-                value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
-                type={field.type}
-                placeholder={field.placeholder}
-                disabled={disabled || field.disabled}
-                className={cn(error && "border-destructive")}
-              />
-            )}
-          />
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              disabled={field.type === 'tempId'}
+              defaultValue={data?.[field.name] || getValueByPath(data, field.name) || (field.type === 'tempId' ? generateTempId() : '')}
+              rules={{
+                required: field.required ? `${field.label} is required` : false,
+                pattern: field.validation?.pattern ? {
+                  value: new RegExp(field.validation.pattern),
+                  message: field.validation.message || 'Invalid format'
+                } : undefined,
+                minLength: field.validation?.minLength ? {
+                  value: field.validation.minLength,
+                  message: `Minimum ${field.validation.minLength} characters required`
+                } : undefined,
+                maxLength: field.validation?.maxLength ? {
+                  value: field.validation.maxLength,
+                  message: `Maximum ${field.validation.maxLength} characters allowed`
+                } : undefined
+              }}
+              render={({ field: controllerField }) => (
+                <Input
+                  {...controllerField}
+                  value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  disabled={disabled || field.disabled}
+                  className={cn(error && "border-destructive")}
+                />
+              )}
+            />
+          </div>
         );
 
       case 'number':
         return (
-          <Controller
-            name={field.name}
-            control={control}
-            defaultValue={data?.[field.name] || getValueByPath(data, field.name) ||''}
-            rules={{
-              required: field.required ? `${field.label} is required` : false,
-              min: field.validation?.min ? {
-                value: field.validation.min,
-                message: `${field.label} must be at least ${field.validation.min}`
-              } : undefined,
-              max: field.validation?.max ? {
-                value: field.validation.max,
-                message: `${field.label} must be no more than ${field.validation.max}`
-              } : undefined
-            }}
-            render={({ field: controllerField }) => (
-              <Input
-                {...controllerField}
-                value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
-                type="number"
-                placeholder={field.placeholder}
-                disabled={disabled || field.disabled}
-                className={cn(error && "border-destructive")}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  // Allow empty string or convert to number
-                  controllerField.onChange(value === '' ? '' : Number(value));
-                }}
-              />
-            )}
-          />
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              defaultValue={data?.[field.name] || getValueByPath(data, field.name) || ''}
+              rules={{
+                required: field.required ? `${field.label} is required` : false,
+                min: field.validation?.min ? {
+                  value: field.validation.min,
+                  message: `${field.label} must be at least ${field.validation.min}`
+                } : undefined,
+                max: field.validation?.max ? {
+                  value: field.validation.max,
+                  message: `${field.label} must be no more than ${field.validation.max}`
+                } : undefined
+              }}
+              render={({ field: controllerField }) => (
+                <Input
+                  {...controllerField}
+                  value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
+                  type="number"
+                  placeholder={field.placeholder}
+                  disabled={disabled || field.disabled}
+                  className={cn(error && "border-destructive")}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty string or convert to number
+                    controllerField.onChange(value === '' ? '' : Number(value));
+                  }}
+                />
+              )}
+            />
+          </div>
         );
 
       case 'textarea':
         return (
-          <Controller
-            name={field.name}
-            control={control}
-            defaultValue={data?.[field.name] || getValueByPath(data, field.name)}
-            rules={{
-              required: field.required ? `${field.label} is required` : false,
-              minLength: field.validation?.min ? {
-                value: field.validation.min,
-                message: `${field.label} must be at least ${field.validation.min} characters`
-              } : undefined,
-              maxLength: field.validation?.max ? {
-                value: field.validation.max,
-                message: `${field.label} must be no more than ${field.validation.max} characters`
-              } : undefined
-            }}
-            render={({ field: controllerField }) => (
-              <Textarea
-                {...controllerField}
-                value={controllerField.value || getValueByPath(data, field.name) || ''}
-                placeholder={field.placeholder}
-                disabled={disabled || field.disabled}
-                className={cn(error && "border-destructive")}
-                rows={4}
-              />
-            )}
-          />
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              defaultValue={data?.[field.name] || getValueByPath(data, field.name)}
+              rules={{
+                required: field.required ? `${field.label} is required` : false,
+                minLength: field.validation?.min ? {
+                  value: field.validation.min,
+                  message: `${field.label} must be at least ${field.validation.min} characters`
+                } : undefined,
+                maxLength: field.validation?.max ? {
+                  value: field.validation.max,
+                  message: `${field.label} must be no more than ${field.validation.max} characters`
+                } : undefined
+              }}
+              render={({ field: controllerField }) => (
+                <Textarea
+                  {...controllerField}
+                  value={controllerField.value || getValueByPath(data, field.name) || ''}
+                  placeholder={field.placeholder}
+                  disabled={disabled || field.disabled}
+                  className={cn(error && "border-destructive")}
+                  rows={4}
+                />
+              )}
+            />
+          </div>
         );
 
       case 'select':
         const valueObject = getValueByPath(data, field.name); // safely gets the nested object
         console.log('valueObject', valueObject);
-  const selectedValue = valueObject?._id || valueObject || "";
-  console.log('selectedValue', selectedValue);
+        const selectedValue = valueObject?._id || valueObject || "";
+        console.log('selectedValue', selectedValue);
         return (
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name]?._id || selectedValue || ""}
+            defaultValue={data?.[field.name]?._id || ""} // Or getValueByPath()
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
-            render={({ field: controllerField }) => (
-              <Select
-                onValueChange={controllerField.onChange}
-                value={ controllerField.value || data?.[field.name]?._id || selectedValue || ""}
-                disabled={disabled || field.disabled}
-
-                
-              >
-                <SelectTrigger className={cn(error && "border-destructive")}>
-                  <SelectValue placeholder={field.placeholder || `Select ${field.label.toLowerCase()}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {field.options?.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            render={({ field: controllerField, fieldState }) => (
+              <Combobox
+                field={field}
+                value={controllerField.value}
+                formData={{ [field?.name]: controllerField.value }}
+                handleChange={(value: any) => controllerField.onChange(value)}
+                placeholder={field.placeholder || `Select ${field.label}`}
+                disabled={disabled || field?.disabled}
+              />
             )}
           />
         );
 
+
       case 'checkbox':
         return (
-          <Controller
-            name={field.name}
-            control={control}
-            defaultValue={data?.[field.name] || false}
-            render={({ field: controllerField }) => (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id={field.name}
-                  checked={controllerField.value || data?.[field.name] || false}
-                  onCheckedChange={controllerField.onChange}
-                  disabled={disabled || field.disabled}
-                />
-                <Label 
-                  htmlFor={field.name}
-                  className="text-sm font-normal cursor-pointer"
-                >
-                  {field.label}
-                </Label>
-              </div>
-            )}
-          />
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              defaultValue={data?.[field.name] || false}
+              render={({ field: controllerField }) => (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id={field.name}
+                    checked={controllerField.value || data?.[field.name] || false}
+                    onCheckedChange={controllerField.onChange}
+                    disabled={disabled || field.disabled}
+                  />
+                  <Label
+                    htmlFor={field.name}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {field.label}
+                  </Label>
+                </div>
+              )}
+            />
+          </div>
         );
 
       case 'radio':
         return (
-          <Controller
-            name={field.name}
-            control={control}
-            defaultValue={data?.[field.name] || ""}
-            rules={{
-              required: field.required ? `${field.label} is required` : false
-            }}
-            render={({ field: controllerField }) => (
-              <RadioGroup
-                onValueChange={controllerField.onChange}
-                value={controllerField.value || data?.[field.name] || ""}
-                disabled={disabled || field.disabled}
-                className="flex flex-col space-y-2"
-              >
-                {field.options?.map((option) => (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
-                    <Label htmlFor={`${field.name}-${option.value}`} className="font-normal">
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            )}
-          />
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              defaultValue={data?.[field.name] || ""}
+              rules={{
+                required: field.required ? `${field.label} is required` : false
+              }}
+              render={({ field: controllerField }) => (
+                <RadioGroup
+                  onValueChange={controllerField.onChange}
+                  value={controllerField.value || data?.[field.name] || ""}
+                  disabled={disabled || field.disabled}
+                  className="flex flex-col space-y-2"
+                >
+                  {field.options?.map((option) => (
+                    <div key={option.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`${field.name}-${option.value}`} />
+                      <Label htmlFor={`${field.name}-${option.value}`} className="font-normal">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+              )}
+            />
+          </div>
         );
 
       case 'date':
         return (
-          <Controller
-            name={field.name}
-            control={control}
-            defaultValue={data?.[field.name] || getValueByPath(data, field.name) || ''}
-            rules={{
-              required: field.required ? `${field.label} is required` : false
-            }}
-            render={({ field: controllerField }) => (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !controllerField.value && "text-muted-foreground",
-                      error && "border-destructive"
-                    )}
-                    disabled={disabled || field.disabled}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {controllerField.value ? (
-                      format(new Date(controllerField.value), "PPP")
-                    ) : (
-                      <span>{field.placeholder || `Pick a date`}</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-white" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={controllerField.value ? new Date(controllerField.value) : (data?.[field.name] ? new Date(data?.[field.name]) : (getValueByPath(data, field.name) ? new Date(getValueByPath(data, field.name)) : undefined))}
-                    onSelect={(date) => controllerField.onChange(date?.toISOString())}
-                    disabled={disabled || field.disabled}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-          />
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              defaultValue={data?.[field.name] || getValueByPath(data, field.name) || ''}
+              rules={{
+                required: field.required ? `${field.label} is required` : false
+              }}
+              render={({ field: controllerField }) => (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !controllerField.value && "text-muted-foreground",
+                        error && "border-destructive"
+                      )}
+                      disabled={disabled || field.disabled}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {controllerField.value ? (
+                        format(new Date(controllerField.value), "PPP")
+                      ) : (
+                        <span>{field.placeholder || `Pick a date`}</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-white" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={controllerField.value ? new Date(controllerField.value) : (data?.[field.name] ? new Date(data?.[field.name]) : (getValueByPath(data, field.name) ? new Date(getValueByPath(data, field.name)) : undefined))}
+                      onSelect={(date) => controllerField.onChange(date?.toISOString())}
+                      disabled={disabled || field.disabled}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              )}
+            />
+          </div>
         );
 
       case 'file':
@@ -331,7 +336,7 @@ export default function HRMSFormField({ field, disabled = false , data}: HRMSFor
       </div>
     );
   }
-console.log("Current form values:", watchedValues);
+  console.log("Current form values:", watchedValues);
 
   return (
     <div className="space-y-2">

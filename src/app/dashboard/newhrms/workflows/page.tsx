@@ -314,7 +314,7 @@ console.log(workflowInstances, 'Workflow Instances Data');
       {/* Workflow Templates */}
       <Card className='bg-white border-gray-100'>
         <CardHeader>
-          <CardTitle>Available Process To Proceed</CardTitle>
+          <CardTitle>Available Process To Proceed With</CardTitle>
           {/* <CardDescription>
             Pre-configured workflows for common HR processes
           </CardDescription> */}
@@ -322,7 +322,7 @@ console.log(workflowInstances, 'Workflow Instances Data');
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Object.entries(HRMS_WORKFLOW_TEMPLATES).map(([key, template]) => (
-              <Link key={key} href={`/dashboard/hrms/workflows/${key.toLowerCase()}`}>
+              <Link key={key} href={`/dashboard/newhrms/workflows/${key.toLowerCase()}`}>
               <Card className="bg-gray-50 hover:shadow-lg transition-shadow border-gray-300 cursor-pointer h-[180px]" >
                 <CardHeader className="pb-3 h-[110px]">
                   <CardTitle className="text-base">{template.workflowName}</CardTitle>

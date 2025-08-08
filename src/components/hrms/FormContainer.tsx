@@ -3,6 +3,7 @@
 import React from 'react';
 import SectionContainer from './SectionContainer';
 import { useForm, FormProvider } from 'react-hook-form';
+import { Button } from '../ui/button';
 
 export interface FieldConfig {
     id: string;
@@ -36,9 +37,9 @@ interface FormContainerProps {
 }
 
 
-const FormContainer: React.FC<FormContainerProps> = ({ formConfig }, onSubmit) => {
+const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit} ) => {
     const { title, description, sections, submitLabel, saveDraftLabel } = formConfig;
-
+console.log('Form Config:', formConfig);
     const methods = useForm({
         mode: 'onBlur', // or 'onChange' / 'onSubmit'
         defaultValues: {},
@@ -60,16 +61,15 @@ const FormContainer: React.FC<FormContainerProps> = ({ formConfig }, onSubmit) =
                     <SectionContainer key={section.id} section={section} />
                 ))}
 
-                <div className="flex gap-4 justify-end ">
-                    <button
-                        type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+                <div className="flex gap-4 justify-end pb-2">
+                    <Button
+                       
                     >
                         {submitLabel}
-                    </button>
+                    </Button>
 
-                    {saveDraftLabel && (
-                        <button
+                    {/* {saveDraftLabel && (
+                        <Button
                             type="button"
                             className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded"
                             onClick={() => {
@@ -79,8 +79,8 @@ const FormContainer: React.FC<FormContainerProps> = ({ formConfig }, onSubmit) =
                             }}
                         >
                             {saveDraftLabel}
-                        </button>
-                    )}
+                        </Button>
+                    )} */}
                 </div>
             </form>
         </FormProvider>

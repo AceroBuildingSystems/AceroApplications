@@ -2,11 +2,17 @@ import React from 'react';
 import { SectionConfig } from './FormContainer';
 import HRMSFormField from './HRMSFormField';
 import { cn } from '@/lib/utils';
+
+import { useFormContext } from 'react-hook-form';
+
 interface SectionContainerProps {
     section: SectionConfig;
 }
 
 const SectionContainer: React.FC<SectionContainerProps> = ({ section }) => {
+    console.log('Section Config:', section);
+    const { watch } = useFormContext();
+
     return (
         <div className="bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200 mb-4">
             <div className="flex items-center justify-between gap-4 pb-3 ">
@@ -23,16 +29,17 @@ const SectionContainer: React.FC<SectionContainerProps> = ({ section }) => {
 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {section.fields.map((field) => (
-                    <div
-                        key={field.name}
-                        className={cn(
-                            field.type === 'textarea' && "md:col-span-2"
-                        )}
-                    >
-                        <HRMSFormField field={field} disabled={false} data={[]} />
-                    </div>
-                ))}
+                {section.fields.map((field) => {
+                    const watchedValues = watch();
+                    const shouldShow = !field.showIf || field.showIf(watchedValues);
+                    if (!shouldShow) return null;
+
+                    return (
+                        <div key={field.name}>
+                            <HRMSFormField field={field} disabled={false} data={field?.options} />
+                        </div>
+                    );
+                })}
             </div>
 
         </div>

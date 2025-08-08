@@ -2,7 +2,7 @@
 
 import React from 'react'
 import DashboardLoader from '../ui/DashboardLoader';
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/inputSearch";
 import { Button } from '../ui/button';
 import { ChevronsUpDown, Check } from 'lucide-react';
 
@@ -48,6 +48,8 @@ const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState,
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
+    const [summaryData, setSummaryData] = useState([]);
+    const [title, setTitle] = useState(config?.title || "");
 console.log("Filtered Data", config?.dataTable?.data)
     useEffect(() => {
         setFilteredData(config?.dataTable?.data)
@@ -145,13 +147,13 @@ console.log("Filtered Data", config?.dataTable?.data)
     return (
         <>
             <DashboardLoader loading={loadingState}>
-                <div className='flex flex-col gap-1 w-full h-full px-4 pt-1'>
+                <div className='flex flex-col gap-2 w-full h-full px-4 py-1 pt-3'>
 
                     {/* Filter Section */}
-                    <div className='flex flex-row items-center justify-between'>
-                        <div className="flex flex-row items-center gap-2 w-full">
+                    <div className='flex flex-row items-center justify-between gap-2'>
+                        <div className="flex items-center gap-1 w-full">
                             {/* Render search fields */}
-                            <div className='flex items-center gap-1'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
+                            <div className='flex items-center'>{config.searchFields?.map((field: FieldObject, index: React.Key | null | undefined) => (
                                 <div key={index} className='w-full'>
 
                                     <Input
@@ -230,9 +232,9 @@ console.log("Filtered Data", config?.dataTable?.data)
 
                     </div>
 
-                    <div className="h-[85%]">
+                    <div className="h-[86%]">
                         {<DataTable data={filteredData && filteredData?.length > 0 ? filteredData : filteredData ? [] : config?.dataTable?.data} columns={config?.dataTable?.columns || []}
-                            rowClassMap={rowClassMap} summary={summary} summaryTotal={undefined} title={''} />}
+                            rowClassMap={rowClassMap} summary={summary} summaryTotal={summaryData} title={title} />}
                     </div>
                 </div>
 

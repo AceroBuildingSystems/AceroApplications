@@ -1,8 +1,8 @@
 "use client";
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
@@ -17,14 +17,76 @@ import { createMasterData } from '@/server/services/masterDataServices';
 import { bulkImport } from '@/shared/functions';
 import useUserAuthorised from '@/hooks/useUserAuthorised';
 import * as XLSX from "xlsx";
+import { useRouter } from 'next/navigation';
+import HrmsDialog from '@/components/hrms/HrmsComponent';
+import { HRMSFormConfig } from '@/types/hrms';
+import { getFormConfig } from '@/configs/hrms-forms';
+import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
 
 const page = () => {
+    const router = useRouter()
+    const [workflowType, setWorkflowType]: any = useState('recruitment');
+    const [workflowConfig, setWorkflowConfig]: any = useState(null);
+    const [formConfig, setFormConfig] = useState<HRMSFormConfig | null>(null);
     const [importing, setImporting] = useState(false);
     const { user, status, authenticated } = useUserAuthorised();
+
     const { data: customerData = [], isLoading: customerLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_MASTER,
         sort: { name: 'asc' },
     });
+
+    const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.LOCATION_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const { data: employeeTypeData = [], isLoading: employeeTypeLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.EMPLOYEE_TYPE_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.DESIGNATION_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const { data: departmentsData = [], isLoading: departmentLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.DEPARTMENT_MASTER,
+        sort: { name: 'asc' },
+    });
+    const { data: usersData = [], isLoading: userLoading }: any = useGetMasterQuery({
+        db: 'USER_MASTER',
+        filter: { isActive: true },
+        sort: { empId: 'asc' },
+    });
+
+    const departments = departmentsData?.data || [];
+    const users = usersData?.data || [];
+
+    const userOptions = useMemo(() =>
+        users.map((user: { _id: any; displayName: any; firstName: any; }) => ({
+            _id: user._id,
+            name: user?.displayName ? user.displayName : `${user.firstName}`,
+        })), [users]
+    );
+
+    const recruitymentTypes = [{_id:'internal', name: 'Internal'}, {_id:'external', name: 'External'}, {_id:'foreign', name: 'Foreign'}];
+
+
+    // useEffect(() => {
+    //     const config = getFormConfig('manpower_requisition');
+    //     console.log('Form Config:', config);
+    //     setFormConfig(config || null);
+    // }, []); // ✅ only runs once on mount
+
+    useEffect(() => {
+        // Simulate fetching or selecting workflow config
+        if (workflowType) {
+            const config = HRMS_WORKFLOW_TEMPLATES[workflowType.toUpperCase()];
+            setWorkflowConfig(config);
+        }
+    }, [workflowType]);
 
     const { data: customerTypeData = [], isLoading: customerTypeLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.CUSTOMER_TYPE_MASTER,
@@ -32,9 +94,9 @@ const page = () => {
     });
     const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
-    const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
+    const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];   
 
-    const loading = customerLoading || customerTypeLoading;
+    const loading = customerLoading || customerTypeLoading || departmentLoading || userLoading || designationLoading || employeeTypeLoading || locationLoading;
 
     interface RowData {
         id: string;
@@ -43,7 +105,6 @@ const page = () => {
         role: string;
     }
 
-    console.log('Customer Data:', customerTypeData);
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
@@ -76,6 +137,8 @@ const page = () => {
         setSelectedMaster("");
     };
 
+
+
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
@@ -86,7 +149,10 @@ const page = () => {
             data: formData,
         };
 
+
+
         const response = await createMaster(formattedData);
+
 
         if (response.data?.status === SUCCESS && action === 'Add') {
             toast.success('Customer added successfully');
@@ -113,10 +179,8 @@ const page = () => {
     };
 
     const handleAdd = () => {
-        setInitialData({});
         setAction('Add');
-        openDialog("customer");
-
+        openDialog("new quotation");
     };
 
 
@@ -137,42 +201,6 @@ const page = () => {
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
         // Write the workbook and trigger a download
         XLSX.writeFile(workbook, 'exported_data.xlsx');
-    };
-
-    const handleExport = (type: string, data: any) => {
-        let formattedData: any[] = [];
-
-        if (data?.length > 0) {
-            formattedData = data?.map((data: any) => ({
-                "Name": data?.name,
-                "Website": data?.website,
-                "Email": data?.email,
-                "Phone": data?.phone,
-                "Address": data?.address,
-                "Customer Type": data?.customerType?.name,
-
-            }));
-        } else {
-            // Create a single empty row with keys only (for header export)
-            formattedData = [{
-                "Name": '',
-                "Website": '',
-                "Email": '',
-                "Phone": '',
-                "Address": '',
-                "Customer Type": '',
-
-            }];
-        }
-
-        type === 'excel' && exportToExcel(formattedData);
-
-    };
-
-
-    const handleDelete = () => {
-        console.log('UserPage Delete button clicked');
-        // Your delete logic for user page
     };
 
 
@@ -314,23 +342,39 @@ const page = () => {
             data: customerData?.data,
         },
         buttons: [
-            { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
-            {
-                label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
-                    { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
-                    { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
-                ]
-            },
-            { label: 'Add', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+            // { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
+            // {
+            //     label: 'Export', action: handleExport, icon: Upload, className: 'bg-green-600 hover:bg-green-700 duration-300', dropdownOptions: [
+            //         { label: "Export to Excel", value: "excel", action: (type: string, data: any) => handleExport(type, data) },
+            //         { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
+            //     ]
+            // },
+            { label: 'New Process', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
 
-
+    console.log('Workflow Config:', workflowConfig, formConfig);
+    if (loading) return <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50"></div>
+    </div>;
     return (
         <>
 
             <MasterComponent config={customerConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
-            <DynamicDialog
+            <HrmsDialog isOpen={isDialogOpen}
+                closeDialog={closeDialog}
+                formConfig={formConfig}
+                workflowType={workflowConfig?.workflowType}
+                initialFormConfig={workflowConfig}
+                departments={departments}
+                users={userOptions}
+                designations={designationData?.data || []}
+                employeeTypes={employeeTypeData?.data || []}
+                action={action}
+                locationData={locationData?.data || []}
+                recruitymentTypes={recruitymentTypes}
+            />
+            {/* <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}
                 selectedMaster={selectedMaster}
@@ -341,7 +385,7 @@ const page = () => {
                 height='auto'
                 onchangeData={() => { }}
 
-            />
+            /> */}
         </>
 
     )

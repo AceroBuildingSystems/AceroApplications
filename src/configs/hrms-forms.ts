@@ -3,7 +3,7 @@ import { HRMSFormTypes } from '@/types/hrms';
 
 // Form configurations for all HRMS forms
 export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
-  
+
   // === Manpower Requisition Form ===
   [HRMSFormTypes.MANPOWER_REQUISITION]: {
     formType: HRMSFormTypes.MANPOWER_REQUISITION,
@@ -25,9 +25,9 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             options: [] // Will be populated from API
           },
           {
-            name: 'requestDate',
+            name: 'expectedCompletionDate',
             type: 'date',
-            label: 'Request Date',
+            label: 'Expected Completion Date',
             required: true,
             defaultValue: new Date().toISOString()
           },
@@ -39,11 +39,20 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             options: [] // Will be populated from API
           },
           {
-            name: 'requestedPosition',
-            type: 'text',
+            name: 'requiredPosition',
+            type: 'select',
             label: 'Requested Position',
             required: true,
-            placeholder: 'Enter the position title'
+            options: [],
+            placeholder: 'Select position to be filled',
+          },
+          {
+            name: 'workingLocation',
+            type: 'select',
+            label: 'Working Location',
+            required: true,
+            options: [],
+            placeholder: 'Select working location',
           }
         ]
       },
@@ -64,17 +73,17 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           },
 
           {
-            name: 'isBudgeted',
+            name: 'positionType',
             type: 'radio',
-            label: 'New Position Budgeted',
+            label: 'New Position Type',
             required: true,
             options: [
-              { label: 'Budgeted', value: 'true' },
-              { label: 'Non-Budgeted', value: 'false' }
+              { label: 'Budgeted', value: 'budgeted' },
+              { label: 'Non-Budgeted', value: 'nonbudgeted' }
             ],
             showIf: (values) => values.vacancyReason === 'new_position'
           },
-          
+
           {
             name: 'noOfVacantPositions',
             type: 'number',
@@ -82,6 +91,13 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             defaultValue: 1,
             validation: { min: 1, max: 50 }
+          },
+          {
+            name: 'recruitmentType',
+            type: 'select',
+            label: 'Recruitment Type',
+            options: [],
+            placeholder: 'Select recruitment type',
           }
         ]
       },
@@ -91,81 +107,29 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         description: 'Information about the employee being replaced (if applicable)',
         fields: [
           {
-            name: 'previousEmployee.empName',
-            type: 'text',
+            name: 'prevEmployee',
+            type: 'select',
             label: 'Employee Name',
+            options: [],
+            placeholder: 'Select previous employee',
             showIf: (values) => values.vacancyReason === 'replacement'
           },
+         
           {
-            name: 'previousEmployee.empNo',
-            type: 'text',
-            label: 'Employee Number',
-            showIf: (values) => values.vacancyReason === 'replacement'
-          },
-          {
-            name: 'previousEmployee.designation',
-            type: 'text',
-            label: 'Designation',
-            showIf: (values) => values.vacancyReason === 'replacement'
-          },
-          {
-            name: 'previousEmployee.department',
-            type: 'text',
-            label: 'Department',
-            showIf: (values) => values.vacancyReason === 'replacement'
-          },
-          {
-            name: 'previousEmployee.doe',
+            name: 'dateOfExit',
             type: 'date',
             label: 'Date of Exit',
             showIf: (values) => values.vacancyReason === 'replacement'
           },
           {
-            name: 'previousEmployee.salary',
+            name: 'prevEmployeeSalary',
             type: 'number',
-            label: 'Last Drawn Salary (AED)',
+            label: 'Salary (AED)',
             showIf: (values) => values.vacancyReason === 'replacement'
           }
         ]
       },
-      {
-        id: 'candidate_info',
-        title: 'Candidate Information',
-        description: 'Details about the selected candidate (if available)',
-        collapsible: true,
-        defaultExpanded: false,
-        fields: [
-          {
-            name: 'candidateInfo.selectedCandidateName',
-            type: 'text',
-            label: 'Selected Candidate Name',
-            placeholder: 'Enter candidate name if already selected'
-          },
-          {
-            name: 'candidateInfo.expectedDateOfJoining',
-            type: 'date',
-            label: 'Expected Date of Joining'
-          },
-          {
-            name: 'candidateInfo.designation',
-            type: 'text',
-            label: 'Designation',
-            placeholder: 'Position title for the candidate'
-          },
-          {
-            name: 'candidateInfo.proposedSalary',
-            type: 'number',
-            label: 'Proposed Salary (AED)',
-            validation: { min: 0 }
-          },
-          {
-            name: 'candidateInfo.benefits',
-            type: 'textarea',
-            label: 'Additional Benefits',
-            placeholder: 'Describe any additional benefits offered'
-          }
-        ]
-      }
+      
     ]
   },
 
@@ -370,17 +334,17 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             options: [
               { label: 'Join directly after visa cancellation', value: 'joinDirectlyAfterCancellation' },
-              { label: 'Travel to home country first', value: 'travelToHomeCountry'  }
+              { label: 'Travel to home country first', value: 'travelToHomeCountry' }
             ]
-            
+
           },
           {
             name: 'reasonForTravel',
             type: 'text',
             label: 'Reason for Travel',
             showIf: (values) => {
-           
-             return values.VisaCancellation === 'travelToHomeCountry'
+
+              return values.VisaCancellation === 'travelToHomeCountry'
             },
             placeholder: 'Specify reason for travel'
           },
@@ -1391,13 +1355,57 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'text',
             label: 'Jurisdiction',
             required: true,
-defaultValue: 'Dubai Courts'
+            defaultValue: 'Dubai Courts'
           }
         ]
       }
     ]
   }
 };
+
+
+// export function injectOptionsIntoFormConfig(config, optionsMap) {
+//   // Deep clone the config while skipping functions (like showIf)
+//   const clonedConfig = JSON.parse(JSON.stringify(config));
+
+//   clonedConfig.sections.forEach((section) => {
+//     section.fields.forEach((field) => {
+//       if (field.type === 'select' && optionsMap[field.name]) {
+//         field.data = optionsMap[field.name];
+//       }
+//     });
+//   });
+
+//   return clonedConfig;
+// }
+
+
+export function deepCloneWithOptionsInjection(obj, optionsMap) {
+  if (Array.isArray(obj)) {
+    return obj.map(item => deepCloneWithOptionsInjection(item, optionsMap));
+  } else if (obj && typeof obj === 'object') {
+    const cloned = {};
+    for (const key in obj) {
+      const val = obj[key];
+      if (key === 'options' && Array.isArray(val) && optionsMap[obj.name]) {
+        // Inject options for select fields by matching 'name'
+       cloned['data'] = optionsMap[obj.name];
+      } else if (typeof val === 'function') {
+        // Preserve functions like showIf
+        cloned[key] = val;
+      } else {
+        cloned[key] = deepCloneWithOptionsInjection(val, optionsMap);
+      }
+    }
+    return cloned;
+  }
+  // Primitive values: string, number, boolean, null, undefined
+  return obj;
+}
+
+
+
+
 
 // Helper function to get form config by type
 export function getFormConfig(formType: string): HRMSFormConfig | undefined {
@@ -1413,7 +1421,7 @@ export function getAllFormTypes(): string[] {
 export function getRequiredFields(formType: string): string[] {
   const config = getFormConfig(formType);
   if (!config) return [];
-  
+
   const requiredFields: string[] = [];
   config.sections.forEach(section => {
     section.fields.forEach(field => {
@@ -1422,7 +1430,7 @@ export function getRequiredFields(formType: string): string[] {
       }
     });
   });
-  
+
   return requiredFields;
 }
 

@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, ChevronsUpDown } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, ChevronsUpDown, ChevronsRight, ChevronsLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -41,7 +41,7 @@ import DashboardLoader from "../ui/DashboardLoader";
 interface DataTableProps<T extends { status: string }> {
   data: T[];
   columns: ColumnDef<T>[];
-  rowClassMap: Record<string, string>; // Mapping of status to CSS class names
+   rowClassMap?: (row: T) => string; // Function instead of object // Mapping of status to CSS class names
   summary: boolean;
   summaryTotal: any;
   title: string;
@@ -51,7 +51,7 @@ interface DataTableProps<T extends { status: string }> {
 
 export function DataTable<T extends { status: string }>({ data, columns, rowClassMap, summary, summaryTotal, title }: DataTableProps<T>) {
 
-  const rowNo = ['10', '20', '30', '40', '50', '100'];
+  const rowNo = ['10', '50', '100'];
 
   const [pagination, setPagination] = useState({
     pageIndex: 0, //initial page index
@@ -71,7 +71,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
- 
+
   const table = useReactTable({
     data,
     columns,
@@ -96,50 +96,10 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
   return (
     <DashboardLoader loading={table?.getRow?.length === 0}>
       <div className="w-full relative h-full flex flex-col gap-1">
-        <div className="flex items-center justify-between py-1 gap-1">
+        {/* <div className="flex items-center justify-between py-1 gap-1">
 
-          {/* <div className="flex items-center gap-1">
-            <span className="text-sm">Rows per page</span>
-            <Select onValueChange={handlePageSizeChange} defaultValue={String(pagination.pageSize)}>
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder={String(pagination.pageSize)} />
-              </SelectTrigger>
-              <SelectContent>
-                {rowNo.map((rows) => (
-                  <SelectItem key={rows} value={rows}>
-                    {rows}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div> */}
+       
           <div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  className="w-32 bg-white px-2 py-2 flex items-center justify-between text-left"
-                >
-                  <span className="truncate">Rows : {pagination.pageSize}</span>
-                  <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent  className="bg-white w-32">
-                {rowNo.map((rows) => (
-                  <DropdownMenuItem
-                    key={rows}
-                    className={`cursor-pointer `}
-                    onClick={() => handlePageSizeChange(String(rows))}
-                  >
-                    {rows}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-          </div>
-          {/* <div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -156,7 +116,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
                   .map((column) => {
-                   
+
                     return (
                       <DropdownMenuCheckboxItem
                         key={column.id}
@@ -172,11 +132,11 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                   })}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div> */}
-        </div>
+          </div>
+        </div> */}
 
         <div className="h-full w-full pb-6">
-          <div className="h-auto max-h-[68vh] overflow-y-auto rounded-md border cursor-pointer">
+          <div className=" h-auto max-h-[73vh] overflow-y-auto rounded-md border border-gray-200 cursor-pointer">
             <Table className="">
               <TableHeader className=" w-full ">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -204,7 +164,7 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
 
                       <TableRow
                         key={row.id}
-                        className={rowClassMap && rowClassMap[row.original?.status]}
+                        className={rowClassMap?.(row.original)}
                         data-state={row.getIsSelected() && "selected"}
                       >
                         {row.getVisibleCells().map((cell) => {
@@ -227,6 +187,25 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
                     ))}
 
                     {/* Summary Row (placed outside the map) */}
+                    {summary && title === 'Usage Details' && <TableRow className="bg-gray-200 font-bold">
+                      <TableCell>Total</TableCell>
+                      <TableCell colSpan={4}></TableCell>
+                      <TableCell >{summaryTotal?.totalPackageAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell colSpan={1}></TableCell>
+                      <TableCell >{summaryTotal?.totalGrossBillAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalOneTimeCharges)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalVAT)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalNetBillAmount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>}
+                    {summary && title === 'Deduction Reports' && <TableRow className="bg-gray-200 font-bold">
+                      <TableCell>Total</TableCell>
+                      <TableCell colSpan={3}></TableCell>
+                      <TableCell >{summaryTotal?.totalPackageAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell colSpan={1}></TableCell>
+                      <TableCell >{summaryTotal?.totalGrossBillAmount?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalWaivedAMount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                      <TableCell >{(summaryTotal?.totalDeductionAmount)?.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
+                    </TableRow>}
                     {summary && title === 'Quotation Details' && <TableRow className="bg-gray-200 font-bold">
                       <TableCell>Total</TableCell>
                       <TableCell colSpan={3}></TableCell>
@@ -296,23 +275,57 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
               {table.getFilteredSelectedRowModel().rows.length} of{" "}
               {table.getFilteredRowModel().rows.length} row(s) selected.
             </div>
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Previous
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
+            <div className="flex items-center space-x-2 gap-2">
+              <div className="text-sm">Rows Per Page</div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-20 bg-white px-2 py-2 flex items-center justify-between text-left"
+                  >
+                    <span className="truncate text-sm">{pagination.pageSize}</span>
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="bg-white w-20">
+                  {rowNo.map((rows) => (
+                    <DropdownMenuItem
+                      key={rows}
+                      className={`cursor-pointer `}
+                      onClick={() => handlePageSizeChange(String(rows))}
+                    >
+                      {rows}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+            </div>
+            <div className="space-x-2 flex">
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
+                >
+                  <ChevronsLeft /> Prev
+                </Button>
+              </div>
+
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                  className="flex items-center"
+                >
+                  Next <ChevronsRight className="" />
+                </Button>
+              </div>
+
             </div>
           </div>
         </div>

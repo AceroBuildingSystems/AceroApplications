@@ -1,6 +1,8 @@
 import { Document, Types } from "mongoose";
 
 export interface ApprovalInfo {
+  step: number;                // step number in the flow
+  key: string;                 // e.g. 'finance', 'hr', 'departmentHead', 'ceo'
   approverId?: Types.ObjectId;
   date?: Date;
   status?: "Pending" | "Approved" | "Rejected";
@@ -14,7 +16,7 @@ export interface recruitment extends Document {
   requestDate?: Date;
   expectedCompletionDate?: Date;
   department: Types.ObjectId;
-  requiredPosition: string;
+  requiredPosition: Types.ObjectId;
 
   // Position Information
   vacancyReason: "new_position" | "replacement";
@@ -28,29 +30,28 @@ export interface recruitment extends Document {
   prevEmployeeSalary?: number;
   recruitmentType: "internal" | "external" | "foreign";
 
-  // Final Approvals
-  approvedByFinance?: ApprovalInfo;
-  approvedByHR?: ApprovalInfo;
-  approvedByDepartmentHead?: ApprovalInfo;
-  approvedByCEO?: ApprovalInfo;
+  // Final Approvals as an array of approval steps
+  approvalFlow?: ApprovalInfo[];
 
   // Form Status
   approvalStatus?:
-    | "draft"
-    | "pending_department_head"
-    | "pending_hr_review"
-    | "pending_finance"
-    | "pending_hr_head"
-    | "pending_coo_cfo"
-    | "pending_ceo"
-    | "approved"
-    | "rejected";
+  | "draft"
+  | "pending_department_head"
+  | "pending_hr_review"
+  | "pending_finance"
+  | "pending_hr"
+  | "pending_coo_cfo"
+  | "pending_ceo"
+  | "approved"
+  | "rejected";
 
   status?: "incomplete" | "completed";
 
   currentApprovalStep?: number;
   completedStep?: number;
-
+  checker: Types.ObjectId;
+  interviewers?: Types.ObjectId[];
+  isActive?: boolean;
   updatedBy?: string;
 
   // Mongoose timestamps

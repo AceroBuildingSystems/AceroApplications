@@ -44,7 +44,8 @@ interface MasterComponentProps {
 
 
 const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
-
+console.log("Master Component Config", config)
+    // State to manage search and filter values
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);

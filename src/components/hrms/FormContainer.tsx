@@ -34,15 +34,34 @@ export interface FormConfig {
 interface FormContainerProps {
     formConfig: FormConfig;
     onSubmit: (data: any) => void; // Adjust type as needed
+    initialData?: any; // Optional initial data for the form
 }
 
 
-const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit} ) => {
+const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, initialData = {}} ) => {
     const { title, description, sections, submitLabel, saveDraftLabel } = formConfig;
 console.log('Form Config:', formConfig);
+console.log('initia data:', initialData);
+
+const fieldsToExtractId = [
+    "department",
+    "requestedBy",
+    "requiredPosition",
+    "employeeType",
+    "workLocation",
+    "prevEmployee",
+  ];
+
+  // Replace objects with their _id
+  const cleanedData = { ...initialData };
+  for (const field of fieldsToExtractId) {
+    if (cleanedData[field] && typeof cleanedData[field] === "object" && "_id" in cleanedData[field]) {
+      cleanedData[field] = cleanedData[field]._id;
+    }
+  }
     const methods = useForm({
         mode: 'onBlur', // or 'onChange' / 'onSubmit'
-        defaultValues: {},
+        defaultValues: cleanedData,
     });
 
     const {
@@ -58,7 +77,7 @@ console.log('Form Config:', formConfig);
         <FormProvider {...methods}>
             <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
                 {sections.map((section) => (
-                    <SectionContainer key={section.id} section={section} />
+                    <SectionContainer key={section.id} section={section} data={cleanedData} />
                 ))}
 
                 <div className="flex gap-4 justify-end pb-2">

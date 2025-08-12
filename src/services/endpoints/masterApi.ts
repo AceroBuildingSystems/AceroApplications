@@ -53,5 +53,6 @@ export const masterApi = baseApi.injectEndpoints({
 
 export const {
   useGetMasterQuery,
+  useLazyGetMasterQuery,
   useCreateMasterMutation,
 } = masterApi;

@@ -48,7 +48,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </BreadcrumbItem>
                       {/* <BreadcrumbSeparator className="hidden md:block" /> */}
                       <BreadcrumbItem>
-                        <BreadcrumbPage>{pathContent[pathContent.length - 1].toProperCase()}</BreadcrumbPage>
+                        <BreadcrumbPage className="font-semibold">{pathContent[pathContent.length - 1].toProperCase()}</BreadcrumbPage>
                       </BreadcrumbItem>
                     </BreadcrumbList>
                   </Breadcrumb>

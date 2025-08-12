@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
     API_BASE_URL: process.env.API_BASE_URL,
     ENVIRONMENT: process.env.ENVIRONMENT
   },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '50mb' // Increase to your desired size
+    }
+  },
   // images: {
   //   domains: ['localhost'],
   // },

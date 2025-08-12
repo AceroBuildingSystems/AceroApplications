@@ -2,6 +2,23 @@ import { min } from "lodash";
 import mongoose, { Document, Model, Schema } from "mongoose";
 
 import { recruitment } from "@/types/hrms/recruitment.types";
+
+const ApprovalStepSchema = new Schema({
+    step: { type: Number, required: true },
+    key: { type: String, required: true }, // e.g. 'finance', 'hr', 'departmentHead', 'ceo'
+    approverId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        autopopulate: {
+            select: "firstName lastName displayName email empId designation department"
+        }
+    },
+    date: { type: Date },
+    status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+    remarks: { type: String }
+}, { _id: false }); // 👈 disables _id for each array element
+
+
 const RecruitmentSchema: Schema<recruitment> = new Schema({
 
     // Request Information
@@ -27,7 +44,12 @@ const RecruitmentSchema: Schema<recruitment> = new Schema({
         required: true,
         autopopulate: true
     },
-    requiredPosition: { type: String, required: true },
+    requiredPosition: {
+        type: Schema.Types.ObjectId,
+        ref: 'Designation',
+        required: true,
+        autopopulate: true
+    },
 
     // Position Information
     vacancyReason: {
@@ -65,46 +87,52 @@ const RecruitmentSchema: Schema<recruitment> = new Schema({
 
 
     // Final Approvals
-    approvedByFinance: {
-        approverId: {
-            type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-                select: "firstName lastName displayName email empId designation department"
-            }
-        },
-        date: Date,
-        status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-        remarks: String,
+
+    approvalFlow: {
+        type: [ApprovalStepSchema],
+        default: []
     },
-    approvedByHR: {
-        approverId: {
-            type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-                select: "firstName lastName displayName email empId designation department"
-            }
-        },
-        date: Date,
-        status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-        remarks: String,
-    },
-    approvedByDepartmentHead: {
-        approverId: {
-            type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-                select: "firstName lastName displayName email empId designation department"
-            }
-        },
-        date: Date,
-        status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-        remarks: String,
-    },
-    approvedByCEO: {
-        approverId: {
-            type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-                select: "firstName lastName displayName email empId designation department"
-            }
-        },
-        date: Date,
-        status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-        remarks: String,
-    },
+
+    // approvedByFinance: {
+    //     approverId: {
+    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
+    //             select: "firstName lastName displayName email empId designation department"
+    //         }
+    //     },
+    //     date: Date,
+    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+    //     remarks: String,
+    // },
+    // approvedByHR: {
+    //     approverId: {
+    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
+    //             select: "firstName lastName displayName email empId designation department"
+    //         }
+    //     },
+    //     date: Date,
+    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+    //     remarks: String,
+    // },
+    // approvedByDepartmentHead: {
+    //     approverId: {
+    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
+    //             select: "firstName lastName displayName email empId designation department"
+    //         }
+    //     },
+    //     date: Date,
+    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+    //     remarks: String,
+    // },
+    // approvedByCEO: {
+    //     approverId: {
+    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
+    //             select: "firstName lastName displayName email empId designation department"
+    //         }
+    //     },
+    //     date: Date,
+    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+    //     remarks: String,
+    // },
 
     // Form Status
     approvalStatus: {
@@ -132,9 +160,24 @@ const RecruitmentSchema: Schema<recruitment> = new Schema({
         default: 'incomplete'
     },
 
-   
     currentApprovalStep: { type: Number, default: 0 },
     completedStep: { type: Number, default: 1 },
+    checker: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        autopopulate: {
+            select: "firstName lastName displayName email empId designation department"
+        }
+    },
+    interviewers: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        autopopulate: {
+            select: "firstName lastName displayName email empId designation department"
+        }
+    }],
+
+    isActive: { type: Boolean, default: true },
 
     updatedBy: { type: String },
 },

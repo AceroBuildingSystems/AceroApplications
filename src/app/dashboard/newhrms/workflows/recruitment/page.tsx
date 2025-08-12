@@ -2,12 +2,12 @@
 
 import React, { useMemo } from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import { ArrowUpDown, ChevronDown, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
 import { useGetUsersQuery } from '@/services/endpoints/usersApi';
-import { organisationTransformData } from '@/lib/utils';
+import { organisationTransformData, transformData } from '@/lib/utils';
 import DynamicDialog from '@/components/ModalComponent/ModelComponent';
 import { useCreateMasterMutation, useGetMasterQuery } from '@/services/endpoints/masterApi';
 import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
@@ -22,6 +22,8 @@ import HrmsDialog from '@/components/hrms/HrmsComponent';
 import { HRMSFormConfig } from '@/types/hrms';
 import { getFormConfig } from '@/configs/hrms-forms';
 import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
+import moment from 'moment';
+import { create } from 'lodash';
 
 const page = () => {
     const router = useRouter()
@@ -55,6 +57,10 @@ const page = () => {
         db: MONGO_MODELS.DEPARTMENT_MASTER,
         sort: { name: 'asc' },
     });
+    const { data: recruitmentData = [], isLoading: recruitmentLoading, refetch } = useGetMasterQuery({
+        db: MONGO_MODELS.RECRUITMENT,
+        sort: { status: 'desc', createdAt: 'desc' },
+    });
     const { data: usersData = [], isLoading: userLoading }: any = useGetMasterQuery({
         db: 'USER_MASTER',
         filter: { isActive: true },
@@ -65,15 +71,25 @@ const page = () => {
     const users = usersData?.data || [];
 
     const userOptions = useMemo(() =>
-        users.map((user: { _id: any; displayName: any; firstName: any; }) => ({
-            _id: user._id,
+        users.map((user: any) => ({
+            ...user, // keep all original fields
             name: user?.displayName ? user.displayName : `${user.firstName}`,
-        })), [users]
+        })),
+        [users]
     );
 
-    const recruitymentTypes = [{_id:'internal', name: 'Internal'}, {_id:'external', name: 'External'}, {_id:'foreign', name: 'Foreign'}];
+    const depNames = departmentsData?.data
+    ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
+    ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
+
+    const positionNames = designationData?.data
+    ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
+    ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
 
 
+    const recruitymentTypes = [{ _id: 'internal', name: 'Internal' }, { _id: 'external', name: 'External' }, { _id: 'foreign', name: 'Foreign' }];
+
+    console.log('Recruitment Data:', recruitmentData);
     // useEffect(() => {
     //     const config = getFormConfig('manpower_requisition');
     //     console.log('Form Config:', config);
@@ -94,9 +110,16 @@ const page = () => {
     });
     const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
-    const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];   
+    const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
-    const loading = customerLoading || customerTypeLoading || departmentLoading || userLoading || designationLoading || employeeTypeLoading || locationLoading;
+    const fieldsToAdd = [
+        { fieldName: 'departmentName', path: ['department', 'name'] },
+        { fieldName: 'positionName', path: ['requiredPosition', 'name'] }
+      ];
+    
+      const transformedData = transformData(recruitmentData?.data, fieldsToAdd);
+
+    const loading = customerLoading || customerTypeLoading || departmentLoading || userLoading || designationLoading || employeeTypeLoading || locationLoading || recruitmentLoading;
 
     interface RowData {
         id: string;
@@ -123,6 +146,7 @@ const page = () => {
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
     const [action, setAction] = useState('Add');
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     // Open the dialog and set selected master type
     const openDialog = (masterType: React.SetStateAction<string>) => {
@@ -132,9 +156,11 @@ const page = () => {
     };
 
     // Close dialog
-    const closeDialog = () => {
+    const closeDialog = async () => {
         setDialogOpen(false);
         setSelectedMaster("");
+        setInitialData({});
+        await refetch();
     };
 
 
@@ -174,13 +200,17 @@ const page = () => {
     const editUser = (rowData: RowData) => {
         setAction('Update');
         setInitialData(rowData);
-        openDialog("customer");
+        openDialog("recruitment");
         // Your add logic for user page
     };
 
     const handleAdd = () => {
+        setInitialData({});
+         setCurrentIndex(0);
         setAction('Add');
-        openDialog("new quotation");
+        openDialog("recruitment");
+       
+        
     };
 
 
@@ -205,7 +235,7 @@ const page = () => {
 
 
 
-    const customerColumns = [
+    const recruitmentColumns = [
         {
             id: "select",
             header: ({ table }: { table: any }) => (
@@ -230,116 +260,140 @@ const page = () => {
         },
 
         {
-            accessorKey: "name",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            accessorKey: "requiredPosition",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Customer Name</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("name")}</div>,
+                return (
+                    <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Position</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("requiredPosition")?.name}</div>,
         },
         {
-            accessorKey: "website",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            accessorKey: "department",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Website</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div >{row.getValue("website")}</div>,
+                return (
+                    <button
+                        className="group  flex items-center space-x-2 w-[100px]"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Department</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => <div >{row.getValue("department")?.name}</div>,
         },
         {
-            accessorKey: "email",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            accessorKey: "requestDate",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Email</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div >{row.getValue("email")}</div>,
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Request Date</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => <div >{moment(row.original.requestDate).format("DD-MMM-YYYY")}</div>,
         },
         {
-            accessorKey: "phone",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            accessorKey: "requestedBy",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Phone</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div >{row.getValue("phone")}</div>,
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Requested By</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => <div >{row.getValue("requestedBy")?.displayName}</div>,
         },
+
         {
-            accessorKey: "address",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            accessorKey: "approvalStatus",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
-                >
-                    <span>Address</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div >{row.getValue("address")}</div>,
-        },
-        {
-            accessorKey: "customerType",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Approval Status</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => {
+                const value = row.getValue("approvalStatus") || "";
+                const [first, second] = String(value).split("_");
 
-                >
-                    <span>Customer Type</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div >{row.getValue("customerType")?.name}</div>,
+                return (
+                    <div>
+                        {first?.toProperCase()}
+                        {second && <span> ({second?.toProperCase()})</span>}
+                    </div>
+                );
+            },
         },
-        {
-            accessorKey: "isActive",
-            header: ({ column }: { column: any }) => (
-                <button
-                    className="flex items-center space-x-2"
-                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 
-                >
-                    <span>Status</span> {/* Label */}
-                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
-                </button>
-            ),
-            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-        },
+
 
     ];
 
     const customerConfig = {
-        searchFields: [
-            { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by customer' },
+        // searchFields: [
+        //     { key: "name", label: 'name', type: "text" as const, placeholder: 'Search by customer' },
+
+        // ],
+        filterFields: [
+
+            { key: "department", label: 'departmentName', type: "select" as const, data: depNames, placeholder: 'Search by Department', name: 'departmentName' },
+            { key: "position", label: 'positionName', type: "select" as const, data: positionNames, placeholder: 'Search by Position', name: 'positionName' },
 
         ],
-        filterFields: [
-        ],
         dataTable: {
-            columns: customerColumns,
-            data: customerData?.data,
+            columns: recruitmentColumns,
+            data: transformedData,
         },
         buttons: [
             // { label: importing ? 'Importing...' : 'Import', action: handleImport, icon: Download, className: 'bg-blue-600 hover:bg-blue-700 duration-300' },
@@ -352,15 +406,46 @@ const page = () => {
             { label: 'New Process', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
+    
+      const visaTypes = [
+            { _id: 'visit', name: 'Visit Visa' },
+            { _id: 'employment', name: 'Employment Visa' },
+            { _id: 'residence', name: 'Residence Visa' },
+            { _id: 'others', name: 'Others' }]
+
+    const rowClassMap = (row: any) => {
+        if (row?.isTotalRow) return "bg-yellow-100 font-bold";
+        if (row?.status) return {
+            draft: "bg-white",
+            quoterequested: "bg-yellow-100",
+            completed: 'bg-green-200',
+            submitted: 'bg-orange-200',
+            rejected: 'bg-red-200',
+            approved: 'bg-green-200'
+        }[row.status] || "";
+        return "";
+    };
 
     console.log('Workflow Config:', workflowConfig, formConfig);
-    if (loading) return <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50"></div>
-    </div>;
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+    // if (loading) return 
+    // <div className="flex justify-center items-center h-screen">
+    //     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50"></div>
+    // </div>;
+
+
+
     return (
         <>
 
-            <MasterComponent config={customerConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
+            <MasterComponent config={customerConfig} loadingState={loading} rowClassMap={rowClassMap} summary={false} />
             <HrmsDialog isOpen={isDialogOpen}
                 closeDialog={closeDialog}
                 formConfig={formConfig}
@@ -373,6 +458,10 @@ const page = () => {
                 action={action}
                 locationData={locationData?.data || []}
                 recruitymentTypes={recruitymentTypes}
+                initialData={initialData}
+                visaTypes={visaTypes}
+                onSave={saveData}
+                currentIndex={currentIndex}
             />
             {/* <DynamicDialog
                 isOpen={isDialogOpen}

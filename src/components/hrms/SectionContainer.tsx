@@ -7,9 +7,10 @@ import { useFormContext } from 'react-hook-form';
 
 interface SectionContainerProps {
     section: SectionConfig;
+    data?: any; // Optional data for the section, can be used for default values or other purposes
 }
 
-const SectionContainer: React.FC<SectionContainerProps> = ({ section }) => {
+const SectionContainer: React.FC<SectionContainerProps> = ({ section, data = {} }) => {
     console.log('Section Config:', section);
     const { watch } = useFormContext();
 
@@ -36,7 +37,7 @@ const SectionContainer: React.FC<SectionContainerProps> = ({ section }) => {
 
                     return (
                         <div key={field.name}>
-                            <HRMSFormField field={field} disabled={false} data={field?.options} />
+                            <HRMSFormField field={field} disabled={false} data={data} />
                         </div>
                     );
                 })}

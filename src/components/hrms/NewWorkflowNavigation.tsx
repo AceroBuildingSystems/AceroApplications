@@ -28,35 +28,34 @@ interface WorkflowNavigationProps {
 
 export default function WorkflowNavigation({ formConfig }: WorkflowNavigationProps) {
   const { workflowType, steps, currentStepIndex = 0, onStepChange } = formConfig;
-console.log('Workflow Navigation Config:', formConfig);
+  console.log('Workflow Navigation Config:', formConfig);
   if (!workflowType || !steps || steps.length === 0) return null;
 
   const currentStep = steps[currentStepIndex];
   const canGoBack = currentStepIndex > 0;
   const canGoForward = currentStepIndex < steps.length - 1;
 
-  const getStepIcon = (step: Step) => {
-    if (step.status === 'completed') {
+  const getStepIcon = (index: number) => {
+    if (index < currentStepIndex) {
       return <CheckCircleIcon className="h-6 w-6 text-white" />;
-    } else if (step.status === 'in_progress') {
+    } else if (index === currentStepIndex) {
       return <PlayIcon className="h-6 w-6 text-white" />;
     } else {
       return <CircleIcon className="h-6 w-6 text-gray-400" />;
     }
   };
 
-  const getStepCircleStyle = (step: Step, index: number) => {
-    if (step.status === 'completed') {
-      return 'bg-green-500 border-green-500';
-    } else if (step.status === 'in_progress') {
-      return 'bg-blue-500 border-blue-500';
-    } else if (index <= currentStepIndex) {
-      // accessible steps up to current
-      return 'bg-gray-200 border-gray-300 hover:bg-gray-300 cursor-pointer';
+
+  const getStepCircleStyle = (index: number) => {
+    if (index < currentStepIndex) {
+      return 'bg-green-500 border-green-500'; // completed
+    } else if (index === currentStepIndex) {
+      return 'bg-blue-500 border-blue-500'; // in progress
     } else {
-      return 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50';
+      return 'bg-gray-100 border-gray-200 cursor-not-allowed opacity-50'; // pending
     }
   };
+
 
   // Handler for step click
   const handleStepClick = (index: number) => {
@@ -83,12 +82,12 @@ console.log('Workflow Navigation Config:', formConfig);
                     disabled={index > currentStepIndex}
                     className={cn(
                       'relative w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 transform hover:scale-105',
-                      getStepCircleStyle(step, index),
+                      getStepCircleStyle(index),
                       index > currentStepIndex ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                       index === currentStepIndex ? 'ring-4 ring-blue-200' : ''
                     )}
                   >
-                    {getStepIcon(step)}
+                    {getStepIcon(index)}
 
                     <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
                       {index + 1}
@@ -112,14 +111,14 @@ console.log('Workflow Navigation Config:', formConfig);
                   <div className="flex-1 h-0.5 mx-4 relative">
                     <div className="absolute inset-0 bg-gray-200"></div>
                     <div
-                      className={`absolute inset-0 bg-green-500 transition-all duration-300 ${
-                        step.status === 'completed' ? 'w-full' : 'w-0'
-                      }`}
+                      className={`absolute inset-0 bg-green-500 transition-all duration-300 ${index < currentStepIndex ? 'w-full' : 'w-0'
+                        }`}
                     ></div>
                   </div>
                 )}
               </React.Fragment>
             ))}
+
           </div>
 
           {/* Mobile View */}

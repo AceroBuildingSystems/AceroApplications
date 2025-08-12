@@ -55,6 +55,7 @@ const TicketAttachmentComponent: React.FC<TicketAttachmentComponentProps> = ({
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
+    console.log('Selected file:', file);
     setSelectedFile(file);
   };
 

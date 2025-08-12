@@ -15,6 +15,8 @@ import Provider from '@/components/provider/Provider';
 
 import { Types } from 'mongoose';
 
+
+
 export function sanitizeUserDocs(docs: any[]): any[] {
   return docs.map((doc: any) => {
     const plainDoc = doc.toObject ? doc.toObject() : { ...doc };

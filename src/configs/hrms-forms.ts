@@ -47,12 +47,12 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             placeholder: 'Select position to be filled',
           },
           {
-            name: 'workingLocation',
+            name: 'workLocation',
             type: 'select',
-            label: 'Working Location',
+            label: 'Work Location',
             required: true,
             options: [],
-            placeholder: 'Select working location',
+            placeholder: 'Select work location',
           }
         ]
       },
@@ -89,8 +89,6 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'number',
             label: 'Number of Vacant Positions',
             required: true,
-            defaultValue: 1,
-            validation: { min: 1, max: 50 }
           },
           {
             name: 'recruitmentType',
@@ -114,7 +112,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             placeholder: 'Select previous employee',
             showIf: (values) => values.vacancyReason === 'replacement'
           },
-         
+
           {
             name: 'dateOfExit',
             type: 'date',
@@ -129,11 +127,12 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           }
         ]
       },
-      
+
     ]
   },
 
   // === Candidate Information Form ===
+
   [HRMSFormTypes.CANDIDATE_INFORMATION]: {
     formType: HRMSFormTypes.CANDIDATE_INFORMATION,
     title: 'Candidate Information Form',
@@ -141,37 +140,39 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
     submitLabel: 'Submit Application',
     saveDraftLabel: 'Save Draft',
     sections: [
+      // Personal details section
       {
         id: 'personal_details',
         title: 'Personal Details',
         description: 'Basic personal information of the candidate',
         fields: [
           {
-            name: 'positionApplied',
+            name: 'firstName',
             type: 'text',
-            label: 'Position Applied For',
+            label: 'First Name (As Per Passport)',
             required: true,
-            placeholder: 'Enter the position you are applying for'
+            placeholder: 'Enter first name as per passport'
           },
           {
-            name: 'name',
+            name: 'lastName',
             type: 'text',
-            label: 'Full Name',
+            label: 'Last Name (As Per Passport)',
             required: true,
-            placeholder: 'Enter your full name as per passport'
+            placeholder: 'Enter last name as per passport'
           },
           {
-            name: 'dateOfBirth',
-            type: 'date',
-            label: 'Date of Birth',
-            required: true
+            name: 'contactNumber',
+            type: 'tel',
+            label: 'Contact Number',
+            required: true,
+            placeholder: 'Contact number with country code',
           },
           {
-            name: 'nationality',
-            type: 'select',
-            label: 'Nationality',
+            name: 'email',
+            type: 'email',
+            label: 'Email Address',
             required: true,
-            options: [] // Will be populated from countries API
+            placeholder: 'your.email@example.com'
           },
           {
             name: 'gender',
@@ -184,6 +185,27 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             ]
           },
           {
+            name: 'nationality',
+            type: 'select',
+            label: 'Nationality',
+            required: true,
+            options: [] // Will be populated from countries API
+          },
+          {
+            name: 'currentLocation',
+            type: 'text',
+            label: 'Current Location',
+            required: true,
+            placeholder: 'City, Country'
+          },
+          {
+            name: 'dateOfBirth',
+            type: 'date',
+            label: 'Date of Birth',
+            required: true
+          },
+
+          {
             name: 'maritalStatus',
             type: 'radio',
             label: 'Marital Status',
@@ -193,174 +215,167 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
               { label: 'Married', value: 'married' },
               { label: 'Divorced', value: 'divorced' }
             ]
-          }
+          },
+          {
+            name: 'drivingLicense',
+            type: 'radio',
+            label: 'Driving License',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+          {
+            name: 'currentlyworking',
+            type: 'radio',
+            label: 'Currently Working',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
         ]
       },
+      //Professional details
       {
-        id: 'family_details',
-        title: 'Family Details',
-        description: 'Information about family members',
+        id: 'professional_details',
+        title: 'Professional Details',
+        description: 'Information about your professional background',
         fields: [
+
           {
-            name: 'fatherName',
+            name: 'totalYearsOfExperience',
+            type: 'number',
+            label: 'Total Years of Experience',
+            required: true,
+            validation: { min: 0 }
+          },
+          {
+            name: 'relevantYearsOfExperience',
+            type: 'number',
+            label: 'Relevant Years of Experience',
+            required: true,
+            validation: { min: 0 }
+          },
+          {
+            name: 'currentEmployer',
             type: 'text',
-            label: "Father's Name",
-            required: true,
-            placeholder: "Enter your father's full name"
-          },
-          {
-            name: 'motherName',
-            type: 'text',
-            label: "Mother's Name",
-            required: true,
-            placeholder: "Enter your mother's full name"
-          },
-          {
-            name: 'spouseName',
-            type: 'text',
-            label: "Spouse's Name",
-            placeholder: "Enter spouse name if married",
-            showIf: (values) => values.maritalStatus === 'married'
-          }
-        ]
-      },
-      {
-        id: 'contact_details',
-        title: 'Contact Information',
-        description: 'Contact details and addresses',
-        fields: [
-          {
-            name: 'contactAddressUAE',
-            type: 'textarea',
-            label: 'Contact Address in UAE',
-            required: true,
-            placeholder: 'Enter your current address in UAE'
-          },
-          {
-            name: 'phoneNumbersUAE',
-            type: 'tel',
-            label: 'Phone Number (UAE)',
-            required: true,
-            placeholder: '+971-XX-XXXXXXX'
-          },
-          {
-            name: 'contactAddressHomeCountry',
-            type: 'textarea',
-            label: 'Contact Address (Home Country)',
-            required: true,
-            placeholder: 'Enter your address in home country'
-          },
-          {
-            name: 'phoneNumbersHomeCountry',
-            type: 'tel',
-            label: 'Phone Number (Home Country)',
-            required: true,
-            placeholder: 'Include country code'
-          },
-          {
-            name: 'email',
-            type: 'email',
-            label: 'Email Address',
-            required: true,
-            placeholder: 'your.email@example.com'
-          },
-          {
-            name: 'homeTownCityIntlAirport',
-            type: 'text',
-            label: 'Home Town/City/International Airport',
-            required: true,
-            placeholder: 'Nearest major city or airport'
-          }
-        ]
-      },
-      {
-        id: 'passport_employment',
-        title: 'Passport & Employment Details',
-        description: 'Passport information and current employment status',
-        fields: [
-          {
-            name: 'passportNo',
-            type: 'text',
-            label: 'Passport Number',
-            required: true,
-            placeholder: 'Enter passport number'
-          },
-          {
-            name: 'passportExpiry',
-            type: 'date',
-            label: 'Passport Expiry Date',
-            required: true
+            label: 'Current Employer',
+            //required: true,
+            placeholder: 'Name of current or most recent employer'
           },
           {
             name: 'currentWorkLocation',
             type: 'text',
             label: 'Current Work Location',
-            required: true,
+            //required: true,
             placeholder: 'City, Country'
+          },
+          {
+            name: 'currentDesignation',
+            type: 'text',
+            label: 'Current Designation',
+            //required: true,
+            placeholder: 'Your current or most recent job title'
+          },
+          {
+            name: 'noticePeriodRequired',
+            type: 'number',
+            label: 'Notice Period Required (Days)',
+            //required: true,
+            placeholder: '15, 30, etc'
           },
           {
             name: 'currentSalaryPackage',
             type: 'number',
-            label: 'Current Salary Package (AED)',
-            required: true,
+            label: 'Current Salary (Per Month)',
+            //required: true,
             validation: { min: 0 }
           },
           {
-            name: 'noticePeriod',
-            type: 'text',
-            label: 'Notice Period',
-            required: true,
-            placeholder: 'e.g., 30 days, 2 months'
+            name: 'expectedSalaryPackage',
+            type: 'number',
+            label: 'Expected Salary (Per Month)',
+            // required: true,
+            validation: { min: 0 }
           },
-          {
-            name: 'expectedDOJ',
-            type: 'date',
-            label: 'Expected Date of Joining',
-            required: true
-          }
         ]
       },
+      //Visa details
       {
-        id: 'visa_options',
-        title: 'Visa-Cancellation Options (UAE Based)',
-        description: 'Options for UAE visa holders',
+        id: 'visa_details',
+        title: 'Visa Details',
+        description: 'Visa information and current visa status',
         collapsible: true,
         defaultExpanded: false,
         fields: [
           {
-            name: 'VisaCancellation',
+            name: 'visaType',
+            type: 'select',
+            label: 'Visa Type',
+            //  required: true,
+            options: []
+          },
+          {
+            name: 'visaExpiry',
+            type: 'date',
+            label: 'Visa Expiry Date',
+            // required: true
+          },
+        ]
+      },
+      //Education details
+      {
+        id: 'education_details',
+        title: 'Education Details',
+        description: 'Information about your educational background',
+        fields: [
+          {
+            name: 'highestQualification',
+            type: 'text',
+            label: 'Highest Qualification',
+            required: true,
+            placeholder: 'e.g., Bachelor\'s, Master\'s, PhD'
+          },
+          {
+            name: 'degreeCertificateAttested',
             type: 'radio',
-            label: 'Visa Cacellation',
+            label: 'Degree Certificate Attested',
             required: true,
             options: [
-              { label: 'Join directly after visa cancellation', value: 'joinDirectlyAfterCancellation' },
-              { label: 'Travel to home country first', value: 'travelToHomeCountry' }
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
             ]
-
           },
           {
-            name: 'reasonForTravel',
+            name: 'languagesKnown',
+            type: 'textarea',
+            label: 'Languages Known',
+            required: true,
+            placeholder: 'e.g., English, Arabic, Hindi'
+          },
+          {
+            name: 'certifications',
             type: 'text',
-            label: 'Reason for Travel',
-            showIf: (values) => {
-
-              return values.VisaCancellation === 'travelToHomeCountry'
-            },
-            placeholder: 'Specify reason for travel'
+            label: 'Certifications (if any)',
+            placeholder: 'Mention your certifications here'
           },
           {
-            name: 'daysStayHomeCountry',
-            type: 'number',
-            label: 'Days to Stay in Home Country',
-            showIf: (values) => values.VisaCancellation === 'travelToHomeCountry',
-            validation: { min: 1, max: 365 }
+            name: 'attachResume',
+            type: 'file',
+            label: 'Attach Resume',
+            required: true,
+            accept: '.pdf,.doc,.docx',
           }
         ]
       },
+      //Referral information
       {
         id: 'referral_info',
         title: 'Referral Information',
-        description: 'How you learned about this position',
+        description: 'How you know about this position',
         collapsible: true,
         defaultExpanded: false,
         fields: [
@@ -373,13 +388,371 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           },
           {
             name: 'friendsRelativesInABS',
-            type: 'checkbox',
-            label: 'Do you have friends or relatives working in ABS?'
-          }
+            type: 'radio',
+            label: 'Do you have friends or relatives working in ABS?',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+          {
+            name: 'friendsRelativesDetails.name',
+            type: 'text',
+            label: 'Friend/Relative Name',
+            showIf: (values) => values.friendsRelativesInABS === 'yes',
+          },
+          {
+            name: 'friendsRelativesDetails.relation',
+            type: 'text',
+            label: 'Relation',
+            showIf: (values) => values.friendsRelativesInABS === 'yes',
+          },
+          {
+            name: 'friendsRelativesDetails.contactNo',
+            type: 'tel',
+            label: 'Contact Number',
+            showIf: (values) => values.friendsRelativesInABS === 'yes',
+          },
+          // {
+          //   id: 'friends_RelativesDetails',
+
+          //   label: 'Friends/Relatives Details',
+          //   showIf: (values) => values.friendsRelativesInABS === 'yes',
+          //   fields: [
+          //     {
+          //       name: 'friendsRelativesDetails.name',
+          //       type: 'text',
+          //       label: 'Friend/Relative Name',
+          //       //required: true
+          //     },
+          //     {
+          //       name: 'friendsRelativesDetails.relation',
+          //       type: 'text',
+          //       label: 'Relation',
+          //       //required: true
+          //     },
+          //     {
+          //       name: 'friendsRelativesDetails.contactNo',
+          //       type: 'tel',
+          //       label: 'Contact Number',
+          //       //required: true
+          //     }
+          //   ]
+          // }
+        ]
+      },
+      //Declaration
+      {
+        id: 'declaration',
+
+        title: 'Declaration',
+        description: 'I declare that the above statement given by me is true and correct to the best of my knowledge and belief. I understand that all information provided about me to you will be held by you and used for the purpose of evaluating my qualifications, experience and suitability for employment with you. I also understand that my employment contract will be terminated if, after investigation, the company discovers that any information which I have provided, or which has been provided by me, is false or misleading.',
+        fields: [
+          {
+            name: 'declaredBy.candidateSignature',
+            type: 'text',
+            label: 'Candidate Signature',
+            required: true,
+            placeholder: 'Type your full name as signature'
+          },
+          // {
+          //   name: 'declaredBy.date',
+          //   type: 'date',
+          //   label: 'Date',
+          //   required: true,
+          //   defaultValue: new Date().toISOString()
+          // },
+          // {
+          //   name: 'remarks',
+          //   type: 'textarea',
+          //   label: 'Remarks (If Any)',
+          //   placeholder: 'Type your remarks here'
+          // },
+          // {
+          //   name: 'checkedBy',
+          //   type: 'select',
+          //   label: 'Checked By (For HR/Admin)',
+          //   placeholder: 'select checked by',
+          //   options: []
+          // },
+        ]
+      },
+      //HR Admin
+      {
+        id: 'hrAdmin',
+
+        title: 'For HR/Admin',
+        // description: 'I declare that the above statement given by me is true and correct to the best of my knowledge and belief. I understand that all information provided about me to you will be held by you and used for the purpose of evaluating my qualifications, experience and suitability for employment with you. I also understand that my employment contract will be terminated if, after investigation, the company discovers that any information which I have provided, or which has been provided by me, is false or misleading.',
+        fields: [
+           {
+            name: 'checkedBy',
+            type: 'select',
+            label: 'Checked By',
+            placeholder: 'select checked by',
+            options: []
+          },
+          {
+            name: 'remarks',
+            type: 'textarea',
+            label: 'Remarks (If Any)',
+            placeholder: 'Type your remarks here'
+          },
+        
         ]
       }
+
     ]
   },
+
+
+  // === Candidate Information Form ===
+  // [HRMSFormTypes.CANDIDATE_INFORMATION]: {
+  //   formType: HRMSFormTypes.CANDIDATE_INFORMATION,
+  //   title: 'Candidate Information Form',
+  //   description: 'Comprehensive candidate information and background details',
+  //   submitLabel: 'Submit Information',
+  //   saveDraftLabel: 'Save Draft',
+  //   sections: [
+  //     {
+  //       id: 'personal_details',
+  //       title: 'Personal Details',
+  //       description: 'Basic personal information of the candidate',
+  //       fields: [
+  //         {
+  //           name: 'positionApplied',
+  //           type: 'text',
+  //           label: 'Position Applied For',
+  //           required: true,
+  //           placeholder: 'Enter the position you are applying for'
+  //         },
+  //         {
+  //           name: 'name',
+  //           type: 'text',
+  //           label: 'Full Name',
+  //           required: true,
+  //           placeholder: 'Enter your full name as per passport'
+  //         },
+  //         {
+  //           name: 'dateOfBirth',
+  //           type: 'date',
+  //           label: 'Date of Birth',
+  //           required: true
+  //         },
+  //         {
+  //           name: 'nationality',
+  //           type: 'select',
+  //           label: 'Nationality',
+  //           required: true,
+  //           options: [] // Will be populated from countries API
+  //         },
+  //         {
+  //           name: 'gender',
+  //           type: 'radio',
+  //           label: 'Gender',
+  //           required: true,
+  //           options: [
+  //             { label: 'Male', value: 'male' },
+  //             { label: 'Female', value: 'female' }
+  //           ]
+  //         },
+  //         {
+  //           name: 'maritalStatus',
+  //           type: 'radio',
+  //           label: 'Marital Status',
+  //           required: true,
+  //           options: [
+  //             { label: 'Single', value: 'single' },
+  //             { label: 'Married', value: 'married' },
+  //             { label: 'Divorced', value: 'divorced' }
+  //           ]
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       id: 'family_details',
+  //       title: 'Family Details',
+  //       description: 'Information about family members',
+  //       fields: [
+  //         {
+  //           name: 'fatherName',
+  //           type: 'text',
+  //           label: "Father's Name",
+  //           required: true,
+  //           placeholder: "Enter your father's full name"
+  //         },
+  //         {
+  //           name: 'motherName',
+  //           type: 'text',
+  //           label: "Mother's Name",
+  //           required: true,
+  //           placeholder: "Enter your mother's full name"
+  //         },
+  //         {
+  //           name: 'spouseName',
+  //           type: 'text',
+  //           label: "Spouse's Name",
+  //           placeholder: "Enter spouse name if married",
+  //           showIf: (values) => values.maritalStatus === 'married'
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       id: 'contact_details',
+  //       title: 'Contact Information',
+  //       description: 'Contact details and addresses',
+  //       fields: [
+  //         {
+  //           name: 'contactAddressUAE',
+  //           type: 'textarea',
+  //           label: 'Contact Address in UAE',
+  //           required: true,
+  //           placeholder: 'Enter your current address in UAE'
+  //         },
+  //         {
+  //           name: 'phoneNumbersUAE',
+  //           type: 'tel',
+  //           label: 'Phone Number (UAE)',
+  //           required: true,
+  //           placeholder: '+971-XX-XXXXXXX'
+  //         },
+  //         {
+  //           name: 'contactAddressHomeCountry',
+  //           type: 'textarea',
+  //           label: 'Contact Address (Home Country)',
+  //           required: true,
+  //           placeholder: 'Enter your address in home country'
+  //         },
+  //         {
+  //           name: 'phoneNumbersHomeCountry',
+  //           type: 'tel',
+  //           label: 'Phone Number (Home Country)',
+  //           required: true,
+  //           placeholder: 'Include country code'
+  //         },
+  //         {
+  //           name: 'email',
+  //           type: 'email',
+  //           label: 'Email Address',
+  //           required: true,
+  //           placeholder: 'your.email@example.com'
+  //         },
+  //         {
+  //           name: 'homeTownCityIntlAirport',
+  //           type: 'text',
+  //           label: 'Home Town/City/International Airport',
+  //           required: true,
+  //           placeholder: 'Nearest major city or airport'
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       id: 'passport_employment',
+  //       title: 'Passport & Employment Details',
+  //       description: 'Passport information and current employment status',
+  //       fields: [
+  //         {
+  //           name: 'passportNo',
+  //           type: 'text',
+  //           label: 'Passport Number',
+  //           required: true,
+  //           placeholder: 'Enter passport number'
+  //         },
+  //         {
+  //           name: 'passportExpiry',
+  //           type: 'date',
+  //           label: 'Passport Expiry Date',
+  //           required: true
+  //         },
+  //         {
+  //           name: 'currentWorkLocation',
+  //           type: 'text',
+  //           label: 'Current Work Location',
+  //           required: true,
+  //           placeholder: 'City, Country'
+  //         },
+  //         {
+  //           name: 'currentSalaryPackage',
+  //           type: 'number',
+  //           label: 'Current Salary Package (AED)',
+  //           required: true,
+  //           validation: { min: 0 }
+  //         },
+  //         {
+  //           name: 'noticePeriod',
+  //           type: 'text',
+  //           label: 'Notice Period',
+  //           required: true,
+  //           placeholder: 'e.g., 30 days, 2 months'
+  //         },
+  //         {
+  //           name: 'expectedDOJ',
+  //           type: 'date',
+  //           label: 'Expected Date of Joining',
+  //           required: true
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       id: 'visa_options',
+  //       title: 'Visa-Cancellation Options (UAE Based)',
+  //       description: 'Options for UAE visa holders',
+  //       collapsible: true,
+  //       defaultExpanded: false,
+  //       fields: [
+  //         {
+  //           name: 'VisaCancellation',
+  //           type: 'radio',
+  //           label: 'Visa Cacellation',
+  //           required: true,
+  //           options: [
+  //             { label: 'Join directly after visa cancellation', value: 'joinDirectlyAfterCancellation' },
+  //             { label: 'Travel to home country first', value: 'travelToHomeCountry' }
+  //           ]
+
+  //         },
+  //         {
+  //           name: 'reasonForTravel',
+  //           type: 'text',
+  //           label: 'Reason for Travel',
+  //           showIf: (values) => {
+
+  //             return values.VisaCancellation === 'travelToHomeCountry'
+  //           },
+  //           placeholder: 'Specify reason for travel'
+  //         },
+  //         {
+  //           name: 'daysStayHomeCountry',
+  //           type: 'number',
+  //           label: 'Days to Stay in Home Country',
+  //           showIf: (values) => values.VisaCancellation === 'travelToHomeCountry',
+  //           validation: { min: 1, max: 365 }
+  //         }
+  //       ]
+  //     },
+  //     {
+  //       id: 'referral_info',
+  //       title: 'Referral Information',
+  //       description: 'How you learned about this position',
+  //       collapsible: true,
+  //       defaultExpanded: false,
+  //       fields: [
+  //         {
+  //           name: 'sourceOfPositionInfo',
+  //           type: 'text',
+  //           label: 'Source of Position Information',
+  //           required: true,
+  //           placeholder: 'e.g., Job portal, referral, company website'
+  //         },
+  //         {
+  //           name: 'friendsRelativesInABS',
+  //           type: 'checkbox',
+  //           label: 'Do you have friends or relatives working in ABS?'
+  //         }
+  //       ]
+  //     }
+  //   ]
+  // },
 
   // === Business Trip Request Form ===
   [HRMSFormTypes.BUSINESS_TRIP_REQUEST]: {
@@ -1389,7 +1762,7 @@ export function deepCloneWithOptionsInjection(obj, optionsMap) {
       const val = obj[key];
       if (key === 'options' && Array.isArray(val) && optionsMap[obj.name]) {
         // Inject options for select fields by matching 'name'
-       cloned['data'] = optionsMap[obj.name];
+        cloned['data'] = optionsMap[obj.name];
       } else if (typeof val === 'function') {
         // Preserve functions like showIf
         cloned[key] = val;

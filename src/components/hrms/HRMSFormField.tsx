@@ -109,7 +109,8 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
               render={({ field: controllerField }) => (
                 <Input
                   {...controllerField}
-                  value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
+                  value={controllerField.value === 0 ? '0' : controllerField.value?.toString() ?? ''}
+
                   type="number"
                   placeholder={field.placeholder}
                   disabled={disabled || field.disabled}
@@ -226,7 +227,7 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
                   onValueChange={controllerField.onChange}
                   value={controllerField.value || data?.[field.name] || ""}
                   disabled={disabled || field.disabled}
-                  className="flex flex-col space-y-2"
+                  className="flex space-x-5"
                 >
                   {field.options?.map((option) => (
                     <div key={option.value} className="flex items-center space-x-2">

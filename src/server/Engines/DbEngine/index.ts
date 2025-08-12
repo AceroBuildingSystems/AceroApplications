@@ -44,7 +44,9 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
   Notification,
   ApprovalFlow, // Added ApprovalFlow import
 UserBenefits
-, UserPersonalDetails, UserEmploymentDetails, UserVisaDetails, UserIdentification
+, UserPersonalDetails, UserEmploymentDetails, UserVisaDetails, UserIdentification,
+Recruitment,
+CandidateInfo
 } from '@/models';
 
 
@@ -124,7 +126,9 @@ function getMongooseAdapter(): MongooseAdapter {
     USER_BENEFITS: UserBenefits,
     USER_EMPLOYMENT_DETAILS: UserEmploymentDetails,
     USER_VISA_DETAILS: UserVisaDetails,
-    USER_IDENTIFICATION: UserIdentification
+    USER_IDENTIFICATION: UserIdentification,
+    RECRUITMENT: Recruitment,
+    CANDIDATE_INFO: CandidateInfo
     });
   }
   return dbEngineInstance;

@@ -71,6 +71,7 @@ import UserEmploymentDetails from "./master/UserEmploymentDetails.model";
 import UserVisaDetails from "./master/UserVisaDetails.model";
 import UserIdentification from "./master/UserIdentification.model";
 import Recruitment from "./hrms/Recruitment.model";
+import CandidateInfo from "./hrms/CandidateInfo.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -114,6 +115,7 @@ export {
     UserEmploymentDetails,
     UserVisaDetails,
     UserIdentification,
-    Recruitment
+    Recruitment,
+    CandidateInfo
     
 }

@@ -108,7 +108,7 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
       },
       {
         id: 'interview_assessment',
-        formType: HRMSFormTypes.EMPLOYEE_INFORMATION, // For detailed evaluation and interview notes
+        formType: HRMSFormTypes.INTERVIEW_ASSESSMENT, // For detailed evaluation and interview notes
         stepName: 'Interview Assessment',
         stepOrder: 3,
         isRequired: true,
@@ -117,7 +117,7 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
       },
       {
         id: 'offer_acceptance',
-        formType: HRMSFormTypes.NEW_EMPLOYEE_JOINING, // For hiring decision and joining details
+        formType: HRMSFormTypes.OFFER_ACCEPTANCE, // For hiring decision and joining details
         stepName: 'Offer Acceptance',
         stepOrder: 4,
         isRequired: true,

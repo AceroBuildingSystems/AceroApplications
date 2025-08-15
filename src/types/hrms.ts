@@ -5,6 +5,9 @@
 export enum HRMSFormTypes {
   MANPOWER_REQUISITION = 'manpower_requisition',
   CANDIDATE_INFORMATION = 'candidate_information',
+  CANDIDATE_INFORMATION_NEW = 'candidate_information_new',
+  INTERVIEW_ASSESSMENT = 'interview_assesment',
+  OFFER_ACCEPTANCE = 'offer_acceptance',
   BUSINESS_TRIP_REQUEST = 'business_trip_request',
   NEW_EMPLOYEE_JOINING = 'new_employee_joining',
   ASSETS_IT_ACCESS = 'assets_it_access',
@@ -109,7 +112,7 @@ export const HRMS_WORKFLOW_STAGES = {
   RECRUITMENT: [
     'manpower_requisition',
     'candidate_information',
-    'interview_scheduling',
+    'interview_assesment',
     'offer_letter',
     'acceptance'
   ],
@@ -126,9 +129,10 @@ export const HRMS_WORKFLOW_STAGES = {
 
 // Common field types for forms
 export interface HRMSFormField {
+  disable: boolean | undefined;
   id: string;
 
-  type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'file';
+  type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'file' | 'array';
   label: string;
   required?: boolean;
   placeholder?: string;

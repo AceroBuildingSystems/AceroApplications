@@ -11,25 +11,25 @@ interface SectionContainerProps {
 }
 
 const SectionContainer: React.FC<SectionContainerProps> = ({ section, data = {} }) => {
-    console.log('Section Config:', section);
+    console.log('Section Config:', section, data);
     const { watch } = useFormContext();
 
     return (
         <div className="bg-gray-50 rounded-lg p-6 shadow-sm border border-gray-200 mb-4">
-            <div className="flex items-center justify-between gap-4 pb-3 ">
-                <h3 className="text-xl font-semibold m-0 flex-shrink-0">
+            <div className="flex flex-col justify-between gap-4 pb-3 ">
+                <h3 className="text-lg font-semibold m-0 flex-shrink-0">
                     {section.title}
                 </h3>
 
-                {/* {section.description && (
+                {section.description && section.title === 'Declaration' && (
                     <p className="text-gray-500 m-0 flex-grow">
                         {section.description}
                     </p>
-                )} */}
+                )}
             </div>
 
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className={`grid gap-4 ${(section?.id === 'assessment_section' || section?.id === 'rounds_section') ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
                 {section.fields.map((field) => {
                     const watchedValues = watch();
                     const shouldShow = !field.showIf || field.showIf(watchedValues);

@@ -87,7 +87,7 @@ CandidateInfoSchema.plugin(require('mongoose-autopopulate'));
 // });
 
 // Index for efficient queries
-CandidateInfoSchema.index({ createdAt: -1 });
+CandidateInfoSchema.index({recruitment: 1, createdAt: -1 });
 
 const CandidateInfo: Model<candidateInformation> = mongoose.models.CandidateInfoSchema || mongoose.model<candidateInformation>("CandidateInfo", CandidateInfoSchema)
 

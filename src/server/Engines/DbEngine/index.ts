@@ -46,7 +46,9 @@ import { Access,Department,Designation,EmployeeType,Organisation,Role,User,Categ
 UserBenefits
 , UserPersonalDetails, UserEmploymentDetails, UserVisaDetails, UserIdentification,
 Recruitment,
-CandidateInfo
+CandidateInfo,
+Interview,
+OfferAcceptance
 } from '@/models';
 
 
@@ -128,7 +130,9 @@ function getMongooseAdapter(): MongooseAdapter {
     USER_VISA_DETAILS: UserVisaDetails,
     USER_IDENTIFICATION: UserIdentification,
     RECRUITMENT: Recruitment,
-    CANDIDATE_INFO: CandidateInfo
+    CANDIDATE_INFO: CandidateInfo,
+    INTERVIEW: Interview,
+    OFFER_ACCEPTANCE: OfferAcceptance
     });
   }
   return dbEngineInstance;

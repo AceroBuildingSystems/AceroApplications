@@ -57,8 +57,8 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
             <Controller
               name={field.name}
               control={control}
-              disabled={field.type === 'tempId'}
-              defaultValue={data?.[field.name] || getValueByPath(data, field.name) || (field.type === 'tempId' ? generateTempId() : '')}
+              disabled={field?.disable}
+              defaultValue={data?.[field.name] ?? getValueByPath(data, field.name) ?? ''}
               rules={{
                 required: field.required ? `${field.label} is required` : false,
                 pattern: field.validation?.pattern ? {
@@ -77,10 +77,15 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
               render={({ field: controllerField }) => (
                 <Input
                   {...controllerField}
-                  value={controllerField.value || data?.[field.name] || getValueByPath(data, field.name) || ''}
+                  value={
+                    controllerField.value ??
+                    data?.[field.name] ??
+                    getValueByPath(data, field.name) ??
+                    ""
+                  }
                   type={field.type}
                   placeholder={field.placeholder}
-                  disabled={disabled || field.disabled}
+                  disabled={disabled || field?.disable}
                   className={cn(error && "border-destructive")}
                 />
               )}
@@ -94,7 +99,7 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
             <Controller
               name={field.name}
               control={control}
-              defaultValue={data?.[field.name] || getValueByPath(data, field.name) || ''}
+              defaultValue={data?.[field.name] ?? getValueByPath(data, field.name) ?? ''}
               rules={{
                 required: field.required ? `${field.label} is required` : false,
                 min: field.validation?.min ? {
@@ -109,7 +114,13 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
               render={({ field: controllerField }) => (
                 <Input
                   {...controllerField}
-                  value={controllerField.value === 0 ? '0' : controllerField.value?.toString() ?? ''}
+                  value={
+                    controllerField.value ??
+                    data?.[field.name] ??
+                    getValueByPath(data, field.name) ??
+                    ""
+                  }
+
 
                   type="number"
                   placeholder={field.placeholder}
@@ -132,7 +143,7 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
             <Controller
               name={field.name}
               control={control}
-              defaultValue={data?.[field.name] || getValueByPath(data, field.name)}
+              defaultValue={data?.[field.name] ?? getValueByPath(data, field.name ?? '')}
               rules={{
                 required: field.required ? `${field.label} is required` : false,
                 minLength: field.validation?.min ? {
@@ -147,7 +158,7 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
               render={({ field: controllerField }) => (
                 <Textarea
                   {...controllerField}
-                  value={controllerField.value || getValueByPath(data, field.name) || ''}
+                  value={controllerField.value ?? getValueByPath(data, field.name) ?? ''}
                   placeholder={field.placeholder}
                   disabled={disabled || field.disabled}
                   className={cn(error && "border-destructive")}
@@ -167,14 +178,14 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name]?._id || ""} // Or getValueByPath()
+            defaultValue={data?.[field.name]?._id ?? ""} // Or getValueByPath()
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
             render={({ field: controllerField, fieldState }) => (
               <Combobox
                 field={field}
-                value={controllerField.value}
+                value={controllerField.value ?? ''}
                 formData={{ [field?.name]: controllerField.value }}
                 handleChange={(value: any) => controllerField.onChange(value)}
                 placeholder={field.placeholder || `Select ${field.label}`}
@@ -296,25 +307,131 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
             rules={{
               required: field.required ? `${field.label} is required` : false
             }}
-            render={({ field: controllerField }) => (
-              <div className="flex items-center gap-2">
-                <Input
-                  type="file"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    controllerField.onChange(file);
-                  }}
-                  disabled={disabled || field.disabled}
-                  className={cn(error && "border-destructive")}
-                />
-                <Button type="button" variant="outline" size="sm" disabled={disabled || field.disabled}>
-                  <UploadIcon className="h-4 w-4 mr-2" />
-                  Upload
-                </Button>
-              </div>
-            )}
+            render={({ field: controllerField }) => {
+              const selectedFile = controllerField.value; // This will be a File object or URL
+
+              const fileName =
+                selectedFile instanceof File
+                  ? selectedFile.name
+                  : selectedFile?.name || ""; // In case you pre-fill
+
+              const fileUrl = data?.resumeUrl;
+              console.log('url', fileUrl);
+              return (
+                <div className="flex items-center gap-2">
+                  {/* Hidden native file input */}
+                  <input
+                    id={`file-${field.name}`}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      controllerField.onChange(file);
+                    }}
+                    disabled={disabled || field.disabled}
+                  />
+
+                  {/* Custom button to trigger file picker */}
+                  <Button
+                    className={`${field.disable && 'hidden'}`}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      document.getElementById(`file-${field.name}`).click()
+                    }
+                    disabled={disabled || field.disabled}
+                  >
+                    <UploadIcon className="h-4 w-4 mr-2" />
+                    Choose File
+                  </Button>
+
+                  {/* Display file name if available */}
+                  {fileName && (
+                    fileUrl ? (
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline cursor-pointer"
+                      >
+                        {fileName}
+                      </a>
+                    ) : (
+                      <span>{fileName}</span>
+                    )
+                  )}
+                </div>
+              );
+            }}
           />
         );
+
+      case 'array':
+        const arrayData = getValueByPath(data, field.name) || field.defaultValue || [];
+        console.log('field name', field.name, arrayData)
+        if (field.name === 'rounds') {
+
+          // Custom rendering for Interview Rounds
+          return (
+            <div className="space-y-3 ">
+              {arrayData.map((item: any, index: number) => (
+                <div key={index} className="border rounded-lg p-4 shadow-sm">
+                  {/* Round label */}
+                  <Label className="font-semibold">Round {index + 1}</Label>
+
+                  {/* Render subfields for this round */}
+                  <div className="grid grid-cols-2 gap-4  pt-2">
+                    {field.subFields?.map((sub) => (
+                      <div key={sub.name} className="space-y-1">
+                        <HRMSFormField
+                          field={{
+                            ...sub,
+                            name: `${field.name}[${index}].${sub.name}`, // unique field path
+                          }}
+                          data={data}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        }
+
+        // Default: assessment parameter layout
+        return (
+          <div className="border rounded-lg p-4 shadow-sm">
+            <div className="grid grid-cols-2 gap-4">
+              {arrayData.map((item: any, index: number) => (
+                <div key={index} className="flex flex-col gap-1">
+                  <Label>{item.parameterName}</Label>
+                  <Controller
+                    name={`${field.name}[${index}].score`}
+                    control={control}
+                    defaultValue={item.score ?? ''}
+                    rules={{
+                      required: false,
+                      max: `${field?.max}`,
+                    }}
+                    render={({ field: controllerField }) => (
+                      <Input
+                        {...controllerField}
+                        type="number"
+                        max={field?.max}
+                        placeholder={field?.placeholder}
+                      />
+                    )}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+
+
 
       default:
         return (

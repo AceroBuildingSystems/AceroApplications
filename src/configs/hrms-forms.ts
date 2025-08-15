@@ -227,7 +227,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             ]
           },
           {
-            name: 'currentlyworking',
+            name: 'currentlyWorking',
             type: 'radio',
             label: 'Currently Working',
             required: true,
@@ -414,32 +414,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             label: 'Contact Number',
             showIf: (values) => values.friendsRelativesInABS === 'yes',
           },
-          // {
-          //   id: 'friends_RelativesDetails',
 
-          //   label: 'Friends/Relatives Details',
-          //   showIf: (values) => values.friendsRelativesInABS === 'yes',
-          //   fields: [
-          //     {
-          //       name: 'friendsRelativesDetails.name',
-          //       type: 'text',
-          //       label: 'Friend/Relative Name',
-          //       //required: true
-          //     },
-          //     {
-          //       name: 'friendsRelativesDetails.relation',
-          //       type: 'text',
-          //       label: 'Relation',
-          //       //required: true
-          //     },
-          //     {
-          //       name: 'friendsRelativesDetails.contactNo',
-          //       type: 'tel',
-          //       label: 'Contact Number',
-          //       //required: true
-          //     }
-          //   ]
-          // }
         ]
       },
       //Declaration
@@ -456,26 +431,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Type your full name as signature'
           },
-          // {
-          //   name: 'declaredBy.date',
-          //   type: 'date',
-          //   label: 'Date',
-          //   required: true,
-          //   defaultValue: new Date().toISOString()
-          // },
-          // {
-          //   name: 'remarks',
-          //   type: 'textarea',
-          //   label: 'Remarks (If Any)',
-          //   placeholder: 'Type your remarks here'
-          // },
-          // {
-          //   name: 'checkedBy',
-          //   type: 'select',
-          //   label: 'Checked By (For HR/Admin)',
-          //   placeholder: 'select checked by',
-          //   options: []
-          // },
+
         ]
       },
       //HR Admin
@@ -485,7 +441,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         title: 'For HR/Admin',
         // description: 'I declare that the above statement given by me is true and correct to the best of my knowledge and belief. I understand that all information provided about me to you will be held by you and used for the purpose of evaluating my qualifications, experience and suitability for employment with you. I also understand that my employment contract will be terminated if, after investigation, the company discovers that any information which I have provided, or which has been provided by me, is false or misleading.',
         fields: [
-           {
+          {
             name: 'checkedBy',
             type: 'select',
             label: 'Checked By',
@@ -498,13 +454,322 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             label: 'Remarks (If Any)',
             placeholder: 'Type your remarks here'
           },
-        
+
         ]
       }
 
     ]
   },
 
+
+  // === direct candidate form === //
+
+  [HRMSFormTypes.CANDIDATE_INFORMATION_NEW]: {
+    formType: HRMSFormTypes.CANDIDATE_INFORMATION,
+    title: 'Candidate Information Form',
+    description: 'Comprehensive candidate information and background details',
+    submitLabel: 'Submit Application',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      // Personal details section
+      {
+        id: 'personal_details',
+        title: 'Personal Details',
+        description: 'Basic personal information of the candidate',
+        fields: [
+          {
+            name: 'firstName',
+            type: 'text',
+            label: 'First Name (As Per Passport)',
+            required: true,
+            placeholder: 'Enter first name as per passport'
+          },
+          {
+            name: 'lastName',
+            type: 'text',
+            label: 'Last Name (As Per Passport)',
+            required: true,
+            placeholder: 'Enter last name as per passport'
+          },
+          {
+            name: 'contactNumber',
+            type: 'tel',
+            label: 'Contact Number',
+            required: true,
+            placeholder: 'Contact number with country code',
+          },
+          {
+            name: 'email',
+            type: 'email',
+            label: 'Email Address',
+            required: true,
+            placeholder: 'your.email@example.com'
+          },
+          {
+            name: 'gender',
+            type: 'radio',
+            label: 'Gender',
+            required: true,
+            options: [
+              { label: 'Male', value: 'male' },
+              { label: 'Female', value: 'female' }
+            ]
+          },
+          {
+            name: 'nationality',
+            type: 'select',
+            label: 'Nationality',
+            required: true,
+            options: [] // Will be populated from countries API
+          },
+          {
+            name: 'currentLocation',
+            type: 'text',
+            label: 'Current Location',
+            required: true,
+            placeholder: 'City, Country'
+          },
+          {
+            name: 'dateOfBirth',
+            type: 'date',
+            label: 'Date of Birth',
+            required: true
+          },
+
+          {
+            name: 'maritalStatus',
+            type: 'radio',
+            label: 'Marital Status',
+            required: true,
+            options: [
+              { label: 'Single', value: 'single' },
+              { label: 'Married', value: 'married' },
+              { label: 'Divorced', value: 'divorced' }
+            ]
+          },
+          {
+            name: 'drivingLicense',
+            type: 'radio',
+            label: 'Driving License',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+          {
+            name: 'currentlyWorking',
+            type: 'radio',
+            label: 'Currently Working',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+        ]
+      },
+      //Professional details
+      {
+        id: 'professional_details',
+        title: 'Professional Details',
+        description: 'Information about your professional background',
+        fields: [
+
+          {
+            name: 'totalYearsOfExperience',
+            type: 'number',
+            label: 'Total Years of Experience',
+            required: true,
+            validation: { min: 0 }
+          },
+          {
+            name: 'relevantYearsOfExperience',
+            type: 'number',
+            label: 'Relevant Years of Experience',
+            required: true,
+            validation: { min: 0 }
+          },
+          {
+            name: 'currentEmployer',
+            type: 'text',
+            label: 'Current Employer',
+            //required: true,
+            placeholder: 'Name of current or most recent employer'
+          },
+          {
+            name: 'currentWorkLocation',
+            type: 'text',
+            label: 'Current Work Location',
+            //required: true,
+            placeholder: 'City, Country'
+          },
+          {
+            name: 'currentDesignation',
+            type: 'text',
+            label: 'Current Designation',
+            //required: true,
+            placeholder: 'Your current or most recent job title'
+          },
+          {
+            name: 'noticePeriodRequired',
+            type: 'number',
+            label: 'Notice Period Required (Days)',
+            //required: true,
+            placeholder: '15, 30, etc'
+          },
+          {
+            name: 'currentSalaryPackage',
+            type: 'number',
+            label: 'Current Salary (Per Month)',
+            //required: true,
+            validation: { min: 0 }
+          },
+          {
+            name: 'expectedSalaryPackage',
+            type: 'number',
+            label: 'Expected Salary (Per Month)',
+            // required: true,
+            validation: { min: 0 }
+          },
+        ]
+      },
+      //Visa details
+      {
+        id: 'visa_details',
+        title: 'Visa Details',
+        description: 'Visa information and current visa status',
+        collapsible: true,
+        defaultExpanded: false,
+        fields: [
+          {
+            name: 'visaType',
+            type: 'select',
+            label: 'Visa Type',
+            //  required: true,
+            options: []
+          },
+          {
+            name: 'visaExpiry',
+            type: 'date',
+            label: 'Visa Expiry Date',
+            // required: true
+          },
+        ]
+      },
+      //Education details
+      {
+        id: 'education_details',
+        title: 'Education Details',
+        description: 'Information about your educational background',
+        fields: [
+          {
+            name: 'highestQualification',
+            type: 'text',
+            label: 'Highest Qualification',
+            required: true,
+            placeholder: 'e.g., Bachelor\'s, Master\'s, PhD'
+          },
+          {
+            name: 'degreeCertificateAttested',
+            type: 'radio',
+            label: 'Degree Certificate Attested',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+          {
+            name: 'languagesKnown',
+            type: 'textarea',
+            label: 'Languages Known',
+            required: true,
+            placeholder: 'e.g., English, Arabic, Hindi'
+          },
+          {
+            name: 'certifications',
+            type: 'text',
+            label: 'Certifications (if any)',
+            placeholder: 'Mention your certifications here'
+          },
+          {
+            name: 'attachResume',
+            type: 'file',
+            label: 'Attach Resume',
+            required: true,
+            accept: '.pdf,.doc,.docx',
+          }
+        ]
+      },
+      //Referral information
+      {
+        id: 'referral_info',
+        title: 'Referral Information',
+        description: 'How you know about this position',
+        collapsible: true,
+        defaultExpanded: false,
+        fields: [
+          {
+            name: 'sourceOfPositionInfo',
+            type: 'text',
+            label: 'Source of Position Information',
+            required: true,
+            placeholder: 'e.g., Job portal, referral, company website'
+          },
+          {
+            name: 'friendsRelativesInABS',
+            type: 'radio',
+            label: 'Do you have friends or relatives working in ABS?',
+            required: true,
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+          {
+            name: 'friendsRelativesDetails.name',
+            type: 'text',
+            label: 'Friend/Relative Name',
+            showIf: (values) => values.friendsRelativesInABS === 'yes',
+          },
+          {
+            name: 'friendsRelativesDetails.relation',
+            type: 'text',
+            label: 'Relation',
+            showIf: (values) => values.friendsRelativesInABS === 'yes',
+          },
+          {
+            name: 'friendsRelativesDetails.contactNo',
+            type: 'tel',
+            label: 'Contact Number',
+            showIf: (values) => values.friendsRelativesInABS === 'yes',
+          },
+
+        ]
+      },
+      //Declaration
+      {
+        id: 'declaration',
+
+        title: 'Declaration',
+        description: 'I declare that the above statement given by me is true and correct to the best of my knowledge and belief. I understand that all information provided about me to you will be held by you and used for the purpose of evaluating my qualifications, experience and suitability for employment with you. I also understand that my employment contract will be terminated if, after investigation, the company discovers that any information which I have provided, or which has been provided by me, is false or misleading.',
+        fields: [
+          {
+            name: 'declaredBy.candidateSignature',
+            type: 'text',
+            label: 'Candidate Signature',
+            required: true,
+            placeholder: 'Type your full name as signature'
+          },
+
+        ]
+      },
+      //HR Admin
+
+
+    ]
+  },
 
   // === Candidate Information Form ===
   // [HRMSFormTypes.CANDIDATE_INFORMATION]: {
@@ -753,6 +1018,281 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
   //     }
   //   ]
   // },
+
+
+  // ==== Interview And Assesment ==== //
+  // === Interview Assessment Form ===
+  [HRMSFormTypes.INTERVIEW_ASSESSMENT]: {
+    formType: HRMSFormTypes.INTERVIEW_ASSESSMENT,
+    title: 'Interview Assessment Form',
+    description: 'Record interview rounds and assessment scores for a candidate',
+    submitLabel: 'Submit Assessment',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      {
+        id: 'candidate_info',
+        title: 'Candidate Information',
+        description: 'Basic details about the candidate being assessed',
+        fields: [
+          {
+            name: 'candidateName',
+            type: 'text',
+            label: 'Candidate Name',
+            disable: true
+          },
+          {
+            name: 'candidateId.recruitment.requiredPosition.name',
+            type: 'text',
+            label: 'Position',
+            disable: true
+          },
+          {
+            name: 'candidateId.recruitment.department.name',
+            type: 'text',
+            label: 'Department',
+            disable: true
+          },
+          {
+            name: 'attachResume',
+            type: 'file',
+            label: 'Resume',
+            disable: true,
+            accept: '.pdf,.doc,.docx',
+          }
+        ]
+      },
+
+      {
+        id: 'rounds_section',
+        title: 'Interview Rounds',
+        description: 'Details of each interview round conducted',
+        fields: [
+          {
+            name: 'rounds',
+            type: 'array',
+            label: 'Rounds',
+            subFields: [
+              {
+                name: 'interviewer',
+                type: 'select',
+                label: 'Interviewer',
+                options: [], // Populate from User collection
+
+              },
+              {
+                name: 'date',
+                type: 'date',
+                label: 'Interview Date',
+
+              },
+              {
+                name: 'roundStatus',
+                type: 'select',
+                label: 'Round Status',
+                options: [
+                  { name: 'Shortlisted', _id: 'shortlisted' },
+                  { name: 'Rejected', _id: 'rejected' },
+                  { name: 'N/A', _id: 'na' }
+                ]
+              },
+              {
+                name: 'remarks',
+                type: 'textarea',
+                label: 'Remarks'
+              }
+            ]
+          }
+        ]
+      },
+
+      {
+        id: 'assessment_section',
+        title: 'Assessment (For Department Manager)',
+        description: 'Score the candidate on predefined parameters (1–5)',
+        fields: [
+          {
+            name: 'assessmentParameters',
+            type: 'array',
+            label: 'Assessment Parameters',
+            subFields: [
+              {
+                name: 'parameterName',
+                type: 'label', // display only, not editable
+                label: 'Parameter'
+              },
+              {
+                name: 'score',
+                type: 'number',
+                label: 'Score (1–5)',
+                max: 5,
+                placeholder: 'Score (1–5)'
+              }
+            ],
+            defaultValue: [
+              { parameterName: 'Education Qualification', score: '' },
+              { parameterName: 'Technical Proficiency/ Job Knowledge', score: '' },
+              { parameterName: 'Work Experience', score: '' },
+              { parameterName: 'Communication skills', score: '' },
+              { parameterName: 'Interpersonal Skills', score: '' },
+              { parameterName: 'Intellect/Future Potential', score: '' },
+              { parameterName: 'Stable work history', score: '' },
+              { parameterName: 'Self Confidence/ Self Esteem', score: '' },
+              { parameterName: 'Proactive/Initiative towards learning', score: '' },
+              { parameterName: 'Team Orientation', score: '' }
+            ]
+          },
+
+        ]
+      },
+
+      {
+        id: 'status_remarks',
+        title: 'Status And Remarks',
+        description: '',
+        fields: [
+          {
+            name: 'status',
+            type: 'select',
+            label: 'Selction Status',
+
+            options: [
+              { name: 'Recruited', _id: 'recruited' },
+              { name: 'Shortlisted', _id: 'shortlisted' },
+              { name: 'Held', _id: 'held' },
+              { name: 'Rejected', _id: 'rejected' },
+              { name: 'N/A', _id: 'na' }
+            ]
+          },
+          {
+            name: 'remarks',
+            type: 'textarea',
+            label: 'Overall Remarks'
+          }
+
+        ]
+      },
+
+    ]
+  },
+
+
+  // === Offer Acceptance === //
+
+  [HRMSFormTypes.OFFER_ACCEPTANCE]: {
+    formType: HRMSFormTypes.OFFER_ACCEPTANCE,
+    title: 'Offer Acceptance Form',
+    description: 'Record details of offer issuance and acceptance for a selected candidate',
+    submitLabel: 'Submit Offer',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      {
+        id: 'candidate_info',
+        title: 'Candidate Details',
+        description: 'Basic details about the offer issued to the candidate',
+        fields: [
+          {
+            name: 'candidateId',
+            type: 'select',
+            label: 'Candidate Name',
+            options: [],
+            required: true,
+            placeholder: 'Select the candidate'
+          },
+          {
+            name: 'position',
+            type: 'text',
+            label: 'Position',
+            showIf: (values) => values?.candidateId !== '',
+            disable: true
+          },
+          {
+            name: 'department',
+            type: 'text',
+            label: 'Department',
+            showIf: (values) => values?.candidateId !== '',
+            disable: true
+          },
+
+
+        ]
+      },
+      {
+        id: 'offer_info',
+        title: 'Offer Details',
+        description: 'Basic details about the offer issued to the candidate',
+        fields: [
+
+          {
+            name: 'offerIssueDate',
+            type: 'date',
+            label: 'Offer Issue Date',
+            required: true
+          },
+          {
+            name: 'offerStatus',
+            type: 'select',
+            label: 'Offer Status',
+            options: [
+              { name: 'Issued', _id: 'issued' },
+              { name: 'Accepted', _id: 'accepted' },
+              { name: 'Rejected', _id: 'rejected' }
+            ]
+          },
+
+          {
+            name: 'offerLetterUrl',
+            type: 'file',
+            label: 'Offer Letter',
+            accept: '.pdf,.doc,.docx'
+          }
+        ]
+      },
+      {
+        id: 'joining_info',
+        title: 'Joining Details',
+        description: '',
+        fields: [
+          {
+            name: 'expectedJoiningDate',
+            type: 'date',
+            label: 'Expected Joining Date',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'joiningImmediate',
+            type: 'radio',
+            label: 'Joining Immediate',
+            showIf: (values) => values?.offerStatus === 'accepted',
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' }
+            ]
+          },
+          {
+            name: 'reasonToTravel',
+            type: 'textarea',
+            label: 'Reason to Travel (If applicable)',
+            showIf: (values) => values?.joiningImmediate === 'no',
+          },
+          {
+            name: 'noOfDays',
+            type: 'number',
+            label: 'Number of Days',
+            showIf: (values) => values?.joiningImmediate === 'no',
+          },
+          {
+            name: 'remarks',
+            type: 'textarea',
+            label: 'Remarks',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+        ]
+      },
+      
+    ]
+  },
+
+
 
   // === Business Trip Request Form ===
   [HRMSFormTypes.BUSINESS_TRIP_REQUEST]: {

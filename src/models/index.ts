@@ -72,6 +72,8 @@ import UserVisaDetails from "./master/UserVisaDetails.model";
 import UserIdentification from "./master/UserIdentification.model";
 import Recruitment from "./hrms/Recruitment.model";
 import CandidateInfo from "./hrms/CandidateInfo.model";
+import Interview from "./hrms/InterviewAssesment.model";
+import OfferAcceptance from "./hrms/OfferAcceptance.model"
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -116,6 +118,8 @@ export {
     UserVisaDetails,
     UserIdentification,
     Recruitment,
-    CandidateInfo
+    CandidateInfo,
+    Interview,
+    OfferAcceptance
     
 }

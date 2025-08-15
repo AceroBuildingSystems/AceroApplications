@@ -207,9 +207,9 @@ export default function WorkflowNavigation() {
             </p>
 
             <div className="text-center">
-              <p className="text-sm text-gray-600">
+              {/* <p className="text-sm text-gray-600">
                 {currentStep?.status === 'completed' ? 'Step completed' : 'Complete this step to continue'}
-              </p>
+              </p> */}
             </div>
 
             {/* <div>

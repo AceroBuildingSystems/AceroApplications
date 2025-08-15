@@ -24,6 +24,10 @@ import { getFormConfig } from '@/configs/hrms-forms';
 import { HRMS_WORKFLOW_TEMPLATES } from '@/types/workflow';
 import moment from 'moment';
 import { create } from 'lodash';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/inputSearch';
+import { Button } from '@/components/ui/button';
 
 const page = () => {
     const router = useRouter()
@@ -31,6 +35,8 @@ const page = () => {
     const [workflowConfig, setWorkflowConfig]: any = useState(null);
     const [formConfig, setFormConfig] = useState<HRMSFormConfig | null>(null);
     const [importing, setImporting] = useState(false);
+
+    const [searchTerm, setSearchTerm] = useState('')
     const { user, status, authenticated } = useUserAuthorised();
 
     const { data: customerData = [], isLoading: customerLoading }: any = useGetMasterQuery({
@@ -40,6 +46,11 @@ const page = () => {
 
     const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const { data: countryData = [], isLoading: countryLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.COUNTRY_MASTER,
         sort: { name: 'asc' },
     });
 
@@ -79,22 +90,18 @@ const page = () => {
     );
 
     const depNames = departmentsData?.data
-    ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
-    ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
+        ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
+        ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
 
     const positionNames = designationData?.data
-    ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
-    ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
+        ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
+        ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
 
 
     const recruitymentTypes = [{ _id: 'internal', name: 'Internal' }, { _id: 'external', name: 'External' }, { _id: 'foreign', name: 'Foreign' }];
 
     console.log('Recruitment Data:', recruitmentData);
-    // useEffect(() => {
-    //     const config = getFormConfig('manpower_requisition');
-    //     console.log('Form Config:', config);
-    //     setFormConfig(config || null);
-    // }, []); // ✅ only runs once on mount
+   
 
     useEffect(() => {
         // Simulate fetching or selecting workflow config
@@ -115,11 +122,11 @@ const page = () => {
     const fieldsToAdd = [
         { fieldName: 'departmentName', path: ['department', 'name'] },
         { fieldName: 'positionName', path: ['requiredPosition', 'name'] }
-      ];
-    
-      const transformedData = transformData(recruitmentData?.data, fieldsToAdd);
+    ];
 
-    const loading = customerLoading || customerTypeLoading || departmentLoading || userLoading || designationLoading || employeeTypeLoading || locationLoading || recruitmentLoading;
+    const transformedData = transformData(recruitmentData?.data, fieldsToAdd);
+
+    const loading = customerLoading || customerTypeLoading || departmentLoading || userLoading || designationLoading || countryLoading || employeeTypeLoading || locationLoading || recruitmentLoading;
 
     interface RowData {
         id: string;
@@ -131,28 +138,45 @@ const page = () => {
 
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
-        { label: 'Customer Name', name: "name", type: "text", required: true, placeholder: 'Customer Name' },
-        { label: 'Website', name: "website", type: "text", placeholder: 'Website' },
-        { label: 'Email', name: "email", type: "email", placeholder: 'Email' },
-        { label: 'Phone', name: "phone", type: "text", placeholder: 'Phone' },
-        { label: 'Address', name: "address", type: "text", placeholder: 'Address' },
-        { label: 'Customer Type', name: "customerType", type: "select", data: customerTypeData?.data, placeholder: 'Select Customer Type' },
-        { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+
+        { label: 'Checker', name: "checker", type: "select", data: usersData?.data, placeholder: 'Select Checker' },
 
     ]
 
-
     const [isDialogOpen, setDialogOpen] = useState(false);
+    const [isDialogOpenChecker, setDialogOpenChecker] = useState(false);
+    const [isDialogOpenInterviewer, setDialogOpenInterviewer] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
     const [action, setAction] = useState('Add');
     const [currentIndex, setCurrentIndex] = useState(0);
+
+    const [interviewers, setInterviewers] = React.useState<string[]>([]);
+
+    const updateInterviewers = (newInterviewers: string[]) => {
+        setInterviewers(newInterviewers);
+        console.log('interv', interviewers)
+        // If you are using react-hook-form, you might also want to update the form field value here
+        // e.g. setValue('interviewers', newInterviewers);
+    };
 
     // Open the dialog and set selected master type
     const openDialog = (masterType: React.SetStateAction<string>) => {
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
+    };
+
+    const openDialogChecker = (masterType: React.SetStateAction<string>) => {
+        setSelectedMaster(masterType);
+
+        setDialogOpenChecker(true);
+    };
+
+    const openDialogInterviewer = (masterType: React.SetStateAction<string>) => {
+        setSelectedMaster(masterType);
+
+        setDialogOpenInterviewer(true);
     };
 
     // Close dialog
@@ -163,36 +187,34 @@ const page = () => {
         await refetch();
     };
 
+    const closeDialogChecker = async () => {
+        setDialogOpenChecker(false);
+        setSelectedMaster("");
+        setInitialData({});
 
+    };
 
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
         const formattedData = {
-            db: MONGO_MODELS.CUSTOMER_MASTER,
-            action: action === 'Add' ? 'create' : 'update',
+            db: MONGO_MODELS.RECRUITMENT,
+            action: 'update',
             filter: { "_id": formData._id },
             data: formData,
         };
 
-
+        console.log('Formatted Data:', formattedData);
 
         const response = await createMaster(formattedData);
 
-
-        if (response.data?.status === SUCCESS && action === 'Add') {
-            toast.success('Customer added successfully');
-
+        setDialogOpenInterviewer(false);
+        setSelectedMaster("");
+        setInitialData({});
+        if (selectedMaster === 'Interviewer') {
+            toast.success('Interviewer assigned successfully.')
         }
-        else {
-            if (response.data?.status === SUCCESS && action === 'Update') {
-                toast.success('Customer updated successfully');
-            }
-        }
-
-        if (response?.error?.data?.message?.message) {
-            toast.error(`Error encountered: ${response?.error?.data?.message?.message}`);
-        }
+        return response;
 
     };
 
@@ -204,13 +226,30 @@ const page = () => {
         // Your add logic for user page
     };
 
+    const editChecker = (rowData: RowData) => {
+        setAction('Add');
+        setInitialData(rowData);
+        openDialogChecker("Checker");
+        // Your add logic for user page
+    };
+
+    const editInterviewer = (rowData: RowData) => {
+        setAction('Add');
+        setInitialData(rowData);
+        const interviewerIds = rowData?.interviewers?.map((i: any) => i._id) || [];
+        setInterviewers(interviewerIds);
+        
+        openDialogInterviewer("Interviewer");
+        // Your add logic for user page
+    };
+    console.log('interv', interviewers)
     const handleAdd = () => {
         setInitialData({});
-         setCurrentIndex(0);
+        setCurrentIndex(0);
         setAction('Add');
         openDialog("recruitment");
-       
-        
+
+
     };
 
 
@@ -376,6 +415,76 @@ const page = () => {
             },
         },
 
+        {
+            accessorKey: "checker",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Checker</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => {
+                const value = row.getValue("checker")?.displayName || "Assign";
+
+
+                return (
+                    <div className='text-blue-500' onClick={() => editChecker(row.original)}>
+                        {value?.toProperCase()}
+
+                    </div>
+                );
+            },
+        },
+
+        {
+            accessorKey: "interviewers",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
+
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span>Interviewer</span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => {
+                const interviewers = row.getValue("interviewers") || [];
+
+                if (!Array.isArray(interviewers) || interviewers.length === 0) {
+                    return <div className='text-blue-500' onClick={() => editInterviewer(row.original)}>Assign</div>;
+                }
+
+                return (
+                    <div className='text-blue-500' onClick={() => editInterviewer(row.original)}>
+                        {interviewers.map((intv: any, idx: number) => (
+                            <div key={idx}>
+                                {intv.displayName?.toProperCase() || "Unknown"}
+                            </div>
+                        ))}
+                    </div>
+                );
+            },
+        },
+
 
 
     ];
@@ -406,12 +515,12 @@ const page = () => {
             { label: 'New Process', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
-    
-      const visaTypes = [
-            { _id: 'visit', name: 'Visit Visa' },
-            { _id: 'employment', name: 'Employment Visa' },
-            { _id: 'residence', name: 'Residence Visa' },
-            { _id: 'others', name: 'Others' }]
+
+    const visaTypes = [
+        { _id: 'visit', name: 'Visit Visa' },
+        { _id: 'employment', name: 'Employment Visa' },
+        { _id: 'residence', name: 'Residence Visa' },
+        { _id: 'others', name: 'Others' }]
 
     const rowClassMap = (row: any) => {
         if (row?.isTotalRow) return "bg-yellow-100 font-bold";
@@ -440,7 +549,7 @@ const page = () => {
     //     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50"></div>
     // </div>;
 
-
+console.log('workflow config', workflowConfig)
 
     return (
         <>
@@ -462,7 +571,94 @@ const page = () => {
                 visaTypes={visaTypes}
                 onSave={saveData}
                 currentIndex={currentIndex}
+                countryData={countryData?.data || []}
             />
+            <DynamicDialog
+                isOpen={isDialogOpenChecker}
+                closeDialog={closeDialogChecker}
+                selectedMaster={selectedMaster}
+                onSave={saveData}
+                fields={fields}
+                initialData={initialData}
+                action={action}
+                height='auto'
+            />
+
+
+            <Dialog open={isDialogOpenInterviewer} onOpenChange={setDialogOpenInterviewer}>
+                <DialogContent
+                    className="bg-white max-w-full pointer-events-auto mx-2 max-h-[75vh] w-[65%] h-[80vh] flex flex-col"
+                    onInteractOutside={(e) => e.preventDefault()}
+                >
+                    <DialogTitle className="sticky top-0 bg-white border-b border-gray-200 py-2 mx-2">
+                        Add Interviewers
+                    </DialogTitle>
+
+                    {/* Search Box */}
+                    <div className="px-2 mb-1">
+
+                        <Input
+                            type="text"
+                            placeholder="Search interviewer..."
+
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        >
+
+                        </Input>
+
+                    </div>
+
+                    <Label className="px-2">Select Interviewer</Label>
+
+                    {/* Scrollable List */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-60 overflow-y-auto border border-gray-200 rounded-md p-4 mx-2">
+                        {usersData?.data
+                            ?.filter((user: any) => {
+                                const name = user.displayName || `${user.firstName} ${user.lastName}`;
+                                return name.toLowerCase().includes(searchTerm.toLowerCase());
+                            })
+                            .map((user: any, idx: number) => {
+                                const name = user.displayName || `${user.firstName} ${user.lastName}`;
+                                const isChecked = interviewers?.includes(user._id);
+
+                                return (
+                                    <div key={user._id} className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id={`interviewer-${idx}-${user._id}`}
+                                            checked={isChecked}
+                                            onCheckedChange={(checked) => {
+                                                const updated = checked
+                                                    ? [...(interviewers || []), user._id]
+                                                    : interviewers.filter((id) => id !== user._id);
+                                                updateInterviewers(updated);
+                                            }}
+                                        />
+                                        <Label
+                                            htmlFor={`interviewer-${idx}-${user._id}`}
+                                            className="text-sm cursor-pointer"
+                                        >
+                                            {name}
+                                        </Label>
+                                    </div>
+                                );
+                            })}
+                    </div>
+                    <div className='flex justify-end items-end px-2'>
+                        <Button
+                            className="px-4"
+                            onClick={() => saveData({ formData: { ...initialData, interviewers }, action: 'Add' })}
+                        >
+                            Save
+                        </Button>
+
+                    </div>
+
+                </DialogContent>
+            </Dialog>
+
+
+
             {/* <DynamicDialog
                 isOpen={isDialogOpen}
                 closeDialog={closeDialog}

@@ -15,6 +15,313 @@ import Provider from '@/components/provider/Provider';
 
 import { Types } from 'mongoose';
 
+export function renderManpowerTemplate(doc, manpowerData) {
+
+        const startX = 5; // instead of 10
+        const startY = 5;
+        const totalWidth = 196;
+        const pageWidth = 210; // A4 width in mm
+        const pageHeight = 297; // A4 height in mm
+        const outerMargin = startX; // outer border margin
+        let currentY = startY;
+
+        // 1️⃣ Outer border
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.1); // very thin border
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, pageHeight - 2 * startY);
+
+        // 2️⃣ Main Title Section (merged with outer border)
+        const titleHeight = 20;
+        // doc.setFillColor(100, 149, 237); // blue
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, titleHeight); // Fill + Draw
+        doc.setFont("times", "bolditalic");
+        doc.setFontSize(16);
+        // doc.setTextColor(255, 255, 255);
+        doc.text(
+            "MANPOWER REQUISITION FORM",
+            pageWidth / 2,
+            currentY + titleHeight / 2,
+            { align: "center", baseline: "middle" }
+        );
+        doc.setTextColor(0, 0, 0);
+        currentY += titleHeight;
+
+        // 3️⃣ Requester Information Section (2 rows × 4 columns)
+        const headerHeight = 8;   // shorter header row
+        const rowHeight = 16;      // taller table rows
+        const sectionHeight = headerHeight + rowHeight * 2; // total section height
+        const colWidth = (pageWidth - 2 * outerMargin) / 4;
+
+        // Light blue header
+        doc.setFillColor(224, 240, 255);
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+        doc.setFont("times", "italic");
+        doc.setFontSize(13);
+        doc.text(
+            "Requester Information",
+            pageWidth / 2,
+            currentY + headerHeight / 2,
+            { align: "center", baseline: "middle" }
+        );
+
+        currentY += headerHeight;
+
+        // Define custom column widths
+        const colWidths = [
+            colWidth * 0.8,  // Column 1 (narrower)
+            colWidth * 1.2,  // Column 2 (wider)
+            colWidth * 0.8,  // Column 3 (narrower)
+            colWidth * 1.2   // Column 4 (wider)
+        ];
+
+        // Draw 2x4 table with taller rows
+        let xPos;
+        for (let r = 0; r < 2; r++) {
+            xPos = outerMargin;
+            for (let c = 0; c < 4; c++) {
+                doc.rect(xPos, currentY + r * rowHeight, colWidths[c], rowHeight, "S");
+                xPos += colWidths[c];
+            }
+        }
+
+        // Labels and Values
+        doc.setFont("times", "normal");
+        doc.setFontSize(13);
+
+        // --- Row 1 Labels ---
+        doc.text("Requested By", outerMargin + 2, currentY + 8, { baseline: "middle" });
+        doc.text("Requested Date", outerMargin + colWidths[0] + colWidths[1] + 2, currentY + 8, { baseline: "middle" });
+
+        // --- Row 2 Labels ---
+        doc.text("Department", outerMargin + 2, currentY + rowHeight + 8, { baseline: "middle" });
+        doc.text("Requested Position", outerMargin + colWidths[0] + colWidths[1] + 2, currentY + rowHeight + 8, { baseline: "middle" });
+
+        // --- Row 1 Values ---
+
+        doc.setTextColor(70, 70, 70);
+        doc.text(
+            `${manpowerData.requestedBy?.displayName?.toProperCase() || ""}`,
+            outerMargin + colWidths[0] + 2,
+            currentY + 8, { baseline: "middle" }
+        );
+        doc.text(
+            `${moment(manpowerData?.requestDate).format("DD-MMM-YYYY")}`,
+            outerMargin + colWidths[0] + colWidths[1] + colWidths[2] + 2,
+            currentY + 8, { baseline: "middle" }
+        );
+
+        // --- Row 2 Values ---
+        doc.text(
+            `${manpowerData.department?.name || ""}`,
+            outerMargin + colWidths[0] + 2,
+            currentY + rowHeight + 8, { baseline: "middle" }
+        );
+        doc.text(
+            `${manpowerData.positionName || ""}`,
+            outerMargin + colWidths[0] + colWidths[1] + colWidths[2] + 2,
+            currentY + rowHeight + 8, { baseline: "middle" }
+        );
+
+        currentY += rowHeight * 2;
+
+        // 4️⃣ Vacancy & Position Type Section
+
+        const vacancyheaderHeight = 8;   // shorter header row
+
+
+        doc.setTextColor(0, 0, 0);
+
+        // Light blue header
+        doc.setFillColor(224, 240, 255);
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyheaderHeight, "FD");
+        doc.setFont("times", "italic");
+        doc.setFontSize(13);
+        doc.text(
+            "Position Information",
+            pageWidth / 2,
+            currentY + vacancyheaderHeight / 2,
+            { align: "center", baseline: "middle" }
+        );
+
+        currentY += headerHeight;
+
+
+        const vacancyHeight = manpowerData.vacancyReason === "replacement" ? 85 : 60;
+        // doc.setFillColor(224, 224, 224);
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyHeight);
+        doc.setFont("times", "normal");
+        doc.setFontSize(13);
+
+        // Vacancy Reason
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Vacancy Reason:                   ", outerMargin + 2, currentY + 10);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
+            outerMargin + 75, // adjust x position to align with label
+            currentY + 10
+        );
+
+        // Position Type
+        doc.setTextColor(0, 0, 0);
+        doc.text("Position Type:                       ", outerMargin + 2, currentY + 20);
+        doc.setTextColor(70, 70, 70);
+        doc.text(
+            manpowerData.positionType === "budgeted" ? "Budgeted" : "Non-Budgeted",
+            outerMargin + 75,
+            currentY + 20
+        );
+
+        // No Of Vacant Positions
+        doc.setTextColor(0, 0, 0);
+        doc.text("No Of Vacant Positions:       ", outerMargin + 2, currentY + 30);
+        doc.setTextColor(70, 70, 70);
+        doc.text(`${manpowerData.noOfVacantPositions}`, outerMargin + 75, currentY + 30);
+
+        // Recruitment Type
+        doc.setTextColor(0, 0, 0);
+        doc.text("Recruitment Type:               ", outerMargin + 2, currentY + 40);
+        doc.setTextColor(70, 70, 70);
+        doc.text(`${manpowerData.recruitmentType?.toProperCase()}`, outerMargin + 75, currentY + 40);
+
+        // Previous Employee Details
+        // Previous Employee Details
+        doc.setTextColor(0, 0, 0);
+        doc.text("Previous Employee Details:    ", outerMargin + 2, currentY + 50);
+
+        if (manpowerData.vacancyReason === "replacement" && manpowerData.prevEmployee) {
+            const prev = manpowerData.prevEmployee;
+            const labelY = currentY + 50;
+            const dataY = labelY + 9; // move EMP details to next line
+
+            // EMP Name
+            doc.setTextColor(0, 0, 0);
+            doc.text("Employee Name:", outerMargin + 2, dataY);
+            doc.setTextColor(70, 70, 70);
+            doc.text(`${prev.displayName?.toProperCase() || ""}`, outerMargin + 40, dataY);
+
+            // EMP No
+            doc.setTextColor(0, 0, 0);
+            doc.text("Employee Id:", outerMargin + 110, dataY);
+            doc.setTextColor(70, 70, 70);
+            doc.text(`${prev.empId || ""}`, outerMargin + 140, dataY);
+
+            // Designation
+            doc.setTextColor(0, 0, 0);
+            doc.text("Designation:", outerMargin + 2, dataY + 10);
+            doc.setTextColor(70, 70, 70);
+            doc.text(`${prev.designation?.name || ""}`, outerMargin + 40, dataY + 10);
+
+            // Department
+            doc.setTextColor(0, 0, 0);
+            doc.text("Department:", outerMargin + 110, dataY + 10);
+            doc.setTextColor(70, 70, 70);
+            doc.text(`${prev.department?.name || ""}`, outerMargin + 140, dataY + 10);
+
+            // DOE
+            doc.setTextColor(0, 0, 0);
+            doc.text("DOE:", outerMargin + 2, dataY + 20);
+            doc.setTextColor(70, 70, 70);
+            doc.text(`${prev.doe ? moment(prev.doe).format("DD-MMM-YYYY") : ""}`, outerMargin + 40, dataY + 20);
+
+            // Salary
+            doc.setTextColor(0, 0, 0);
+            doc.text("Salary:", outerMargin + 110, dataY + 20);
+            doc.setTextColor(70, 70, 70);
+            doc.text(`${manpowerData.prevEmployeeSalary || ""}`, outerMargin + 140, dataY + 20);
+
+        } else {
+            doc.setTextColor(70, 70, 70);
+            doc.text("N/A", outerMargin + 75, currentY + 50);
+        }
+        currentY += vacancyHeight;
+
+
+        const approvalheaderHeight = 8;   // shorter header row
+
+
+        // Light blue header
+        doc.setTextColor(0, 0, 0);
+        doc.setFillColor(224, 240, 255);
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, approvalheaderHeight, "FD");
+        doc.setFont("times", "italic");
+        doc.setFontSize(13);
+        doc.text(
+            "Approvals",
+            pageWidth / 2,
+            currentY + approvalheaderHeight / 2,
+            { align: "center", baseline: "middle" }
+        );
+
+        currentY += headerHeight;
+        // Define custom column widths
+        const equalColWidth = (pageWidth - 2 * outerMargin) / 4;
+
+        // Define custom row heights
+        const rowHeights = [18, 30]; // Row 1 shorter, Row 2 taller
+
+        // Draw 2x4 table with custom row heights
+        let yPos = currentY;
+        let cellYPositions = []; // store top Y for each row
+        for (let r = 0; r < 2; r++) {
+            let xPos = outerMargin;
+            cellYPositions[r] = yPos;
+            for (let c = 0; c < 4; c++) {
+                doc.rect(xPos, yPos, equalColWidth, rowHeights[r], "S");
+                xPos += equalColWidth;
+            }
+            yPos += rowHeights[r];
+        }
+
+        // Labels
+        doc.setFont("times", "normal");
+        doc.setFontSize(13);
+
+        // Row 1 (centered text)
+        const row1Labels = ["Finance Department", "HEAD OF HR/ADMIN", "COO/CFO", "C.E.O"];
+        row1Labels.forEach((label, i) => {
+            const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+            const yCenter = cellYPositions[0] + (rowHeights[0] / 2);
+            doc.text(label, xCenter, yCenter, { align: "center", baseline: "middle" });
+        });
+
+        // Row 2 (empty now, but centered)
+        const row2Values = ["", "", "", ""];
+        row2Values.forEach((val, i) => {
+            const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+            const yCenter = cellYPositions[1] + (rowHeights[1] / 2);
+            doc.text(val, xCenter, yCenter, { align: "center", baseline: "middle" });
+        });
+
+        // Update currentY to move below the new box
+        currentY = yPos;
+
+
+        // 5️⃣ Candidate Type Section
+
+
+        // 8️⃣ Form Version at bottom
+        const footerText = "ABS/HR/N/ F01 C (25/04/2022) V.1";
+        const footerHeight = 6;
+        const footerY = pageHeight - startY - footerHeight;
+
+        // Draw footer box
+        doc.setFillColor(224, 240, 255);
+        doc.rect(outerMargin, footerY, pageWidth - 2 * outerMargin, footerHeight, "FD");
+
+        // Footer text (left aligned, vertically centered)
+        doc.setFont("times", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(0, 0, 0);
+        doc.text(
+            footerText,
+            outerMargin + 3,                       // small left padding
+            footerY + footerHeight / 2,            // vertical center
+            { align: "left", baseline: "middle" }  // left alignment
+        );
+
+        doc.output("dataurlnewwindow");
+    }
 
 
 export function sanitizeUserDocs(docs: any[]): any[] {

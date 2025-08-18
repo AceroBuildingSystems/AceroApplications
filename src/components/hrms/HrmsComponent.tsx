@@ -505,7 +505,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             return;
         }
 
-         const uploadResult = await handleUpload(
+        const uploadResult = await handleUpload(
             data?.firstName,
             data?.lastName,
             data?.contactNumber,
@@ -530,7 +530,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 db: MONGO_MODELS.RECRUITMENT,
                 action: 'update',
                 filter: { "_id": initialData?._id },
-                data: { completedStep: 4 },
+                data: { completedStep: 4, status: 'completed' },
             };
             console.log('Recruitment Update Data:', recruitmentPayload);
 
@@ -783,7 +783,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     const editOffer = (rowData: any) => {
         console.log('Editing offer:', rowData);
 
-         if (rowData?.offerLetterUrl) {
+        if (rowData?.offerLetterUrl) {
             const loadFile = async () => {
                 try {
                     // Extract filename and extension
@@ -796,8 +796,10 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
                     // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
                     // setFormData(prev => ({ ...prev, resume: file }));
-                    setInitialDataCandidate({ ...rowData, offerLetterUrl: file, resumeUrl: url, candidateId: rowData?.interviewAssesmentId?.candidateId?._id, department: initialData?.department?.name || '',
-            position: initialData?.requiredPosition?.name });
+                    setInitialDataCandidate({
+                        ...rowData, offerLetterUrl: file, resumeUrl: url, candidateId: rowData?.interviewAssesmentId?.candidateId?._id, department: initialData?.department?.name || '',
+                        position: initialData?.requiredPosition?.name
+                    });
                     // If you want to preview, also create an object URL
                     // setResumePreview(URL.createObjectURL(file));
                 } catch (err) {
@@ -1482,11 +1484,11 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
                     <div className="h-full flex flex-col min-h-0 pt-4">
 
-                        {!isStaff && (
+                        {(!isStaff && !loading) && (
                             <div className="w-[200px] mb-4">
                                 <Label className="mb-1 block">Select Employee Type</Label>
                                 <Combobox
-                                    value={employeeType}
+                                    value={''}
                                     field={{
                                         name: 'employeeType',
                                         label: 'Employee Type',

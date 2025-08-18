@@ -16,7 +16,7 @@ import useUserAuthorised from "@/hooks/useUserAuthorised";
 import MultipleSelector from "../ui/multiple-selector";
 import { toast } from "react-toastify";
 import { FocusScope } from '@radix-ui/react-focus-scope';
-import {DismissableLayer} from '@radix-ui/react-dismissable-layer'
+import { DismissableLayer } from '@radix-ui/react-dismissable-layer'
 
 interface Field {
   name: string;
@@ -133,7 +133,7 @@ function DynamicDialog<T extends BaseFormData>({
         formattedValue = value ? new Date(value).toISOString() : null;
       }
 
-      const updatedFormData:any = {
+      const updatedFormData: any = {
         ...prev,
         [fieldName]: formattedValue,
       };
@@ -141,7 +141,7 @@ function DynamicDialog<T extends BaseFormData>({
       if (field?.onChange) {
         field.onChange(formattedValue);
       }
-     
+
       // Clear error when field is changed
       if (errors[fieldName]) {
         setErrors(prev => {
@@ -151,7 +151,7 @@ function DynamicDialog<T extends BaseFormData>({
         });
       }
       customFunction(updatedFormData[fieldName])
-      if (fieldName === 'quoteStatus' && quoteStatusData?.find((data:any) => data._id === formattedValue)?.name === 'L - Lost') {
+      if (fieldName === 'quoteStatus' && quoteStatusData?.find((data: any) => data._id === formattedValue)?.name === 'L - Lost') {
         updatedFormData['lostDate'] = new Date().toISOString();
       }
 
@@ -197,7 +197,7 @@ function DynamicDialog<T extends BaseFormData>({
   };
 
   // Handle form submission
-  const handleSubmit = async (status:string) => {
+  const handleSubmit = async (status: string) => {
     if (!validateForm()) {
       toast.error("Please fix the form errors before submitting");
       return;
@@ -216,7 +216,7 @@ function DynamicDialog<T extends BaseFormData>({
         updatedData.addedBy = user._id;
       }
       const response: any = await onSave({ formData: updatedData, action });
-     
+
       if (!response || response?.error) {
         toast.error(response?.error.message || "Something Went Wrong!");
         return;
@@ -294,8 +294,8 @@ function DynamicDialog<T extends BaseFormData>({
                                   handleChange={handleChange}
                                   placeholder={field.placeholder || ""}
                                   modal
-                                  />
-                                  {/* </FocusScope> */}
+                                />
+                                {/* </FocusScope> */}
                                 {errors[field.name] && (
                                   <span className="text-sm text-destructive">{errors[field.name]}</span>
                                 )}
@@ -377,11 +377,11 @@ function DynamicDialog<T extends BaseFormData>({
           <Button variant="secondary" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={()=>handleSubmit('update')} disabled={isSubmitting} className={`${action === 'Update' && 'bg-blue-800 hover:bg-blue-700 duration-300'} `}>
+          <Button onClick={() => handleSubmit('update')} disabled={isSubmitting} className={`${action === 'Update' && 'bg-blue-800 hover:bg-blue-700 duration-300'} `}>
             {action === 'Add' ? isSubmitting ? "Saving..." : "Save" : isSubmitting ? "Updating..." : "Update"}
           </Button>
 
-          {action === 'Update' && <Button onClick={()=>handleSubmit('delete')} disabled={isSubmitting}>
+          {action === 'Update' && <Button onClick={() => handleSubmit('delete')} disabled={isSubmitting}>
             {isSubmitting ? "Deleting..." : "Delete"}
           </Button>}
         </DialogFooter>

@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react'
 import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import { ArrowUpDown, ChevronDown, ChevronsUpDown, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, FileTextIcon, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react"
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
@@ -28,6 +28,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/inputSearch';
 import { Button } from '@/components/ui/button';
+import HrmsPdfGenerator from '@/components/hrms/HrmsPdfGenerator';
 
 const page = () => {
     const router = useRouter()
@@ -101,7 +102,7 @@ const page = () => {
     const recruitymentTypes = [{ _id: 'internal', name: 'Internal' }, { _id: 'external', name: 'External' }, { _id: 'foreign', name: 'Foreign' }];
 
     console.log('Recruitment Data:', recruitmentData);
-   
+
 
     useEffect(() => {
         // Simulate fetching or selecting workflow config
@@ -145,6 +146,7 @@ const page = () => {
 
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [isDialogOpenChecker, setDialogOpenChecker] = useState(false);
+     const [isDialogOpenPdfGenerator, setDialogOpenPdfGenerator] = useState(false);
     const [isDialogOpenInterviewer, setDialogOpenInterviewer] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
     const [initialData, setInitialData] = useState({});
@@ -194,6 +196,13 @@ const page = () => {
 
     };
 
+     const closeDialogPdfGenerator = async () => {
+        setDialogOpenPdfGenerator(false);
+        setSelectedMaster("");
+        setInitialData({});
+
+    };
+
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
@@ -238,10 +247,19 @@ const page = () => {
         setInitialData(rowData);
         const interviewerIds = rowData?.interviewers?.map((i: any) => i._id) || [];
         setInterviewers(interviewerIds);
-        
+
         openDialogInterviewer("Interviewer");
         // Your add logic for user page
     };
+
+     const openPdfGenerator = (rowData: RowData) => {
+        setAction('Add');
+        setInitialData(rowData);
+       
+       setDialogOpenPdfGenerator(true)
+        // Your add logic for user page
+    };
+
     console.log('interv', interviewers)
     const handleAdd = () => {
         setInitialData({});
@@ -484,7 +502,30 @@ const page = () => {
                 );
             },
         },
+        {
+            accessorKey: "pdf",
+            header: ({ column }: { column: any }) => {
+                const isSorted = column.getIsSorted();
 
+                return (
+                    <button
+                        className="group  flex items-center space-x-2"
+                        onClick={() => column.toggleSorting(isSorted === "asc")}
+                    >
+                        <span></span>
+                        <ChevronsUpDown
+                            size={15}
+                            className={`transition-opacity duration-150 ${isSorted ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                        />
+                    </button>
+                );
+            },
+            cell: ({ row }: { row: any }) => <div onClick={() => openPdfGenerator(row.original)}><Button className='text-xs'>
+                <FileTextIcon className="h-3 w-3" />
+                PDF
+            </Button></div>,
+        },
 
 
     ];
@@ -512,7 +553,7 @@ const page = () => {
             //         { label: "Export to PDF", value: "pdf", action: (type: string, data: any) => handleExport(type, data) },
             //     ]
             // },
-            { label: 'New Process', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
+            { label: 'Recruitment', action: handleAdd, icon: Plus, className: 'bg-sky-600 hover:bg-sky-700 duration-300' },
         ]
     };
 
@@ -549,7 +590,7 @@ const page = () => {
     //     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50"></div>
     // </div>;
 
-console.log('workflow config', workflowConfig)
+    console.log('workflow config', workflowConfig)
 
     return (
         <>
@@ -583,6 +624,19 @@ console.log('workflow config', workflowConfig)
                 action={action}
                 height='auto'
             />
+
+            <HrmsPdfGenerator
+                isOpen={isDialogOpenPdfGenerator}
+                closeDialog={closeDialogPdfGenerator}
+                workflowData={workflowConfig}
+                manpowerData={initialData}
+                candidateData={[]}
+                interviewData={[]}
+                offerData={[]}
+                height='auto'
+                width="80%"
+            />
+
 
 
             <Dialog open={isDialogOpenInterviewer} onOpenChange={setDialogOpenInterviewer}>

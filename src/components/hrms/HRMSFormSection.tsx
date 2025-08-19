@@ -14,13 +14,15 @@ interface HRMSFormSectionProps {
   disabled?: boolean;
   data: any; // Adjust type as needed based on your data structure
   className?: string;
+  users:any
 }
 
 export default function HRMSFormSection({ 
   section, 
   disabled = false, 
   data,
-  className 
+  className,
+  users 
 }: HRMSFormSectionProps) {
   const [isExpanded, setIsExpanded] = useState(section.defaultExpanded ?? true);
 
@@ -86,7 +88,7 @@ export default function HRMSFormSection({
                 field.type === 'textarea' && "md:col-span-2"
               )}
             >
-              <HRMSFormField field={field} disabled={disabled} data={data} />
+              <HRMSFormField field={field} disabled={disabled} data={data} usersList= {users} />
             </div>
           ))}
         </div>

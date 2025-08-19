@@ -86,10 +86,11 @@ const page = () => {
         users.map((user: any) => ({
             ...user, // keep all original fields
             name: user?.displayName ? user.displayName : `${user.firstName}`,
+           
         })),
         [users]
     );
-
+console.log('designations', designationData?.data);
     const depNames = departmentsData?.data
         ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
         ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
@@ -630,7 +631,7 @@ const page = () => {
                 closeDialog={closeDialogPdfGenerator}
                 workflowData={workflowConfig}
                 manpowerData={initialData}
-                candidateData={[]}
+                candidateData={users}
                 interviewData={[]}
                 offerData={[]}
                 height='auto'

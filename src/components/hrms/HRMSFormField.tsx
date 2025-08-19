@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import React, { useEffect } from 'react';
+import { useFormContext, Controller, useWatch } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,14 +22,57 @@ interface HRMSFormFieldProps {
   field: HRMSFormFieldType;
   disabled?: boolean;
   data: any; // Adjust type as needed based on your data structure
+  userlist: any
 }
 
-export default function HRMSFormField({ field, disabled = false, data }: HRMSFormFieldProps) {
+export default function HRMSFormField({ field, disabled = false, data, userlist }: HRMSFormFieldProps) {
   console.log('HRMSFormField', field, data);
-  const { control, formState: { errors }, watch } = useFormContext();
-  // console.log('data', data)
+  const { control, formState: { errors }, watch, setValue } = useFormContext();
+  console.log('userdata', userlist)
   const error = errors[field.name];
   const watchedValues = watch();
+
+  const requestedByValue = useWatch({
+    control,
+    name: "requestedBy",
+  });
+
+  const departmentValue = useWatch({
+    control,
+    name: "department",
+  });
+
+  useEffect(() => {
+    if (field.name === "requiredPosition") {
+      setValue(field.name, ""); // clear selection
+    }
+  }, [departmentValue, setValue, field.name]);
+
+
+  useEffect(() => {
+    setValue("requiredPosition", ""); // Clear previous selection
+  }, [departmentValue, setValue]);
+
+  useEffect(() => {
+    console.log('requestByVal', requestedByValue)
+
+
+    if (requestedByValue) {
+      console.log('userlist', userlist)
+      // requestedByValue can be the full object or just _id
+      const selectedUser = userlist.find(u => u._id === requestedByValue);
+
+      if (selectedUser) {
+        // Update department with full department object or ID
+        const departmentValue = selectedUser.department?._id || selectedUser.department || "";
+        setValue("department", departmentValue);
+      }
+    } else {
+      // Clear department if requestedBy is cleared
+      setValue("department", "");
+    }
+  }, [requestedByValue, userlist, setValue]);
+
 
   // Check if field should be shown based on dependencies
   const shouldShow = React.useMemo(() => {
@@ -170,26 +213,33 @@ export default function HRMSFormField({ field, disabled = false, data }: HRMSFor
         );
 
       case 'select':
-        const valueObject = getValueByPath(data, field.name); // safely gets the nested object
-        console.log('valueObject', valueObject);
+        const valueObject = getValueByPath(data, field.name);
         const selectedValue = valueObject?._id || valueObject || "";
-        console.log('selectedValue', selectedValue);
+
+        const filteredOptions = React.useMemo(() => {
+          if (field.name !== 'requiredPosition') return field.data;
+           if (!departmentValue) return [];
+          return field.data?.filter((pos: any) => pos.department?._id === departmentValue) || [];
+        }, [departmentValue, field.options, field.name]);
+
         return (
           <Controller
             name={field.name}
             control={control}
-            defaultValue={data?.[field.name]?._id ?? ""} // Or getValueByPath()
-            rules={{
-              required: field.required ? `${field.label} is required` : false
-            }}
-            render={({ field: controllerField, fieldState }) => (
+            defaultValue={selectedValue}
+            rules={{ required: field.required ? `${field.label} is required` : false }}
+            render={({ field: controllerField }) => (
               <Combobox
-                field={field}
+                field={{ ...field, data: filteredOptions }}
                 value={controllerField.value ?? ''}
                 formData={{ [field?.name]: controllerField.value }}
-                handleChange={(value: any) => controllerField.onChange(value)}
-                placeholder={field.placeholder || `Select ${field.label}`}
-                disabled={disabled || field?.disabled}
+                handleChange={controllerField.onChange}
+                placeholder={
+                  field.name === 'requiredPosition' && !departmentValue
+                    ? 'Select department first'
+                    : field.placeholder || `Select ${field.label}`
+                }
+                disabled={disabled || field?.disabled || (field.name === 'requiredPosition' && !departmentValue)}
               />
             )}
           />

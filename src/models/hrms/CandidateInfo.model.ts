@@ -6,6 +6,11 @@ const DeclaredBySchema = new mongoose.Schema({
     candidateSignature: { type: String, default: "" }, // Could store base64, image URL, or file path
     date: { type: Date, default: Date.now }
 });
+const FriendsRelativeDetailsSchema = new mongoose.Schema({
+    name: { type: String, trim: true },
+    relation: { type: String, trim: true },
+    contactNo: { type: String, trim: true }
+}, { _id: false });
 
 const CandidateInfoSchema: Schema<candidateInformation> = new Schema({
     recruitment: {
@@ -52,6 +57,7 @@ const CandidateInfoSchema: Schema<candidateInformation> = new Schema({
 
     sourceOfPositionInfo: { type: String, trim: true },
     friendsRelativesInABS: { type: String, trim: true },
+    friendsRelativesDetails: { type: FriendsRelativeDetailsSchema, default: {} },
 
     languagesKnown: { type: String, default: '' },
 

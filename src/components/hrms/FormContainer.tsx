@@ -36,14 +36,16 @@ interface FormContainerProps {
     onSubmit: (data: any) => void; // Adjust type as needed
     initialData?: any; // Optional initial data for the form
     action: any; // Action to be performed, e.g., 'create', 'update', etc.
+    users:any
 }
 
 
-const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, initialData = {}, action }) => {
+const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, initialData = {}, action, users }) => {
     const { title, description, sections, submitLabel, saveDraftLabel } = formConfig;
     const [actionType, setActionType] = React.useState<'update' | 'delete' | 'submit' | null>(null);
     console.log('Form Config:', formConfig);
     console.log('initia data:', initialData);
+    console.log('users:', users);
 
     console.log('action:', action);
 
@@ -98,7 +100,7 @@ const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, ini
                 className="space-y-6"
             >
                 {sections.map((section) => (
-                    <SectionContainer key={section.id} section={section} data={cleanedData} />
+                    <SectionContainer key={section.id} section={section} data={cleanedData} userlist={users} />
                 ))}
 
                 <div className="flex gap-2 justify-end pb-2">

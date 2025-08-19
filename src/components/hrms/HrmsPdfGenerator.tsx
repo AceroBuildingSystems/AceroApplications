@@ -10,7 +10,7 @@ import { MONGO_MODELS } from "@/shared/constants";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { FileTextIcon } from "lucide-react";
-import { renderManpowerTemplate } from "@/shared/functions";
+import { renderCandidateTemplate, renderManpowerTemplate } from "@/shared/functions";
 
 type HrmsPdfGeneratorProps = {
     workflowData: any;
@@ -69,8 +69,8 @@ export default function HrmsPdfGenerator({
         }
     }, [isOpen, getInterviews]);
 
-    function renderCandidateTemplate(doc, manpowerData) {
-console.log('candidatedata', manpowerData)
+    function renderInterviewTemplate(doc, manpowerData) {
+        console.log('interviewData', manpowerData)
         const startX = 5; // instead of 10
         const startY = 5;
         const totalWidth = 196;
@@ -92,7 +92,7 @@ console.log('candidatedata', manpowerData)
         doc.setFontSize(16);
         // doc.setTextColor(255, 255, 255);
         doc.text(
-            "CANDIDATE INFORMATION FORM",
+            "INTERVIEW ASSESSMENT FORM",
             pageWidth / 2,
             currentY + titleHeight / 2,
             { align: "center", baseline: "middle" }
@@ -106,137 +106,52 @@ console.log('candidatedata', manpowerData)
         doc.setFont("times", "italic");
         doc.setFontSize(13);
         doc.text(
-            "Personal Details",
+            "Candidate Details",
             pageWidth / 2,
             currentY + height / 2,
             { align: "center", baseline: "middle" }
         );
         // personal detail
 
-        const personalDetailHeight = 62;
+        const personalDetailHeight = 33;
         doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, personalDetailHeight);
         doc.setFont("times", "normal");
         doc.setFontSize(13);
         let gap = 15;
-        const space = 60
+        const space = 40
         const space2 = 113
         const space3 = 160
         // Vacancy Reason
 
         doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Position Applied:                   ", outerMargin + 2, currentY + gap);
+        doc.text("Candidate Name:                   ", outerMargin + 2, currentY + gap);
         doc.setTextColor(70, 70, 70); // lighter black for value
         doc.text(
-            manpowerData.recruitment?.requiredPosition?.name,
+            `${manpowerData.candidateId?.firstName?.toProperCase()} ${manpowerData.candidateId?.lastName?.toProperCase()}`,
             outerMargin + space, // adjust x position to align with label
             currentY + gap
         );
         gap = gap + 7
         doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Full Name (As Per Passport):                   ", outerMargin + 2, currentY + gap);
+        doc.text("Position:                   ", outerMargin + 2, currentY + gap);
         doc.setTextColor(70, 70, 70); // lighter black for value
         doc.text(
-            `${manpowerData.firstName?.toProperCase()} ${manpowerData.lastName?.toProperCase()}`,
+            manpowerData.candidateId?.recruitment?.requiredPosition?.name?.toProperCase(),
             outerMargin + space, // adjust x position to align with label
             currentY + gap
         );
         gap = gap + 7
 
-         // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Email Address:                       ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.email,
-            outerMargin + space,
-            currentY + gap
-        );
         // Position Type
         doc.setTextColor(0, 0, 0);
-        doc.text("Contact Number:                       ", outerMargin + space2, currentY + gap);
+        doc.text("Department:                       ", outerMargin + 2, currentY + gap);
         doc.setTextColor(70, 70, 70);
         doc.text(
-            manpowerData.contactNumber,
-            outerMargin + space3,
-            currentY + gap
-        );
-
-
-
-        gap = gap + 7
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Gender:                       ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.gender?.toProperCase(),
+            manpowerData.candidateId?.recruitment?.department?.name,
             outerMargin + space,
             currentY + gap
         );
 
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Nationality:                       ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.nationality?.name?.toProperCase(),
-            outerMargin + space3,
-            currentY + gap
-        );
-
-        gap = gap + 7
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Current Location:                       ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.currentLocation?.toProperCase(),
-            outerMargin + space,
-            currentY + gap
-        );
-
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Date Of Birth:                       ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            moment(manpowerData.dateOfBirth).format("DD-MMM-YYYY"),
-            outerMargin + space3,
-            currentY + gap
-        );
-
-        gap = gap + 7
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Marital Status:                       ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.maritalStatus?.toProperCase(),
-            outerMargin + space,
-            currentY + gap
-        );
-
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Driving License:                       ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.drivingLicense?.toProperCase(),
-            outerMargin + space3,
-            currentY + gap
-        );
-
-        gap = gap + 7
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Currently Working:                       ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.currentlyWorking?.toProperCase(),
-            outerMargin + space,
-            currentY + gap
-        );
-        // 4️⃣ Vacancy & Position Type Section
 
 
         const vacancyheaderHeight = 8;   // shorter header row
@@ -249,7 +164,7 @@ console.log('candidatedata', manpowerData)
         doc.setFont("times", "italic");
         doc.setFontSize(13);
         doc.text(
-            "Professional Details",
+            "Interview Rounds Detail",
             pageWidth / 2,
             currentY + vacancyheaderHeight / 2,
             { align: "center", baseline: "middle" }
@@ -257,340 +172,434 @@ console.log('candidatedata', manpowerData)
 
         currentY += vacancyheaderHeight;
 
-        const vacancyHeight = 33;
-        // doc.setFillColor(224, 224, 224);
+        const vacancyHeight = manpowerData.rounds.length > 1 ? (manpowerData.rounds.length * 20) - 22 : 25;
         doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyHeight);
-        doc.setFont("times", "normal");
-        doc.setFontSize(13);
+        if (manpowerData.rounds.length > 1) {
+            // doc.setFillColor(224, 224, 224);
+            doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyHeight);
+            doc.setFont("times", "bold");
+            doc.setFontSize(11);
+            gap = 7
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text(`Round ${manpowerData.rounds?.[0]?.roundNumber}:`, outerMargin + 2, currentY + gap);
 
-        gap = 7;
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Total Years Of Experience:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space, // adjust x position to align with label
-            currentY + gap
-        );
+            gap = gap + 7
+            doc.setFont("times", "normal");
+            doc.setFontSize(13);
+            let interviewer = candidateData?.find(
+                (candidate: any) => candidate?._id == manpowerData.rounds?.[0]?.interviewer
+            );
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Interviewed By:                       ", outerMargin + 2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                `${interviewer?.displayName?.toProperCase()}`,
+                outerMargin + space, // adjust x position to align with label
+                currentY + gap
+            );
 
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Interview Date:                       ", outerMargin + space2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                moment(manpowerData.rounds?.[0]?.date).format("DD-MMM-YYYY"),
+                outerMargin + space3, // adjust x position to align with label
+                currentY + gap
+            );
 
-        // Position Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Relevant Experience:                       ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(
-            manpowerData.positionType === "budgeted" ? "Budgeted" : "Non-Budgeted",
-            outerMargin + space3,
-            currentY + gap
-        );
+            gap = gap + 7
+            doc.setFont("times", "normal");
+            doc.setFontSize(13);
 
-        gap = gap + 7
-        // No Of Vacant Positions
-        doc.setTextColor(0, 0, 0);
-        doc.text("Current Company:       ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(`${manpowerData.noOfVacantPositions}`, outerMargin + space, currentY + gap);
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Remarks:                       ", outerMargin + 2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                manpowerData.rounds?.[0]?.remarks?.toProperCase(),
+                outerMargin + space, // adjust x position to align with label
+                currentY + gap
+            );
 
-        // Recruitment Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Current Work Location:               ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(`${manpowerData.recruitmentType?.toProperCase()}`, outerMargin + space3, currentY + gap);
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Status:                       ", outerMargin + space2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                manpowerData.rounds?.[0]?.roundStatus?.toProperCase(),
+                outerMargin + space3, // adjust x position to align with label
+                currentY + gap
+            );
 
-        gap = gap + 7
-        // Recruitment Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Designation:               ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(`${manpowerData.recruitmentType?.toProperCase()}`, outerMargin + space, currentY + gap);
+            gap = gap + 10
 
-        // Recruitment Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Notice Period:               ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(`${manpowerData.recruitmentType?.toProperCase()}`, outerMargin + space3, currentY + gap);
+            if (manpowerData.rounds.length > 2) {
+                doc.setFont("times", "bold");
+                doc.setFontSize(11);
 
-        gap = gap + 7
-        // Recruitment Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Current Salary:               ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(`${manpowerData.recruitmentType?.toProperCase()}`, outerMargin + space, currentY + gap);
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text(`Round ${manpowerData.rounds?.[1]?.roundNumber}:`, outerMargin + 2, currentY + gap);
 
-        // Recruitment Type
-        doc.setTextColor(0, 0, 0);
-        doc.text("Expected Salary:               ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70);
-        doc.text(`${manpowerData.recruitmentType?.toProperCase()}`, outerMargin + space3, currentY + gap);
+                gap = gap + 7
+                doc.setFont("times", "normal");
+                doc.setFontSize(13);
+                interviewer = candidateData?.find(
+                    (candidate: any) => candidate?._id == manpowerData.rounds?.[1]?.interviewer
+                );
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Interviewed By:                       ", outerMargin + 2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    `${interviewer?.displayName?.toProperCase()}`,
+                    outerMargin + space, // adjust x position to align with label
+                    currentY + gap
+                );
 
-        // Previous Employee Details
-        // Previous Employee Details
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Interview Date:                       ", outerMargin + space2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    moment(manpowerData.rounds?.[1]?.date).format("DD-MMM-YYYY"),
+                    outerMargin + space3, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                gap = gap + 7
+                doc.setFont("times", "normal");
+                doc.setFontSize(13);
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Remarks:                       ", outerMargin + 2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    manpowerData.rounds?.[1]?.remarks ? manpowerData.rounds?.[1]?.remarks?.toProperCase() : '',
+                    outerMargin + space, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Status:                       ", outerMargin + space2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    manpowerData.rounds?.[1]?.roundStatus?.toProperCase(),
+                    outerMargin + space3, // adjust x position to align with label
+                    currentY + gap
+                );
+            }
+            gap = gap + 10
+
+            if (manpowerData.rounds.length > 3) {
+                doc.setFont("times", "bold");
+                doc.setFontSize(11);
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text(`Round ${manpowerData.rounds?.[2]?.roundNumber}:`, outerMargin + 2, currentY + gap);
+
+                gap = gap + 7
+                doc.setFont("times", "normal");
+                doc.setFontSize(13);
+                interviewer = candidateData?.find(
+                    (candidate: any) => candidate?._id == manpowerData.rounds?.[2]?.interviewer
+                );
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Interviewed By:                       ", outerMargin + 2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    `${interviewer?.displayName?.toProperCase()}`,
+                    outerMargin + space, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Interview Date:                       ", outerMargin + space2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    moment(manpowerData.rounds?.[2]?.date).format("DD-MMM-YYYY"),
+                    outerMargin + space3, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                gap = gap + 7
+                doc.setFont("times", "normal");
+                doc.setFontSize(13);
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Remarks:                       ", outerMargin + 2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    manpowerData.rounds?.[2]?.remarks ? manpowerData.rounds?.[2]?.remarks?.toProperCase() : '',
+                    outerMargin + space, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Status:                       ", outerMargin + space2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    manpowerData.rounds?.[2]?.roundStatus?.toProperCase(),
+                    outerMargin + space3, // adjust x position to align with label
+                    currentY + gap
+                );
+            }
+gap = gap + 10
+            if (manpowerData.rounds.length > 4) {
+                doc.setFont("times", "bold");
+                doc.setFontSize(11);
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text(`Round ${manpowerData.rounds?.[3]?.roundNumber}:`, outerMargin + 2, currentY + gap);
+
+                gap = gap + 7
+                doc.setFont("times", "normal");
+                doc.setFontSize(13);
+                interviewer = candidateData?.find(
+                    (candidate: any) => candidate?._id == manpowerData.rounds?.[3]?.interviewer
+                );
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Interviewed By:                       ", outerMargin + 2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    `${interviewer?.displayName?.toProperCase()}`,
+                    outerMargin + space, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Interview Date:                       ", outerMargin + space2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    moment(manpowerData.rounds?.[3]?.date).format("DD-MMM-YYYY"),
+                    outerMargin + space3, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                gap = gap + 7
+                doc.setFont("times", "normal");
+                doc.setFontSize(13);
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Remarks:                       ", outerMargin + 2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    manpowerData.rounds?.[3]?.remarks ? manpowerData.rounds?.[3]?.remarks?.toProperCase() : '',
+                    outerMargin + space, // adjust x position to align with label
+                    currentY + gap
+                );
+
+                doc.setTextColor(0, 0, 0); // black for label
+                doc.text("Status:                       ", outerMargin + space2, currentY + gap);
+                doc.setTextColor(70, 70, 70); // lighter black for value
+                doc.text(
+                    manpowerData.rounds?.[3]?.roundStatus?.toProperCase(),
+                    outerMargin + space3, // adjust x position to align with label
+                    currentY + gap
+                );
+            }
+
+        }
+        else {
+            doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyHeight);
+            doc.setFont("times", "bold");
+            doc.setFontSize(11);
+            gap = 7
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text(`Round 1:`, outerMargin + 2, currentY + gap);
+
+            gap = gap + 7
+            doc.setFont("times", "normal");
+            doc.setFontSize(13);
+            let interviewer = candidateData?.find(
+                (candidate: any) => candidate?._id == manpowerData.rounds?.[0]?.interviewer
+            );
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Interviewed By:                       ", outerMargin + 2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                ``,
+                outerMargin + space, // adjust x position to align with label
+                currentY + gap
+            );
+
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Interview Date:                       ", outerMargin + space2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                '',
+                outerMargin + space3, // adjust x position to align with label
+                currentY + gap
+            );
+
+            gap = gap + 7
+            doc.setFont("times", "normal");
+            doc.setFontSize(13);
+
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Remarks:                       ", outerMargin + 2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                '',
+                outerMargin + space, // adjust x position to align with label
+                currentY + gap
+            );
+
+            doc.setTextColor(0, 0, 0); // black for label
+            doc.text("Status:                       ", outerMargin + space2, currentY + gap);
+            doc.setTextColor(70, 70, 70); // lighter black for value
+            doc.text(
+                '',
+                outerMargin + space3, // adjust x position to align with label
+                currentY + gap
+            );
+
+        }
+
 
         currentY += vacancyHeight;
 
-        const visaHeaderHeight = 8;   // shorter header row
+        const assessmentHeight = 10
         doc.setTextColor(0, 0, 0); // black for label
         // Light blue header
         doc.setFillColor(224, 240, 255);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, visaHeaderHeight, "FD");
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyheaderHeight, "FD");
         doc.setFont("times", "italic");
         doc.setFontSize(13);
         doc.text(
-            "Visa Details",
+            "Assessment Sheet",
             pageWidth / 2,
-            currentY + visaHeaderHeight / 2,
+            currentY + vacancyheaderHeight / 2,
             { align: "center", baseline: "middle" }
         );
 
-        currentY += visaHeaderHeight;
-
-        const visaHeight = 11;
-        // doc.setFillColor(224, 224, 224);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, visaHeight);
-
-        doc.setFont("times", "normal");
-        doc.setFontSize(13);
-
-        gap = 7;
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Visa Status:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space, // adjust x position to align with label
-            currentY + gap
-        );
 
 
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Visa Expiry Date:                   ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space3, // adjust x position to align with label
-            currentY + gap
-        );
+        currentY += vacancyheaderHeight;
 
-        currentY += visaHeight;
-
-        const educationalHeaderHeight = 8;   // shorter header row
-        doc.setTextColor(0, 0, 0); // black for label
-        // Light blue header
-        doc.setFillColor(224, 240, 255);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, educationalHeaderHeight, "FD");
-        doc.setFont("times", "italic");
-        doc.setFontSize(13);
-        doc.text(
-            "Highest Eductaional Qualification Details",
-            pageWidth / 2,
-            currentY + educationalHeaderHeight / 2,
-            { align: "center", baseline: "middle" }
-        );
-
-        currentY += educationalHeaderHeight;
-
-        const educational = 18;
-        // doc.setFillColor(224, 224, 224);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, educational);
-
-        doc.setFont("times", "normal");
-        doc.setFontSize(13);
-
-        gap = 7;
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Degree:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space, // adjust x position to align with label
-            currentY + gap
-        );
-
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Degree Attested:                   ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space3, // adjust x position to align with label
-            currentY + gap
-        );
-
-        gap = 7 + gap;
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Languages Known:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space, // adjust x position to align with label
-            currentY + gap
-        );
-
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Certifications (If Any):                   ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space3, // adjust x position to align with label
-            currentY + gap
-        );
-        currentY += educational;
-
-        // 5️⃣ Candidate Type Section
-
-        const refferalHeight = 8;   // shorter header row
-        doc.setTextColor(0, 0, 0); // black for label
-        // Light blue header
-        doc.setFillColor(224, 240, 255);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, refferalHeight, "FD");
-        doc.setFont("times", "italic");
-        doc.setFontSize(13);
-        doc.text(
-            "Referral Information",
-            pageWidth / 2,
-            currentY + refferalHeight / 2,
-            { align: "center", baseline: "middle" }
-        );
-
-        currentY += refferalHeight;
-
-        const refferal = 32;
-        // doc.setFillColor(224, 224, 224);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, refferal);
-
-        doc.setFont("times", "normal");
-        doc.setFontSize(13);
-
-        gap = 7;
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("How You Knew About This Position:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space + 40, // adjust x position to align with label
-            currentY + gap
-        );
-
-        gap = 7 + gap;
-        // Vacancy Reason
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Do You Have Friends/Relatives Working In ABS:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space + 40, // adjust x position to align with label
-            currentY + gap
-        );
-
-        gap = 7 + gap;
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Name:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space, // adjust x position to align with label
-            currentY + gap
-        );
-
-        gap = 7 + gap;
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Relation:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space, // adjust x position to align with label
-            currentY + gap
-        );
-
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Contact No:                   ", outerMargin + space2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space3, // adjust x position to align with label
-            currentY + gap
-        );
-
-        currentY += refferal;
-
-        const declarationHeader = 8;   // shorter header row
-        doc.setTextColor(0, 0, 0); // black for label
-        // Light blue header
-        doc.setFillColor(224, 240, 255);
-        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, declarationHeader, "FD");
-        doc.setFont("times", "italic");
-        doc.setFontSize(13);
-        doc.text(
-            "Declaration",
-            pageWidth / 2,
-            currentY + refferalHeight / 2,
-            { align: "center", baseline: "middle" }
-        );
-
-        currentY += declarationHeader;
-
-        const declaration = 52;
-        // doc.setFillColor(224, 224, 224);
-        // doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, declaration);
-
+        // doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, assessmentHeight);
         doc.setFont("times", "normal");
         doc.setFontSize(11);
+        gap = 6
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text(`Score Scale : Very Good (5),  Good (4), Average (3), Poor (2), Very Poor (1)`, outerMargin + 2, currentY + gap);
 
-        gap = 7;
+        gap = gap + 7
         // Vacancy Reason
-        const availableWidth = pageWidth - 2 * outerMargin - 4; // minus small padding
 
-        // Your long text
-        const declarationText =
-            "I declare that the above statement given by me is true and correct to the best of my knowledge and belief. I understand that all information provided about me to you will be held by you and used for the purpose of evaluating my qualifications, experience and suitability for employment with you. I also understand that my employment contract will be terminated if, after investigation, the company discovers that any information which I have provided, or which has been provided by me, is false or misleading.";
+        currentY += assessmentHeight;
 
-        // Wrap text to fit width
-        const wrappedText = doc.splitTextToSize(declarationText, availableWidth);
 
-        // Print wrapped text
-        doc.setTextColor(0, 0, 0); // black
-        doc.text(wrappedText, outerMargin + 2, currentY + gap);
-        doc.setFontSize(13);
-        gap = 7 + gap + 25;
+        // ---------------- TABLE ----------------
+        const tableX = outerMargin;
+        const tableY = currentY;
+        const tableWidth = pageWidth - 2 * outerMargin;
+        const rowHeight = 7;
+        const rows = 10; // 10 rows
+
+        // Column widths
+        const colSNo = 20;                  // small
+        const colScore = 30;                // small
+        const colParam = tableWidth - colSNo - colScore; // remaining for Parameter Name
+
+        // Table header
+        doc.setFillColor(224, 240, 255);
+        doc.rect(tableX, tableY, tableWidth, rowHeight, "FD");
+        doc.setFont("times", "normal");
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(tableX, tableY, colSNo, rowHeight, "FD");
+        doc.text("S. No", tableX + colSNo / 2, tableY + rowHeight / 2, {
+            align: "center",
+            baseline: "middle",
+        });
+
+        // Draw Parameter Name box
+        doc.setFillColor(255, 255, 255);
+        doc.rect(tableX + colSNo, tableY, colParam, rowHeight, "FD");
+        doc.text("Parameters", tableX + colSNo + colParam / 2, tableY + rowHeight / 2, {
+            align: "center",
+            baseline: "middle",
+        });
+
+        // Draw Score box
+        doc.setFillColor(255, 255, 255);
+        doc.rect(tableX + colSNo + colParam, tableY, colScore, rowHeight, "FD");
+        doc.text("Score", tableX + colSNo + colParam + colScore / 2, tableY + rowHeight / 2, {
+            align: "center",
+            baseline: "middle",
+        });
+        // Table rows
+        doc.setFont("times", "normal");
+        let totalScore = 0
+        for (let i = 0; i < rows; i++) {
+            const rowY = tableY + (i + 1) * rowHeight;
+
+            // Draw row borders
+            doc.rect(tableX, rowY, tableWidth, rowHeight);
+
+            // Draw vertical lines (columns)
+            doc.line(tableX + colSNo, rowY, tableX + colSNo, rowY + rowHeight);
+            doc.line(tableX + colSNo + colParam, rowY, tableX + colSNo + colParam, rowY + rowHeight);
+
+            // S. No → center
+            doc.text(String(i + 1), tableX + colSNo / 2, rowY + rowHeight / 2, {
+                align: "center",
+                baseline: "middle"
+            });
+
+            // Parameter Name → left aligned
+            doc.text(manpowerData?.assessmentParameters ?. [i]?.parameterName, tableX + colSNo + 5, rowY + rowHeight / 2, {
+                baseline: "middle"
+            });
+
+            // Score → center
+            doc.setTextColor(70, 70, 70);
+            doc.text(manpowerData?.assessmentParameters ?. [i]?.score ? manpowerData?.assessmentParameters ?. [i]?.score?.toString() : "-", tableX + colSNo + colParam + colScore / 2, rowY + rowHeight / 2, {
+                align: "center",
+                baseline: "middle"
+            });
+            doc.setTextColor(0, 0, 0);
+            totalScore = totalScore + (manpowerData?.assessmentParameters ?. [i]?.score ? manpowerData?.assessmentParameters ?. [i]?.score : 0) 
+
+            currentY = rowY
+        }
+
+        currentY += 7;
+        doc.setFont("times", "normal");
+        doc.setFontSize(11);
+        gap = 6
         doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Candidate Signature And Date:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(`Total Score:    `, outerMargin + 2, currentY + gap);
+         doc.setTextColor(70, 70, 70);
+        doc.text(`${totalScore}`, outerMargin + space, currentY + gap);
+
+
+        gap = gap + 6
+
+         currentY += 9
+
+        doc.setTextColor(0, 0, 0); // black for label
+        // Light blue header
+        doc.setFillColor(224, 240, 255);
+        doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, vacancyheaderHeight-2, "FD");
+        doc.setFont("times", "normal");
+        doc.setFontSize(9);
         doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space + 10, // adjust x position to align with label
-            currentY + gap
+            "*Candidate should at least score 35 out of 50 to eligible for final selection.",
+            7,
+            currentY + (vacancyheaderHeight-2) / 2,
+            {align: "left", baseline: "middle" }
         );
 
-        gap = 7 + gap;
+         currentY += 7;
+        doc.setFont("times", "normal");
+        doc.setFontSize(11);
+        gap = 5
         doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Remarks (If Any):                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space + 10, // adjust x position to align with label
-            currentY + gap
-        );
+        doc.text(`Interview Status:       `, outerMargin + 2, currentY + gap);
+        doc.setTextColor(70, 70, 70);
+        doc.text(`${manpowerData?.status?.toProperCase()}`, outerMargin + space, currentY + gap);
 
-        gap = 7 + gap;
-        doc.setTextColor(0, 0, 0); // black for label
-        doc.text("Checked By:                   ", outerMargin + 2, currentY + gap);
-        doc.setTextColor(70, 70, 70); // lighter black for value
-        doc.text(
-            manpowerData.vacancyReason === "new_position" ? "New Position" : "Replacement",
-            outerMargin + space + 10, // adjust x position to align with label
-            currentY + gap
-        );
+        gap = gap + 6
 
-        currentY += declaration;
         // 8️⃣ Form Version at bottom
-        const footerText = "ABS/HR/C/F02 D  (25/04/2022) V. 1";
+        const footerText = "ABS/HR/N/F02 B (25/04/2022) V. 1";
         const footerHeight = 6;
         const footerY = pageHeight - startY - footerHeight;
 
@@ -637,7 +646,12 @@ console.log('candidatedata', manpowerData)
 
             case "interview_assesment":
                 title = "Interview Assessment";
-                tableData = Object.entries(interviewData).map(([key, value]) => [key, String(value)]);
+                title = "Candidate Information";
+                const selectedInterview = interviewsData?.data?.find(
+                    (candidate: any) => candidate?._id == interviewCandidateId
+                );
+
+                renderInterviewTemplate(doc, selectedInterview);
                 break;
 
             case "offer_acceptance":

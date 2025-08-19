@@ -655,7 +655,16 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
 
         const response: any = await createMaster(formattedData);
-        console.log('Response:', response);
+        let emailData = {};
+        if (response?.data?.data?.currentApprovalStep === 0) {
+            const approver = response.data.data.approvalFlow[0];
+            console.log('approval flow', approver);
+            const requestData = {'requestedBy': response.data.data?.requestedBy?.displayName, 'requestedDate': response.data.data?.createdAt, 'requestedPosition': response.data.data?.requiredPosition?.name};
+            emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Manpower Requisition Request', templateData: requestData, fileName: "hrmsTemplates/manpowerRequisition", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=test&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=test` };
+
+           await sendEmail(emailData);
+        }
+        console.log('Response:', response, 'approval flow', response.data.data.approvalFlow);
 
         if (response.data && response.data.status === SUCCESS) {
             toast.success(`Successfully ${action}ed recruitment request!`, {
@@ -1579,6 +1588,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                                             onSubmit={handleSave}
                                                             initialData={initialData}
                                                             action={action}
+                                                            users={users}
                                                         />
                                                     </div>
                                                 );
@@ -1609,6 +1619,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                 onSubmit={handleSaveCandidate}
                                 initialData={initialDataCandidate}
                                 action={actionCandidate}
+                                users={users}
                             />
                         </div>
                     </DialogContent>
@@ -1632,6 +1643,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                             onSubmit={handleSaveInterview}
                             initialData={initialDataCandidate}
                             action={actionInterview}
+                            users={users}
                         />
                     </div>
                 </DialogContent>
@@ -1653,6 +1665,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                             onSubmit={handleSaveOffer}
                             initialData={initialDataCandidate}
                             action={actionOffer}
+                            users={users}
                         />
                     </div>
                 </DialogContent>

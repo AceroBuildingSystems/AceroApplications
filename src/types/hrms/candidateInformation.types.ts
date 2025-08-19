@@ -5,6 +5,12 @@ export interface DeclaredBy {
     date?: Date;
 }
 
+export interface FriendsRelativeDetails {
+    name?: string;
+    relation?: string;
+    contactNo?: string;
+}
+
 export interface candidateInformation extends Document {
     recruitment: Types.ObjectId; // Reference to Recruitment model
     firstName: string;
@@ -40,6 +46,7 @@ export interface candidateInformation extends Document {
 
     sourceOfPositionInfo?: string;
     friendsRelativesInABS?: string;
+    friendsRelativesDetails?: FriendsRelativeDetails;
 
     languagesKnown: string; // Comma-separated string or array of languages
 

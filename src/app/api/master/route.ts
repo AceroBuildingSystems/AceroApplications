@@ -11,11 +11,11 @@ import mongoose from 'mongoose'
 Object.values(models).forEach(model => {
   const modelName = (model as any).modelName
   if (modelName && !mongoose.models[modelName]) {
-    ;(model as any).init()
+    ; (model as any).init()
   }
 })
 
-export async function GET(request:NextRequest) {
+export async function GET(request: NextRequest) {
   // Ensure database connection and models are initialized
   await dbConnect()
 
@@ -26,7 +26,7 @@ export async function GET(request:NextRequest) {
   const db = searchParams.get('db');
   if (!db) {
     return NextResponse.json(
-      { status: 'ERROR', message: 'DB_REQUIRED', data:{} },
+      { status: 'ERROR', message: 'DB_REQUIRED', data: {} },
       { status: 400 }
     );
   }
@@ -38,7 +38,7 @@ export async function GET(request:NextRequest) {
       operations.filter = JSON.parse(filterParam);
     } catch (error) {
       return NextResponse.json(
-        { status: 'ERROR', message: 'INVALID_FILTER_FORMAT', data:{} },
+        { status: 'ERROR', message: 'INVALID_FILTER_FORMAT', data: {} },
         { status: 400 }
       );
     }
@@ -53,7 +53,7 @@ export async function GET(request:NextRequest) {
       operations.sort = JSON.parse(sortParam);
     } catch (error) {
       return NextResponse.json(
-        { status: 'ERROR', message: 'INVALID_SORT_FORMAT', data:{} },
+        { status: 'ERROR', message: 'INVALID_SORT_FORMAT', data: {} },
         { status: 400 }
       );
     }
@@ -66,43 +66,43 @@ export async function GET(request:NextRequest) {
       operations.populate = JSON.parse(populateParam);
     } catch (error) {
       return NextResponse.json(
-        { status: 'ERROR', message: 'INVALID_POPULATE_FORMAT', data:{} },
+        { status: 'ERROR', message: 'INVALID_POPULATE_FORMAT', data: {} },
         { status: 400 }
       );
     }
   }
 
-  const response:any = await masterdataManager.getMasterData({ db,operations })
-  
-  if(response.status === SUCCESS) {
-    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
+  const response: any = await masterdataManager.getMasterData({ db, operations })
+console.log('response:', db);
+  if (response.status === SUCCESS) {
+    return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: response.data }, { status: 200 })
   }
-  return  NextResponse.json(
-    { status: 'ERROR', message: response.message, data:{} },
+  return NextResponse.json(
+    { status: 'ERROR', message: response.message, data: {} },
     { status: 500 }
   );
 }
 
-export async function POST(request:NextRequest) {
+export async function POST(request: NextRequest) {
   // Ensure database connection and models are initialized
   await dbConnect()
 
   const body = await request.json()
 
-  if(!body) return NextResponse.json({status:ERROR, message:INVALID_REQUEST, data:{}}, { status: 400 })
+  if (!body) return NextResponse.json({ status: ERROR, message: INVALID_REQUEST, data: {} }, { status: 400 })
 
 
-  const {db,action,data} = body
+  const { db, action, data } = body
 
-  if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
-  
+  if (!db || !action) return NextResponse.json({ status: ERROR, message: INSUFFIENT_DATA, data: {} }, { status: 400 })
+
 
   body.data.addedBy = createMongooseObjectId(body.addedBy)
   body.data.updatedBy = createMongooseObjectId(body.updatedBy)
 
-  let response:any = {}
-  
-  switch(action){
+  let response: any = {}
+
+  switch (action) {
     case "create":
       response = await masterdataManager.createMasterData(body)
       break;
@@ -110,14 +110,14 @@ export async function POST(request:NextRequest) {
       response = await masterdataManager.updateMasterData(body)
       break;
     default:
-      response = {status:ERROR, message:INVALID_REQUEST}
+      response = { status: ERROR, message: INVALID_REQUEST }
   }
 
-  
-  if(response.status === SUCCESS) {
-    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
+  console.log('response:', response);
+  if (response.status === SUCCESS) {
+    return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: response.data }, { status: 200 })
   }
-  return  NextResponse.json(
-    { status: 'ERROR', message: response.message, data:{} },
-    { status: 500 })
+  return NextResponse.json(
+    { status: ERROR, message: response.message.errorResponse.errmsg, data: {} },
+    { status: 200 })
 }

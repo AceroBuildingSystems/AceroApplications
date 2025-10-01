@@ -11,6 +11,7 @@ export interface ApprovalInfo {
 
 export interface recruitment extends Document {
   // Request Information
+  regionRequisition: Types.ObjectId;
   employeeType: Types.ObjectId;
   requestedBy: Types.ObjectId;
   requestDate?: Date;

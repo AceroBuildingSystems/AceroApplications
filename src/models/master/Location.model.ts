@@ -13,6 +13,7 @@ const LocationSchema: Schema<location> = new Schema({
             autopopulate: true
         },
     isActive: { type: Boolean, default: true },
+    isCompanyLocation: { type: String, default: 'no' },
     addedBy: { type: String },
     updatedBy: { type: String },
    

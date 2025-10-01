@@ -22,15 +22,16 @@ import {
 
 
 
-export function Combobox({ field, formData, handleChange, placeholder, selectedRegion, setSelectedRegion, selectedArea, setSelectedArea, setSelectedYear, setSelectedMonth }: any) {
+export function Combobox({ field, formData, handleChange, placeholder, selectedRegion, setSelectedRegion, selectedArea, setSelectedArea, setSelectedYear, setSelectedMonth,disabled }: any) {
     const [open, setOpen] = useState(false)
     const [selectedValue, setSelectedValue] = useState<string | null>(null);
-console.log('Combobox Field:', field, 'Form Data:', formData);
+// console.log('Combobox Field:', field, 'Form Data:', formData);
     return (
         <Popover modal={true} open={open} onOpenChange={setOpen} >
             <PopoverTrigger asChild>
                 
                 <Button
+                disabled={disabled}
                     variant="outline"
                     role="combobox"
                     aria-expanded={open}

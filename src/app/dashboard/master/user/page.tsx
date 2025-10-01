@@ -32,7 +32,7 @@ const page = () => {
 
     sort: { empId: 'asc' },
   });
-  console.log("userData", userData);
+  
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -108,8 +108,8 @@ const page = () => {
   const reportingToData = userData?.data
     ?.filter((user: any) =>
       user &&
-      user?.employmentDetails?.employeeType?.name &&
-      ['Manager', 'Management'].includes(user?.employmentDetails?.employeeType?.name)
+      user?.employeeType?.name &&
+      ['Manager', 'Management'].includes(user?.employeeType?.name)
     )
     ?.map((user: { _id: any; displayName: any }) => ({
       _id: user._id,

@@ -29,9 +29,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/inputSearch';
 import { Button } from '@/components/ui/button';
 import HrmsPdfGenerator from '@/components/hrms/HrmsPdfGenerator';
+import { useSendEmailMutation } from '@/services/endpoints/emailApi';
+import ApprovalFlowDialog from '@/components/ApprovalFlowDialog';
+
 
 const page = () => {
     const router = useRouter()
+    const [sendEmail, { isLoading: isSendEMail }]: any = useSendEmailMutation();
     const [workflowType, setWorkflowType]: any = useState('recruitment');
     const [workflowConfig, setWorkflowConfig]: any = useState(null);
     const [formConfig, setFormConfig] = useState<HRMSFormConfig | null>(null);
@@ -47,6 +51,7 @@ const page = () => {
 
     const { data: locationData = [], isLoading: locationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
+        filter: { isActive: true, isCompanyLocation: 'yes' },
         sort: { name: 'asc' },
     });
 
@@ -79,6 +84,7 @@ const page = () => {
         sort: { empId: 'asc' },
     });
 
+
     const departments = departmentsData?.data || [];
     const users = usersData?.data || [];
 
@@ -86,11 +92,11 @@ const page = () => {
         users.map((user: any) => ({
             ...user, // keep all original fields
             name: user?.displayName ? user.displayName : `${user.firstName}`,
-           
+
         })),
         [users]
     );
-console.log('designations', designationData?.data);
+    console.log('designations', designationData?.data);
     const depNames = departmentsData?.data
         ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
         ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));
@@ -145,12 +151,14 @@ console.log('designations', designationData?.data);
 
     ]
 
+    const [isApprovalFLowDialogOpen, setApprovalFLowDialogOpen] = useState(false);
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [isDialogOpenChecker, setDialogOpenChecker] = useState(false);
-     const [isDialogOpenPdfGenerator, setDialogOpenPdfGenerator] = useState(false);
+    const [isDialogOpenPdfGenerator, setDialogOpenPdfGenerator] = useState(false);
     const [isDialogOpenInterviewer, setDialogOpenInterviewer] = useState(false);
     const [selectedMaster, setSelectedMaster] = useState(""); // This will track the master type (department, role, etc.)
-    const [initialData, setInitialData] = useState({});
+    const [initialData, setInitialData]: any = useState({});
+
     const [action, setAction] = useState('Add');
     const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -168,6 +176,7 @@ console.log('designations', designationData?.data);
         setSelectedMaster(masterType);
 
         setDialogOpen(true);
+
     };
 
     const openDialogChecker = (masterType: React.SetStateAction<string>) => {
@@ -180,6 +189,20 @@ console.log('designations', designationData?.data);
         setSelectedMaster(masterType);
 
         setDialogOpenInterviewer(true);
+    };
+
+    const closeApprovalFLowDialog = async () => {
+        setApprovalFLowDialogOpen(false);
+        setSelectedMaster("");
+        setInitialData({});
+
+    };
+
+    const openApprovalFLowDialog = (rowData: RowData) => {
+        setApprovalFLowDialogOpen(true);
+        setSelectedMaster("Approval Flow");
+        setInitialData(rowData);
+
     };
 
     // Close dialog
@@ -197,7 +220,7 @@ console.log('designations', designationData?.data);
 
     };
 
-     const closeDialogPdfGenerator = async () => {
+    const closeDialogPdfGenerator = async () => {
         setDialogOpenPdfGenerator(false);
         setSelectedMaster("");
         setInitialData({});
@@ -207,6 +230,7 @@ console.log('designations', designationData?.data);
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
+
         const formattedData = {
             db: MONGO_MODELS.RECRUITMENT,
             action: 'update',
@@ -214,9 +238,45 @@ console.log('designations', designationData?.data);
             data: formData,
         };
 
-        console.log('Formatted Data:', formattedData);
+        console.log('Formatted Data1:', formattedData);
 
         const response = await createMaster(formattedData);
+
+
+        let emailData = {};
+        if (response?.data && response?.data?.status === SUCCESS) {
+            if (selectedMaster === 'Checker') {
+                console.log('response', response)
+
+                const requestData = { 'requestedBy': response.data.data?.requestedBy?.displayName, 'requestedDate': response.data.data?.createdAt, 'requestedPosition': '' };
+                emailData = { recipient: response.data.data?.checker?.email, subject: 'To Check Candidates Detail', templateData: requestData, fileName: "hrmsTemplates/checkerInterviewer", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/dashboard/newhrms/candidates`, rejectUrl: ``, recipientName: response.data.data?.checker?.displayName?.toProperCase(), position: response.data.data?.requiredPosition?.name };
+
+                await sendEmail(emailData);
+            }
+            if (selectedMaster === 'Interviewer') {
+                const oldInterviewers = recruitmentData?.data?.filter(data => data._id === formData._id)?.[0]?.interviewers?.map(i => i._id) || [];
+
+                // Extract new interviewer IDs from updated data
+                const updatedInterviewers = response?.data?.data?.interviewers?.map(i => i._id) || [];
+
+                // Find newly added interviewers
+                const newInterviewers = updatedInterviewers.filter(id => !oldInterviewers.includes(id));
+
+                const newInterviewerObjects = response?.data?.data?.interviewers?.filter(i => newInterviewers.includes(i._id)) || [];
+
+                // Extract emails of new interviewers
+                const newInterviewerEmails = newInterviewerObjects.map(i => i.email).join(',');
+                console.log('response', response?.data?.data?.interviewers, recruitmentData?.data?.filter(data => data._id === formData._id), oldInterviewers, newInterviewers, newInterviewerEmails)
+                if (newInterviewerEmails.length > 0) {
+                    const requestData = { 'requestedBy': response.data.data?.requestedBy?.displayName, 'requestedDate': response.data.data?.createdAt, 'requestedPosition': '' };
+                    emailData = { recipient: newInterviewerEmails, subject: 'To Interview candidates', templateData: requestData, fileName: "hrmsTemplates/checkerInterviewer", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/dashboard/newhrms/interview_assessment`, rejectUrl: ``, recipientName: `Team`, position: response.data.data?.requiredPosition?.name };
+
+                    await sendEmail(emailData);
+                }
+
+            }
+
+        }
 
         setDialogOpenInterviewer(false);
         setSelectedMaster("");
@@ -231,7 +291,9 @@ console.log('designations', designationData?.data);
 
     const editUser = (rowData: RowData) => {
         setAction('Update');
-        setInitialData(rowData);
+
+
+        setInitialData({ ...rowData, requestedDepartment: rowData?.department });
         openDialog("recruitment");
         // Your add logic for user page
     };
@@ -253,11 +315,11 @@ console.log('designations', designationData?.data);
         // Your add logic for user page
     };
 
-     const openPdfGenerator = (rowData: RowData) => {
+    const openPdfGenerator = (rowData: RowData) => {
         setAction('Add');
         setInitialData(rowData);
-       
-       setDialogOpenPdfGenerator(true)
+
+        setDialogOpenPdfGenerator(true)
         // Your add logic for user page
     };
 
@@ -426,7 +488,7 @@ console.log('designations', designationData?.data);
                 const [first, second] = String(value).split("_");
 
                 return (
-                    <div>
+                    <div className='text-blue-500' onClick={() => openApprovalFLowDialog(row.original)}>
                         {first?.toProperCase()}
                         {second && <span> ({second?.toProperCase()})</span>}
                     </div>
@@ -577,7 +639,6 @@ console.log('designations', designationData?.data);
         return "";
     };
 
-    console.log('Workflow Config:', workflowConfig, formConfig);
 
     if (loading) {
         return (
@@ -591,7 +652,7 @@ console.log('designations', designationData?.data);
     //     <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-opacity-50"></div>
     // </div>;
 
-    console.log('workflow config', workflowConfig)
+
 
     return (
         <>
@@ -637,6 +698,14 @@ console.log('designations', designationData?.data);
                 height='auto'
                 width="80%"
             />
+
+            {initialData && (<ApprovalFlowDialog
+                isOpen={isApprovalFLowDialogOpen}
+                closeDialog={closeApprovalFLowDialog}
+                approvalFlow={initialData?.approvalFlow}
+                title={`Approval Workflow for Manpower Requisistion`}
+                name='recruitment'
+            />)}
 
 
 
@@ -711,7 +780,6 @@ console.log('designations', designationData?.data);
 
                 </DialogContent>
             </Dialog>
-
 
 
             {/* <DynamicDialog

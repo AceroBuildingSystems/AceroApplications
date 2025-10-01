@@ -48,8 +48,20 @@ UserBenefits
 Recruitment,
 CandidateInfo,
 Interview,
-OfferAcceptance
+OfferAcceptance,
+EmployeeJoining,
+ITAssetsAccess,
+EmployeeInfo,
+BeneficiaryInfo,
+ConsentInfo,
+NdaInfo,
+OrientationInfo,
+VisaInfo,
+BusinessTrip,
+PerformanceAppraisal,
+Offboarding
 } from '@/models';
+
 
 
 
@@ -132,7 +144,18 @@ function getMongooseAdapter(): MongooseAdapter {
     RECRUITMENT: Recruitment,
     CANDIDATE_INFO: CandidateInfo,
     INTERVIEW: Interview,
-    OFFER_ACCEPTANCE: OfferAcceptance
+    OFFER_ACCEPTANCE: OfferAcceptance,
+    EMPLOYEE_JOINING: EmployeeJoining,
+    IT_ASSETS_ACCESS: ITAssetsAccess,
+    EMPLOYEE_INFO: EmployeeInfo,
+    BENEFICIARY_INFO: BeneficiaryInfo,
+    CONSENT_INFO: ConsentInfo,
+    NDA_INFO: NdaInfo,
+    ORIENTATION_INFO: OrientationInfo,
+    VISA_INFO: VisaInfo,
+    BUSINESS_TRIP: BusinessTrip,
+    PERFORMANCE_APPRAISAL: PerformanceAppraisal,
+    OFFBOARDING: Offboarding
     });
   }
   return dbEngineInstance;

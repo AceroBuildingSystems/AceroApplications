@@ -9,8 +9,22 @@ export interface offeracceptance extends Document {
   reasonToTravel?: string;
   noOfDays?: number;
   offerStatus: "issued" | "accepted" | "rejected";
+  onboardingStatus: "active" | "inactive";
   remarks?: string;
   offerLetterUrl?: string;
+  passportInfo?: {
+    passportNo?: string;
+    issueDate?: Date;
+    expiryDate?: Date;
+    passportUrl?: string;
+  };
+
+  uploadDocuments?: {
+    visitVisaUrl?: string;
+    cancellationVisaUrl?: string;
+    educationCertificatesUrl?: [string];
+    passportSizePhoto?: string;
+  };
   isActive: boolean;
   createddBy?: string; // seems like a typo, maybe 'createdBy'
   updatedBy?: string;

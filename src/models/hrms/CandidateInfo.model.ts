@@ -48,6 +48,7 @@ const CandidateInfoSchema: Schema<candidateInformation> = new Schema({
     noticePeriodRequired: { type: String, trim: true },
 
     highestQualification: { type: String, trim: true },
+    specialization: { type: String, trim: true },
     degreeCertificateAttested: { type: String, enum: ["yes", "no", ""] },
     certifications: { type: String, trim: true },
 
@@ -93,9 +94,9 @@ CandidateInfoSchema.plugin(require('mongoose-autopopulate'));
 // });
 
 // Index for efficient queries
-CandidateInfoSchema.index({recruitment: 1, createdAt: -1 });
+// CandidateInfoSchema.index({recruitment: 1, createdAt: -1 });
 
-const CandidateInfo: Model<candidateInformation> = mongoose.models.CandidateInfoSchema || mongoose.model<candidateInformation>("CandidateInfo", CandidateInfoSchema)
+const CandidateInfo: Model<candidateInformation> = mongoose.models.CandidateInfo || mongoose.model<candidateInformation>("CandidateInfo", CandidateInfoSchema)
 
 export default CandidateInfo
 

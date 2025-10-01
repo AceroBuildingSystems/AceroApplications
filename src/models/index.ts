@@ -74,6 +74,17 @@ import Recruitment from "./hrms/Recruitment.model";
 import CandidateInfo from "./hrms/CandidateInfo.model";
 import Interview from "./hrms/InterviewAssesment.model";
 import OfferAcceptance from "./hrms/OfferAcceptance.model"
+import EmployeeJoining from "./hrms/EmployeeJoining.model"
+import ITAssetsAccess from "./hrms/ItAssetsAccess.model";
+import EmployeeInfo from "./hrms/EmployeeInfo.model";
+import BeneficiaryInfo from "./hrms/BeneficiaryInfo.model";
+import ConsentInfo from "./hrms/ConsentInfo.model";
+import NdaInfo from "./hrms/NdaInfo.model";
+import OrientationInfo from "./hrms/OrientationInfo.model";
+import VisaInfo from "./hrms/VisaInfo.model";
+import BusinessTrip from "./hrms/BusinessTrip.model";
+import PerformanceAppraisal from "./hrms/PerformanceAppraisal.model";
+import Offboarding from "./hrms/Offboarding.model";
 
 export { 
     Access, Department, Designation, EmployeeType, Organisation, Role, User, 
@@ -120,6 +131,17 @@ export {
     Recruitment,
     CandidateInfo,
     Interview,
-    OfferAcceptance
+    OfferAcceptance,
+    EmployeeJoining,
+    ITAssetsAccess,
+    EmployeeInfo,
+    BeneficiaryInfo,
+    ConsentInfo,
+    NdaInfo,
+    OrientationInfo,
+    VisaInfo,
+    BusinessTrip,
+    PerformanceAppraisal,
+    Offboarding
     
 }

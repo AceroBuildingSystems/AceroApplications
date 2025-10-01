@@ -44,14 +44,14 @@ interface MasterComponentProps {
 
 
 const MasterComponent: React.FC<MasterComponentProps> = ({ config, loadingState, rowClassMap, summary }) => {
-console.log("Master Component Config", config)
+    console.log("Master Component Config", config)
     // State to manage search and filter values
     const [searchValues, setSearchValues] = useState<Record<string, string>>({});
     const [filterValues, setFilterValues] = useState<Record<string, string | null>>({});
     const [filteredData, setFilteredData] = useState(config?.dataTable?.data);
     const [summaryData, setSummaryData] = useState([]);
     const [title, setTitle] = useState(config?.title || "");
-console.log("Filtered Data", config?.dataTable?.data)
+    console.log("Filtered Data", config?.dataTable?.data)
     useEffect(() => {
         setFilteredData(config?.dataTable?.data)
     }, [config, loadingState])
@@ -173,14 +173,14 @@ console.log("Filtered Data", config?.dataTable?.data)
 
                                     return (
                                         <div key={index} className='w-full'>
-                                        <Combobox
-                                            key={field.key || index}
-                                            field={field}
-                                            formData={[]}
-                                            handleChange={handleFilterChange}
-                                            placeholder={field.placeholder || ""}
+                                            <Combobox
+                                                key={field.key || index}
+                                                field={field}
+                                                formData={[]}
+                                                handleChange={handleFilterChange}
+                                                placeholder={field.placeholder || ""}
 
-                                        />
+                                            />
                                         </div>
                                     );
                                 })}
@@ -204,7 +204,7 @@ console.log("Filtered Data", config?.dataTable?.data)
                                                 button.action(); // Call action directly if no dropdown
                                             }
                                         }}
-                                        className={`w-28 ${button.className}`}
+                                        className={`w-36 ${button.className}`}
                                     >
                                         {button.label}
                                     </Button>
@@ -212,7 +212,7 @@ console.log("Filtered Data", config?.dataTable?.data)
                                     {/* Dropdown (only if dropdownOptions are provided and active) */}
                                     {button.dropdownOptions && activeDropdown === index && (
                                         <div className="absolute right-0 mt-2 p-2 bg-white shadow-lg border rounded-md w-40 z-50">
-                                            {button.dropdownOptions.map((option:any, optionIndex) => (
+                                            {button.dropdownOptions.map((option: any, optionIndex) => (
                                                 <div
                                                     key={optionIndex}
                                                     className="rounded-md cursor-pointer px-4 p-2 hover:bg-gray-100"

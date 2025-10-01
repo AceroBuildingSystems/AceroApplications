@@ -5,15 +5,15 @@ import { interview } from "@/types/hrms/interview.types";
 import { date } from "zod";
 
 const assessmentParameterSchema = new mongoose.Schema({
-  parameterName: { type: String, required: true }, // e.g. "Technical Knowledge"
-  score: { type: Number, min: 1, max: 5, default: '' },
-  
+    parameterName: { type: String, required: true }, // e.g. "Technical Knowledge"
+    score: { type: Number, min: 1, max: 5, default: '' },
+
 }, { _id: false });
 
 const interviewRoundSchema = new mongoose.Schema({
     roundNumber: { type: Number },
     interviewer: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    date: { type: Date, default: undefined},
+    date: { type: Date, default: undefined },
     roundStatus: {
         type: String,
         enum: ["shortlisted", "rejected", "na"],
@@ -35,6 +35,11 @@ const InterviewSchema: Schema<interview> = new Schema({
 
     assessmentParameters: [assessmentParameterSchema],
 
+    hrFeedback: {
+        date: { type: Date },
+        remarks: { type: String }
+    },
+
     status: {
         type: String,
         enum: [
@@ -46,7 +51,7 @@ const InterviewSchema: Schema<interview> = new Schema({
         ],
         default: 'na'
     },
-remarks: { type: String },
+    remarks: { type: String },
     isActive: { type: Boolean, default: true },
 
     updatedBy: { type: String },
@@ -63,6 +68,6 @@ InterviewSchema.plugin(require('mongoose-autopopulate'));
 
 InterviewSchema.index({ recruitmentId: 1, isActive: 1 });
 
-const Interview: Model<interview> = mongoose.models.interview || mongoose.model<interview>("Interview", InterviewSchema)
+const Interview: Model<interview> = mongoose.models.Interview || mongoose.model<interview>("Interview", InterviewSchema)
 
 export default Interview

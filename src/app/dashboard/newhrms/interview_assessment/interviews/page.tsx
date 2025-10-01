@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useMemo } from 'react'
+import React, { useMemo } from 'react';
 import NextLink from 'next/link';
-import MasterComponent from '@/components/MasterComponent/MasterComponent'
-import { ArrowUpDown, ChevronDown, ChevronsUpDown, Link, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react"
+import MasterComponent from '@/components/MasterComponent/MasterComponent';
+import { ArrowUpDown, ChevronDown, ChevronsUpDown, Link, Loader, Loader2, Loader2Icon, MoreHorizontal } from "lucide-react";
 import { Plus, Import, Download, Upload } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useState, useEffect } from 'react';
@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/inputSearch';
 import { Button } from '@/components/ui/button';
 import { Recruitment } from '@/models';
 import FormContainer from '@/components/hrms/FormContainer';
+
 
 const page = () => {
     const router = useRouter()
@@ -75,15 +76,16 @@ const page = () => {
     });
 
     const users = usersData?.data || [];
-    
-        const userOptions = useMemo(() =>
-            users.map((user: any) => ({
-                ...user, // keep all original fields
-                name: user?.displayName ? user.displayName : `${user.firstName}`,
-            })),
-            [users]
-        );
 
+    const userOptions = useMemo(() =>
+        users.map((user: any) => ({
+            ...user, // keep all original fields
+            name: user?.displayName ? user.displayName : `${user.firstName}`,
+        })),
+        [users]
+    );
+
+    console.log('loggedin user:', user)
 
     if (!recruitmentId) {
         toast.error(`Recruitment need to be selected to get the candidates info.`)
@@ -94,19 +96,31 @@ const page = () => {
         const loadStepConfig = async () => {
             const baseConfig = getFormConfig('interview_assesment');
             if (!baseConfig) return;
-
+            console.log('interviewData', interviewData)
             const optionsMap = {
-                interviewer: userOptions,
+                interviewer: interviewData?.data?.[0]?.recruitmentId?.interviewers || [],
                 roundStatus: roundStatus,
                 status: status
             };
-            console.log('baseconfig', baseConfig);
-            const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
-            setFormConfig(updatedConfig);
-        };
+            // console.log('baseconfig', baseConfig, optionsMap);
+            const currentUserRole = user?.employeeType?.name;
+            const currentUserDept = user?.department?.name;
 
-        loadStepConfig();
-    }, [countryLoading, userLoading]);
+            const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
+            const visibleSections = updatedConfig.sections.filter((section) => {
+                if (!section.visibleFor) return true; // no restriction → show to everyone
+
+                return (
+                    section.visibleFor.includes(currentUserRole) ||
+                    section.visibleFor.includes(currentUserDept)
+                );
+            });
+            setFormConfig({ ...updatedConfig, sections: visibleSections });
+        };
+        if (!interviewLoading) {
+            loadStepConfig();
+        }
+    }, [interviewData, interviewLoading, countryLoading, userLoading]);
 
 
     const loading = departmentLoading || userLoading || designationLoading || interviewLoading || countryLoading || isCreatingMaster;
@@ -118,7 +132,7 @@ const page = () => {
         role: string;
     }
 
- const roundStatus = [
+    const roundStatus = [
         { name: 'Shortlisted', _id: 'shortlisted' },
         { name: 'Rejected', _id: 'rejected' },
         { name: 'N/A', _id: 'na' }
@@ -145,7 +159,7 @@ const page = () => {
         return new File([blob], filename, { type: mimeType });
     }
 
-     function normalizeCandidateData(data: any) {
+    function normalizeCandidateData(data: any) {
         if (!data) return {};
 
         return {
@@ -183,8 +197,12 @@ const page = () => {
     }
 
 
-    const editInterview = (rowData: any) => {
+    const editInterview = async (rowData: any) => {
         console.log('Editing interview:', rowData);
+
+        const normalizedData = await normalizeCandidateData(rowData);
+        console.log('normalized:', normalizedData);
+
         if (rowData?.candidateId?.attachResume) {
             const loadFile = async () => {
                 try {
@@ -198,7 +216,7 @@ const page = () => {
 
                     // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
                     // setFormData(prev => ({ ...prev, resume: file }));
-                    const normalizedData = await normalizeCandidateData(rowData);
+                    // const normalizedData = await normalizeCandidateData(rowData);
                     setInitialDataCandidate({ ...normalizedData, attachResume: file, resumeUrl: url });
                     // If you want to preview, also create an object URL
                     // setResumePreview(URL.createObjectURL(file));
@@ -207,6 +225,10 @@ const page = () => {
                 }
             };
             loadFile();
+        }
+        else {
+            const normalizedData = await normalizeCandidateData(rowData);
+            setInitialDataCandidate(normalizedData);
         }
 
         // setInitialDataCandidate(rowData);
@@ -217,17 +239,26 @@ const page = () => {
         // Your add logic for user page
     };
 
-   
+
 
     const handleSaveInterview = async (data: any) => {
         console.log('Form Data Candidate:', data);
 
         const { candidateId, recruitment, rounds = [], ...updateData } = data;
 
-
+        let roundsData = rounds;
+        console.log('rounds:', rounds)
         if (rounds.length > 0) {
             const lastRound = rounds[rounds.length - 1];
             if (lastRound?.interviewer) {
+
+                const missingRemarks = rounds.some((round, idx) => !round.remarks?.trim());
+                console.log('remarks:', missingRemarks);
+                if (missingRemarks) {
+                    toast.error("Please fill the remarks.");
+                    return; // ❌ stop saving
+                }
+
                 // Add empty round for next one
                 rounds.push({
                     roundNumber: rounds.length + 1,
@@ -236,6 +267,22 @@ const page = () => {
                     remarks: '',
                     roundStatus: 'na' // keep as per your structure
                 });
+            }
+
+            roundsData = rounds.slice(0, -1); // remove last blank
+
+            console.log('roundsdata:', roundsData)
+            const missingRemarks = roundsData.some((round, idx) => !round.remarks?.trim());
+            const roundStatus = roundsData.some((round, idx) => round?.roundStatus === 'rejected') && data?.status !== 'na';
+            console.log('remarks:', missingRemarks);
+            if (missingRemarks) {
+                toast.error("Please fill the remarks for interview rounds.");
+                return; // ❌ stop saving
+            }
+
+            if (roundStatus) {
+                toast.error("The candidate’s status cannot be changed as they have already been rejected in the interview rounds.");
+                return; // ❌ stop saving
             }
         }
 
@@ -482,15 +529,28 @@ const page = () => {
     ];
 
     const formattedInterviewData = useMemo(() => {
-        return interviewData?.data?.map((candidate: any) => ({
-            ...candidate,
-            firstName: candidate?.candidateId?.firstName || '',
-            lastName: candidate?.candidateId?.lastName || '',
-            contactNumber: candidate?.candidateId?.contactNumber || '',
-            email: candidate?.candidateId?.email || '',
-            fullName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName} ${candidate?.candidateId?.contactNumber}`,
-            candidateName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName}`
-        }));
+        return interviewData?.data?.map((candidate: any) => {
+            let rounds = [...(candidate.rounds || [])];
+
+            // ✅ Check if any round is rejected
+            const hasRejected = rounds.some((r: any) => r.roundStatus === "rejected");
+
+            if (hasRejected && rounds.length > 0) {
+                // Remove last round if rejected exists
+                rounds = rounds.slice(0, -1);
+            }
+
+            return {
+                ...candidate,
+                rounds, // updated rounds
+                firstName: candidate?.candidateId?.firstName || '',
+                lastName: candidate?.candidateId?.lastName || '',
+                contactNumber: candidate?.candidateId?.contactNumber || '',
+                email: candidate?.candidateId?.email || '',
+                fullName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName} ${candidate?.candidateId?.contactNumber}`,
+                candidateName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName}`
+            };
+        });
     }, [interviewData?.data]);
 
     console.log('formattedData:', formattedInterviewData)
@@ -530,7 +590,13 @@ const page = () => {
         <>
 
             <MasterComponent config={interviewConfig} loadingState={loading} rowClassMap={undefined} summary={false} />
-            <Dialog open={showInterviewDialog} onOpenChange={setShowInterviewDialog}>
+            <Dialog open={showInterviewDialog} onOpenChange={(open) => {
+                setShowInterviewDialog(open);
+                if (!open) {
+                    // Dialog is closing, reset the initial data
+                    setInitialDataCandidate([]);
+                }
+            }}>
                 <DialogContent
                     className="bg-white max-w-full pointer-events-auto mx-2 max-h-[95vh] w-[75%] h-[95vh] flex flex-col"
                     onInteractOutside={(e) => e.preventDefault()}
@@ -540,14 +606,14 @@ const page = () => {
                     </DialogTitle>
 
                     {/* Scrollable form container */}
-                    <div className="overflow-y-auto flex-1 px-2">
+                    {initialDataCandidate && Object.keys(initialDataCandidate).length > 0 && (<div className="overflow-y-auto flex-1 px-2">
                         <FormContainer
                             formConfig={formConfig}
                             onSubmit={handleSaveInterview}
                             initialData={initialDataCandidate}
                             action={actionInterview}
                         />
-                    </div>
+                    </div>)}
                 </DialogContent>
             </Dialog>
 

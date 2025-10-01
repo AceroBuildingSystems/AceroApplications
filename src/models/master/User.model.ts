@@ -120,11 +120,11 @@ const UserSchema: Schema<UserDocument> = new Schema({
     // Benefits details
 
     medicalInsurance: { type: String },
-    medicalInsuranceStartDate: { type: Date, default: null},
-    medicalInsuranceEndDate: { type: Date, default: null},
+    medicalInsuranceStartDate: { type: Date, default: null },
+    medicalInsuranceEndDate: { type: Date, default: null },
 
 
-access: [{
+    access: [{
         accessId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Access",

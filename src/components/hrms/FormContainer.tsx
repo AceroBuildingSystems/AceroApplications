@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import SectionContainer from './SectionContainer';
 import { useForm, FormProvider } from 'react-hook-form';
 import { Button } from '../ui/button';
@@ -36,39 +36,42 @@ interface FormContainerProps {
     onSubmit: (data: any) => void; // Adjust type as needed
     initialData?: any; // Optional initial data for the form
     action: any; // Action to be performed, e.g., 'create', 'update', etc.
-    users:any
+    users: any
 }
 
 
 const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, initialData = {}, action, users }) => {
     const { title, description, sections, submitLabel, saveDraftLabel } = formConfig;
     const [actionType, setActionType] = React.useState<'update' | 'delete' | 'submit' | null>(null);
-    console.log('Form Config:', formConfig);
-    console.log('initia data:', initialData);
-    console.log('users:', users);
+    // console.log('Form Config:', formConfig);
+    console.log('initia data:', initialData, formConfig);
+    // console.log('users:', users);
 
-    console.log('action:', action);
+    // console.log('action:', action);
 
-    const fieldsToExtractId = [
-        "department",
-        "requestedBy",
-        "requiredPosition",
-        "employeeType",
-        "workLocation",
-        "prevEmployee",
-        "nationality",
-        "checkedBy",
-    ];
+    const cleanedData = useMemo(() => {
+        const fieldsToExtractId = [
+            "requestedDepartment",
+            "requestedBy",
+            "requiredPosition",
+            "employeeType",
+            "workLocation",
+            "prevEmployee",
+            "nationality",
+            "checkedBy",
+        ];
 
-    // Replace objects with their _id
-    const cleanedData = { ...initialData };
-    for (const field of fieldsToExtractId) {
-        if (cleanedData[field] && typeof cleanedData[field] === "object" && "_id" in cleanedData[field]) {
-            cleanedData[field] = cleanedData[field]._id;
+        const clone = { ...initialData };
+        
+        for (const field of fieldsToExtractId) {
+            if (clone[field] && typeof clone[field] === "object" && "_id" in clone[field]) {
+                clone[field] = clone[field]._id;
+            }
         }
-    }
+        return clone;
+    }, [initialData]);
 
-    console.log('Cleaned Data:', cleanedData);
+    // console.log('Cleaned Data:', cleanedData);
     const methods = useForm({
         mode: 'onBlur', // or 'onChange' / 'onSubmit'
         defaultValues: cleanedData,
@@ -80,10 +83,13 @@ const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, ini
     } = methods;
 
     useEffect(() => {
-        methods.reset(cleanedData);
-    }, [initialData]);
+        if (cleanedData) {
+            methods.reset(cleanedData);
+        }
+    }, [cleanedData, methods]);
 
     const handleFormSubmit = (data: any) => {
+        console.log('Form Submitted Data:', data, formConfig);
         if (actionType === 'delete') {
             // mark inactive and call onSubmit
             onSubmit({ ...data, isActive: false });
@@ -106,7 +112,7 @@ const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, ini
                 <div className="flex gap-2 justify-end pb-2">
                     <Button
                         type="submit"
-                        className={`${action !== 'Add' && 'hidden'}`}
+                        className={`${(action !== 'Add') && 'hidden'}`}
                         onClick={() => setActionType('submit')}
                     >
                         {submitLabel}
@@ -114,19 +120,19 @@ const FormContainer: React.FC<FormContainerProps> = ({ formConfig, onSubmit, ini
 
                     <Button
                         type="submit"
-                        className={`${(action === 'Add' ) ? 'hidden' : 'bg-blue-700 hover:bg-blue-600 duration-300 px-3'}`}
+                        className={`${(action === 'Add') ? 'hidden' : 'bg-blue-700 hover:bg-blue-600 duration-300 px-3'}`}
                         onClick={() => setActionType('update')}
                     >
                         Update
                     </Button>
 
-                    <Button
+                    {/* <Button
                         type="submit"
                         className={`${(action === 'Add' || formConfig.formType === 'interview_assesment') ? 'hidden' : 'px-3'}`}
                         onClick={() => setActionType('delete')}
                     >
                         Delete
-                    </Button>
+                    </Button> */}
                 </div>
             </form>
         </FormProvider>

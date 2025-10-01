@@ -81,6 +81,17 @@ const page = () => {
         toast.error(`Recruitment need to be selected to get the candidates info.`)
     }
 
+    const qualifications = [
+        { name: 'Secondary', _id: 'Secondary' },
+        { name: 'Higher Secondary', _id: 'Higher Secondary' },
+        { name: 'Diploma', _id: 'Diploma' },
+        { name: 'Bachelor’s Degree', _id: 'Degree' },
+        { name: 'Master’s Degree', _id: 'Master Degree' },
+        { name: 'PhD', _id: 'PhD' },
+        { name: 'Others', _id: 'others' },
+
+    ];
+
     useEffect(() => {
 
         const loadStepConfig = async () => {
@@ -91,6 +102,7 @@ const page = () => {
                 nationality: countryData?.data,
                 visaType: visaTypes,
                 checkedBy: usersData?.data,
+                highestQualification: qualifications
             };
             console.log('baseconfig', baseConfig);
             const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
@@ -130,29 +142,31 @@ const page = () => {
         return new File([blob], filename, { type: mimeType });
     }
 
-    const editUser = (rowData: any) => {
+    const editUser = async (rowData: any) => {
         console.log('Editing user:', rowData);
         if (rowData?.attachResume) {
-            const loadFile = async () => {
-                try {
-                    // Extract filename and extension
-                    const url = rowData.attachResume;
-                    const filename = url.split('/').pop();
-                    const ext = filename.split('.').pop()?.toLowerCase() || '';
-                    const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
 
-                    const file = await urlToFile(url, filename, mimeType);
+            try {
+                // Extract filename and extension
+                const url = rowData.attachResume;
+                const filename = url.split('/').pop();
+                const ext = filename.split('.').pop()?.toLowerCase() || '';
+                const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
 
-                    // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
-                    // setFormData(prev => ({ ...prev, resume: file }));
-                    setInitialDataCandidate({ ...rowData, attachResume: file, resumeUrl: url });
-                    // If you want to preview, also create an object URL
-                    // setResumePreview(URL.createObjectURL(file));
-                } catch (err) {
-                    console.error("Error loading file:", err);
-                }
-            };
-            loadFile();
+                const file = await urlToFile(url, filename, mimeType);
+
+                // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
+                // setFormData(prev => ({ ...prev, resume: file }));
+                setInitialDataCandidate({ ...rowData, attachResume: file, resumeUrl: url });
+                // If you want to preview, also create an object URL
+                // setResumePreview(URL.createObjectURL(file));
+            } catch (err) {
+                console.error("Error loading file:", err);
+            }
+
+        }
+        else {
+            setInitialDataCandidate(rowData);
         }
 
 
@@ -170,14 +184,14 @@ const page = () => {
         setShowCandidateDialog(true);
     };
 
-    const handleUpload = async (firstName, lastName, contactNumber, documentType, file) => {
+    const handleUpload = async (firstName, lastName, contactNumber, documentType, file, folderName) => {
         if (!file) return;
         console.log('upoading file:', file.name);
         // setIsUploading(true);
         // setUploadProgress(0);
 
         // Prepare API endpoint with ticketId and userId
-        const endpoint = `/api/uploadCadidatesDocs?fullname=${firstName + `_` + lastName + `_` + contactNumber}&documentType=${documentType}`;
+        const endpoint = `/api/uploadCadidatesDocs?fullname=${firstName + `_` + lastName + `_` + contactNumber}&documentType=${documentType}&folderName=${folderName}`;
 
         // Prepare headers
         const headers: HeadersInit = {
@@ -226,7 +240,7 @@ const page = () => {
         }
     };
 
-     const fixedParameters = [
+    const fixedParameters = [
         "Education Qualification",
         "Technical Proficiency/ Job Knowledge",
         "Work Experience",
@@ -284,7 +298,8 @@ const page = () => {
             data?.lastName,
             data?.contactNumber,
             'resume',
-            data?.attachResume
+            data?.attachResume,
+            'candidates'
         );
 
         // Prepare candidate save payload
@@ -301,7 +316,7 @@ const page = () => {
         console.log('Candidate Save Response:', candidateResponse);
 
         // 3️⃣ Update recruitment step if needed
-       if (recruitmentData?.data?.completedStep === 1) {
+        if (recruitmentData?.data?.completedStep === 1) {
             const recruitmentPayload = {
                 db: MONGO_MODELS.RECRUITMENT,
                 action: 'update',
@@ -351,7 +366,7 @@ const page = () => {
                 position: "bottom-right"
             });
             setShowCandidateDialog(false);
-           
+
             return;
         }
 

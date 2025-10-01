@@ -17,6 +17,7 @@ import MultipleSelector from "../ui/multiple-selector";
 import { toast } from "react-toastify";
 import { FocusScope } from '@radix-ui/react-focus-scope';
 import { DismissableLayer } from '@radix-ui/react-dismissable-layer'
+import { ERROR } from "@/shared/constants";
 
 interface Field {
   name: string;
@@ -216,9 +217,9 @@ function DynamicDialog<T extends BaseFormData>({
         updatedData.addedBy = user._id;
       }
       const response: any = await onSave({ formData: updatedData, action });
-
-      if (!response || response?.error) {
-        toast.error(response?.error.message || "Something Went Wrong!");
+      console.log('resposnse', response);
+      if (!response || (response?.data?.status === ERROR)) {
+        toast.error(response?.data.message || "Something Went Wrong!");
         return;
       }
       toast.success(`${selectedMaster} ${action === 'Add' ? 'created' : status === 'delete' ? 'deleted' : 'updated'} successfully`);

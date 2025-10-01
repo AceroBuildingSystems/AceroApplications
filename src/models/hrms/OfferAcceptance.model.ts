@@ -2,6 +2,7 @@ import { min } from "lodash";
 import mongoose, { Document, Model, Schema } from "mongoose";
 
 import { offeracceptance } from "@/types/hrms/offeracceptance.types";
+import { passiveEventSupported } from "@tanstack/react-table";
 
 const OfferAccpetanceSchema: Schema<offeracceptance> = new Schema({
 
@@ -25,8 +26,30 @@ const OfferAccpetanceSchema: Schema<offeracceptance> = new Schema({
         ],
         default: 'issued'
     },
+    onboardingStatus: {
+        type: String,
+        enum: [
+            'active',
+            'inactive',
+
+        ],
+        default: 'inactive'
+    },
     remarks: { type: String, default: '' },
     offerLetterUrl: { type: String },
+    passportInfo: {
+        passportNo: String,
+        issueDate: Date,
+        expiryDate: Date,
+        passportUrl: String,
+    },
+
+    uploadDocuments: {
+        visitVisaUrl: String,
+        cancellationVisaUrl: String,
+        educationCertificatesUrl: [String],
+        passportSizePhotoUrl: String,
+    },
     isActive: { type: Boolean, default: true },
     createddBy: { type: String },
     updatedBy: { type: String },
@@ -43,6 +66,6 @@ OfferAccpetanceSchema.plugin(require('mongoose-autopopulate'));
 
 OfferAccpetanceSchema.index({ recruitmentId: 1, isActive: 1 });
 
-const OfferAcceptance: Model<offeracceptance> = mongoose.models.offeracceptance || mongoose.model<offeracceptance>("OfferAcceptance", OfferAccpetanceSchema)
+const OfferAcceptance: Model<offeracceptance> = mongoose.models.OfferAcceptance || mongoose.model<offeracceptance>("OfferAcceptance", OfferAccpetanceSchema)
 
 export default OfferAcceptance

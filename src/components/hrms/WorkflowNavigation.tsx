@@ -90,7 +90,7 @@ export default function WorkflowNavigation() {
       </Card> */}
 
       {/* Step Navigation */}
-      <Card>
+      <Card className='bg-gray-200'>
         <div className='px-4 py-2 font-bold text-lg border-b'>
           {workflowType.toProperCase()} Process
         </div>
@@ -103,7 +103,7 @@ export default function WorkflowNavigation() {
                 <div className="flex flex-col items-center min-w-[120px]">
                   {/* Step Circle */}
                   <button
-                     onClick={() => navigateToStep(step.stepIndex, false, workflowId)}
+                    onClick={() => navigateToStep(step.stepIndex, false, workflowId)}
                     disabled={!isStepAccessible(step.stepIndex)}
                     className={`
                       relative w-12 h-12 rounded-full border-2 flex items-center justify-center
@@ -202,7 +202,7 @@ export default function WorkflowNavigation() {
               )}
             </div> */}
 
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 font-semibold">
               Step {currentStepIndex + 1} of {steps.length}: {currentStep?.stepName}
             </p>
 

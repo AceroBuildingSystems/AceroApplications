@@ -36,6 +36,8 @@ const page = () => {
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
+  const isCompanyLocation = [{ _id: 'yes', name: 'Yes' }, { _id: 'no', name: 'No' }];
+
   const loading = locationLoading || stateLoading || isCreatingMaster;
 
 
@@ -54,6 +56,7 @@ const page = () => {
     { label: 'Pin Code', name: "pincode", type: "text", placeholder: 'Pin Code' },
     { label: 'State / City', name: "state", type: "select", required: true, placeholder: 'Select State / City', format: 'ObjectId', data: stateData?.data },
     { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
+    { label: 'Company Location', name: "isCompanyLocation", type: "select", data: isCompanyLocation, placeholder: 'Select Status' },
 
   ]
 

@@ -22,6 +22,12 @@ const ApprovalStepSchema = new Schema({
 const RecruitmentSchema: Schema<recruitment> = new Schema({
 
     // Request Information
+    regionRequisition: {
+        type: Schema.Types.ObjectId,
+        ref: 'Country',
+        required: true,
+        autopopulate: true
+    },
     employeeType: {
         type: Schema.Types.ObjectId,
         ref: 'EmployeeType',
@@ -93,46 +99,6 @@ const RecruitmentSchema: Schema<recruitment> = new Schema({
         default: []
     },
 
-    // approvedByFinance: {
-    //     approverId: {
-    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-    //             select: "firstName lastName displayName email empId designation department"
-    //         }
-    //     },
-    //     date: Date,
-    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-    //     remarks: String,
-    // },
-    // approvedByHR: {
-    //     approverId: {
-    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-    //             select: "firstName lastName displayName email empId designation department"
-    //         }
-    //     },
-    //     date: Date,
-    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-    //     remarks: String,
-    // },
-    // approvedByDepartmentHead: {
-    //     approverId: {
-    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-    //             select: "firstName lastName displayName email empId designation department"
-    //         }
-    //     },
-    //     date: Date,
-    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-    //     remarks: String,
-    // },
-    // approvedByCEO: {
-    //     approverId: {
-    //         type: Schema.Types.ObjectId, ref: 'User', autopopulate: {
-    //             select: "firstName lastName displayName email empId designation department"
-    //         }
-    //     },
-    //     date: Date,
-    //     status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
-    //     remarks: String,
-    // },
 
     // Form Status
     approvalStatus: {
@@ -142,7 +108,7 @@ const RecruitmentSchema: Schema<recruitment> = new Schema({
             'pending_department_head',
             'pending_hr_review',
             'pending_finance',
-            'pending_hr_head',
+            'pending_hr',
             'pending_coo_cfo',
             'pending_ceo',
             'approved',

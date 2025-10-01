@@ -9,9 +9,11 @@ interface EmailOptions {
     recipient: string;
     subject: string;
     templateData: any;
-    fileName:string;
-    senderName:string;
-    reason:string
+    fileName: string;
+    senderName: string;
+    reason: string,
+    recipientName: string,
+    position: string
 }
 
 // Create reusable transporter for sending emails
@@ -35,20 +37,22 @@ export const sendEmail = async (
     recipient: string,
     subject: string,
     templateData: any,
-    fileName:string,
-    senderName:string,
-    approveUrl:string,
-    rejectUrl:string,
-    reason:string,
+    fileName: string,
+    senderName: string,
+    approveUrl: string,
+    rejectUrl: string,
+    reason: string,
+    recipientName: string,
+    position: string
 ): Promise<any> => {
     try {
-        if(!fileName){
-           return {status:ERROR,message: "File Name must be sent!",data:{},statusCode:500}
+        if (!fileName) {
+            return { status: ERROR, message: "File Name must be sent!", data: {}, statusCode: 500 }
         }
         const filePath = `src/server/shared/emailTemplates/${fileName}.ejs`
-        const templatePath = path.join(process.cwd(),filePath );
+        const templatePath = path.join(process.cwd(), filePath);
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const htmlContent =  ejs.render(template, { subject, templateData, senderName,approveUrl,rejectUrl, reason });
+        const htmlContent = ejs.render(template, { subject, templateData, senderName, approveUrl, rejectUrl, reason, recipientName, position });
 
         // Set up email options
         const mailOptions = {
@@ -58,13 +62,13 @@ export const sendEmail = async (
             html: htmlContent, // Rendered HTML content
         };
 
-        const info:any = await transporter.sendMail(mailOptions);
-        if(info.status === ERROR){
+        const info: any = await transporter.sendMail(mailOptions);
+        if (info.status === ERROR) {
             return info
         }
-        return {status:SUCCESS,message: "Email sent!",data:info,statusCode:200}
+        return { status: SUCCESS, message: "Email sent!", data: info, statusCode: 200 }
     } catch (error: any) {
-        return {status:ERROR,message: "something went wrong",data:error.message,statusCode:500}
+        return { status: ERROR, message: "something went wrong", data: error.message, statusCode: 500 }
     }
 };
 // D:\\AceroApplications\\src\\server\\shared\\emailTemplates\\newCustomerTemplate.ejs

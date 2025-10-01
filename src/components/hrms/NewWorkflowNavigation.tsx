@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,9 +31,43 @@ export default function WorkflowNavigation({ formConfig }: WorkflowNavigationPro
   console.log('Workflow Navigation Config:', formConfig);
   if (!workflowType || !steps || steps.length === 0) return null;
 
-  const currentStep = steps[currentStepIndex];
+  const [currentStepInd, setCurrrentStepInd] = useState(currentStepIndex)
+  const [currentStep, setCurrrentStep] = useState(currentStepIndex >= steps?.length ? steps[currentStepIndex - 1] : steps[currentStepIndex])
+  console.log('current step:', currentStepInd)
+  //  const currentStep = steps[currentStepIndex];
   const canGoBack = currentStepIndex > 0;
   const canGoForward = currentStepIndex < steps.length - 1;
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Scroll to the far right on initial render
+    if (scrollContainerRef.current && currentStepIndex > 4) {
+      scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+    }
+    console.log('currentStepIndex changed:', currentStepIndex, currentStepInd, currentStep);
+  }, []);
+
+  useEffect(() => {
+
+    // Scroll to the far right on initial render
+    if (scrollContainerRef.current) {
+      if (currentStepInd > 4) {
+        scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+      }
+      else {
+        if (currentStepInd < 3) {
+          scrollContainerRef.current.scrollLeft = 0;
+        }
+        else {
+          scrollContainerRef.current.scrollLeft = + (currentStepInd * 135);
+        }
+      }
+
+
+    }
+    console.log('currentStepIndex changed:', currentStepIndex, currentStepInd);
+  }, [currentStepIndex, currentStep]);
 
   const getStepIcon = (index: number) => {
     if (index < currentStepIndex) {
@@ -60,6 +94,8 @@ export default function WorkflowNavigation({ formConfig }: WorkflowNavigationPro
   // Handler for step click
   const handleStepClick = (index: number) => {
     if (index <= currentStepIndex && onStepChange) {
+      setCurrrentStepInd(index);
+      setCurrrentStep(steps[index]);
       onStepChange(index);
     }
   };
@@ -71,55 +107,58 @@ export default function WorkflowNavigation({ formConfig }: WorkflowNavigationPro
           {workflowType.toProperCase()} Process
         </div>
 
-        <CardContent className="p-4">
+        <CardContent className="p-2">
           {/* Desktop View */}
-          <div className="hidden md:flex items-center justify-between relative">
-            {steps.map((step, index) => (
-              <React.Fragment key={step.id}>
-                <div className="flex flex-col items-center min-w-[120px]">
-                  <button
-                    onClick={() => handleStepClick(index)}
-                    disabled={index > currentStepIndex}
-                    className={cn(
-                      'relative w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 transform hover:scale-105',
-                      getStepCircleStyle(index),
-                      index > currentStepIndex ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-                      index === currentStepIndex ? 'ring-4 ring-blue-200' : ''
-                    )}
-                  >
-                    {getStepIcon(index)}
-
-                    <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
-                      {index + 1}
-                    </div>
-                  </button>
-
-                  <div className="mt-2 text-center">
-                    <p
+          {/* Desktop View */}
+          <div className="hidden md:block relative">
+            <div ref={scrollContainerRef} className="flex items-center space-x-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 px-2 py-2">
+              {steps.map((step, index) => (
+                <React.Fragment key={step.id}>
+                  <div className="flex flex-col items-center min-w-[120px] flex-shrink-0">
+                    <button
+                      onClick={() => handleStepClick(index)}
+                      disabled={index > currentStepIndex}
                       className={cn(
-                        'text-sm font-medium',
-                        index === currentStepIndex ? 'text-blue-600' : 'text-gray-700'
+                        'relative w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-200 transform hover:scale-105',
+                        getStepCircleStyle(index),
+                        index > currentStepIndex ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+                        index === currentStepIndex ? 'ring-4 ring-blue-200' : ''
                       )}
                     >
-                      {step.stepName}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">{step?.status}</p>
-                  </div>
-                </div>
+                      {getStepIcon(index)}
 
-                {index < steps.length - 1 && (
-                  <div className="flex-1 h-0.5 mx-4 relative">
-                    <div className="absolute inset-0 bg-gray-200"></div>
-                    <div
-                      className={`absolute inset-0 bg-green-500 transition-all duration-300 ${index < currentStepIndex ? 'w-full' : 'w-0'
-                        }`}
-                    ></div>
-                  </div>
-                )}
-              </React.Fragment>
-            ))}
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-white border-2 border-gray-300 rounded-full flex items-center justify-center text-xs font-bold">
+                        {index + 1}
+                      </div>
+                    </button>
 
+                    <div className="mt-2 text-center">
+                      <p
+                        className={cn(
+                          'text-sm font-medium whitespace-nowrap',
+                          index === currentStepIndex ? 'text-blue-600' : 'text-gray-700'
+                        )}
+                      >
+                        {step.stepName}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">{step?.status}</p>
+                    </div>
+                  </div>
+
+                  {index < steps.length - 1 && (
+                    <div className="flex-1 h-0.5 relative min-w-[60px]">
+                      <div className="absolute inset-0 bg-gray-200"></div>
+                      <div
+                        className={`absolute inset-0 bg-green-500 transition-all duration-300 ${index < currentStepIndex ? 'w-full' : 'w-0'
+                          }`}
+                      ></div>
+                    </div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
           </div>
+
 
           {/* Mobile View */}
           <div className="md:hidden space-y-3">
@@ -156,9 +195,9 @@ export default function WorkflowNavigation({ formConfig }: WorkflowNavigationPro
           </div>
 
           {/* Footer - info only */}
-          <div className="flex justify-between items-center mt-4 pt-3 border-t">
-            <p className="text-sm text-gray-600">
-              Step {currentStepIndex + 1} of {steps.length}: {currentStep?.stepName}
+          <div className="flex justify-between items-center pt-2 ">
+            <p className="text-sm text-gray-600 font-semibold">
+              Step {(currentStepInd >= steps.length) ? steps.length : currentStepInd + 1} of {steps.length}: {currentStep?.stepName}
             </p>
 
             <div className="text-center">

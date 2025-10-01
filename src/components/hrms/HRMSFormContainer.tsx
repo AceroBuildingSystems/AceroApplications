@@ -7,10 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { 
-  SaveIcon, 
-  SendIcon, 
-  FileTextIcon, 
+import {
+  SaveIcon,
+  SendIcon,
+  FileTextIcon,
   AlertCircleIcon,
   CheckCircleIcon,
   ClockIcon,
@@ -54,20 +54,20 @@ export default function HRMSFormContainer({
   const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
- const defaultValues = useMemo(() => {
-  const processed = { ...initialData };
-  Object.keys(processed || {}).forEach((key) => {
-    if (processed[key] === undefined || processed[key] === null) {
-      processed[key] = '';
-    }
-  });
-  return processed;
-}, [initialData]);
+  const defaultValues = useMemo(() => {
+    const processed = { ...initialData };
+    Object.keys(processed || {}).forEach((key) => {
+      if (processed[key] === undefined || processed[key] === null) {
+        processed[key] = '';
+      }
+    });
+    return processed;
+  }, [initialData]);
 
-const methods = useForm({
-  defaultValues,
-  mode: 'onChange',
-});
+  const methods = useForm({
+    defaultValues,
+    mode: 'onChange',
+  });
 
 
   const { handleSubmit, formState: { errors, isDirty }, watch, reset } = methods;
@@ -80,22 +80,22 @@ const methods = useForm({
   useEffect(() => {
     if (mode === 'create' || mode === 'edit') {
       let timeoutId: NodeJS.Timeout | null = null;
-      
+
       const subscription = watch((value, { name, type }) => {
         if (type === 'change' && onSaveDraft && isDraft && isDirty) {
           console.log('⏰ AUTO-SAVE: Field changed, scheduling auto-save', { field: name });
-          
+
           // Clear previous timeout
           if (timeoutId) {
             clearTimeout(timeoutId);
           }
-          
+
           // Set new timeout for auto-save - longer delay to reduce frequency
           // timeoutId = setTimeout(() => {
           //   console.log('⏰ AUTO-SAVE: Executing auto-save after user stopped typing for 10 seconds');
           //   handleSaveDraft(value, false); // Pass false for isManualSubmit
           // }, 10000); // 10 seconds - only save when user stops typing for 10 seconds
-          
+
           console.log('⏰ AUTO-SAVE: Debounce timeout set for 10 seconds');
         }
       });
@@ -115,7 +115,7 @@ const methods = useForm({
     try {
       setIsSaving(true);
       console.log('💾 DRAFT SAVE: Starting draft save', { isManualSubmit });
-      
+
       const formData = data || methods.getValues();
       await onSaveDraft(formData);
       setLastSaved(new Date());
@@ -133,21 +133,21 @@ const methods = useForm({
 
   const handleFormSubmit = async (data: any, event?: React.BaseSyntheticEvent) => {
     console.log('📝 FORM CONTAINER: handleFormSubmit called', data)
-    console.log('📝 FORM CONTAINER: handleFormSubmit called', { 
-      mode, 
+    console.log('📝 FORM CONTAINER: handleFormSubmit called', {
+      mode,
       hasHandlers: { onSubmit: !!onSubmit, onUpdate: !!onUpdate },
       eventType: event?.type,
       submitterName: event?.nativeEvent?.submitter?.name,
       submitterType: event?.nativeEvent?.submitter?.type
     });
-    
+
     if (!onSubmit && !onUpdate) return;
 
     // This is a manual submission, so we can proceed
     if (event?.nativeEvent?.submitter?.name === 'submit-button') {
       try {
         setIsSubmitting(true);
-        
+
         if (mode === 'create' || mode === 'edit') {
           const handler = mode === 'create' ? onSubmit : onUpdate;
           if (handler) {
@@ -178,8 +178,8 @@ const methods = useForm({
         withdrawn: { label: 'Withdrawn', variant: 'secondary' as const }
       };
 
-      const config = statusConfig[status as keyof typeof statusConfig] || 
-                    { label: status || 'Unknown', variant: 'secondary' as const };
+      const config = statusConfig[status as keyof typeof statusConfig] ||
+        { label: status || 'Unknown', variant: 'secondary' as const };
 
       return <Badge variant={config.variant}>{config.label}</Badge>;
     }
@@ -221,7 +221,7 @@ const methods = useForm({
                     </p>
                   )}
                 </div>
-                
+
                 <div className="text-right text-sm text-muted-foreground">
                   {mode === 'view' && initialData?.createdAt && (
                     <p>Created: {new Date(initialData.createdAt).toLocaleDateString()}</p>
@@ -278,7 +278,7 @@ const methods = useForm({
                       </span>
                     )}
                   </div>
-                  
+
                   <div className="flex gap-2">
                     {onSaveDraft && (
                       <Button
@@ -295,18 +295,18 @@ const methods = useForm({
                         {isSaving ? 'Saving...' : 'Save Draft'}
                       </Button>
                     )}
-                    
+
                     <Button
-                        type="submit"
-                        name="submit-button"
-                        disabled={isSubmitting || isSaving}
-                        className="w-full"
-                      >
+                      type="submit"
+                      name="submit-button"
+                      disabled={isSubmitting || isSaving}
+                      className="w-full"
+                    >
                       <SendIcon className="h-4 w-4 mr-2" />
-                      {isSubmitting 
-                        ? 'Submitting...' 
-                        : mode === 'create' 
-                          ? 'Submit Form' 
+                      {isSubmitting
+                        ? 'Submitting...'
+                        : mode === 'create'
+                          ? 'Submit Form'
                           : 'Update Form'
                       }
                     </Button>
@@ -346,7 +346,7 @@ const methods = useForm({
                   <p className="text-muted-foreground">{initialData.updatedBy}</p>
                 </div>
               </div>
-              
+
               {/* PDF Generation Section for submitted forms */}
               {formType && formId && initialData?.status && initialData.status !== 'draft' && (
                 <div className="pt-4 border-t">

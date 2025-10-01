@@ -232,15 +232,15 @@ export const hrmsApi = baseApi.injectEndpoints({
       providesTags: ['HRMS_Config']
     }),
 
-    getDepartments: builder.query({
-      query: () => 'hrms/approval-flows/config/departments',
-      providesTags: ['HRMS_Config']
-    }),
+    // getDepartments: builder.query({
+    //   query: () => 'hrms/approval-flows/config/departments',
+    //   providesTags: ['HRMS_Config']
+    // }),
 
-    getRoles: builder.query({
-      query: () => 'hrms/approval-flows/config/roles',
-      providesTags: ['HRMS_Config']
-    }),
+    // getRoles: builder.query({
+    //   query: () => 'hrms/approval-flows/config/roles',
+    //   providesTags: ['HRMS_Config']
+    // }),
 
     // === Approval Instance Operations ===
     getApprovalInstances: builder.query({

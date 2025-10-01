@@ -58,7 +58,7 @@ const page = () => {
         filter: { isActive: true },
         sort: { empId: 'asc' },
     });
-
+console.log('log in user', user)
     const depNames = departmentsData?.data
         ?.filter((dep: undefined) => dep !== undefined)  // Remove undefined entries
         ?.map((dep: { _id: any; name: any }) => ({ _id: dep.name, name: dep.name }));

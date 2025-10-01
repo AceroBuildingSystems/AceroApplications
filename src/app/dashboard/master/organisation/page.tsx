@@ -23,24 +23,24 @@ import { bulkImport } from '@/shared/functions';
 const page = () => {
 
     const { user, status, authenticated } = useUserAuthorised();
-    const { data: organisationData = [], isLoading: organisationLoading }:any = useGetMasterQuery({
+    const { data: organisationData = [], isLoading: organisationLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.ORGANISATION_MASTER,
         sort: { name: 'asc' },
     });
 
-    const { data: locationData = [], isLoading: locationLoading }:any = useGetMasterQuery({
+    const { data: locationData = [], isLoading: locationLoading }: any = useGetMasterQuery({
         db: MONGO_MODELS.LOCATION_MASTER,
         sort: { name: 'asc' },
     });
 
-    const [createMaster, { isLoading: isCreatingMaster }]:any = useCreateMasterMutation();
+    const [createMaster, { isLoading: isCreatingMaster }]: any = useCreateMasterMutation();
 
     const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
 
     const loading = organisationLoading || locationLoading || isCreatingMaster;
 
     // Flatten each object in the array
-   
+
 
     const flattenedData = organisationData?.data?.map((item: { [x: string]: any; location: any; }) => {
         const { location, ...rest } = item;
@@ -48,7 +48,7 @@ const page = () => {
         return {
             _id: rest._id,
             name: rest.name,
-            isActive:rest.isActive,
+            isActive: rest.isActive,
             location: location
                 ? {
                     _id: location._id,
@@ -97,7 +97,7 @@ const page = () => {
     const fields: Array<{ label: string; name: string; type: string; data?: any; readOnly?: boolean; format?: string; required?: boolean; placeholder?: string }> = [
 
         { label: 'Organisation Name', name: "name", type: "text", required: true, placeholder: 'Organisation Name' },
-        { label: 'Location', name: "location", type: "select",required: true, data: locationData?.data, placeholder:'Select Location' },
+        { label: 'Location', name: "location", type: "select", required: true, data: locationData?.data, placeholder: 'Select Location' },
         { label: 'Status', name: "isActive", type: "select", data: statusData, placeholder: 'Select Status' },
 
     ]
@@ -124,28 +124,30 @@ const page = () => {
     // Save function to send data to an API or database
     const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
-        let formattedData = Object.entries(formData).reduce(
-            (result:any, [key, value]) => {
-                if (addressFields.includes(key)) {
-                    // Add to 'address' object
-                    result.address = { ...result.address, [key]: value };
-                } else {
-                    // Keep other fields at the top level
-                    result[key] = value;
-                }
-                return result;
-            },
-            {}
-        );
+        console.log('formattedData', formData);
+        // let formattedData = Object.entries(formData).reduce(
+        //     (result: any, [key, value]) => {
+        //         if (addressFields.includes(key)) {
+        //             // Add to 'address' object
+        //             result.address = { ...result.address, [key]: value };
+        //         } else {
+        //             // Keep other fields at the top level
+        //             result[key] = value;
+        //         }
+        //         return result;
+        //     },
+        //     {}
+        // );
 
-        formattedData = {
+        const formattedData = {
             db: 'ORGANISATION_MASTER',
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": formData._id },
-            data: formattedData,
+            data: formData,
         };
 
-
+        console.log('formattedData', formattedData);
+  
 
         const response = await createMaster(formattedData);
 
@@ -169,7 +171,7 @@ const page = () => {
     };
 
     const handleImport = () => {
-        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [],locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [],customerTypeData: [], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ORGANISATION_MASTER", masterName: "Organisation" });
+        bulkImport({ roleData: [], continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], action: "Add", user, createUser: createMaster, db: "ORGANISATION_MASTER", masterName: "Organisation" });
     };
 
     const handleExport = () => {
@@ -244,20 +246,20 @@ const page = () => {
             ),
             cell: ({ row }: { row: any }) => <div className='text-blue-500' onClick={() => editUser(row.original)}>{row.getValue("state")?.name}</div>,
         },
-       {
-             accessorKey: "isActive",
-             header: ({ column }: { column: any }) => (
-               <button
-                 className="flex items-center space-x-2"
-                 onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-       
-               >
-                 <span>Status</span> {/* Label */}
-                 <ArrowUpDown size={15} /> {/* Sorting Icon */}
-               </button>
-             ),
-             cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
-           },
+        {
+            accessorKey: "isActive",
+            header: ({ column }: { column: any }) => (
+                <button
+                    className="flex items-center space-x-2"
+                    onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+
+                >
+                    <span>Status</span> {/* Label */}
+                    <ArrowUpDown size={15} /> {/* Sorting Icon */}
+                </button>
+            ),
+            cell: ({ row }: { row: any }) => <div>{statusData.find(status => status._id === row.getValue("isActive"))?.name}</div>,
+        },
 
 
 

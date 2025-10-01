@@ -17,6 +17,9 @@ import { format } from 'date-fns';
 import { HRMSFormField as HRMSFormFieldType } from '@/types/hrms';
 import { getValueByPath } from '@/utils/toSplit';
 import { Combobox } from '../ui/ComboBoxWrapper';
+import { CustomCaption } from '../CustomerCaption';
+import { DatePicker } from '../ui/date-picker';
+import { request } from 'http';
 
 interface HRMSFormFieldProps {
   field: HRMSFormFieldType;
@@ -26,9 +29,10 @@ interface HRMSFormFieldProps {
 }
 
 export default function HRMSFormField({ field, disabled = false, data, userlist }: HRMSFormFieldProps) {
-  console.log('HRMSFormField', field, data);
+  // console.log('HRMSFormField', field, data);
+  let scoreSum = 0;
   const { control, formState: { errors }, watch, setValue } = useFormContext();
-  console.log('userdata', userlist)
+  console.log('userdata', data)
   const error = errors[field.name];
   const watchedValues = watch();
 
@@ -37,41 +41,135 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
     name: "requestedBy",
   });
 
+  const otherAllowanceValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.otherAllowance",
+  });
+  const petrolCardValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.petrolCard",
+  });
+
+  const companyCarAllowValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.companyCarAllow",
+  });
+
+  const foodAllowanceValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.foodAllowance",
+  });
+
+  const mobileAllowanceValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.mobileAllowance",
+  });
+
+  const miscAllowanceValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.miscAllowance",
+  });
+
+  const transportAllowanceValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.transportAllowance",
+  });
+
+  const housingAllowanceValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.housingAllowance",
+  });
+
+  const basicSalaryValue = useWatch({
+    control,
+    name: "employeeInfo.salaryDetails.basic",
+  });
+
+  const employeeValue = useWatch({
+    control,
+    name: "employee",
+  });
+
   const departmentValue = useWatch({
     control,
-    name: "department",
+    name: "requestedDepartment",
   });
 
   useEffect(() => {
-    if (field.name === "requiredPosition") {
-      setValue(field.name, ""); // clear selection
-    }
-  }, [departmentValue, setValue, field.name]);
 
+    setValue("employeeInfo.salaryDetails.totalSalary", (basicSalaryValue || 0) + (housingAllowanceValue || 0) + (transportAllowanceValue || 0) + (miscAllowanceValue || 0) + (mobileAllowanceValue || 0) + (foodAllowanceValue || 0) + (companyCarAllowValue || 0) + (petrolCardValue || 0) + (otherAllowanceValue || 0));
+
+  }, [basicSalaryValue, housingAllowanceValue, transportAllowanceValue, miscAllowanceValue, mobileAllowanceValue, foodAllowanceValue, companyCarAllowValue, petrolCardValue, otherAllowanceValue, setValue]);
+
+  // useEffect(() => {
+  //   if (field.name === "requiredPosition") {
+  //     setValue(field.name, ""); // clear selection
+  //   }
+  // }, [departmentValue, setValue]);
+
+
+
+  // useEffect(() => {
+  //   setValue("requiredPosition", ""); // Clear previous selection
+  // }, [departmentValue, setValue]);
 
   useEffect(() => {
-    setValue("requiredPosition", ""); // Clear previous selection
-  }, [departmentValue, setValue]);
-
-  useEffect(() => {
-    console.log('requestByVal', requestedByValue)
-
 
     if (requestedByValue) {
-      console.log('userlist', userlist)
+      // console.log('userlist', userlist)
       // requestedByValue can be the full object or just _id
       const selectedUser = userlist.find(u => u._id === requestedByValue);
 
       if (selectedUser) {
         // Update department with full department object or ID
-        const departmentValue = selectedUser.department?._id || selectedUser.department || "";
-        setValue("department", departmentValue);
+        const departmentValue = selectedUser.department?._id || selectedUser.department || requestedDepartmentValue || "";
+        setValue("requestedDepartment", departmentValue);
       }
     } else {
       // Clear department if requestedBy is cleared
-      setValue("department", "");
+      // setValue("requestedDepartment", "");
     }
-  }, [requestedByValue, userlist, setValue]);
+  }, [requestedByValue, setValue]);
+
+  useEffect(() => {
+    console.log('employeeValue', requestedByValue)
+
+
+    if (employeeValue) {
+      // console.log('userlist', userlist)
+      // requestedByValue can be the full object or just _id
+      const selectedUser = userlist.find(u => u._id === employeeValue);
+
+      if (selectedUser) {
+        // Update department with full department object or ID
+        const departmentValue = selectedUser.recruitmentId?.department?._id || "";
+        const designationValue = selectedUser.recruitmentId?.requiredPosition?._id || "";
+        const workLocationValue = selectedUser.recruitmentId?.workLocation?._id || "";
+        const reportingToValue = selectedUser.recruitmentId?.requestedBy?._id || "";
+        const reportingDateValue = selectedUser?.expectedJoiningDate || undefined;
+        // setValue("requestedDepartment", departmentValue);
+        setValue("designation", designationValue);
+        data?.workLocation ? setValue("workLocation", data?.workLocation) : setValue("workLocation", workLocationValue);
+
+        data?.reportingTo ? setValue("reportingTo", data?.reportingTo) : setValue("reportingTo", reportingToValue);
+        // data?.dateOfRequest ? setValue("dateOfRequest", data?.dateOfRequest) : setValue("dateOfRequest", new Date().toISOString());
+
+        setValue("dateOfReporting", reportingDateValue);
+
+      }
+    } else {
+      // Clear department if requestedBy is cleared
+      // setValue("requestedDepartment", "");
+      if (!requestedByValue) {
+        // setValue("requestedDepartment", "");
+        setValue("designation", "");
+        setValue("workLocation", "");
+        setValue("reportingTo", "");
+        setValue("dateOfReporting", undefined);
+      }
+
+    }
+  }, [employeeValue, userlist, setValue]);
 
 
   // Check if field should be shown based on dependencies
@@ -127,6 +225,48 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
                     ""
                   }
                   type={field.type}
+                  placeholder={field.placeholder}
+                  disabled={disabled || field?.disable}
+                  className={cn(error && "border-destructive")}
+                />
+              )}
+            />
+          </div>
+        );
+
+      case 'labeltext':
+        return (
+          <div>
+            <Controller
+              name={field.name}
+              control={control}
+              disabled={field?.disable}
+              defaultValue={data?.[field.name] ?? getValueByPath(data, field.name) ?? ''}
+              rules={{
+                required: field.required ? `${field.label} is required` : false,
+                pattern: field.validation?.pattern ? {
+                  value: new RegExp(field.validation.pattern),
+                  message: field.validation.message || 'Invalid format'
+                } : undefined,
+                minLength: field.validation?.minLength ? {
+                  value: field.validation.minLength,
+                  message: `Minimum ${field.validation.minLength} characters required`
+                } : undefined,
+                maxLength: field.validation?.maxLength ? {
+                  value: field.validation.maxLength,
+                  message: `Maximum ${field.validation.maxLength} characters allowed`
+                } : undefined
+              }}
+              render={({ field: controllerField }) => (
+                <Input
+                  {...controllerField}
+                  value={
+                    controllerField.value ??
+                    data?.[field.name] ??
+                    getValueByPath(data, field.name) ??
+                    ""
+                  }
+                  type='text'
                   placeholder={field.placeholder}
                   disabled={disabled || field?.disable}
                   className={cn(error && "border-destructive")}
@@ -218,7 +358,7 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
 
         const filteredOptions = React.useMemo(() => {
           if (field.name !== 'requiredPosition') return field.data;
-           if (!departmentValue) return [];
+          if (!departmentValue) return [];
           return field.data?.filter((pos: any) => pos.department?._id === departmentValue) || [];
         }, [departmentValue, field.options, field.name]);
 
@@ -226,6 +366,7 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
           <Controller
             name={field.name}
             control={control}
+            disabled={field?.disable}
             defaultValue={selectedValue}
             rules={{ required: field.required ? `${field.label} is required` : false }}
             render={({ field: controllerField }) => (
@@ -239,7 +380,7 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
                     ? 'Select department first'
                     : field.placeholder || `Select ${field.label}`
                 }
-                disabled={disabled || field?.disabled || (field.name === 'requiredPosition' && !departmentValue)}
+                disabled={disabled || field?.disable || (field.name === 'requiredPosition' && !departmentValue)}
               />
             )}
           />
@@ -254,7 +395,7 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
               control={control}
               defaultValue={data?.[field.name] || false}
               render={({ field: controllerField }) => (
-                <div className="flex items-center space-x-2">
+                <div className="flex  space-x-2">
                   <Checkbox
                     id={field.name}
                     checked={controllerField.value || data?.[field.name] || false}
@@ -272,6 +413,62 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
             />
           </div>
         );
+
+      case 'checkbox-group':
+        return (
+          <div key={field.name} className="space-y-2">
+            {/* <Label className="font-semibold">{field.label}</Label> */}
+
+            {/* grid for checkboxes → 2 per row */}
+            <div className={`grid grid-cols-1  gap-2 ${(field.name === 'itSoftwareAssets' || field.name === 'itHardwareAssets' || field.name === 'workplaceApps' || true) && 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2'}`}>
+              {field.options?.map((opt: any) => (
+                <Controller
+                  key={opt.value}
+                  name={field.name}
+                  control={control}
+                  defaultValue={data?.[field.name] || []}
+                  render={({ field: controllerField }) => {
+                    const selectedValues: string[] = controllerField.value || [];
+
+                    const handleChange = (checked: boolean) => {
+                      let newValues;
+                      if (checked) {
+                        newValues = [...selectedValues, opt.value];
+                      } else {
+                        newValues = selectedValues.filter((v) => v !== opt.value);
+                        if (opt.value === "laptop") {
+                          newValues = newValues.filter(
+                            (v) => v !== "keyboard-mouse" && v !== "wireless-mouse"
+                          );
+                        }
+                      }
+                      controllerField.onChange(newValues);
+                    };
+
+                    return (
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`${field.name}_${opt.value}`}
+                          checked={!selectedValues.includes('laptop') && (opt.value === 'keyboard-mouse' || opt.value === 'wireless-mouse') ? false : selectedValues.includes(opt.value)}
+                          onCheckedChange={handleChange}
+                          disabled={!selectedValues.includes('laptop') && (opt.value === 'keyboard-mouse' || opt.value === 'wireless-mouse') || disabled || field.disabled}
+                        />
+                        <Label
+                          htmlFor={`${field.name}_${opt.value}`}
+                          className="text-sm font-normal cursor-pointer"
+                        >
+                          {opt.label}
+                        </Label>
+                      </div>
+                    );
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        );
+
+
 
       case 'radio':
         return (
@@ -304,50 +501,61 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
           </div>
         );
 
-      case 'date':
+      case "date":
+      case 'labeldate':
         return (
           <div>
             <Controller
               name={field.name}
               control={control}
-              defaultValue={data?.[field.name] || getValueByPath(data, field.name) || ''}
+              defaultValue={
+                data?.[field.name] ||
+                getValueByPath(data, field.name) ||
+                ""
+              }
               rules={{
-                required: field.required ? `${field.label} is required` : false
+                required: field.required
+                  ? `${field.label} is required`
+                  : false,
               }}
-              render={({ field: controllerField }) => (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !controllerField.value && "text-muted-foreground",
-                        error && "border-destructive"
-                      )}
-                      disabled={disabled || field.disabled}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {controllerField.value ? (
-                        format(new Date(controllerField.value), "PPP")
-                      ) : (
-                        <span>{field.placeholder || `Pick a date`}</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0 bg-white" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={controllerField.value ? new Date(controllerField.value) : (data?.[field.name] ? new Date(data?.[field.name]) : (getValueByPath(data, field.name) ? new Date(getValueByPath(data, field.name)) : undefined))}
-                      onSelect={(date) => controllerField.onChange(date?.toISOString())}
-                      disabled={disabled || field.disabled}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+              render={({ field: controllerField, fieldState }) => (
+                <div>
+                  <DatePicker
+                    currentDate={
+                      controllerField.value
+                        ? new Date(controllerField.value)
+                        : undefined
+                    }
+                    placeholder={field.placeholder || "Pick a date"}
+                    disabled={field.disable}
+                    handleChange={(newDate: Date | undefined, setDate: any) => {
+                      // update react-hook-form value
+                      controllerField.onChange(
+                        newDate ? newDate.toISOString() : ""
+                      );
+                      // also allow DatePicker to update its internal state
+                      if (setDate) setDate(newDate);
+                    }}
+                  />
+
+                  {fieldState.error && (
+                    <p className="text-sm text-red-500 mt-1">
+                      {fieldState.error.message}
+                    </p>
+                  )}
+                </div>
               )}
             />
           </div>
         );
+
+      case "label":
+        return (
+          <div className='hidden'>
+
+          </div>
+        );
+
 
       case 'file':
         return (
@@ -365,7 +573,60 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
                   ? selectedFile.name
                   : selectedFile?.name || ""; // In case you pre-fill
 
-              const fileUrl = data?.resumeUrl;
+              let fileUrl = data?.resumeUrl;
+              if (field.name === 'employeeInfo.visaInfo.attachVisa') {
+                fileUrl = data?.employeeInfo?.visaInfo?.visaUrl;
+              }
+              if (field.name === 'employeeInfo.visaInfo.attachEmiratesId') {
+                fileUrl = data?.employeeInfo?.visaInfo?.emiratesIdUrl;
+              }
+              if (field.name === 'employeeInfo.visaInfo.attachLaborCard') {
+                fileUrl = data?.employeeInfo?.visaInfo?.laborCardUrl;
+              }
+              if (field.name === 'employeeInfo.visaInfo.attachIloe') {
+                fileUrl = data?.employeeInfo?.visaInfo?.iloeUrl;
+              }
+              if (field.name === 'employeeInfo.ndaInfo.attachNda') {
+                fileUrl = data?.employeeInfo?.ndaInfo?.ndaFormUrl;
+              }
+              if (field.name === 'employeeInfo.consentInfo.declaration.attachDeclaration') {
+                fileUrl = data?.employeeInfo?.consentInfo?.declaration?.declarationFormUrl;
+              }
+              if (field.name === 'employeeInfo.beneficiaryInfo.declaration.attachBeneficiaryDeclaration') {
+                fileUrl = data?.employeeInfo?.beneficiaryInfo?.declaration?.declarationFormUrl;
+              }
+              if (field.name === 'employeeInfo.uploadDocuments.attachEducationCertificates') {
+                fileUrl = data?.employeeInfo?.uploadDocuments?.educationCertificatesUrl;
+              }
+              if (field.name === 'employeeInfo.uploadDocuments.attachVisitVisa') {
+                fileUrl = data?.employeeInfo?.uploadDocuments?.visitVisaUrl;
+              }
+              if (field.name === 'employeeInfo.uploadDocuments.attachVisaCancellation') {
+                fileUrl = data?.employeeInfo?.uploadDocuments?.cancellationVisaUrl;
+              }
+              if (field.name === 'employeeInfo.passport.attachPassport') {
+                fileUrl = data?.employeeInfo?.passport?.passportUrl;
+              }
+              if (field.name === 'passportInfo.attachPassport') {
+                fileUrl = data?.passportInfo?.passportUrl;
+              }
+              if (field.name === 'offerLetterUrl') {
+                fileUrl = data?.offerUrl;
+              }
+
+              if (field.name === 'uploadDocuments.attachVisitVisa') {
+                fileUrl = data?.uploadDocuments?.visitVisaUrl;
+              }
+              if (field.name === 'uploadDocuments.attachVisaCancellation') {
+                fileUrl = data?.uploadDocuments?.cancellationVisaUrl;
+              }
+              if (field.name === 'uploadDocuments.passportSizePhoto') {
+                fileUrl = data?.uploadDocuments?.passportSizePhotoUrl;
+              }
+              if (field.name === 'uploadDocuments.attachEducationCertificates') {
+                fileUrl = data?.uploadDocuments?.educationCertificatesUrl;
+              }
+
               console.log('url', fileUrl);
               return (
                 <div className="flex items-center gap-2">
@@ -374,9 +635,17 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
                     id={`file-${field.name}`}
                     type="file"
                     className="hidden"
+                    multiple={field.multiple || false}
+                    accept={field.accept || ".pdf"}
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      controllerField.onChange(file);
+                      const files = e.target.files;
+                      if (!files) return;
+
+                      if (field.multiple) {
+                        controllerField.onChange(Array.from(files)); // 👈 save all files
+                      } else {
+                        controllerField.onChange(files[0]); // 👈 save single file
+                      }
                     }}
                     disabled={disabled || field.disabled}
                   />
@@ -397,25 +666,378 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
                   </Button>
 
                   {/* Display file name if available */}
-                  {fileName && (
-                    fileUrl ? (
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline cursor-pointer"
-                      >
-                        {fileName}
-                      </a>
+                  {selectedFile && (
+                    Array.isArray(selectedFile) ? (
+                      <span>
+                        {Array.isArray(fileUrl) && fileUrl.length > 0 ? (
+                          // Case 2: pre-filled URLs from backend
+                          fileUrl.map((url, idx) => (
+                            <a
+                              key={idx}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 underline cursor-pointer mr-4"
+                            >
+                              {url.split('/').pop()}
+                            </a>
+
+                          ))
+                        ) : selectedFile.length > 0 ? (
+                          // Case 1: selected files (new uploads)
+                          selectedFile.map((file) =>
+                            file instanceof File ? file.name : file?.name || ""
+                          ).join(", ")
+                        ) : (
+                          // Case 3: nothing selected or empty
+                          <span>No file</span>
+                        )}
+                      </span>
                     ) : (
-                      <span>{fileName}</span>
+                      fileUrl ? (
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline cursor-pointer"
+                        >
+                          {fileName}
+                        </a>
+                      ) : (
+                        <span>{fileName}</span>
+                      )
                     )
                   )}
+
                 </div>
               );
             }}
           />
         );
+
+      case "handover":
+        // Get the array data from form state or default
+        const handoverData: any[] = getValueByPath(data, field.name) || field.defaultValue || [];
+
+        // Watch all fields
+        const watchedHandover: any[] = watch(field.name) || [];
+
+        return (
+          <div className="space-y-4 bg-white p-4 rounded-md shadow">
+            {/* Header Row */}
+            <div className="flex items-center gap-4 border-b border-gray-300 pb-2 font-bold text-sm text-gray-800">
+              <div className="w-10 text-center">S.No</div>
+              <div className="flex-1 pr-4">Department</div>
+              <div className="flex-1">Task Description</div>
+              <div className="w-42 text-center">Handovered To & Date</div>
+              <div className="w-32 text-center">Status</div>
+              <div className="w-32 text-center">Signature</div>
+            </div>
+
+            {handoverData.map((dept, index) => {
+              const isLast = index === handoverData.length - 1;
+              const selectedEmployeeId = watch("employee");
+              const selectedEmployee = userlist.find(
+                (u) => u._id === selectedEmployeeId
+              );
+
+              // 3. Get that employee's department
+              const selectedDepartment = selectedEmployee?.department?.name;
+              let departmentUsers = null;
+              // 4. Filter employees based on that department
+
+              if (dept.department === "Employee Department" && selectedEmployeeId) {
+                departmentUsers = userlist.filter(
+                  (u) => u.department?.name === selectedDepartment
+                );
+
+              }
+
+              if (dept.department === "Finance" && selectedEmployeeId) {
+                departmentUsers = userlist.filter(
+                  (u) => u.department?.name === 'Finance'
+                );
+
+              }
+
+              if (dept.department === "IT" && selectedEmployeeId) {
+                departmentUsers = userlist.filter(
+                  (u) => u.department?.name === 'IT'
+                );
+
+              }
+
+              if (dept.department === "Accommodation In charge" && selectedEmployeeId) {
+                departmentUsers = userlist.filter(
+                  (u) => u.department?.name === 'HR & Admin'
+                );
+
+              }
+
+              if (dept.department === "HR & ADMIN" && selectedEmployeeId) {
+                departmentUsers = userlist.filter(
+                  (u) => u.department?.name === 'HR & Admin'
+                );
+
+              }
+
+              return (
+                <div
+                  key={index}
+                  className={`flex items-start gap-4 py-3 ${!isLast ? "border-b border-gray-200" : ""}`}
+                >
+                  {/* S.No */}
+                  <div className="w-10 text-center font-bold text-sm">{index + 1}</div>
+
+                  {/* Department */}
+                  <div className="flex-1 pr-4 font-bold text-sm">{dept.department}</div>
+
+                  {/* Task Description */}
+                  <div className="flex-1 pl-6">
+                    <ul className="list-disc text-gray-700 text-sm space-y-1">
+                      {dept.taskDescription.map((task: string, tIndex: number) => (
+                        <li key={tIndex}>{task}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Handovered To & Date */}
+                  <div className="w-42 flex flex-col gap-6">
+                    {/* HandoverTo as Combobox */}
+                    <Controller
+                      name={`${field.name}[${index}].handoverTo`}
+                      control={control}
+                      defaultValue={watchedHandover[index]?.handoverTo || ""}
+                      render={({ field: controllerField }) => (
+                        <Combobox
+                          field={{ ...field, data: dept.options || departmentUsers || userlist || [] }} // provide department-specific options
+                          value={controllerField.value ?? ""}
+                          formData={{ [field?.name]: controllerField.value }}
+                          handleChange={controllerField.onChange}
+                          placeholder={field?.placeholder || "Select Handover To"}
+                          disabled={false}
+                        />
+                      )}
+                    />
+
+                    {/* Date */}
+                    <Controller
+                      name={`${field.name}[${index}].handoverDate`}
+                      control={control}
+                      defaultValue={dept.handoverDate || ""}
+                      render={({ field: controllerField }) => (
+                        <DatePicker
+                          currentDate={
+                            controllerField.value ? new Date(controllerField.value) : undefined
+                          }
+                          placeholder="Pick a date"
+                          handleChange={(newDate: Date | undefined, setDate: any) => {
+                            controllerField.onChange(newDate ? newDate.toISOString() : "");
+                            if (setDate) setDate(newDate);
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
+
+
+                  {/* Status */}
+                  <div className="w-24 text-center">
+                  <Controller
+                    name={`${field.name}[${index}].status`}
+                    control={control}
+                    render={({ field: cField }) => (
+                      <input
+                        type="checkbox"
+                        className="h-5 w-5"
+                        checked={!!cField.value}   // ✅ bind directly
+                        onChange={(e) => cField.onChange(e.target.checked)}
+                      />
+                    )}
+                  />
+                    </div>
+
+                  {/* Signature */}
+                  <div className="w-36 text-center">
+                    <Controller
+                      name={`${field.name}[${index}].signature`}
+                      control={control}
+                      defaultValue={watchedHandover[index]?.signature || ""}
+                      render={({ field: cField }) => (
+                        <Input
+                          {...cField}
+                          placeholder="Signature"
+                          className="w-full rounded px-2 py-1 text-sm"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+
+
+
+      case "evaluation":
+        // Get the array data from form state or default
+        const evalData: any[] = getValueByPath(data, field.name) || field.defaultValue || [];
+
+        // Watch only scores (react-hook-form tracks them)
+        const watchedScores: any[] = watch(field.name) || [];
+
+        // Calculate total score from scores array
+        const totalScore = watchedScores.reduce(
+          (sum, val) => sum + (Number(val?.score) || 0),
+          0
+        );
+        // Calculate total score dynamically from watched values
+        // const watchedEvalData: any[] = watch(field.name) || evalData;
+        // const totalScore = watchedEvalData.reduce((sum, param) => sum + (Number(param.score) || 0), 0);
+
+        return (
+          <div className="space-y-4 bg-white p-4 rounded-md shadow">
+            {/* Header Row */}
+            <div className="flex items-center gap-4 border-b border-gray-300 pb-2 font-bold text-sm text-gray-800">
+              <div className="w-10 text-center">S.No</div>
+              <div className="flex-1 pr-4">Parameters</div>
+              <div className="w-32 text-center">Ratings</div>
+            </div>
+
+            {evalData.map((param, index) => {
+              const isLast = index === evalData.length - 1;
+              return (
+                <div
+                  key={index}
+                  className={`flex items-start gap-4 pb-2 ${!isLast ? "border-b border-gray-200" : ""}`}
+                >
+                  {/* S.No */}
+                  <div className="w-10 text-center font-bold text-sm">{index + 1}</div>
+
+                  {/* Parameter Title + Description */}
+                  <div className="flex-1 pr-4">
+                    <div className="font-bold text-sm">{param.parameterName}</div>
+                    <div className="text-gray-700">{param.description}</div>
+                  </div>
+
+                  {/* Score Input */}
+                  <div className="w-32">
+                    <Controller
+                      name={`${field.name}[${index}].score`}
+                      control={control}
+                      defaultValue={watchedScores[index]?.score ?? ""}
+                      rules={{
+                        required: false,
+                        min: 1,
+                        max: field?.max ?? 5,
+                      }}
+                      render={({ field: controllerField }) => (
+                        <Input
+                          {...controllerField}
+                          type="number"
+                          min={1}
+                          max={field?.max ?? 5}
+                          placeholder={field?.placeholder ?? "Enter 1-5"}
+                          className="w-full text-center rounded px-2 py-1"
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Total Score Row */}
+            <div className="flex items-center gap-4 border-t border-gray-300 pt-2 font-bold text-sm">
+              <div className="w-10 text-center"></div>
+              <div className="flex-1">Total Score</div>
+              <div className="w-20 text-center">{totalScore}</div>
+            </div>
+
+            {/* Guidelines for Evaluation */}
+            <div className=" p-3 rounded-md border border-gray-200">
+              {/* Heading Row */}
+              <div className="flex items-center justify-between mb-2 font-semibold text-gray-800 text-sm">
+                <div className="w-20 text-left">Ratings</div>
+                <div className="flex-1 text-center">Guidelines for Evaluation</div>
+              </div>
+
+              {/* Guidelines List */}
+              <ul className="space-y-2 text-gray-700 text-sm">
+                <li className="flex gap-10">
+                  <span className="w-12  text-center">5</span>
+                  <span className="flex-1"><span className="font-bold">Exceptional:</span> Performance and results achieved always exceed the standards and expectations for the position requirements and objectives.</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-12  text-center">4</span>
+                  <span className="flex-1"><span className="font-bold">Exceeds Expectations:</span> Performance and results achieved consistently exceed expectations for the position requirements and objectives.</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-12  text-center">3</span>
+                  <span className="flex-1"><span className="font-bold">Meets Expectations:</span> Performance and results generally meet the expectations for the position requirements and objectives. Performance requires normal degree of supervision.</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-12  text-center">2</span>
+                  <span className="flex-1"><span className="font-bold">Below Expectations:</span> Performance and results achieved generally do not meet established objectives. Performance requires more than normal degree of supervision.</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-12  text-center">1</span>
+                  <span className="flex-1"><span className="font-bold">Unsatisfactory:</span> Performance and results achieved consistently do not meet established objectives.</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Guidelines for Evaluation */}
+            <div className=" p-3 rounded-md border border-gray-200">
+              {/* Heading Row */}
+              <div className="flex items-center justify-between mb-2 font-semibold text-gray-800 text-sm">
+                <div className="w-20 text-left">S.No</div>
+                <div className="w-40 text-center">Range</div>
+                <div className="w-36 text-center">Ranking</div>
+                <div className="flex-1 text-center">Performance Level</div>
+              </div>
+
+              {/* Guidelines List */}
+              <ul className="space-y-2 text-gray-700 text-sm">
+                <li className="flex gap-10">
+                  <span className="w-8  text-center">1</span>
+                  <span className="w-40 pl-4  text-center">46 - 50</span>
+                  <span className="w-16  text-center">A</span>
+                  <span className="flex-1 text-center">Excellet</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-8  text-center">2</span>
+                  <span className="w-40 pl-4  text-center">41 - 45</span>
+                  <span className="w-16  text-center">B</span>
+                  <span className="flex-1 text-center">Good</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-8  text-center">3</span>
+                  <span className="w-40 pl-4  text-center">36 - 40</span>
+                  <span className="w-16  text-center">C</span>
+                  <span className="flex-1 text-center">Fair</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-8  text-center">4</span>
+                  <span className="w-40 pl-4  text-center">30 - 35</span>
+                  <span className="w-16  text-center">D</span>
+                  <span className="flex-1 text-center">Satisfactory</span>
+                </li>
+                <li className="flex gap-10">
+                  <span className="w-8  text-center">5</span>
+                  <span className="w-40 pl-4  text-center">Below 30</span>
+                  <span className="w-16  text-center">E</span>
+                  <span className="flex-1 text-center">Not eligible for employment, increment, promotion</span>
+                </li>
+
+              </ul>
+            </div>
+
+
+          </div>
+        );
+
 
       case 'array':
         const arrayData = getValueByPath(data, field.name) || field.defaultValue || [];
@@ -448,7 +1070,8 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
               ))}
             </div>
           );
-        }
+        };
+
 
         // Default: assessment parameter layout
         return (
@@ -508,11 +1131,31 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={field.name} className={cn("text-sm font-medium", field.required && "after:content-['*'] after:ml-0.5 after:text-destructive")}>
-        {field.label}
-      </Label>
+      {!(field.type === 'labeltext' || field.type === 'labeldate') && (
+        <div className="text-sm font-medium">
+          {/** Split the label into lines */}
+          {(() => {
+            const lines = field.label.split('\n').map(line => line.trim()).filter(Boolean);
+            const firstLine = lines[0] || '';
+            const listItems = lines.slice(1).map(line => line.replace(/^•\s*/, '')); // remove leading bullet if exists
+            return (
+              <>
+                <div>{firstLine} <span className="text-red-600">{field.required && '*'}</span></div>
+                {listItems.length > 0 && (
+                  <ul className="list-disc ml-8 mt-1">
+                    {listItems.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            );
+          })()}
+        </div>
+      )}
+
       {renderField()}
-      {error && (
+      {error && field.type !== 'date' && (
         <p className="text-sm text-destructive">{error.message}</p>
       )}
     </div>

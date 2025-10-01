@@ -20,13 +20,15 @@ interface DatePickerProps {
   endYear?: number;
   handleChange?: any;
   placeholder?: string;
+  disabled?: boolean;
 }
 export function DatePicker({
   currentDate,
   startYear = getYear(new Date()) - 100,
   endYear = getYear(new Date()) + 100,
   handleChange,
-  placeholder
+  placeholder,
+  disabled = false,
 }: DatePickerProps) {
  
   console.log("DatePicker Rendered", currentDate, startYear, endYear, handleChange, placeholder);
@@ -52,6 +54,7 @@ export function DatePicker({
   );
  
   const handleMonthChange = (month: string) => {
+    if (disabled) return;
     const newDate = setMonth(date, months.indexOf(month));
     const customChange = handleChange(newDate,setDate)
     if(!customChange){
@@ -60,6 +63,7 @@ export function DatePicker({
   }
  
   const handleYearChange = (year: string) => {
+    if (disabled) return;
     const newDate = setYear(date, parseInt(year));
     const customChange = handleChange(newDate,setDate)
     if(!customChange){
@@ -69,6 +73,7 @@ export function DatePicker({
   }
  
   const handleSelect = (selectedData: Date | undefined) => {
+    if (disabled) return;
     if (selectedData) {
       const now = new Date();
       const newDate = setHours(setMinutes(selectedData, now.getMinutes()), now.getHours()); // Set default time
@@ -88,8 +93,9 @@ export function DatePicker({
               variant={"outline"}
               className={cn(
                 "w-full flex justify-start  font-normal",
-                !date && "text-muted-foreground bg-white text-gray-400"
+                !date && "text-muted-foreground bg-white text-gray-400",disabled && "cursor-not-allowed opacity-50"
               )}
+              disabled={disabled}
             >
               <CalendarIcon className=" h-4 w-4" />
               {date ? format(date, "PPP") : <span>{placeholder}</span>}
@@ -135,11 +141,11 @@ export function DatePicker({
             />
           </PopoverContent>
         </Popover>
-        <div className="absolute top-[-18] cursor-pointer text-xs font-medium text-white  right-0 w-4 h-4 rounded-full bg-red-500 flex justify-center" onClick={() => {setDate(undefined); handleChange(undefined)}}>
+        { !disabled && (<div className="absolute top-[-18] cursor-pointer text-xs font-medium text-white  right-0 w-4 h-4 rounded-full bg-red-500 flex justify-center" onClick={() => {setDate(undefined); handleChange(undefined)}}>
        
           X
        
-        </div>
+        </div>)}
       </div>
        
      

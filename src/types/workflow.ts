@@ -82,7 +82,7 @@ export interface HRMSWorkflowInstance {
 }
 
 // Predefined Workflow Templates
-export const HRMS_WORKFLOW_TEMPLATES:any = {
+export const HRMS_WORKFLOW_TEMPLATES: any = {
   RECRUITMENT: {
     workflowName: 'Recruitment Process',
     workflowType: 'recruitment' as const,
@@ -124,7 +124,7 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
         dependencies: ['interview_assessment'],
         nextSteps: []
       }
-     
+
     ],
     triggers: [
       {
@@ -142,9 +142,9 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
     description: 'Complete onboarding process for new employees',
     steps: [
       {
-        id: 'employee_info',
-        formType: HRMSFormTypes.EMPLOYEE_INFORMATION,
-        stepName: 'Employee Information Setup',
+        id: 'employee_joining',
+        formType: HRMSFormTypes.NEW_EMPLOYEE_JOINING,
+        stepName: 'Employee Joining',
         stepOrder: 1,
         isRequired: true,
         dependencies: [],
@@ -153,8 +153,26 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
       {
         id: 'assets_access',
         formType: HRMSFormTypes.ASSETS_IT_ACCESS,
-        stepName: 'IT Assets & Access Setup',
+        stepName: 'Assets & IT - Access',
         stepOrder: 2,
+        isRequired: true,
+        dependencies: ['employee_joining'],
+        nextSteps: ['employee_info']
+      },
+      {
+        id: 'employee_info',
+        formType: HRMSFormTypes.EMPLOYEE_INFORMATION,
+        stepName: 'Employee Information Setup',
+        stepOrder: 3,
+        isRequired: true,
+        dependencies: ['assets_access'],
+        nextSteps: ['beneficiary_declaration']
+      },
+      {
+        id: 'beneficiary_declaration',
+        formType: HRMSFormTypes.BENEFICIARY_DECLARATION,
+        stepName: 'Beneficiary Declaration',
+        stepOrder: 4,
         isRequired: true,
         dependencies: ['employee_info'],
         nextSteps: ['accommodation_transport']
@@ -162,63 +180,91 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
       {
         id: 'accommodation_transport',
         formType: HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT,
-        stepName: 'Accommodation & Transport Setup',
-        stepOrder: 3,
+        stepName: 'Consent (Accommodation & Transport)',
+        stepOrder: 5,
         isRequired: false,
-        dependencies: ['employee_info'],
-        nextSteps: ['beneficiary_declaration']
-      },
-      {
-        id: 'beneficiary_declaration',
-        formType: HRMSFormTypes.BENEFICIARY_DECLARATION,
-        stepName: 'Beneficiary Information',
-        stepOrder: 4,
-        isRequired: true,
-        dependencies: ['employee_info'],
+        dependencies: ['beneficiary_declaration'],
         nextSteps: ['nda_signing']
       },
+
       {
         id: 'nda_signing',
         formType: HRMSFormTypes.NON_DISCLOSURE_AGREEMENT,
-        stepName: 'NDA & Legal Documents',
-        stepOrder: 5,
+        stepName: 'Non-Disclosure Agreement',
+        stepOrder: 6,
         isRequired: true,
-        dependencies: ['employee_info'],
+        dependencies: ['accommodation_transport'],
+        nextSteps: ['employee_orientation']
+      },
+
+      {
+        id: 'employee_orientation',
+        formType: HRMSFormTypes.EMPLOYEE_ORIENTATION,
+        stepName: 'Employee Orientation',
+        stepOrder: 7,
+        isRequired: true,
+        dependencies: ['nda_signing'],
+        nextSteps: ['visa_process']
+      },
+      {
+        id: 'visa_process',
+        formType: HRMSFormTypes.VISA_PROCESS,
+        stepName: 'Medical & Visa Process',
+        stepOrder: 8,
+        isRequired: true,
+        dependencies: ['employee_orientation'],
         nextSteps: []
       },
+
+    ],
+
+  },
+
+  BUSINESS_TRAVEL: {
+    workflowName: 'Business Trip Request Process',
+    workflowType: 'business_travel' as const,
+    description: 'Business travel request and approval workflow',
+    steps: [
       {
-        id: 'accommodation_transport1',
-        formType: HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT,
-        stepName: 'Accommodation & Transport Setup',
-        stepOrder: 3,
-        isRequired: false,
-        dependencies: ['employee_info'],
-        nextSteps: ['beneficiary_declaration']
-      },
-      {
-        id: 'beneficiary_declaration1',
-        formType: HRMSFormTypes.BENEFICIARY_DECLARATION,
-        stepName: 'Beneficiary Information',
-        stepOrder: 4,
+        id: 'travel_request',
+        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
+        stepName: 'Business Trip Request',
+        stepOrder: 1,
         isRequired: true,
-        dependencies: ['employee_info'],
-        nextSteps: ['nda_signing']
-      },
-      {
-        id: 'nda_signing1',
-        formType: HRMSFormTypes.NON_DISCLOSURE_AGREEMENT,
-        stepName: 'NDA & Legal Documents',
-        stepOrder: 5,
-        isRequired: true,
-        dependencies: ['employee_info'],
+        dependencies: [],
         nextSteps: []
       }
     ],
     triggers: [
       {
-        id: 'start_onboarding',
+        id: 'start_travel_request',
         triggerType: 'form_submission' as const,
-        formType: HRMSFormTypes.NEW_EMPLOYEE_JOINING,
+        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
+        action: 'start_workflow' as const
+      }
+    ]
+  },
+
+  PERFORMANCE_APPRAISAL: {
+    workflowName: 'Performance Appraisal Request',
+    workflowType: 'performance_appraisal' as const,
+    description: 'Employee performance appraisal process',
+    steps: [
+      {
+        id: 'appraisal_request',
+        formType: HRMSFormTypes.PERFORMANCE_APPRAISAL,
+        stepName: 'Performance Appraisal Request',
+        stepOrder: 1,
+        isRequired: true,
+        dependencies: [],
+        nextSteps: []
+      }
+    ],
+    triggers: [
+      {
+        id: 'start_travel_request',
+        triggerType: 'form_submission' as const,
+        formType: HRMSFormTypes.PERFORMANCE_APPRAISAL,
         action: 'start_workflow' as const
       }
     ]
@@ -231,15 +277,15 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
     steps: [
       {
         id: 'offboarding',
-        formType: HRMSFormTypes.MANPOWER_REQUISITION,
+        formType: HRMSFormTypes.OFFBOARDING,
         stepName: 'Offboarding Process',
         stepOrder: 1,
         isRequired: true,
         dependencies: [],
         nextSteps: []
       },
-      
-     
+
+
     ],
     triggers: [
       {
@@ -250,55 +296,6 @@ export const HRMS_WORKFLOW_TEMPLATES:any = {
       }
     ]
   },
-
-   PERFORMANCE_APPRAISAL: {
-    workflowName: 'Performamnce Appraisal Request',
-    workflowType: 'appraisal' as const,
-    description: 'Employee performance appraisal process',
-    steps: [
-      {
-        id: 'appraisal_request',
-        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
-        stepName: 'Performance Appraisal Request',
-        stepOrder: 1,
-        isRequired: true,
-        dependencies: [],
-        nextSteps: []
-      }
-    ],
-    triggers: [
-      {
-        id: 'start_travel_request',
-        triggerType: 'form_submission' as const,
-        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
-        action: 'start_workflow' as const
-      }
-    ]
-  },
-  BUSINESS_TRAVEL: {
-    workflowName: 'Business Travel Request Process',
-    workflowType: 'custom' as const,
-    description: 'Business travel request and approval workflow',
-    steps: [
-      {
-        id: 'travel_request',
-        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
-        stepName: 'Travel Request Submission',
-        stepOrder: 1,
-        isRequired: true,
-        dependencies: [],
-        nextSteps: []
-      }
-    ],
-    triggers: [
-      {
-        id: 'start_travel_request',
-        triggerType: 'form_submission' as const,
-        formType: HRMSFormTypes.BUSINESS_TRIP_REQUEST,
-        action: 'start_workflow' as const
-      }
-    ]
-  }
 
 
 };

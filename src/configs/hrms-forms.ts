@@ -32,7 +32,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             defaultValue: new Date().toISOString()
           },
           {
-            name: 'department',
+            name: 'requestedDepartment',
             type: 'select',
             label: 'Department',
             required: true,
@@ -334,10 +334,18 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         fields: [
           {
             name: 'highestQualification',
-            type: 'text',
+            type: 'select',
             label: 'Highest Qualification',
             required: true,
-            placeholder: 'e.g., Bachelor\'s, Master\'s, PhD'
+
+            options: []
+          },
+          {
+            name: 'specialization',
+            type: 'text',
+            label: 'Specialization',
+            required: false,
+            placeholder: 'e.g., Coputer Science, Accounts etc.'
           },
           {
             name: 'degreeCertificateAttested',
@@ -365,9 +373,9 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           {
             name: 'attachResume',
             type: 'file',
-            label: 'Attach Resume',
+            label: 'Attach Resume (PDF Only)',
             required: true,
-            accept: '.pdf,.doc,.docx',
+            accept: '.pdf',
           }
         ]
       },
@@ -465,7 +473,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
   // === direct candidate form === //
 
   [HRMSFormTypes.CANDIDATE_INFORMATION_NEW]: {
-    formType: HRMSFormTypes.CANDIDATE_INFORMATION,
+    formType: HRMSFormTypes.CANDIDATE_INFORMATION_NEW,
     title: 'Candidate Information Form',
     description: 'Comprehensive candidate information and background details',
     submitLabel: 'Submit Application',
@@ -665,10 +673,25 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         fields: [
           {
             name: 'highestQualification',
-            type: 'text',
+            type: 'select',
             label: 'Highest Qualification',
             required: true,
-            placeholder: 'e.g., Bachelor\'s, Master\'s, PhD'
+
+            options: [
+              { value: 'laptop', label: 'Laptop' },
+              { value: 'desktop', label: 'Desktop' },
+              { value: 'monitor', label: 'Monitor' },
+              {
+                value: 'telephone-extension',
+                label: 'Telephone Extension',
+
+              },
+              { value: 'mobile-phone', label: 'Mobile Phone' },
+              { value: 'sim-card', label: 'Sim Card' },
+              { value: 'keyboard-mouse', label: 'wireless Keyboard Mouse' },
+              { value: 'wireless-mouse', label: 'Wireless Mouse' },
+              { value: 'headphone', label: 'Headphone' }
+            ]
           },
           {
             name: 'degreeCertificateAttested',
@@ -1082,6 +1105,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
               {
                 name: 'date',
                 type: 'date',
+
                 label: 'Interview Date',
 
               },
@@ -1089,6 +1113,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
                 name: 'roundStatus',
                 type: 'select',
                 label: 'Round Status',
+
                 options: [
                   { name: 'Shortlisted', _id: 'shortlisted' },
                   { name: 'Rejected', _id: 'rejected' },
@@ -1098,6 +1123,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
               {
                 name: 'remarks',
                 type: 'textarea',
+
                 label: 'Remarks'
               }
             ]
@@ -1106,14 +1132,36 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
       },
 
       {
+        id: 'preliminary_feedback',
+        title: 'Preliminary Interview Feedback (HR/ADMIN Department)',
+        description: '',
+        visibleFor: ['Manager', 'HR & Admin'],
+        fields: [
+          {
+            name: 'hrFeedback.date',
+            type: 'date',
+            label: 'Interview Date',
+
+          },
+          {
+            name: 'hrFeedback.remarks',
+            type: 'textarea',
+            label: 'Remarks'
+          }
+
+        ]
+      },
+
+      {
         id: 'assessment_section',
         title: 'Assessment (For Department Manager)',
         description: 'Score the candidate on predefined parameters (1–5)',
+        visibleFor: ['Manager'],
         fields: [
           {
             name: 'assessmentParameters',
             type: 'array',
-            label: 'Assessment Parameters',
+            label: 'Assessment Parameters (Score 1 - 5 , 1-Poor / 5-Very Good)',
             subFields: [
               {
                 name: 'parameterName',
@@ -1147,8 +1195,9 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
 
       {
         id: 'status_remarks',
-        title: 'Status And Remarks',
+        title: 'Status And Remarks (For Department Manager)',
         description: '',
+        visibleFor: ['Manager'],
         fields: [
           {
             name: 'status',
@@ -1206,7 +1255,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             disable: true
           },
           {
-            name: 'department',
+            name: 'offerDepartment',
             type: 'text',
             label: 'Department',
             showIf: (values) => values?.candidateId !== '',
@@ -1251,6 +1300,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         id: 'joining_info',
         title: 'Joining Details',
         description: '',
+
         fields: [
           {
             name: 'expectedJoiningDate',
@@ -1288,7 +1338,85 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           },
         ]
       },
-      
+      {
+        id: 'passport_info',
+        title: 'Passport Details',
+        description: 'Contact details and addresses',
+        fields: [
+          {
+            name: 'passportInfo.passportNo',
+            type: 'text',
+            label: 'Passport Number',
+            placeholder: 'Enter passport number',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'passportInfo.issueDate',
+            type: 'date',
+            label: 'Date Of Issue',
+            placeholder: 'Issue date of passport',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'passportInfo.expiryDate',
+            type: 'date',
+            label: 'Date Of Expiry',
+            placeholder: 'Expiry date of passport',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'passportInfo.attachPassport',
+            type: 'file',
+            label: 'Upload Passport Copy',
+            placeholder: 'Upload scanned copy of passport',
+            accept: '.pdf,.jpg,.png',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+
+        ]
+      },
+      {
+        id: 'documents_info',
+        title: 'Upload Documents',
+        description: 'Contact details and addresses',
+        fields: [
+          {
+            name: 'uploadDocuments.attachVisitVisa',
+            type: 'file',
+            label: 'Upload Visit Visa Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'uploadDocuments.attachVisaCancellation',
+            type: 'file',
+            label: 'Upload Visa Cancellation Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'uploadDocuments.attachEducationCertificates',
+            type: 'file',
+            label: 'Upload Education Certificates',
+            placeholder: 'Expiry date of passport',
+            accept: '.pdf,.jpg,.png',
+            multiple: true,
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+          {
+            name: 'uploadDocuments.passportSizePhoto',
+            type: 'file',
+            label: 'Upload Passport Size Photo',
+            placeholder: 'Expiry date of passport',
+            accept: '.jpg,.png',
+            showIf: (values) => values?.offerStatus === 'accepted',
+          },
+
+        ]
+      }
+
     ]
   },
 
@@ -1304,47 +1432,58 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
     sections: [
       {
         id: 'employee_details',
-        title: 'Employee Details',
+        title: 'Traveller Details',
         description: 'Information about the traveler',
         fields: [
           {
-            name: 'empOrGuestName',
-            type: 'text',
-            label: 'Employee/Guest Name',
+            name: 'travellerType',
+            type: 'select',
+            label: 'Traveller Type',
             required: true,
-            placeholder: 'Enter full name of traveler'
+            options: [] // Will be populated from API
+          },
+          {
+            name: 'travellerName',
+            type: 'text',
+            label: 'Traveller Name',
+            required: true,
+            placeholder: 'Enter full name of the traveler'
           },
           {
             name: 'empId',
             type: 'text',
             label: 'Employee ID',
-            placeholder: 'Leave empty for guests'
+            showIf: (values) => values.travellerType === 'employee',
+            placeholder: 'Employee ID'
           },
           {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: [] // Will be populated from API
-          },
-          {
-            name: 'department',
+            name: 'requestedDepartment',
             type: 'select',
             label: 'Department',
             required: true,
+            showIf: (values) => values.travellerType === 'employee',
             options: [] // Will be populated from API
-          }
+          },
+          {
+            name: 'requiredPosition',
+            type: 'select',
+            label: 'Designation',
+            required: true,
+            showIf: (values) => values.travellerType === 'employee',
+            options: [] // Will be populated from API
+          },
+
         ]
       },
       {
         id: 'trip_details',
-        title: 'Trip Details',
-        description: 'Information about the business trip',
+        title: 'Travel Details',
+        description: 'Information about the business travel',
         fields: [
           {
             name: 'placeOfVisit',
             type: 'text',
-            label: 'Place of Visit (Country & City)',
+            label: 'Place of Visit (City & Country)',
             required: true,
             placeholder: 'e.g., Dubai, UAE'
           },
@@ -1376,50 +1515,121 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         fields: [
           {
             name: 'cashAdvanceRequired',
-            type: 'checkbox',
-            label: 'Cash Advance Required'
+            type: 'radio',
+            label: 'Cash Advance Required',
+            options: [
+              { label: 'Yes', value: 'yes' },
+              { label: 'No', value: 'no' },
+
+            ]
+          },
+          {
+            name: 'cashAdvanceCurrency',
+            type: 'select',
+            label: 'Currency',
+            placeholder: 'Select Currency',
+            showIf: (values) => values.cashAdvanceRequired === 'yes',
+            options: []
           },
           {
             name: 'cashAdvanceAmount',
             type: 'number',
-            label: 'Cash Advance Amount (AED)',
-            showIf: (values) => values.cashAdvanceRequired,
+            label: 'Cash Advance Amount',
+            showIf: (values) => values.cashAdvanceRequired === 'yes',
             validation: { min: 0 }
           },
           {
             name: 'airTicketArrangedBy',
-            type: 'radio',
+            type: 'select',
             label: 'Air Ticket Arranged By',
             required: true,
-            options: [
-              { label: 'Company', value: 'company' },
-              { label: 'Guest/Employee', value: 'guest' },
-              { label: 'Not Required', value: 'not_required' }
-            ]
+            options: []
           },
           {
             name: 'hotelArrangedBy',
-            type: 'radio',
+            type: 'select',
             label: 'Hotel Arranged By',
             required: true,
-            options: [
-              { label: 'Company', value: 'company' },
-              { label: 'Guest/Employee', value: 'guest' },
-              { label: 'Not Required', value: 'not_required' }
-            ]
+            options: []
           },
-          {
-            name: 'airTicketReimbursed',
-            type: 'checkbox',
-            label: 'Air Ticket to be Reimbursed',
-            showIf: (values) => values.airTicketArrangedBy === 'guest'
-          },
+
           {
             name: 'remarks',
             type: 'textarea',
             label: 'Additional Remarks',
             placeholder: 'Any additional information or special requirements'
-          }
+          },
+
+          {
+            name: 'requestedBySignature',
+            type: 'text',
+            label: 'Employee Signature',
+            placeholder: 'Type your full name as signature',
+            required: true,
+          },
+
+
+        ]
+      },
+      {
+        id: 'reimbursements',
+        title: 'Reimbursements',
+        description: '',
+        fields: [
+
+          {
+            name: 'airTicketreimbursement',
+            type: 'checkbox',
+            label: 'Air Ticket Reimbursement',
+            required: false,
+
+          },
+          {
+            name: 'airTicketreimbursedTo',
+            type: 'radio',
+            label: 'Air Ticket Reimbursed To',
+            required: false,
+            showIf: (values) => values.airTicketreimbursement,
+            options: [
+              { label: 'Guest', value: 'guest' },
+              { label: 'Employee', value: 'employee' },
+
+            ]
+          },
+          {
+            name: 'hotelreimbursement',
+            type: 'checkbox',
+            label: 'Hotel Reimbursement',
+            required: false,
+
+          },
+          {
+            name: 'hotelreimbursedTo',
+            type: 'radio',
+            label: 'Hotel Reimbursed To',
+            required: false,
+            showIf: (values) => values.hotelreimbursement,
+            options: [
+              { label: 'Guest', value: 'guest' },
+              { label: 'Employee', value: 'employee' },
+
+            ]
+          },
+          {
+            name: 'reimbursedCurrency',
+            type: 'select',
+            label: 'Currency',
+            required: false,
+            placeholder: 'Select Currency',
+            options: []
+          },
+          {
+            name: 'reimbursedAmount',
+            type: 'number',
+            label: 'Amount to be Reimbursed',
+            required: false,
+            validation: { min: 0 }
+          },
         ]
       }
     ]
@@ -1435,35 +1645,38 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
     sections: [
       {
         id: 'basic_info',
-        title: 'Basic Information',
+        title: 'Basic Joining Detail',
         description: 'Essential details for the new employee',
         fields: [
           {
-            name: 'empName',
-            type: 'text',
-            label: 'Employee Name',
+            name: 'employee',
+            type: 'select',
+            label: 'Employee name',
             required: true,
-            placeholder: 'Full name of the new employee'
+            options: []
           },
           {
             name: 'designation',
             type: 'select',
             label: 'Designation',
-            required: true,
+            disable: true,
+            // required: true,
             options: [] // Will be populated from API
           },
           {
-            name: 'departmentSection',
+            name: 'department',
             type: 'select',
             label: 'Department/Section',
-            required: true,
+            disable: true,
+            // required: true,
             options: [] // Will be populated from API
           },
           {
-            name: 'location',
+            name: 'workLocation',
+            disable: true,
             type: 'select',
             label: 'Work Location',
-            required: true,
+            // required: true,
             options: [] // Will be populated from API
           },
           {
@@ -1487,26 +1700,26 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
           }
         ]
       },
-      {
-        id: 'hr_admin_section',
-        title: 'For HR/ADMIN Use Only',
-        description: 'Section to be filled by HR/Admin team',
-        collapsible: true,
-        defaultExpanded: false,
-        fields: [
-          {
-            name: 'dateOfJoining',
-            type: 'date',
-            label: 'Actual Date of Joining'
-          },
-          {
-            name: 'empId',
-            type: 'text',
-            label: 'Employee ID',
-            placeholder: 'Will be auto-generated if not provided'
-          }
-        ]
-      },
+      // {
+      //   id: 'hr_admin_section',
+      //   title: 'For HR/ADMIN Use Only',
+      //   description: 'Section to be filled by HR/Admin team',
+      //   collapsible: true,
+      //   defaultExpanded: false,
+      //   fields: [
+      //     {
+      //       name: 'dateOfJoining',
+      //       type: 'date',
+      //       label: 'Actual Date of Joining'
+      //     },
+      //     {
+      //       name: 'empId',
+      //       type: 'text',
+      //       label: 'Employee ID',
+      //       placeholder: 'Will be auto-generated if not provided'
+      //     }
+      //   ]
+      // },
     ]
   },
 
@@ -1524,44 +1737,164 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         description: 'Basic employee details',
         fields: [
           {
-            name: 'empName',
+            name: 'fullName',
             type: 'text',
             label: 'Employee Name',
-            required: true
+            disable: true
           },
           {
             name: 'designation',
             type: 'select',
             label: 'Designation',
-            required: true,
+            disable: true,
             options: []
           },
           {
-            name: 'departmentSection',
+            name: 'department',
             type: 'select',
             label: 'Department/Section',
-            required: true,
+            disable: true,
             options: []
           },
           {
             name: 'reportingTo',
             type: 'select',
             label: 'Reporting To',
-            required: true,
+            disable: true,
             options: []
           },
           {
-            name: 'dateOfRequest',
+            name: 'itAccess.dateOfRequest',
             type: 'date',
             label: 'Date of Request',
             required: true,
-            defaultValue: new Date().toISOString()
           },
           {
-            name: 'emailId',
+            name: 'itAccess.email',
             type: 'email',
-            label: 'Email ID',
-            placeholder: 'Corporate email address'
+            label: 'Email ID (To be filled by IT)',
+            placeholder: 'Company email address'
+          },
+          {
+            name: 'itAccess.displayName',
+            type: 'text',
+            label: 'Preferred Display Name',
+            placeholder: 'Display Name'
+          },
+
+        ]
+      },
+
+      {
+        id: 'assets_hardware',
+        title: 'IT Hardware/Software Assets Access',
+        description: '',
+        fields: [
+          {
+            name: 'itAccess.itHardwareAssets',
+            type: 'checkbox-group',   // 👈 new type
+            label: 'Hardwares',
+
+            options: [
+              { value: 'laptop', label: 'Laptop' },
+              { value: 'cpu', label: 'CPU' },
+              { value: 'monitor', label: 'Monitor' },
+              {
+                value: 'telephone-extension',
+                label: 'Telephone Extension',
+
+              },
+              { value: 'mobile-phone', label: 'Mobile Phone' },
+              { value: 'sim-card', label: 'Sim Card' },
+              { value: 'keyboard-mouse', label: 'wireless Keyboard Mouse' },
+              { value: 'wireless-mouse', label: 'Wireless Mouse' },
+              { value: 'headphone', label: 'Headphone' }
+            ]
+          },
+          // {
+          //   name: 'itAccess.extensionType',
+          //   type: 'radio',
+          //   label: 'Telephone Extension Type',
+          //   defaultValue: 'virtual',
+          //   options: [
+          //     { value: 'physical', label: 'Physical' },
+          //     { value: 'virtual', label: 'Virtual' }
+          //   ],
+          //   showIf: (values) => Array.isArray(values.itAccess?.itHardwareAssets) && values.itAccess?.itHardwareAssets.includes('telephone-extension')
+          // },
+
+          {
+            name: 'itAccess.itSoftwareAssets',
+            type: 'checkbox-group',   // 👈 new type
+            label: 'Softwares',
+
+            options: [
+              { value: 'oracle', label: 'Oracle Fusion' },
+              { value: 'acrobat-pro', label: 'Acrobat Pro' },
+              { value: 'tally', label: 'Tally' },
+              { value: 'zw-cad', label: 'ZW CAD' },
+              { value: 'autodesk', label: 'Autodesk' },
+              { value: 'dwg-reader', label: 'DWG Reader' },
+              { value: 'mbs', label: 'MBS' },
+              { value: 'staad-pro', label: 'STAAD Pro' },
+              { value: 'ram-connect', label: 'RAM Connect' },
+              { value: 'idea-statica', label: 'IDEA StatiCa' },
+              { value: 'sap-2000', label: 'SAP 2000' },
+              { value: 'etabs', label: 'ETABS' },
+              { value: 'cfs', label: 'CFS' },
+              { value: 'tekla', label: 'Tekla' },
+              { value: 'trimble-connect', label: 'Trimble Connect' }
+            ]
+          },
+          {
+            name: 'itAccess.workplaceApps',
+            type: 'checkbox-group',   // 👈 new type
+            label: 'Workplace Apps/Inhouse Apps',
+
+            options: [
+              { value: 'accurest', label: 'Accurest' },
+              { value: 'inhouseApps', label: 'Inhouse Apps' },
+              { value: 'aceroApps', label: 'Acero Applications' },
+              { value: 'hrms', label: 'HRMS' },
+              { value: 'e-invoice', label: 'E-Invoicing' },
+
+            ]
+          },
+
+        ]
+      },
+      {
+        id: 'assets_access',
+        title: 'Access To Be Provided',
+        description: '',
+        fields: [
+          {
+            name: 'itAccess.accessToProvide',
+            type: 'checkbox-group',   // 👈 new type
+            label: 'Access To Provide',
+
+            options: [
+              { value: 'fullAccessInternet', label: 'Full Access Internet' },
+              { value: 'limitedAccessInternet', label: 'Limited Access Internet' },
+              { value: 'colorPrinter', label: 'Color Printer' },
+              { value: 'blackWhitePrinter', label: 'Black And White Printer' },
+              { value: 'networkDriveAccess', label: 'Network Drive Access' },
+              { value: 'usb', label: 'USB' },
+              { value: 'whatsapp', label: 'Whatsapp' },
+              { value: 'emailGroups', label: 'Email Groups' },
+            ]
+          },
+          {
+            name: 'itAccess.othersAccess',
+            type: 'checkbox-group',   // 👈 new type
+            label: 'Others Access',
+
+            options: [
+              { value: 'stationarySet', label: 'Stationary Set' },
+              { value: 'tools', label: 'Tools & Equipments' },
+              { value: 'vehicle', label: 'Vehicle' },
+
+            ]
           }
         ]
       }
@@ -1577,19 +1910,20 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
     saveDraftLabel: 'Save Draft',
     sections: [
       {
-        id: 'basic_info',
-        title: 'Basic Information',
+        id: 'basic_info_hr',
+        title: 'Basic Information By HR',
         description: 'Essential employee details',
         fields: [
           {
-            name: 'empName',
+            name: 'fullName',
             type: 'text',
             label: 'Employee Name',
+            disable: true,
             required: true,
             placeholder: 'Full name of the employee'
           },
           {
-            name: 'empId',
+            name: 'employeeInfo.empId',
             type: 'text',
             label: 'Employee ID',
             required: true,
@@ -1599,11 +1933,12 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             name: 'designation',
             type: 'select',
             label: 'Designation',
-            required: true,
+            disable: true,
+
             options: []
           },
           {
-            name: 'grade',
+            name: 'employeeInfo.grade',
             type: 'text',
             label: 'Grade',
             placeholder: 'Employee grade/level'
@@ -1612,22 +1947,119 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             name: 'department',
             type: 'select',
             label: 'Department',
-            required: true,
+            disable: true,
             options: []
           },
           {
-            name: 'location',
+            name: 'workLocation',
             type: 'select',
             label: 'Location',
-            required: true,
+            disable: true,
             options: []
           },
           {
-            name: 'dateOfJoining',
+            name: 'employeeInfo.dateOfJoining',
             type: 'date',
             label: 'Date of Joining',
             required: true
           },
+
+          {
+            name: 'category',
+            type: 'select',
+            label: 'Category',
+            disable: true,
+            options: []
+          },
+
+        ]
+      },
+
+      {
+        id: 'salary_info_hr',
+        title: 'For HR/Admin Use',
+        description: 'Essential employee details',
+        fields: [
+          {
+            name: 'employeeInfo.salaryDetails.basic',
+            type: 'number',
+            label: 'Basic Salary',
+            placeholder: 'Enter basic salary',
+
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.housingAllowance',
+            type: 'number',
+            label: 'Housing Allowance',
+            placeholder: 'Enter housing allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.transportAllowance',
+            type: 'number',
+            label: 'Transport Allowance',
+            placeholder: 'Enter transport allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.miscAllowance',
+            type: 'number',
+            label: 'Miscellaneous Allowance',
+            placeholder: 'Enter misc allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.mobileAllowance',
+            type: 'number',
+            label: 'Mobile Allowance',
+            placeholder: 'Enter mobile allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.foodAllowance',
+            type: 'number',
+            label: 'Food Allowance',
+            placeholder: 'Enter food allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.companyCarAllow',
+            type: 'number',
+            label: 'Company Car Allowance',
+            placeholder: 'Enter company car allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.petrolCard',
+            type: 'number',
+            label: 'Petrol Card',
+            placeholder: 'Enter petrol card value',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.otherAllowance',
+            type: 'number',
+            label: 'Other Allowance',
+            placeholder: 'Enter other allowance',
+            min: 0
+          },
+          {
+            name: 'employeeInfo.salaryDetails.totalSalary',
+            type: 'text',
+            label: 'Total Salary',
+            placeholder: 'Auto-calculated total',
+            disable: true,   // this one should be auto-calculated
+
+          }
+        ]
+      },
+      {
+        id: 'basic_info',
+        title: 'Employee Basic Details',
+        description: 'Essential employee details',
+        fields: [
+
           {
             name: 'dateOfBirth',
             type: 'date',
@@ -1635,16 +2067,11 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true
           },
           {
-            name: 'category',
-            type: 'radio',
-            label: 'Category',
+            name: 'nationality',
+            type: 'select',
+            label: 'Nationality',
             required: true,
-            options: [
-              { label: 'Management', value: 'management' },
-              { label: 'Manager', value: 'manager' },
-              { label: 'Staff', value: 'staff' },
-              { label: 'Worker', value: 'worker' }
-            ]
+            options: []
           },
           {
             name: 'gender',
@@ -1657,25 +2084,6 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             ]
           },
           {
-            name: 'nationality',
-            type: 'select',
-            label: 'Nationality',
-            required: true,
-            options: []
-          },
-          {
-            name: 'religion',
-            type: 'text',
-            label: 'Religion',
-            placeholder: 'Employee religion'
-          },
-          {
-            name: 'bloodGroup',
-            type: 'text',
-            label: 'Blood Group',
-            placeholder: 'e.g., A+, B-, O+'
-          },
-          {
             name: 'maritalStatus',
             type: 'radio',
             label: 'Marital Status',
@@ -1686,17 +2094,25 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             ]
           },
           {
-            name: 'homeTown',
+            name: 'employeeInfo.religion',
             type: 'text',
-            label: 'Home Town',
-            placeholder: 'Employee home town'
+            label: 'Religion',
+            placeholder: 'Employee religion'
           },
           {
-            name: 'airportName',
+            name: 'employeeInfo.bloodGroup',
             type: 'text',
-            label: 'Nearest Airport',
-            placeholder: 'Nearest international airport'
-          }
+            label: 'Blood Group',
+            placeholder: 'e.g., A+, B-, O+'
+          },
+
+          {
+            name: 'employeeInfo.homeTownAirport',
+            type: 'text',
+            label: 'Home Town Airport',
+            placeholder: 'Home town airport'
+          },
+
         ]
       },
       {
@@ -1705,201 +2121,123 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         description: 'Information about family members',
         fields: [
           {
-            name: 'familyDetails.fatherName',
+            name: 'employeeInfo.familyDetails.fatherName',
             type: 'text',
             label: "Father's Name",
             placeholder: "Enter father's full name"
           },
           {
-            name: 'familyDetails.fatherNationality',
+            name: 'employeeInfo.familyDetails.fatherNationality._id',
             type: 'select',
-            label: "Father's Nationality",
+            label: "Nationality",
             options: []
           },
           {
-            name: 'familyDetails.motherName',
+            name: 'employeeInfo.familyDetails.motherName',
             type: 'text',
             label: "Mother's Name",
             placeholder: "Enter mother's full name"
           },
           {
-            name: 'familyDetails.motherNationality',
+            name: 'employeeInfo.familyDetails.motherNationality._id',
             type: 'select',
-            label: "Mother's Nationality",
+            label: "Nationality",
+            options: []
+          },
+          {
+            name: 'employeeInfo.familyDetails.spouseName',
+            type: 'text',
+            label: "Spouse Name",
+            placeholder: "Enter spouse full name"
+          },
+          {
+            name: 'employeeInfo.familyDetails.spouseNationality._id',
+            type: 'select',
+            label: "Nationality",
+            options: []
+          },
+          {
+            name: 'employeeInfo.familyDetails.child1Name',
+            type: 'text',
+            label: "First Child Name",
+            placeholder: "Enter first child full name"
+          },
+          {
+            name: 'employeeInfo.familyDetails.child1Nationality._id',
+            type: 'select',
+            label: "Nationality",
+            options: []
+          },
+          {
+            name: 'employeeInfo.familyDetails.child2Name',
+            type: 'text',
+            label: "Second Child Name",
+            placeholder: "Enter second child full name"
+          },
+          {
+            name: 'employeeInfo.familyDetails.child2Nationality._id',
+            type: 'select',
+            label: "Nationality",
+            options: []
+          },
+          {
+            name: 'employeeInfo.familyDetails.child3Name',
+            type: 'text',
+            label: "Third Child Name",
+            placeholder: "Enter third child full name"
+          },
+          {
+            name: 'employeeInfo.familyDetails.child3Nationality._id',
+            type: 'select',
+            label: "Nationality",
             options: []
           },
         ]
       },
       {
         id: 'contact_info',
-        title: 'Contact Information',
+        title: 'Contact Details',
         description: 'Contact details and addresses',
         fields: [
           {
-            name: 'contacts.contactAddressUAE',
+            name: 'employeeInfo.contacts.contactAddressUAE',
             type: 'textarea',
             label: 'Contact Address (UAE)',
             placeholder: 'Current address in UAE'
           },
           {
-            name: 'contacts.phoneNumbersUAE',
-            type: 'tel',
+            name: 'employeeInfo.contacts.phoneNumberUAE',
+            type: 'number',
             label: 'Phone Number (UAE)',
             placeholder: '+971-XX-XXXXXXX'
           },
           {
-            name: 'contacts.contactAddressHomeCountry',
+            name: 'employeeInfo.contacts.contactAddressHomeCountry',
             type: 'textarea',
             label: 'Contact Address (Home Country)',
             placeholder: 'Address in home country'
           },
           {
-            name: 'contacts.phoneNumbersHomeCountry',
-            type: 'tel',
+            name: 'employeeInfo.contacts.phoneNumberHomeCountry',
+            type: 'number',
             label: 'Phone Number (Home Country)',
             placeholder: 'Include country code'
           },
           {
-            name: 'contacts.emailId',
+            name: 'employeeInfo.contacts.emailId',
             type: 'email',
-            label: 'Email Address',
+            label: 'Personal Email Address',
             placeholder: 'employee.email@company.com'
           },
           {
-            name: 'contacts.emergencyContactNumbers',
-            type: 'tel',
-            label: 'Emergency Contact Numbers',
-            placeholder: 'Emergency contact numbers'
+            name: 'employeeInfo.contacts.emergencyContactNumber',
+            type: 'number',
+            label: 'Emergency Contact Number',
+            placeholder: 'Emergency contact number'
           }
         ]
-      }
-    ]
-  },
+      },
 
-  // === Accommodation/Transport Consent Form ===
-  [HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT]: {
-    formType: HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT,
-    title: 'Accommodation/Transportation Consent Form',
-    description: 'Employee consent for accommodation and transportation',
-    submitLabel: 'Submit Consent',
-    saveDraftLabel: 'Save Draft',
-    sections: [
-      {
-        id: 'employee_details',
-        title: 'Employee Details',
-        description: 'Basic employee information',
-        fields: [
-          {
-            name: 'empName',
-            type: 'text',
-            label: 'Employee Name',
-            required: true,
-            placeholder: 'Full name of the employee'
-          },
-          {
-            name: 'empId',
-            type: 'text',
-            label: 'Employee ID',
-            required: true,
-            placeholder: 'Employee identification number'
-          },
-          {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: []
-          },
-          {
-            name: 'department',
-            type: 'select',
-            label: 'Department',
-            required: true,
-            options: []
-          },
-          {
-            name: 'dateOfJoining',
-            type: 'date',
-            label: 'Date of Joining',
-            required: true
-          }
-        ]
-      },
-      {
-        id: 'accommodation_options',
-        title: 'Accommodation Options',
-        description: 'Choose your accommodation preference',
-        fields: [
-          {
-            name: 'accommodationPreference',
-            type: 'radio',
-            label: 'Accommodation Preference',
-            required: true,
-            options: [
-              { label: 'Company Provided Accommodation', value: 'company_provided' },
-              { label: 'Own Accommodation', value: 'own_accommodation' }
-            ]
-          },
-          {
-            name: 'accommodationDetails',
-            type: 'textarea',
-            label: 'Accommodation Details',
-            placeholder: 'Provide details about your accommodation choice',
-            showIf: (values) => values.accommodationPreference
-          }
-        ]
-      },
-      {
-        id: 'transportation_options',
-        title: 'Transportation Options',
-        description: 'Choose your transportation preference',
-        fields: [
-          {
-            name: 'transportationPreference',
-            type: 'radio',
-            label: 'Transportation Preference',
-            required: true,
-            options: [
-              { label: 'Company Provided Transportation', value: 'company_provided' },
-              { label: 'Own Transportation', value: 'own_transportation' }
-            ]
-          },
-          {
-            name: 'transportationDetails',
-            type: 'textarea',
-            label: 'Transportation Details',
-            placeholder: 'Provide details about your transportation choice',
-            showIf: (values) => values.transportationPreference
-          }
-        ]
-      },
-      {
-        id: 'consent_declaration',
-        title: 'Consent & Declaration',
-        description: 'Employee consent and declarations',
-        fields: [
-          {
-            name: 'consentGiven',
-            type: 'checkbox',
-            label: 'I hereby give my consent for the above selections',
-            required: true
-          },
-          {
-            name: 'declarationDate',
-            type: 'date',
-            label: 'Declaration Date',
-            required: true,
-            defaultValue: new Date().toISOString()
-          },
-          {
-            name: 'employeeSignature',
-            type: 'text',
-            label: 'Employee Signature',
-            placeholder: 'Type your full name as signature',
-            required: true
-          }
-        ]
-      }
     ]
   },
 
@@ -1917,39 +2255,35 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         description: 'Basic employee details',
         fields: [
           {
-            name: 'empName',
+            name: 'fullName',
             type: 'text',
             label: 'Employee Name',
-            required: true,
+            disable: true,
             placeholder: 'Full name of the employee'
           },
           {
-            name: 'empId',
+            name: 'employeeInfo.empId',
             type: 'text',
             label: 'Employee ID',
-            required: true,
+            disable: true,
             placeholder: 'Employee identification number'
-          },
-          {
-            name: 'designation',
-            type: 'select',
-            label: 'Designation',
-            required: true,
-            options: []
           },
           {
             name: 'department',
             type: 'select',
             label: 'Department',
-            required: true,
+            disable: true,
             options: []
           },
           {
-            name: 'dateOfJoining',
-            type: 'date',
-            label: 'Date of Joining',
-            required: true
-          }
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            disable: true,
+            options: []
+          },
+
+
         ]
       },
       {
@@ -1958,117 +2292,711 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         description: 'Information about your beneficiaries',
         fields: [
           {
-            name: 'primaryBeneficiary.name',
+            name: 'employeeInfo.beneficiaryInfo.name',
             type: 'text',
-            label: 'Primary Beneficiary Name',
+            label: 'Beneficiary Name',
             required: true,
             placeholder: 'Full name of primary beneficiary'
           },
           {
-            name: 'primaryBeneficiary.relationship',
-            type: 'select',
-            label: 'Relationship',
-            required: true,
-            options: [
-              { label: 'Spouse', value: 'spouse' },
-              { label: 'Father', value: 'father' },
-              { label: 'Mother', value: 'mother' },
-              { label: 'Son', value: 'son' },
-              { label: 'Daughter', value: 'daughter' },
-              { label: 'Brother', value: 'brother' },
-              { label: 'Sister', value: 'sister' },
-              { label: 'Other', value: 'other' }
-            ]
-          },
-          {
-            name: 'primaryBeneficiary.percentage',
-            type: 'number',
-            label: 'Percentage (%)',
-            required: true,
-            validation: { min: 1, max: 100 },
-            defaultValue: 100
-          },
-          {
-            name: 'primaryBeneficiary.contactDetails',
-            type: 'textarea',
-            label: 'Contact Details',
-            required: true,
-            placeholder: 'Address and phone number of beneficiary'
-          }
-        ]
-      },
-      {
-        id: 'secondary_beneficiary',
-        title: 'Secondary Beneficiary (Optional)',
-        description: 'Additional beneficiary information',
-        collapsible: true,
-        defaultExpanded: false,
-        fields: [
-          {
-            name: 'secondaryBeneficiary.name',
+            name: 'employeeInfo.beneficiaryInfo.relation',
             type: 'text',
-            label: 'Secondary Beneficiary Name',
-            placeholder: 'Full name of secondary beneficiary'
-          },
-          {
-            name: 'secondaryBeneficiary.relationship',
-            type: 'select',
             label: 'Relationship',
-            options: [
-              { label: 'Spouse', value: 'spouse' },
-              { label: 'Father', value: 'father' },
-              { label: 'Mother', value: 'mother' },
-              { label: 'Son', value: 'son' },
-              { label: 'Daughter', value: 'daughter' },
-              { label: 'Brother', value: 'brother' },
-              { label: 'Sister', value: 'sister' },
-              { label: 'Other', value: 'other' }
-            ]
+            required: true,
+            placeholder: 'Relation with the beneficiary (e.g., Spouse, Child)'
           },
+
           {
-            name: 'secondaryBeneficiary.percentage',
-            type: 'number',
-            label: 'Percentage (%)',
-            validation: { min: 1, max: 100 }
-          },
-          {
-            name: 'secondaryBeneficiary.contactDetails',
+            name: 'employeeInfo.beneficiaryInfo.addressAndContact',
             type: 'textarea',
             label: 'Contact Details',
-            placeholder: 'Address and phone number of beneficiary'
-          }
+            required: true,
+            placeholder: 'Address and phone number of the beneficiary'
+          },
+
         ]
       },
+
       {
         id: 'declaration',
         title: 'Declaration',
-        description: 'Employee declaration and consent',
+        description: 'I declare that the information provided above is true and accurate',
         fields: [
+
           {
-            name: 'declarationStatement',
-            type: 'checkbox',
-            label: 'I declare that the information provided above is true and accurate',
+            name: 'employeeInfo.beneficiaryInfo.declaration.employeeSignature',
+            type: 'text',
+            label: 'Employee Signature',
+            placeholder: 'Type your full name as signature',
             required: true
           },
           {
-            name: 'changeNotification',
-            type: 'checkbox',
-            label: 'I understand that I must notify HR of any changes to beneficiary information',
-            required: true
-          },
-          {
-            name: 'declarationDate',
+            name: 'employeeInfo.beneficiaryInfo.declaration.declarationDate',
             type: 'date',
             label: 'Declaration Date',
             required: true,
             defaultValue: new Date().toISOString()
           },
           {
-            name: 'employeeSignature',
+            name: 'employeeInfo.beneficiaryInfo.declaration.attachBeneficiaryDeclaration',
+            type: 'file',
+            label: 'Upload Beneficiary Declaration Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+
+        ]
+      },
+      {
+        id: 'hrAdmin_section',
+        title: 'For HR/Admin Use Only',
+        description: '',
+        fields: [
+
+          {
+            name: 'employeeInfo.beneficiaryInfo.hrAdmin.departmentSignature',
+            type: 'text',
+            label: 'HR/Admin Department Signature',
+            placeholder: 'Signature by HR/Admin Department',
+
+          },
+          {
+            name: 'employeeInfo.beneficiaryInfo.hrAdmin.departmentSignatureDate',
+            type: 'date',
+            label: 'Signature Date',
+
+            defaultValue: new Date().toISOString()
+          },
+
+          {
+            name: 'employeeInfo.beneficiaryInfo.hrAdmin.headHrAdminSignature',
+            type: 'text',
+            label: 'Head Of HR/Admin Signature',
+            placeholder: 'Signature by Head Of HR/Admin Department',
+
+          },
+          {
+            name: 'employeeInfo.beneficiaryInfo.hrAdmin.headSignatureDate',
+            type: 'date',
+            label: 'Signature Date',
+
+            defaultValue: new Date().toISOString()
+          },
+          {
+            name: 'employeeInfo.beneficiaryInfo.hrAdmin.remarks',
+            type: 'text',
+            label: 'Remarks',
+            placeholder: 'Remarks by HR/Admin',
+
+          },
+        ]
+      }
+    ]
+  },
+
+  // === Accommodation/Transport Consent Form ===
+  [HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT]: {
+    formType: HRMSFormTypes.ACCOMMODATION_TRANSPORT_CONSENT,
+    title: 'Accommodation/Transportation Consent Form',
+    description: 'Employee consent for accommodation and transportation',
+    submitLabel: 'Submit Consent',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      {
+        id: 'employee_details',
+        title: 'Employee Information',
+        description: 'Basic employee details',
+        fields: [
+          {
+            name: 'fullName',
+            type: 'text',
+            label: 'Employee Name',
+            disable: true,
+            placeholder: 'Full name of the employee'
+          },
+          {
+            name: 'employeeInfo.empId',
+            type: 'text',
+            label: 'Employee ID',
+            disable: true,
+            placeholder: 'Employee identification number'
+          },
+
+          {
+            name: 'department',
+            type: 'select',
+            label: 'Department',
+            disable: true,
+            options: []
+          },
+          {
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            disable: true,
+            options: []
+          },
+
+        ]
+      },
+      {
+        id: 'transportation_options',
+        title: 'Transportation Options',
+        description: 'Choose your transportation preference',
+        fields: [
+          {
+            name: 'employeeInfo.consentInfo.transportationPreference',
+            type: 'radio',
+            label: 'Transportation Preference',
+            required: true,
+            options: [
+              { label: 'Company Provided Transportation', value: 'company_provided' },
+              { label: 'Own Transportation', value: 'own_transportation' }
+            ]
+          },
+          {
+            name: 'employeeInfo.consentInfo.pickUpPoint',
+            type: 'text',
+            label: 'Place/Pick Up Point',
+            placeholder: 'Place or pick up point',
+            showIf: (values) => values.employeeInfo?.consentInfo?.transportationPreference === 'company_provided'
+          },
+          {
+            name: 'employeeInfo.consentInfo.pickUpCity',
+            type: 'text',
+            label: 'City',
+            placeholder: 'City name',
+            showIf: (values) => values.employeeInfo?.consentInfo?.transportationPreference === 'company_provided'
+          },
+          {
+            name: 'employeeInfo.consentInfo.deductionAmountTransportation',
+            type: 'number',
+            label: 'Amount to be Deducted (if any)',
+            placeholder: 'Deduction amount from salary',
+            showIf: (values) => values.employeeInfo?.consentInfo?.transportationPreference === 'company_provided'
+          }
+        ]
+      },
+      {
+        id: 'accommodation_options',
+        title: 'Accommodation Options',
+        description: 'Choose your accommodation preference',
+        fields: [
+          {
+            name: 'employeeInfo.consentInfo.accomodationPreference',
+            type: 'radio',
+            label: 'Accomodation Preference',
+            required: true,
+            options: [
+              { label: 'Company Provided Accomodation', value: 'company_provided' },
+              { label: 'Own Accomodation', value: 'own_accomodation' }
+            ]
+          },
+          {
+            name: 'employeeInfo.consentInfo.flatRoomNo',
+            type: 'text',
+            label: 'Flat/Room No',
+            placeholder: 'Flat or room number',
+            showIf: (values) => values.employeeInfo?.consentInfo?.accomodationPreference === 'company_provided'
+          },
+          {
+            name: 'employeeInfo.consentInfo.accomodatedDate',
+            type: 'date',
+            label: 'Accomodated From',
+            placeholder: 'Pick a date',
+            showIf: (values) => values.employeeInfo?.consentInfo?.accomodationPreference === 'company_provided'
+          },
+          {
+            name: 'employeeInfo.consentInfo.location',
+            type: 'text',
+            label: 'Location',
+            placeholder: 'Location of the accomodation',
+            showIf: (values) => values.employeeInfo?.consentInfo?.accomodationPreference === 'company_provided'
+          },
+          {
+            name: 'employeeInfo.consentInfo.deductionAmountAccomodation',
+            type: 'number',
+            label: 'Amount to be Deducted (if any)',
+            placeholder: 'Deduction amount from salary',
+            showIf: (values) => values.employeeInfo?.consentInfo?.accomodationPreference === 'company_provided'
+          }
+        ]
+      },
+
+      {
+        id: 'consent_declaration',
+        title: 'Consent & Declaration',
+        description: 'Employee consent and declarations',
+        fields: [
+          {
+            name: 'employeeInfo.consentInfo.declaration.declarationDate',
+            type: 'date',
+            label: 'Declaration Date',
+            required: true,
+            defaultValue: new Date().toISOString()
+          },
+          {
+            name: 'employeeInfo.consentInfo.declaration.employeeSignature',
             type: 'text',
             label: 'Employee Signature',
             placeholder: 'Type your full name as signature',
             required: true
+          },
+          {
+            name: 'employeeInfo.consentInfo.declaration.attachDeclaration',
+            type: 'file',
+            label: 'Upload Consent Declaration Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+
+        ]
+      }
+    ]
+  },
+
+
+
+  // === Non-Disclosure Agreement Form ===
+  [HRMSFormTypes.NON_DISCLOSURE_AGREEMENT]: {
+    formType: HRMSFormTypes.NON_DISCLOSURE_AGREEMENT,
+    title: 'Non-Disclosure Agreement',
+    description: 'Standard and custom non-disclosure agreements',
+    submitLabel: 'Submit Agreement',
+    saveDraftLabel: 'Save as Draft',
+    sections: [
+      {
+        id: 'nda_Info_Details',
+        title: 'Agreement Details',
+        description: 'Information about the involved parties and the agreement date.',
+        fields: [
+          {
+            name: 'employeeInfo.ndaInfo.data',
+            type: 'label',
+            label: `This agreement is made as of (date)  __ / __  / __  , by ___________ and between Acero Building Systems and its affiliate Companies with principal offices at Dubai, UAE , (The Company), and 	(The Employee).
+Purpose: The Company and The Employee wish to enter an employment relationship in connection with which The Company will disclose its Confidential Information(as defined below) to the Employee(The Relationship).
+
+Definition of Confidential Information: Confidential Information means any information or know- how, including but not limited to, that which relates to business strategy, research, product plans, products, services, customers, markets, software, developments, inventions, processes, designs, marketing or finances of The Company, which all shall be deemed as Confidential Information.Confidential Information does not include information or know how which(i) is in the possession of the employee at the time of disclosure as shown by the employee’s files and records immediately prior to the time of disclosure, or(ii) prior to or after the time of disclosure becomes part of the public knowledge or literature other than as a result of any improper inaction or action of The Employee or, (iii) is approved by The Company, in writing, for release.
+Nondisclosure of Confidential Information: The Employee agrees not to use any Confidential Information disclosed to him/ her by The Company for any purpose outside of its own operations.The Employee will not disclose any Confidential Information of the Company to parties outside the Relationship or to other employees of The Company other than employees or agents under appropriate burden of confidentiality and who are required to have the information in order to carry out their duties.The Employee agrees that he/ she will take all reasonable measures to protect the secrecy of and avoid disclosure or use of Confidential Information of The Company in order to prevent it from falling into the public domain or the possession of persons other than those persons authorized under this Agreement to have any such information.
+    Publicity: The Employee will not, without prior consent of the other party, disclose the confidential information of the company disclosed to the employee to any other person under this agreement, and will not disclose any discussions or negotiations taking place between the parties, except as required by law and then only with prior notice to The Company.
+Return of Materials: Any materials or documents that have been furnished by The Company to the Employee in connection with The Relationship will be promptly returned by The Employee, accompanied by all copies of such documentation or certification of destruction, at the time of the Employee’s separation from the Company.
+Patent or Copyright Infringement: The company has not granted any rights to The Employee with regards to The Company’s rights to patents and copyrights.The Employee is not authorized to reproduce the Company’s material, to benefit people not in the Company’s direct employment.
+    Period: The forgoing commitments of each party shall be valid for a period of two years from separation of the employment.
+Successors and Assigns: This agreement shall be binding upon and for the benefits of the undersigned parties, their successors and assigns, provided that Confidential Information of The Company may not be assigned without the prior written consent of The Company.Failure to enforce any provision of this Agreement shall not constitute a waiver of any term hereof.
+Governing Law: This agreement shall be governed by and enforced in accordance with the laws of the UAE employed region and shall be binding upon The Employee in the UAE and worldwide.
+    Remedies: The Employee agrees that any violation or threatened violation may cause irreparable injury, both financial and strategic, to The Company and in addition to any and all remedies that may be available, in law, in equity or otherwise; The Company may choose to pursue legal action against The Employee.
+    In Witness whereof, this Nondisclosure Agreement is executed as of the date first above written.`,
+
+          },
+
+
+        ]
+      },
+      {
+        id: 'parties_info',
+        title: 'Agreement Details',
+        description: 'Information about the involved parties and the agreement date.',
+        fields: [
+
+          {
+            name: 'employeeInfo.ndaInfo.aggrementDate',
+            type: 'date',
+            label: 'Agreement Date',
+            required: true,
+            defaultValue: new Date().toISOString()
+          },
+          {
+            name: 'fullName',
+            type: 'text',
+            label: 'Employee Name',
+            disable: true,
+            placeholder: 'Full name of the employee'
+          },
+          {
+            name: 'employeeInfo.ndaInfo.attachNda',
+            type: 'file',
+            label: 'Upload Signed Aggrement Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+
+        ]
+      },
+
+    ]
+  },
+
+  // === Induction Program Form ===
+  [HRMSFormTypes.EMPLOYEE_ORIENTATION]: {
+    formType: HRMSFormTypes.EMPLOYEE_ORIENTATION,
+    title: 'Employee Orientation Program',
+    description: 'Orientation and onboarding program for new employees',
+    submitLabel: 'Submit Orientation Form',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      {
+        id: 'employee_details',
+        title: 'Employee Details',
+        description: 'Basic employee details',
+        fields: [
+          {
+            name: 'fullName',
+            type: 'text',
+            label: 'Employee Name',
+            disable: true,
+            placeholder: 'Full name of the employee'
+          },
+          {
+            name: 'employeeInfo.empId',
+            type: 'text',
+            label: 'Employee ID',
+            disable: true,
+            placeholder: 'Employee identification number'
+          },
+
+          {
+            name: 'department',
+            type: 'select',
+            label: 'Department',
+            disable: true,
+            options: []
+          },
+          {
+            name: 'designation',
+            type: 'select',
+            label: 'Designation',
+            disable: true,
+            options: []
+          },
+          {
+            name: 'employeeInfo.dateOfJoining',
+            type: 'date',
+            label: 'Date Of Joining',
+            disable: true,
+            options: []
+          },
+
+        ]
+      },
+      {
+        id: 'program_contents',
+        title: 'Orientation Program Details',
+        description: 'Details of each induction step',
+        fields: [
+
+          {
+            name: 'induction.steps.step1.contentHeader',
+            type: 'label',
+            label: 'About Acero Building Systems',
+            disable: true
+          },
+          {
+            name: 'induction.steps.step1.conductedByHeader',
+            type: 'label',
+            label: 'HR & Admin Department',
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step1.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step1.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+
+          // Step 2
+          {
+            name: 'induction.step2.contentHeader',
+            type: 'label',
+            label: `HR Policy & Procedures:
+          • Working Days/Hours
+          • Leave Entitlement
+          • Performance Assessments
+          • Training and Advancement
+          • Legal Requirements
+          • Employee Relations`,
+            disable: true
+          },
+          {
+            name: 'induction.step2.conductedByHeader',
+            type: 'label',
+            label: 'HR & Admin Department',
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step2.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step2.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 3
+          {
+            name: 'induction.step3.contentHeader',
+            type: 'label',
+            label: 'Administrative Facilities',
+            disable: true
+          },
+          {
+            name: 'induction.step3.conductedByHeader',
+            type: 'label',
+            label: 'HR & Admin Department',
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step3.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step3.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 4
+          {
+            name: 'induction.step4.contentHeader',
+            type: 'label',
+            label: 'Introduction of Employee’s Department',
+            disable: true
+          },
+          {
+            name: 'induction.step4.conductedByHeader',
+            type: 'label',
+            label: `Employee's Department`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step4.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step4.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 5
+          {
+            name: 'induction.step5.contentHeader',
+            type: 'label',
+            label: 'Employee’s Roles and Responsibilities',
+            disable: true
+          },
+          {
+            name: 'induction.step5.conductedByHeader',
+            type: 'label',
+            label: `Employee's Department`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step5.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step5.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 6
+          {
+            name: 'induction.step6.contentHeader',
+            type: 'label',
+            label: 'Initial Job instructions and assignments',
+            disable: true
+          },
+          {
+            name: 'induction.step6.conductedByHeader',
+            type: 'label',
+            label: `Reporting Manager/Head`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step6.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step6.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 7
+          {
+            name: 'induction.step7.contentHeader',
+            type: 'label',
+            label: 'Company Quality Policy and Procedure',
+            disable: true
+          },
+          {
+            name: 'induction.step7.conductedByHeader',
+            type: 'label',
+            label: `QA/QC Department`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step7.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step7.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 8
+          {
+            name: 'induction.step8.contentHeader',
+            type: 'label',
+            label: 'QMS/EMS/SMS Awareness',
+            disable: true
+          },
+          {
+            name: 'induction.step8.conductedByHeader',
+            type: 'label',
+            label: `Management Representative`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step8.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step8.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 9
+          {
+            name: 'induction.step9.contentHeader',
+            type: 'label',
+            label: 'Health & Safety Policy and Procedure',
+            disable: true
+          },
+          {
+            name: 'induction.step9.conductedByHeader',
+            type: 'label',
+            label: `HSE Department`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step9.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step9.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // Step 10
+          {
+            name: 'induction.step10.contentHeader',
+            type: 'label',
+            label: 'IT Access and Policy (For Staffs)',
+            disable: true
+          },
+          {
+            name: 'induction.step10.conductedByHeader',
+            type: 'label',
+            label: `IT Department`,
+            disable: true
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step10.signature',
+            type: 'labeltext',
+            label: 'Conducted By',
+            placeholder: 'Conducted By Name'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.steps.step10.date',
+            type: 'labeldate',
+            label: 'Date',
+            placeholder: 'Conducted On Date'
+          },
+
+          // ⬇️ Continue similarly for all remaining steps (Department Intro, Roles & Responsibilities, Job Instructions, QA/QC, Management Rep, HSE, IT, etc.)
+        ]
+      },
+      {
+        id: 'final_signoff',
+        title: 'Final Endorsements',
+        description: 'Attended and reviewed by concerned departments',
+        fields: [
+          {
+            name: 'employeeInfo.orientationInfo.attendedBy.signature',
+            type: 'text',
+            label: 'Attended By (New Employee) - Signature'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.attendedBy.date',
+            type: 'date',
+            label: 'Date'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.endorsedBy.signature',
+            type: 'text',
+            label: 'Endorsed By (Department Head) - Signature'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.endorsedBy.date',
+            type: 'date',
+            label: 'Date'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.reviewedBy.signature',
+            type: 'text',
+            label: 'Reviewed By (HR/Admin) - Signature'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.reviewedBy.date',
+            type: 'date',
+            label: 'Date'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.approvedBy.signature',
+            type: 'text',
+            label: 'Approved By (Head of HR) - Signature'
+          },
+          {
+            name: 'employeeInfo.orientationInfo.approvedBy.date',
+            type: 'date',
+            label: 'Date'
           }
         ]
       }
@@ -2076,204 +3004,629 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
   },
 
   // === Non-Disclosure Agreement Form ===
-  [HRMSFormTypes.NON_DISCLOSURE_AGREEMENT]: {
-    formType: HRMSFormTypes.NON_DISCLOSURE_AGREEMENT,
-    title: 'Non-Disclosure Agreement',
-    description: 'Standard and custom non-disclosure agreements',
-    submitLabel: 'Execute Agreement',
+  [HRMSFormTypes.VISA_PROCESS]: {
+    formType: HRMSFormTypes.VISA_PROCESS,
+    title: 'Medical & Visa Process',
+    description: '',
+    submitLabel: 'Submit',
     saveDraftLabel: 'Save as Draft',
     sections: [
       {
-        id: 'parties_info',
-        title: 'Parties & Agreement Details',
+        id: 'employee_info',
+        title: 'Employee Details',
         description: 'Information about the involved parties and the agreement date.',
         fields: [
+
           {
-            name: 'agreementDate',
-            type: 'date',
-            label: 'Agreement Date',
-            required: true,
-            defaultValue: new Date().toISOString()
-          },
-          {
-            name: 'employeeName',
+            name: 'fullName',
             type: 'text',
             label: 'Employee Name',
-            required: true,
+            disable: true,
             placeholder: 'Full name of the employee'
           },
           {
-            name: 'employeeId',
+            name: 'employeeInfo.empId',
             type: 'text',
             label: 'Employee ID',
-            required: true,
-            placeholder: 'Employee ID'
+            disable: true,
+            placeholder: 'Employee Identification number'
+          },
+
+        ]
+      },
+      {
+        id: 'visa_info',
+        title: 'Medical & Visa Details',
+        description: 'Information about the involved parties and the agreement date.',
+        fields: [
+
+
+          {
+            name: 'employeeInfo.visaInfo.visaIssueDate',
+            type: 'date',
+            label: 'Visa Issue Date',
+            placeholder: 'Visa Issue Date',
           },
           {
-            name: 'employeeDesignation',
+            name: 'employeeInfo.visaInfo.visaExpiryDate',
+            type: 'date',
+            label: 'Visa Expiry Date',
+            placeholder: 'Visa Expiry Date',
+          },
+          {
+            name: 'employeeInfo.visaInfo.visaFileNo',
+            type: 'text',
+            label: 'Visa File Number',
+            placeholder: 'Visa File Number'
+          },
+          {
+            name: 'employeeInfo.visaInfo.emiratesIdNo',
+            type: 'text',
+            label: 'Emirates ID Number',
+            placeholder: 'Emirates ID Number'
+          },
+          {
+            name: 'employeeInfo.visaInfo.emiratesIdIssueDate',
+            type: 'date',
+            label: 'Emirates ID Issue Date',
+            placeholder: 'Visa Issue Date',
+          },
+          {
+            name: 'employeeInfo.visaInfo.emiratesIdExpiryDate',
+            type: 'date',
+            label: 'Emirates ID Expiry Date',
+            placeholder: 'Visa Expiry Date',
+          },
+          {
+            name: 'employeeInfo.visaInfo.workPermitNo',
+            type: 'text',
+            label: 'Work Permit Number',
+            placeholder: 'Work Permit Number'
+          },
+          {
+            name: 'employeeInfo.visaInfo.visaType._id',
             type: 'select',
-            label: 'Employee Designation',
-            required: true,
+            label: 'Visa Type',
+            placeholder: 'Visa Type',
             options: []
           },
           {
-            name: 'employeeDepartment',
-            type: 'select',
-            label: 'Employee Department',
-            required: true,
-            options: []
+            name: 'employeeInfo.visaInfo.laborCardExpiryDate',
+            type: 'date',
+            label: 'Labor Card Expiry Date',
+            placeholder: 'Labor Card Expiry Date',
           },
           {
-            name: 'companyRepName',
+            name: 'employeeInfo.visaInfo.iloeExpiryDate',
+            type: 'date',
+            label: 'ILOE Expiry Date',
+            placeholder: 'ILOE Expiry Date',
+          },
+          {
+            name: 'employeeInfo.visaInfo.medicalInsuranceProvider',
             type: 'text',
-            label: 'Company Representative Name',
-            required: true,
-            defaultValue: 'HR Manager'
-          }
+            label: 'Medical Insurance Provider',
+            placeholder: 'Medical Insurance Provider'
+          },
+
         ]
       },
+
       {
-        id: 'nda_type',
-        title: 'NDA Type',
-        description: 'Select the type of NDA.',
+        id: 'upload_info',
+        title: 'Upload Documents',
+        description: 'Information about the involved parties and the agreement date.',
         fields: [
+
           {
-            name: 'ndaType',
-            type: 'radio',
-            label: 'Type of Agreement',
-            required: true,
-            defaultValue: 'standard',
-            options: [
-              { label: 'Standard NDA', value: 'standard' },
-              { label: 'Custom NDA', value: 'custom' }
-            ]
-          }
+            name: 'employeeInfo.visaInfo.attachVisa',
+            type: 'file',
+            label: 'Upload Visa Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+          {
+            name: 'employeeInfo.visaInfo.attachEmiratesId',
+            type: 'file',
+            label: 'Upload Emirates Id Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+          {
+            name: 'employeeInfo.visaInfo.attachLaborCard',
+            type: 'file',
+            label: 'Upload Labor Card Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+          {
+            name: 'employeeInfo.visaInfo.attachIloe',
+            type: 'file',
+            label: 'Upload ILOE Copy',
+            placeholder: '',
+            accept: '.pdf,.jpg,.png'
+          },
+
         ]
       },
-      {
-        id: 'standard_terms',
-        title: 'Standard NDA Terms',
-        description: 'Configure the standard terms of the NDA.',
-        showIf: (values) => values.ndaType === 'standard',
-        fields: [
-          {
-            name: 'standardTerms.confidentialityPeriod',
-            type: 'number',
-            label: 'Confidentiality Period (Years)',
-            required: true,
-            defaultValue: 2,
-            validation: { min: 1, max: 99 },
-            description: 'Enter 99 for an indefinite period.'
-          },
-          {
-            name: 'standardTerms.includeTradeSecrets',
-            type: 'checkbox',
-            label: 'Include Trade Secrets',
-            defaultValue: true
-          },
-          {
-            name: 'standardTerms.includeClientInformation',
-            type: 'checkbox',
-            label: 'Include Client Information',
-            defaultValue: true
-          },
-          {
-            name: 'standardTerms.includeBusinessProcesses',
-            type: 'checkbox',
-            label: 'Include Business Processes',
-            defaultValue: true
-          },
-          {
-            name: 'standardTerms.includeFinancialInformation',
-            type: 'checkbox',
-            label: 'Include Financial Information',
-            defaultValue: true
-          },
-          {
-            name: 'standardTerms.includeTechnicalInformation',
-            type: 'checkbox',
-            label: 'Include Technical Information',
-            defaultValue: true
-          },
-          {
-            name: 'standardTerms.includeMarketingInformation',
-            type: 'checkbox',
-            label: 'Include Marketing Information',
-            defaultValue: true
-          }
-        ]
-      },
-      {
-        id: 'custom_terms',
-        title: 'Custom NDA Terms',
-        description: 'Define custom clauses and restrictions for the NDA.',
-        showIf: (values) => values.ndaType === 'custom',
-        fields: [
-          {
-            name: 'customTerms.customClausesText',
-            type: 'textarea',
-            label: 'Custom Clauses',
-            placeholder: 'Enter the full text of any custom clauses.'
-          },
-          {
-            name: 'customTerms.additionalRestrictions',
-            type: 'textarea',
-            label: 'Additional Restrictions',
-            placeholder: 'Specify any additional restrictions.'
-          },
-          {
-            name: 'customTerms.nonCompetePeriod',
-            type: 'number',
-            label: 'Non-Compete Period (Months)',
-            validation: { min: 0 }
-          },
-          {
-            name: 'customTerms.nonSolicitationPeriod',
-            type: 'number',
-            label: 'Non-Solicitation Period (Months)',
-            validation: { min: 0 }
-          }
-        ]
-      },
-      {
-        id: 'agreement_text_preview',
-        title: 'Agreement Text Preview',
-        description: 'This text will be automatically generated for standard NDAs upon saving.',
-        fields: [
-          {
-            name: 'agreementText',
-            type: 'textarea',
-            label: 'Agreement Full Text',
-            readOnly: true,
-            placeholder: 'The full legal text of the agreement will be generated here.'
-          }
-        ]
-      },
-      {
-        id: 'legal_info',
-        title: 'Legal & Compliance',
-        description: 'Governing law and jurisdiction for the agreement.',
-        collapsible: true,
-        defaultExpanded: false,
-        fields: [
-          {
-            name: 'governingLaw',
-            type: 'text',
-            label: 'Governing Law',
-            required: true,
-            defaultValue: 'UAE Federal Law'
-          },
-          {
-            name: 'jurisdiction',
-            type: 'text',
-            label: 'Jurisdiction',
-            required: true,
-            defaultValue: 'Dubai Courts'
-          }
-        ]
-      }
+
     ]
-  }
+  },
+
+  // === Employee Performance Appraisal Form ===
+  [HRMSFormTypes.PERFORMANCE_APPRAISAL]: {
+    formType: HRMSFormTypes.PERFORMANCE_APPRAISAL,
+    title: 'Employee Performance Appraisal Form',
+    description: '',
+    submitLabel: 'Submit Appraisal',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      {
+        id: 'employee_info',
+        title: 'Employee Information',
+        description: 'Basic details about the employee being appraised',
+        fields: [
+          {
+            name: 'employee',
+            type: 'select',
+            label: 'Employee Name',
+            placeholder: 'Select Employee',
+            required: true,
+            options: [] // Populate from Employee collection
+          },
+
+          {
+            name: 'evaluationDate',
+            type: 'date',
+            label: 'Date of Evaluation',
+            placeholder: 'Select Evaluation Date'
+          }
+        ]
+      },
+
+
+      {
+        id: 'evaluation_section',
+        title: 'Evaluation (For Department Manager)',
+        description: 'Evaluate the employee on the following parameters (1–5, 1-Poor / 5-Very Good)',
+        visibleFor: ['Manager'],
+        fields: [
+          {
+            name: 'evaluationParameters',
+            type: 'evaluation',
+            title: 'Evaluation (For Department Manager)',
+            label: 'Evaluation Parameters',
+            subFields: [
+              {
+                name: 'parameterTitle',
+                type: 'label', // display only
+                label: 'Parameter',
+                style: 'font-bold'
+              },
+              {
+                name: 'parameterDescription',
+                type: 'label', // display only
+                label: 'Description'
+              },
+              {
+                name: 'score',
+                type: 'number', // input for score
+                label: 'Rating (1–5)',
+                min: 1,
+                max: 5,
+                placeholder: 'Enter score 1–5'
+              }
+            ],
+            defaultValue: [
+              {
+                parameterName: 'Knowledge of Job',
+                description:
+                  'Familiar with duties and requirements of this position and knows the methods and practices to perform the job. Knowledge gained through experience, education and training.',
+                score: ''
+              },
+              {
+                parameterName: 'Productivity',
+                description:
+                  'Uses working time effectively, plans and prioritizes work, sets and accomplishes goals, and completes assignments on schedule.',
+                score: ''
+              },
+              {
+                parameterName: 'Quality of Work',
+                description:
+                  'Completes duties successfully within estimated time, with output meeting expectations.',
+                score: ''
+              },
+              {
+                parameterName: 'Adaptability',
+                description:
+                  'Ability to learn quickly, adapt to changes in job assignments, methods, and personnel.',
+                score: ''
+              },
+              {
+                parameterName: 'Dependability',
+                description:
+                  'Reliability in performing work assignments, following instructions, taking responsibility, and requiring minimal supervision.',
+                score: ''
+              },
+              {
+                parameterName: 'Communication Skills',
+                description:
+                  'Ability to communicate effectively in oral and written form with internal and external stakeholders.',
+                score: ''
+              },
+              {
+                parameterName: 'Initiative and Resourcefulness',
+                description:
+                  'Contributes ideas, develops/carries out new methods, is a self-starter, anticipates needs, and seeks extra tasks.',
+                score: ''
+              },
+              {
+                parameterName: 'Team Orientation',
+                description:
+                  'Works effectively with superiors, peers, subordinates, and customers.',
+                score: ''
+              },
+              {
+                parameterName: 'Attendance and Punctuality',
+                description:
+                  'Reports to work on time, stays on the job, observes time limits for breaks/lunch, and gives prompt notice for absence.',
+                score: ''
+              },
+              {
+                parameterName: 'Organizational Obligations',
+                description:
+                  'Fits into company culture/values, shows loyalty, goes beyond boundaries, and commits to organizational success.',
+                score: ''
+              }
+            ]
+          },
+
+        ]
+      },
+      {
+        id: 'employee_response',
+        title: 'Employee Response',
+        description: '',
+        fields: [
+
+          {
+            name: 'employeeResponse.reviewed',
+            type: 'checkbox',
+            label: 'I have reviewed this document and discussed the contents with my reporting head and I have been advised of my performance status.',
+
+          },
+          {
+            name: 'employeeResponse.signature',
+            type: 'text',
+            label: 'Employee Signature',
+
+          },
+          {
+            name: 'employeeResponse.comments',
+            type: 'textarea',
+            label: 'Comments',
+            placeholder: 'Enter your comments here',
+
+          },
+          {
+            name: 'employeeResponse.date',
+            type: 'date',
+            label: 'Date',
+            placeholder: 'Select Date'
+          },
+
+        ]
+      },
+
+      {
+        id: 'dep_head_feedback',
+        title: 'Reporting/Department Head Feedback',
+        description: '',
+        fields: [
+
+          {
+            name: 'depHeadFeedback.findings',
+            type: 'textarea',
+            label: 'Significant findings of the Evaluations',
+            placeholder: '',
+          },
+          {
+            name: 'depHeadFeedback.trainingRecommenedation',
+            type: 'textarea',
+            label: 'Training recommended to the employee',
+            placeholder: '',
+          },
+          {
+            name: 'depHeadFeedback.otherRecommenedation',
+            type: 'textarea',
+            label: 'Any other Recommendations',
+            placeholder: '',
+          },
+          {
+            name: 'depHeadFeedback.signature',
+            type: 'text',
+            label: 'Signature',
+
+          },
+
+          {
+            name: 'depHeadFeedback.date',
+            type: 'date',
+            label: 'Date',
+            placeholder: 'Select Date'
+          },
+
+        ]
+      },
+
+      {
+        id: 'hr_admin_use',
+        title: 'For HR/Admin Use',
+        description: '',
+        fields: [
+
+          {
+            name: 'purposeOfEvaluation',
+            type: 'radio',
+            label: 'Purpose of the review',
+            options: [
+              { label: 'Annual Review', value: 'annual_review' },
+              { label: 'Probation Completion', value: 'probation_completion' },
+              { label: 'Increment', value: 'increment' },
+              { label: 'Promotion', value: 'promotion' },
+              { label: 'Department Transfer', value: 'department_transfer' },
+              { label: 'Job Transfer', value: 'job_transfer' },
+              { label: 'Intermediate Review', value: 'intermediate_review' },]
+          },
+
+        ]
+      },
+
+    ]
+  },
+
+  // === Employee Performance Appraisal Form ===
+  [HRMSFormTypes.OFFBOARDING]: {
+    formType: HRMSFormTypes.OFFBOARDING,
+    title: 'Offboarding Process',
+    description: '',
+    submitLabel: 'Submit Request',
+    saveDraftLabel: 'Save Draft',
+    sections: [
+      {
+        id: 'employee_info',
+        title: 'Employee Information',
+        description: 'Basic details about the employee being appraised',
+        fields: [
+          {
+            name: 'employee',
+            type: 'select',
+            label: 'Employee Name',
+            placeholder: 'Select Employee',
+            required: true,
+            options: [] // Populate from Employee collection
+          },
+
+          {
+            name: 'releavingDate',
+            type: 'date',
+            label: 'Last Working Date',
+            placeholder: 'Select Last Working Date'
+          }
+        ]
+      },
+
+
+      {
+        id: 'offboarding_handover',
+        title: 'Offboarding Handover Checklist',
+        description: 'Checklist of items to be handed over by the employee before exit',
+        visibleFor: ['Manager', 'HR'],
+        fields: [
+          {
+            name: 'handoverDetails',
+            type: 'handover',
+            title: 'Department-wise Handover',
+            label: 'Handover Checklist',
+            subFields: [
+              {
+                name: 'department',
+                type: 'label',
+                label: 'Department',
+                style: 'font-bold'
+              },
+              {
+                name: 'taskDescription',
+                type: 'arrayLabel', // display multiple tasks
+                label: 'Handover Task / Item Description'
+              },
+              {
+                name: 'handoverTo',
+                type: 'select',
+                label: 'Handovered To',
+                placeholder: 'Select Handover To',
+                options: [] // Populate from Employee collection
+              },
+              {
+                name: 'handoverDate',
+                type: 'date',
+                label: 'Date'
+              },
+              {
+                name: 'status',
+                type: 'checkbox',
+                label: 'Completed'
+              },
+              {
+                name: 'signature',
+                type: 'text',
+                label: 'Signature'
+              }
+            ],
+            defaultValue: [
+              {
+                department: 'Employee Department',
+                taskDescription: [
+                  'Documents and Records',
+                  'Job Handover',
+                  'Emails to be forwarded (provide Email ID)'
+                ],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              },
+              {
+                department: 'Finance',
+                taskDescription: [
+                  'Outstanding Amount Cleared',
+                  'Petty Cash Cleared',
+                  'Others'
+                ],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              },
+              {
+                department: 'IT',
+                taskDescription: [
+                  'Laptop / Desktop',
+                  'Mobile Phone / Sim Card',
+                  'User Name and Passwords',
+                  'Biometric Access closed on LWD'
+                ],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              },
+              {
+                department: 'Material Control / Stores',
+                taskDescription: ['Tools and Equipment’s'],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              },
+              {
+                department: 'Accommodation In charge',
+                taskDescription: ['Accommodation Items and Locker Keys'],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              },
+              {
+                department: 'HR & ADMIN',
+                taskDescription: [
+                  'Medical Insurance Card / ID Card',
+                  'Office Drawer / Room / Vehicle Keys',
+                  'Others'
+                ],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              },
+              {
+                department: 'Other Department',
+                taskDescription: [''],
+                handoverTo: '',
+                handoverDate: '',
+                status: false,
+                signature: ''
+              }
+            ]
+          },
+          {
+            name: 'remarks',
+            type: 'textarea',
+            label: 'Remarks (if any)',
+            placeholder: 'Enter any remarks here'
+          },
+        ]
+      },
+      {
+        id: 'clearance_signatures',
+        title: 'Clearance Signatures',
+        description: '',
+        fields: [
+          {
+            name: 'employeeClearance.signature',
+            type: 'text',
+            label: 'Employee Signature',
+            placeholder: 'Employee Signature',
+            required: false,
+
+          },
+
+          {
+            name: 'employeeClearance.date',
+            type: 'date',
+            label: 'Signature Date',
+            placeholder: 'Pick Signature Date'
+          },
+          {
+            name: 'endorsedBy.signature',
+            type: 'text',
+            label: 'Endorsed By (Department Head) Signature',
+            placeholder: 'Endorsed By Signature',
+            required: false,
+
+          },
+
+          {
+            name: 'endorsedBy.date',
+            type: 'date',
+            label: 'Signature Date',
+            placeholder: 'Pick Signature Date'
+          },
+          {
+            name: 'reviewedBy.signature',
+            type: 'text',
+            label: 'Reviewed By (HR/Admin) Signature',
+            placeholder: 'Reviewed By Signature',
+            required: false,
+
+          },
+
+          {
+            name: 'reviewedBy.date',
+            type: 'date',
+            label: 'Signature Date',
+            placeholder: 'Pick Signature Date'
+          },
+          {
+            name: 'approvedBy.signature',
+            type: 'text',
+            label: 'Approved By Head Of HR Signature',
+            placeholder: 'Approved By Signature',
+            required: false,
+
+          },
+
+          {
+            name: 'approvedBy.date',
+            type: 'date',
+            label: 'Signature Date',
+            placeholder: 'Pick Signature Date'
+          }
+
+        ]
+      },
+
+
+    ]
+  },
+
+
+
+
+
+
+
+
 };
 
 

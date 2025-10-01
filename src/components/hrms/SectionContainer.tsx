@@ -15,7 +15,7 @@ const SectionContainer: React.FC<SectionContainerProps> = ({ section, data = {},
     console.log('Section Config:', section, data, userlist);
     const { watch } = useFormContext();
 
-    const departmentValue = watch("department"); // watch only the department field
+    const departmentValue = watch("requestedDepartment"); // watch only the department field
 
 
     return (
@@ -33,7 +33,7 @@ const SectionContainer: React.FC<SectionContainerProps> = ({ section, data = {},
             </div>
 
 
-            <div className={`grid gap-4 ${(section?.id === 'assessment_section' || section?.id === 'rounds_section') ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+            <div className={`grid gap-5 ${(section?.id === 'assessment_section' || section?.id === 'rounds_section' || section?.id === 'assets_hardware' || section?.id === 'assets_access' || section?.id === 'nda_Info_Details' || section?.id === 'offboarding_handover' || section?.id === 'evaluation_section') ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'} ${section?.id === 'program_contents' ? 'md:grid-cols-4' : ''} `}>
                 {section.fields.map((field) => {
                     const shouldShow = !field.showIf || field.showIf(watch());
                     if (!shouldShow) return null;
@@ -45,7 +45,7 @@ const SectionContainer: React.FC<SectionContainerProps> = ({ section, data = {},
                         ? field.options?.filter(
                             (pos) =>
                                 departmentValue &&
-                                pos.department?._id === (typeof departmentValue === "object" ? departmentValue._id : departmentValue)
+                                pos.requestedDepartment?._id === (typeof departmentValue === "object" ? departmentValue._id : departmentValue)
                         ) ?? []
                         : field.options;
 

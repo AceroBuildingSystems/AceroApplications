@@ -9,9 +9,11 @@ import { ChevronsRight, X } from 'lucide-react';
 import { useCreateApplicationMutation, useLazyGetApplicationQuery } from '@/services/endpoints/applicationApi';
 import { useSendEmailMutation } from '@/services/endpoints/emailApi';
 import { MONGO_MODELS } from '@/shared/constants';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 
 const QuoteActionPage = () => {
+    const { user } = useUserAuthorised();
     const [getApplication, { data: applicationData, isLoading, error }] = useLazyGetApplicationQuery();
     const searchParams = useSearchParams();
     const [sendEmail] = useSendEmailMutation();
@@ -25,7 +27,7 @@ const QuoteActionPage = () => {
     const option = searchParams.get('option');
     const [quoteNo, setQuoteNo] = useState('');
     const [reason, setReason] = useState('');
-
+    console.log('user', user);
     const handleIssueQuoteNo = async () => {
         if (!/^\d{5}$/.test(quoteNo)) {
             toast.error('Quote No should be exactly 5 digits.');

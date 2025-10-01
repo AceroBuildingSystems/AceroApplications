@@ -6,6 +6,12 @@ export interface AssessmentParameter {
 
 }
 
+export interface HrFeedback {
+  date: Date;
+  remarks: string;
+}
+
+
 export interface InterviewRound {
   roundNumber: number;
   interviewer: Types.ObjectId; // Reference to User
@@ -19,6 +25,7 @@ export interface interview extends Document {
   recruitmentId: Types.ObjectId; // Reference to Recruitment
   rounds: InterviewRound[];
   assessmentParameters: AssessmentParameter[];
+  hrFeedback?: HrFeedback;
   status: "recruited" | "shortlisted" | "held" | "rejected" | "na";
   isActive: boolean;
   remarks?: string;

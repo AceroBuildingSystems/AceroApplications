@@ -106,9 +106,19 @@ export const MONGO_MODELS = {
     USER_IDENTIFICATION: "USER_IDENTIFICATION",
     RECRUITMENT: "RECRUITMENT",
     CANDIDATE_INFO: "CANDIDATE_INFO",
-    INTERVIEW:"INTERVIEW",
-    OFFER_ACCEPTANCE:"OFFER_ACCEPTANCE"
-    
+    INTERVIEW: "INTERVIEW",
+    OFFER_ACCEPTANCE: "OFFER_ACCEPTANCE",
+    EMPLOYEE_JOINING: "EMPLOYEE_JOINING",
+    IT_ASSETS_ACCESS: "IT_ASSETS_ACCESS",
+    EMPLOYEE_INFO: "EMPLOYEE_INFO",
+    BENEFICIARY_INFO: "BENEFICIARY_INFO",
+    CONSENT_INFO: "CONSENT_INFO",
+    NDA_INFO: "NDA_INFO",
+    ORIENTATION_INFO: "ORIENTATION_INFO",
+    VISA_INFO: "VISA_INFO",
+    BUSINESS_TRIP: "BUSINESS_TRIP",
+    PERFORMANCE_APPRAISAL: "PERFORMANCE_APPRAISAL",
+    OFFBOARDING: "OFFBOARDING"
 }
 
 
@@ -124,3 +134,65 @@ export const MASTER_DATA = {
 
 // Notification Constants
 export const NOTIFICATION_MASTER = 'NOTIFICATION_MASTER';
+
+
+export const itHardWares = [
+    { value: 'laptop', label: 'Laptop' },
+    { value: 'cpu', label: 'CPU' },
+    { value: 'monitor', label: 'Monitor' },
+    {
+        value: 'telephone-extension',
+        label: 'Telephone Extension',
+
+    },
+    { value: 'mobile-phone', label: 'Mobile Phone' },
+    { value: 'sim-card', label: 'Sim Card' },
+    { value: 'keyboard-mouse', label: 'Wireless Keyboard Mouse' },
+    { value: 'wireless-mouse', label: 'Wireless Mouse' },
+    { value: 'headphone', label: 'Headphone' }
+];
+
+export const itSoftwares = [
+    { value: 'oracle', label: 'Oracle Fusion' },
+    { value: 'acrobat-pro', label: 'Acrobat Pro' },
+    { value: 'tally', label: 'Tally' },
+    { value: 'zw-cad', label: 'ZW CAD' },
+    { value: 'autodesk', label: 'Autodesk' },
+    { value: 'dwg-reader', label: 'DWG Reader' },
+    { value: 'mbs', label: 'MBS' },
+    { value: 'staad-pro', label: 'STAAD Pro' },
+    { value: 'ram-connect', label: 'RAM Connect' },
+    { value: 'idea-statica', label: 'IDEA StatiCa' },
+    { value: 'sap-2000', label: 'SAP 2000' },
+    { value: 'etabs', label: 'ETABS' },
+    { value: 'cfs', label: 'CFS' },
+    { value: 'tekla', label: 'Tekla' },
+    { value: 'trimble-connect', label: 'Trimble Connect' }
+];
+
+export const workplaceApps = [
+    { value: 'accurest', label: 'Accurest' },
+    { value: 'inhouseApps', label: 'Inhouse Apps' },
+    { value: 'aceroApps', label: 'Acero Applications' },
+    { value: 'hrms', label: 'HRMS' },
+    { value: 'e-invoice', label: 'E-Invoicing' },
+
+];
+
+export const accessToBeProvided = [
+    { value: 'fullAccessInternet', label: 'Full Access Internet' },
+    { value: 'limitedAccessInternet', label: 'Limited Access Internet' },
+    { value: 'colorPrinter', label: 'Color Printer' },
+    { value: 'blackWhitePrinter', label: 'Black And White Printer' },
+    { value: 'networkDriveAccess', label: 'Network Drive Access' },
+    { value: 'usb', label: 'USB' },
+    { value: 'whatsapp', label: 'Whatsapp' },
+    { value: 'emailGroups', label: 'Email Groups' },
+];
+
+export const otherAccess = [
+    { value: 'stationarySet', label: 'Stationary Set' },
+    { value: 'tools', label: 'Tools & Equipments' },
+    { value: 'vehicle', label: 'Vehicle' },
+
+]

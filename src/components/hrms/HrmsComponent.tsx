@@ -56,6 +56,7 @@ interface HrmsDialogProps {
     visaTypes?: Option[]; // Optional, for visa types
     currentIndex?: number; // Optional, for step navigation index
     countryData?: Option[]; // Optional, for country data
+    currencyData?: Option[]; // Optional, for currency data
 }
 
 const HrmsDialog: React.FC<HrmsDialogProps> = ({
@@ -73,15 +74,33 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     initialData = null, // Optional initial data for update
     visaTypes,
     currentIndex = 0, // Optional current index for step navigation
-    countryData
+    countryData,
+    currencyData
 
 }) => {
+
+    const uniqueCountries = [
+        ...new Map(
+            locationData
+                ?.filter(loc => loc?.state?.country) // ensure country exists
+                .map(loc => [loc?.state?.country._id, {
+                    _id: loc?.state?.country?._id,
+                    name: loc?.state?.country?.name
+                }])
+        ).values()
+    ];
+
+
     const { user }: any = useUserAuthorised();
-    const [employeeType, setEmployeeType] = useState<any>(null);
+    const [employeeType, setEmployeeType] = useState<any>('');
+    const [region, setRegion] = useState<any>('');
     const [isEmployeeTypeSelected, setIsEmployeeTypeSelected] = useState(false);
     const [isStaff, setIsStaff] = useState(false);
+    const [isRegion, setIsRegion] = useState(false);
 
     const [showCandidateDialog, setShowCandidateDialog] = useState(false);
+
+    const [filteredInterviewers, setFilteredInterviewers]: any = useState([]);
 
     const [showInterviewDialog, setShowInterviewDialog] = useState(false);
 
@@ -105,9 +124,9 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
     const [actionOffer, setActionOffer] = useState('Add');
 
-    const [initialDataCandidate, setInitialDataCandidate] = useState([]);
+    const [initialDataCandidate, setInitialDataCandidate]: any = useState([]);
 
-    console.log('Form Config:', initialFormConfig);
+    console.log('Form Config:', locationData);
     // const [formattedInterviewData, setFormattedInterviewData] = useState<any[]>([]);
     const [isStepInitialized, setIsStepInitialized] = useState(false);
 
@@ -128,6 +147,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             console.log('Fetching candidates for recruitment:', initialData?._id);
         }
     }, [isOpen, getCandidates]);
+
 
 
     useEffect(() => {
@@ -168,8 +188,6 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
         }
     }, [isOpen, initialData?._id, getOfferACceptance]);
 
-
-    console.log('offer data', localOfferData)
     const handleStepChange = (newIndex: number) => {
         setCurrentStepIndex(newIndex);
         setSavedStepIndex(newIndex); // Save it
@@ -193,13 +211,13 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
         const employeeTypeName: any = employeeTypes?.find(emp => emp._id === employeeType)?.name;
 
 
-        if (employeeTypeName?.toLowerCase() === 'staff') {
+        if (employeeTypeName?.toLowerCase() === 'staff' && region !== null) {
             setIsStaff(true);
         } else {
             setIsStaff(false);
         }
 
-    }, [employeeType, employeeTypes]);
+    }, [employeeType, region, employeeTypes]);
 
 
     useEffect(() => {
@@ -210,6 +228,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             setFormData((prev) => ({
                 ...prev,
                 employeeType: initialData?.employeeType?._id,
+                regionRequisition: region
             }));
         }
     }, [initialData]);
@@ -219,39 +238,78 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     { name: 'Accepted', _id: 'accepted' },
     { name: 'Rejected', _id: 'rejected' }];
 
+    const travellerType = [{ name: 'Employee', _id: 'employee' },
+    { name: 'Guest', _id: 'guest' }];
+
+    const arrangedBy = [{ name: 'Company', _id: 'company' },
+    { name: 'Guest', _id: 'guest' }, { name: 'Employee', _id: 'employee' }, { name: 'Not Required', _id: 'not_required' }];
+
+    const qualifications = [
+        { name: 'Secondary', _id: 'Secondary' },
+        { name: 'Higher Secondary', _id: 'Higher Secondary' },
+        { name: 'Diploma', _id: 'Diploma' },
+        { name: 'Bachelor’s Degree', _id: 'Degree' },
+        { name: 'Master’s Degree', _id: 'Master Degree' },
+        { name: 'PhD', _id: 'PhD' },
+        { name: 'Others', _id: 'others' },
+    ];
+
+    console.log('regions', locationData?.filter(loc => loc?.state?.country?._id === region), region);
+
     useEffect(() => {
         if (!initialFormConfig || !initialFormConfig.steps) return;
         console.log('currentStepIndex', currentStepIndex, 'initialFormConfig', initialFormConfig);
         const step = initialFormConfig.steps[currentStepIndex];
 
         const loadStepConfig = async () => {
-            const baseConfig = getFormConfig(step.formType);
+            const baseConfig = getFormConfig(step?.formType);
             if (!baseConfig) return;
 
             const optionsMap = {
                 department: departments,
+                requestedDepartment: departments,
                 requestedBy: users,
                 requiredPosition: designations,
-                workLocation: locationData,
+                workLocation: locationData?.filter(loc => loc?.state?.country?._id === region) || locationData,
                 recruitmentType: recruitymentTypes,
                 prevEmployee: users,
                 nationality: countryData,
                 visaType: visaTypes,
                 checkedBy: users,
-                interviewer: users,
+                interviewer: initialData?.interviewers || users,
                 roundStatus: roundStatus,
                 status: status,
                 offerStatus: offerStatus,
-                candidateId: candidateOffer
+                candidateId: candidateOffer,
+                highestQualification: qualifications,
+                travellerType: travellerType,
+                cashAdvanceCurrency: currencyData,
+                airTicketArrangedBy: arrangedBy,
+                hotelArrangedBy: arrangedBy,
+                reimbursedCurrency: currencyData,
+                employee: users,
+                "handoverDetails.familyDetails.fatherNationality._id": countryData,
 
             };
+            const currentUserRole = user?.employeeType?.name;
+            const currentUserDept = user?.department?.name;
 
             const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
-            setFormConfig(updatedConfig);
+            const visibleSections = updatedConfig.sections.filter((section) => {
+                if (!section.visibleFor) return true; // no restriction → show to everyone
+
+                return (
+                    section.visibleFor.includes(currentUserRole) ||
+                    section.visibleFor.includes(currentUserDept)
+                );
+            });
+            setFormConfig({ ...updatedConfig, sections: visibleSections });
+            // const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
+            // setFormConfig(updatedConfig);
         };
 
         loadStepConfig();
-    }, [currentStepIndex, initialFormConfig, users, departments, designations, employeeTypes, recruitymentTypes, locationData, visaTypes, currentIndex, candidateOffer]);
+    }, [currentStepIndex, initialFormConfig, users, departments, designations, employeeTypes, recruitymentTypes, locationData, visaTypes, currentIndex, candidateOffer, region]);
 
 
     const roundStatus = [
@@ -269,72 +327,13 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     ];
 
     const loading = candidatesLoading || interviewsLoading || offerAcceptanceLoading;
-    async function getApproverIdByRole(role: string, department?: string, departmentId?: string) {
-        // Simple example: search by role
-        console.log('users', users)
-        console.log('getApproverIdByRole', role, department, departmentId);
-        if (role === 'Manager') {
-            const approver = users?.find(user =>
-                user.department?.name === department &&
-                user.employeeType?.name === role
-            );
-            return approver ? approver?._id : null;
-        }
-        else {
-            if (role === 'DepartmentHead') {
-                const departmentManager = users?.find(user =>
-                    user.department?._id === departmentId &&
-                    user.employeeType?.name === "Manager"
-                );
 
-                const departmentHead = departmentManager?.reportingTo;
-                return departmentHead ? departmentHead?._id : null;
-            }
-            else {
-                const approver = users?.find(user =>
-                    user.designation?.name?.toUpperCase() === 'CEO'
-                );
-                return approver ? approver?._id : null;
-            }
-        }
 
-    }
-
-    async function createRecruitment(data) {
-        const recruitmentFlow = approvalFlows.recruitment;
-        console.log('recruitmentFlow', recruitmentFlow);
-        const approvalFlowArray: ApprovalInfo[] = [];
-
-        // Loop through flow and prepare approvers
-        for (const step of recruitmentFlow) {
-            const approverId = await getApproverIdByRole(
-                step?.role,
-                step?.department,
-                data?.department // pass department for dept head step
-            );
-
-            approvalFlowArray.push({
-                step: step.step,
-                key: step.key,
-                approverId,
-                date: null,
-                status: step.status,
-                remarks: "",
-            });
-        }
-
-        // Return the original data + approvalFlow array to save in DB
-        return {
-            ...data,
-            approvalFlow: approvalFlowArray,
-        };
-    }
-
-    const handleUpload = async (firstName, lastName, contactNumber, documentType, file) => {
+    const handleUpload = async (firstName, lastName, contactNumber, documentType, file, folderName) => {
         if (!file) return;
 
         // Prepare API endpoint with ticketId and userId
-        const endpoint = `/api/uploadCadidatesDocs?fullname=${firstName + `_` + lastName + `_` + contactNumber}&documentType=${documentType}`;
+        const endpoint = `/api/uploadCadidatesDocs?fullname=${firstName + `_` + lastName + `_` + contactNumber}&documentType=${documentType}&folderName=${folderName}`;
 
         // Prepare headers
         const headers: HeadersInit = {
@@ -405,8 +404,11 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             data?.lastName,
             data?.contactNumber,
             'resume',
-            data?.attachResume
+            data?.attachResume,
+            'candidates'
         );
+
+
 
         // Prepare candidate save payload
         const { checkedBy, ...restData } = data || {};
@@ -424,7 +426,6 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
         // 2️⃣ Save candidate
         const candidateResponse: any = await createMaster(candidatePayload);
-        console.log('Candidate Save Response:', candidateResponse);
 
         // 3️⃣ Update recruitment step if needed
         if (initialData?.completedStep === 1) {
@@ -505,12 +506,82 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             return;
         }
 
+        let uploadResultEducationCertificate = null;
+        let uploadResultPassport = null;
+        let uploadResultVisitVisa = null;
+        let uploadResultVisaCancellation = null;
+        let uploadResultPassportSizePhoto = null;
+
+        if (data?.uploadDocuments?.attachEducationCertificates?.length) {
+            // Create an array of promises, one per file
+            const uploadPromises = data?.uploadDocuments.attachEducationCertificates.map(
+                (file) =>
+                    handleUpload(
+                        data.firstName,
+                        data.lastName,
+                        data?.contactNumber,
+                        `${file.name.split('.')[0]}`,
+                        file,
+                        'candidates'
+                    )
+            );
+
+            // Wait for all uploads to finish concurrently
+            try {
+                const uploadResult = await Promise.all(uploadPromises);
+                uploadResultEducationCertificate = uploadResult?.map(file => file.url);
+                console.log('All files uploaded successfully:', uploadResultEducationCertificate);
+            } catch (err) {
+                console.error('One or more uploads failed:', err);
+            }
+        }
+
+
+        // 1️⃣ Upload resume
+
+        data?.passportInfo?.attachPassport && (uploadResultPassport = await handleUpload(
+            data?.firstName,
+            data?.lastName,
+            data?.contactNumber,
+            `passport`,
+            data?.passportInfo?.attachPassport,
+            'candidates'
+        ));
+
+        data?.uploadDocuments?.attachVisitVisa && (uploadResultVisitVisa = await handleUpload(
+            data?.firstName,
+            data?.lastName,
+            data?.contactNumber,
+            `visit visa`,
+            data?.uploadDocuments?.attachVisitVisa,
+            'candidates'
+        ));
+
+        data?.uploadDocuments?.attachVisaCancellation && (uploadResultVisaCancellation = await handleUpload(
+            data?.firstName,
+            data?.lastName,
+            data?.contactNumber,
+            `visit cancellation`,
+            data?.uploadDocuments?.attachVisaCancellation,
+            'candidates'
+        ));
+
+        data?.uploadDocuments?.passportSizePhoto && (uploadResultPassportSizePhoto = await handleUpload(
+            data?.firstName,
+            data?.lastName,
+            data?.contactNumber,
+            `passport size photo`,
+            data?.uploadDocuments?.passportSizePhoto,
+            'candidates'
+        ));
+
         const uploadResult = await handleUpload(
             data?.firstName,
             data?.lastName,
             data?.contactNumber,
             'offer letter',
-            data?.offerLetterUrl
+            data?.offerLetterUrl,
+            'candidates'
         );
 
         const interviewAssesmentId = localInterviews?.find((m: any) => m?.candidateId?._id === data?.candidateId)?._id;
@@ -518,10 +589,8 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             db: MONGO_MODELS.OFFER_ACCEPTANCE,
             action: actionOffer === 'Add' ? 'create' : 'update',
             filter: { "_id": data?._id },
-            data: { ...data, interviewAssesmentId: interviewAssesmentId, recruitmentId: initialData?._id, offerLetterUrl: uploadResult?.url, },
+            data: { ...data, interviewAssesmentId: interviewAssesmentId, recruitmentId: initialData?._id, offerLetterUrl: uploadResult?.url, passportInfo: { ...data?.passportInfo, passportUrl: uploadResultPassport?.url }, uploadDocuments: { ...data?.uploadDocuments, visitVisaUrl: uploadResultVisitVisa?.url, cancellationVisaUrl: uploadResultVisaCancellation?.url, educationCertificatesUrl: uploadResultEducationCertificate, passportSizePhotoUrl: uploadResultPassportSizePhoto?.url } },
         };
-
-        console.log('Offer Data;', offerPayLoad, localInterviews);
 
         const offerResponse: any = await createMaster(offerPayLoad);
 
@@ -532,11 +601,8 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 filter: { "_id": initialData?._id },
                 data: { completedStep: 4, status: 'completed' },
             };
-            console.log('Recruitment Update Data:', recruitmentPayload);
 
             const recruitmentResponse: any = await createMaster(recruitmentPayload);
-            console.log('Recruitment Update Response:', recruitmentResponse);
-
             initialData['completedStep'] = 4;
         }
         if (offerResponse?.data && offerResponse?.data.status === SUCCESS) {
@@ -563,14 +629,21 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     };
 
     const handleSaveInterview = async (data: any) => {
-        console.log('Form Data Candidate:', data);
 
         const { candidateId, recruitment, rounds = [], ...updateData } = data;
-
+        let roundsData = rounds;
 
         if (rounds.length > 0) {
             const lastRound = rounds[rounds.length - 1];
             if (lastRound?.interviewer) {
+
+                const missingRemarks = rounds.some((round, idx) => !round.remarks?.trim());
+                console.log('remarks:', missingRemarks);
+                if (missingRemarks) {
+                    toast.error("Please fill the remarks.");
+                    return; // ❌ stop saving
+                }
+
                 // Add empty round for next one
                 rounds.push({
                     roundNumber: rounds.length + 1,
@@ -580,7 +653,25 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     roundStatus: 'na' // keep as per your structure
                 });
             }
+
+            roundsData = rounds.slice(0, -1); // remove last blank
+
+            console.log('roundsdata:', roundsData)
+            const missingRemarks = roundsData.some((round, idx) => !round.remarks?.trim());
+            const roundStatus = roundsData.some((round, idx) => round?.roundStatus === 'rejected') && data?.status !== 'na';
+            console.log('remarks:', missingRemarks);
+            if (missingRemarks) {
+                toast.error("Please fill the remarks for interview rounds.");
+                return; // ❌ stop saving
+            }
+
+            if (roundStatus) {
+                toast.error("The candidate’s status cannot be changed as they have already been rejected in the interview rounds.");
+                return; // ❌ stop saving
+            }
         }
+
+
 
         const normalizedRounds = rounds.map((round: any) => ({
             roundNumber: round.roundNumber,
@@ -601,7 +692,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             data: updateData,
         };
 
-        console.log('interview Data;', interviewPayload);
+
         const interviewResponse: any = await createMaster(interviewPayload);
 
         if (updateData?.status === 'shortlisted') {
@@ -633,39 +724,125 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             });
 
             setShowInterviewDialog(false);
-
+            setFilteredInterviewers([]);
             return;
         }
 
         return interviewResponse;
 
     };
+    console.log('users', user);
+    async function getApproverIdByRole(role: string, department?: string, departmentId?: string) {
+        // Simple example: search by role
+
+        if (role === 'Manager') {
+            if (department) {
+                const approver = users?.find(user =>
+                    user.department?.name === department &&
+                    user.employeeType?.name === role
+                );
+                return approver ? approver?._id : null;
+            }
+            else {
+                console.log('user', user)
+                const approver = user?.reportingTo
+
+                return approver ? approver : null;
+            }
+
+        }
+        else {
+            if (role === 'DepartmentHead') {
+                if (departmentId) {
+                    const departmentManager = users?.find(user =>
+                        user.department?._id === departmentId &&
+                        user.employeeType?.name === "Manager"
+                    );
+
+                    const departmentHead = departmentManager?.reportingTo;
+
+                    return departmentHead ? departmentHead?._id : null;
+                }
+                else {
+                    const departmentManager = users?.find(u =>
+                        u?._id === user?._id
+                    );
+
+                    const departmentHead = departmentManager?.reportingTo;
+
+                    return departmentHead ? departmentHead?._id : null;
+                }
+
+            }
+            else {
+                const approver = users?.find(user =>
+                    user.designation?.name?.toUpperCase() === 'CEO'
+                );
+                return approver ? approver?._id : null;
+            }
+        }
+
+    }
+
+    async function createRecruitment(data: any, flowType: string) {
+        const recruitmentFlow = approvalFlows[flowType];
+
+        const approvalFlowArray: ApprovalInfo[] = [];
+
+        // Loop through flow and prepare approvers
+        for (const step of recruitmentFlow) {
+            const approverId = await getApproverIdByRole(
+                step?.role,
+                step?.department,
+                data?.requestedDepartment // pass department for dept head step
+            );
+
+            approvalFlowArray.push({
+                step: step.step,
+                key: step.key,
+                approverId,
+                date: null,
+                status: step.status,
+                remarks: "",
+            });
+        }
+
+        if (
+            approvalFlowArray.length >= 4 &&
+            approvalFlowArray[0].approverId === approvalFlowArray[2].approverId
+        ) {
+            approvalFlowArray.splice(2, 1); // remove 4th step
+        }
+
+        // Return the original data + approvalFlow array to save in DB
+        if (flowType === "recruitment") {
+            return {
+                ...data,
+                department: data?.requestedDepartment,
+                approvalFlow: approvalFlowArray,
+            };
+        }
+        else {
+            return {
+                ...data,
+                approvalFlow: approvalFlowArray,
+            };
+        }
+
+    }
 
     const handleSave = async (data: any) => {
-        console.log('Form Data:', data);
 
-        const recruitmentData = await createRecruitment(data);
+        const recruitmentData = await createRecruitment(data, "recruitment");
         const formattedData = {
             db: MONGO_MODELS.RECRUITMENT,
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": data?._id },
-            data: { ...recruitmentData, employeeType: employeeType },
+            data: { ...recruitmentData, employeeType: employeeType, regionRequisition: region },
         };
-        console.log('Formatted Data:', formattedData);
-
 
         const response: any = await createMaster(formattedData);
         let emailData = {};
-        if (response?.data?.data?.currentApprovalStep === 0) {
-            const approver = response.data.data.approvalFlow[0];
-            console.log('approval flow', approver);
-            const requestData = {'requestedBy': response.data.data?.requestedBy?.displayName, 'requestedDate': response.data.data?.createdAt, 'requestedPosition': response.data.data?.requiredPosition?.name};
-            emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Manpower Requisition Request', templateData: requestData, fileName: "hrmsTemplates/manpowerRequisition", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=true&_id=${response?.data?.data?._id}&name=test&year=${response?.data?.data?.year}&option=${response?.data?.data?.option}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/quoteConfirmation?status=false&_id=${response?.data?.data?._id}&name=test` };
-
-           await sendEmail(emailData);
-        }
-        console.log('Response:', response, 'approval flow', response.data.data.approvalFlow);
-
         if (response.data && response.data.status === SUCCESS) {
             toast.success(`Successfully ${action}ed recruitment request!`, {
                 position: "bottom-right"
@@ -673,6 +850,235 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             closeDialog();
 
         }
+
+        if (response?.data?.data?.currentApprovalStep === 0) {
+            const approver = response.data.data.approvalFlow[0];
+            console.log('approval flow', response);
+            const requestData = { 'requestedBy': response.data.data?.requestedBy?.displayName, 'requestedDate': response.data.data?.createdAt ? moment(response.data.data?.createdAt).format("DD-MM-yyyy hh:mm A") : "-", 'requestedPosition': response.data.data?.requiredPosition?.name };
+            emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Manpower Requisition Request', templateData: requestData, fileName: "hrmsTemplates/manpowerRequisition", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/manpowerRequisition?status=true&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/manpowerRequisition?status=false&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}` };
+
+            await sendEmail(emailData);
+        }
+
+
+    };
+
+    const handleSaveBusinessTrip = async (data: any) => {
+
+        console.log('Form Data Business Trip:', data);
+        const recruitmentData = await createRecruitment(data, "businessTrip");
+
+        console.log('business trip data', recruitmentData);
+
+        const formattedData = {
+            db: MONGO_MODELS.BUSINESS_TRIP,
+            action: action === 'Add' ? 'create' : 'update',
+            filter: { "_id": data?._id },
+            data: { ...recruitmentData, requestedBy: user?._id },
+        };
+
+        console.log('Business Trip Data to Save:', formattedData);
+
+        const response: any = await createMaster(formattedData);
+        let emailData = {};
+        console.log('Business Trip Response:', response);
+        if (response.data && response.data.status === SUCCESS) {
+            toast.success(`Successfully ${action === 'Add' ? 'added' : 'updated'} business trip request!`, {
+                position: "bottom-right"
+            });
+            closeDialog();
+
+        }
+
+        if (response?.data?.data?.currentApprovalStep === 0) {
+            const approver = response.data.data.approvalFlow[0];
+            console.log('approval flow', response);
+            const requestData = { 'requested By': response.data.data?.requestedBy?.displayName?.toProperCase(), 'requested Date': response.data.data?.createdAt ? moment(response.data.data?.createdAt).format("DD-MMM-yyyy hh:mm A") : "-", 'Department': response.data.data?.requestedDepartment?.name || user?.department?.name, 'Traveller': response.data.data?.travellerType?.toProperCase() };
+            emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Business Trip Request', templateData: requestData, fileName: "hrmsTemplates/businessTripRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=true&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=false&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}` };
+
+            await sendEmail(emailData);
+        }
+
+
+    };
+
+    const parameterMeta = [
+        { parameterName: "Knowledge of Job", description: "Familiar with duties and requirements of this position and knows the methods and practices to perform the job. knowledge gained through experience, education and training." },
+        { parameterName: "Productivity", description: "Employee uses available working time, plans and prioritizes work, sets and accomplishes goals, and completes assignments on schedule." },
+        { parameterName: "Quality of Work", description: "Employee completes the job duties successfully within the estimated time, with the output satisfying the expectations." },
+        { parameterName: "Adaptability", description: "Consider the ability to learn quickly, to adapt to changes in job assignments, methods and personnel." },
+        { parameterName: "Dependability", description: "Employee’s reliability in performing work assignments and carrying out instructions and the level of supervision required and willingness to take on responsibilities." },
+        { parameterName: "Communication Skills", description: "Employee’s ability to communicate effectively in both oral and written expression with the internal and external customers." },
+        { parameterName: "Initiative and Resourcefulness", description: "Employees ability to contribute, develop and/or carry out new ideas or methods self-starter, offer suggestions, to anticipate needs and to seek additional tasks as time permits." },
+        { parameterName: "Team Orientation", description: "Ability to work effectively with superiors, peers, subordinates and customers." },
+        { parameterName: "Attendance and Punctuality", description: "Employee report to work on time, staying on the job, observance of time limits for breaks and lunches and prompt notice for any absence." },
+        { parameterName: "Organization Obligations", description: "Overall fits in the company culture and values and has sense of loyalty, willingness to go beyond the boundaries and commit oneself to the organization’s success." },
+    ];
+
+    const handleSaveAppraisal = async (data: any) => {
+
+
+        // const recruitmentData = await createRecruitment(data, "businessTrip");
+
+        // console.log('business trip data', recruitmentData);
+        const enriched = data?.evaluationParameters?.map((param, index) => ({
+            ...param,
+            parameterName: parameterMeta[index]?.parameterName || "",
+            description: parameterMeta[index]?.description || "",
+        }));
+        const formattedData = {
+            db: MONGO_MODELS.PERFORMANCE_APPRAISAL,
+            action: action === 'Add' ? 'create' : 'update',
+            filter: { "_id": data?._id },
+            data: {
+                ...data, evaluationParameters: enriched,
+            },
+        };
+
+        console.log('Appraisal Data to Save:', formattedData);
+
+        const response: any = await createMaster(formattedData);
+        let emailData = {};
+        console.log('Appraisal Response:', response);
+        if (response.data && response.data.status === SUCCESS) {
+            toast.success(`Successfully ${action === 'Add' ? 'added' : 'updated'} performance appraisal request!`, {
+                position: "bottom-right"
+            });
+            closeDialog();
+
+        }
+
+        // if (response?.data?.data?.currentApprovalStep === 0) {
+        //     const approver = response.data.data.approvalFlow[0];
+        //     console.log('approval flow', response);
+        //     const requestData = { 'requested By': response.data.data?.requestedBy?.displayName?.toProperCase(), 'requested Date': response.data.data?.createdAt ? moment(response.data.data?.createdAt).format("DD-MMM-yyyy hh:mm A") : "-", 'Department': response.data.data?.requestedDepartment?.name || user?.department?.name, 'Traveller': response.data.data?.travellerType?.toProperCase() };
+        //     emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Business Trip Request', templateData: requestData, fileName: "hrmsTemplates/businessTripRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=true&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=false&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}` };
+
+        //     await sendEmail(emailData);
+        // }
+
+
+    };
+
+    const handoverDefaultValue = [
+        {
+            department: "Employee Department",
+            taskDescription: [
+                "Documents and Records",
+                "Job Handover",
+                "Emails to be forwarded (provide Email ID)",
+            ],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+        {
+            department: "Finance",
+            taskDescription: [
+                "Outstanding Amount Cleared",
+                "Petty Cash Cleared",
+                "Others",
+            ],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+        {
+            department: "IT",
+            taskDescription: [
+                "Laptop / Desktop",
+                "Mobile Phone / Sim Card",
+                "User Name and Passwords",
+                "Biometric Access closed on LWD",
+            ],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+        {
+            department: "Material Control / Stores",
+            taskDescription: ["Tools and Equipment’s"],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+        {
+            department: "Accommodation In charge",
+            taskDescription: ["Accommodation Items and Locker Keys"],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+        {
+            department: "HR & ADMIN",
+            taskDescription: [
+                "Medical Insurance Card / ID Card",
+                "Office Drawer / Room / Vehicle Keys",
+                "Others",
+            ],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+        {
+            department: "Other Department",
+            taskDescription: [""],
+            handoverTo: "",
+            handoverDate: "",
+            status: false,
+            signature: "",
+        },
+    ];
+
+    const handleSaveOffboarding = async (data: any) => {
+
+
+        // const recruitmentData = await createRecruitment(data, "businessTrip");
+
+        console.log('offborading data', data);
+
+
+        const enriched = data?.handoverDetails?.map((param, index) => ({
+            ...param,
+            department: handoverDefaultValue[index]?.department || "",
+            taskDescription: handoverDefaultValue[index]?.taskDescription || [],
+            handoverTo: param?.handoverTo !== "" ? param?.handoverTo : null,
+        }));
+        const formattedData = {
+            db: MONGO_MODELS.OFFBOARDING,
+            action: action === 'Add' ? 'create' : 'update',
+            filter: { "_id": data?._id },
+            data: {
+                ...data, handoverDetails: enriched,
+            },
+        };
+        console.log('offborading data', formattedData);
+        const response: any = await createMaster(formattedData);
+        let emailData = {};
+        console.log('Offboarding Response:', response);
+        if (response.data && response.data.status === SUCCESS) {
+            toast.success(`Successfully ${action === 'Add' ? 'added' : 'updated'} offboarding process request!`, {
+                position: "bottom-right"
+            });
+            closeDialog();
+
+        }
+
+        // if (response?.data?.data?.currentApprovalStep === 0) {
+        //     const approver = response.data.data.approvalFlow[0];
+        //     console.log('approval flow', response);
+        //     const requestData = { 'requested By': response.data.data?.requestedBy?.displayName?.toProperCase(), 'requested Date': response.data.data?.createdAt ? moment(response.data.data?.createdAt).format("DD-MMM-yyyy hh:mm A") : "-", 'Department': response.data.data?.requestedDepartment?.name || user?.department?.name, 'Traveller': response.data.data?.travellerType?.toProperCase() };
+        //     emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Business Trip Request', templateData: requestData, fileName: "hrmsTemplates/businessTripRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=true&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=false&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}` };
+
+        //     await sendEmail(emailData);
+        // }
+
 
     };
 
@@ -684,29 +1090,31 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     }
 
 
-    const editUser = (rowData: any) => {
+    const editUser = async (rowData: any) => {
         console.log('Editing user:', rowData);
         if (rowData?.attachResume) {
-            const loadFile = async () => {
-                try {
-                    // Extract filename and extension
-                    const url = rowData.attachResume;
-                    const filename = url.split('/').pop();
-                    const ext = filename.split('.').pop()?.toLowerCase() || '';
-                    const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
 
-                    const file = await urlToFile(url, filename, mimeType);
+            try {
+                // Extract filename and extension
+                const url = rowData.attachResume;
+                const filename = url.split('/').pop();
+                const ext = filename.split('.').pop()?.toLowerCase() || '';
+                const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
 
-                    // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
-                    // setFormData(prev => ({ ...prev, resume: file }));
-                    setInitialDataCandidate({ ...rowData, attachResume: file, resumeUrl: url });
-                    // If you want to preview, also create an object URL
-                    // setResumePreview(URL.createObjectURL(file));
-                } catch (err) {
-                    console.error("Error loading file:", err);
-                }
-            };
-            loadFile();
+                const file = await urlToFile(url, filename, mimeType);
+
+                // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
+                // setFormData(prev => ({ ...prev, resume: file }));
+                setInitialDataCandidate({ ...rowData, attachResume: file, resumeUrl: url });
+                // If you want to preview, also create an object URL
+                // setResumePreview(URL.createObjectURL(file));
+            } catch (err) {
+                console.error("Error loading file:", err);
+            }
+
+        }
+        else {
+            setInitialDataCandidate(rowData);
         }
 
 
@@ -755,32 +1163,43 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     }
 
 
-    const editInterview = (rowData: any) => {
+    const editInterview = async (rowData: any) => {
         console.log('Editing interview:', rowData);
+
+        const candidateDeptId = rowData?.recruitment?.department?._id;
+        const normalizedData = await normalizeCandidateData(rowData);
+        // Filter users belonging to the same department
+        const filteredInterviewers = users?.filter(
+            (user: any) => user?.department?._id === candidateDeptId
+        );
         if (rowData?.candidateId?.attachResume) {
-            const loadFile = async () => {
-                try {
-                    // Extract filename and extension
-                    const url = rowData?.candidateId.attachResume;
-                    const filename = url.split('/').pop();
-                    const ext = filename.split('.').pop()?.toLowerCase() || '';
-                    const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
 
-                    const file = await urlToFile(url, filename, mimeType);
+            try {
+                // Extract filename and extension
+                const url = rowData?.candidateId.attachResume;
+                const filename = url.split('/').pop();
+                const ext = filename.split('.').pop()?.toLowerCase() || '';
+                const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
 
-                    // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
-                    // setFormData(prev => ({ ...prev, resume: file }));
-                    const normalizedData = await normalizeCandidateData(rowData);
-                    setInitialDataCandidate({ ...normalizedData, attachResume: file, resumeUrl: url });
-                    // If you want to preview, also create an object URL
-                    // setResumePreview(URL.createObjectURL(file));
-                } catch (err) {
-                    console.error("Error loading file:", err);
-                }
-            };
-            loadFile();
+                const file = await urlToFile(url, filename, mimeType);
+
+                // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
+                // setFormData(prev => ({ ...prev, resume: file }));
+
+                setInitialDataCandidate({ ...normalizedData, attachResume: file, resumeUrl: url });
+                // If you want to preview, also create an object URL
+                // setResumePreview(URL.createObjectURL(file));
+            } catch (err) {
+                console.error("Error loading file:", err);
+            }
+
         }
 
+        else {
+            setInitialDataCandidate(rowData);
+        }
+        console.log('interviewer', filteredInterviewers)
+        // setFilteredInterviewers(filteredInterviewers);
         // setInitialDataCandidate(rowData);
         setActionInterview('Update');
 
@@ -789,39 +1208,104 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
         // Your add logic for user page
     };
 
-    const editOffer = (rowData: any) => {
-        console.log('Editing offer:', rowData);
+    async function urlsToFiles(urls: string[]): Promise<File[]> {
+        const filePromises = urls.map(async (fileUrl) => {
+            const filename = fileUrl.split("/").pop() || "file";
+            const ext = filename.split(".").pop()?.toLowerCase() || "";
+            const mimeType = ext === "pdf" ? "application/pdf" : `application/${ext}`;
 
-        if (rowData?.offerLetterUrl) {
-            const loadFile = async () => {
-                try {
-                    // Extract filename and extension
-                    const url = rowData.offerLetterUrl;
-                    const filename = url.split('/').pop();
-                    const ext = filename.split('.').pop()?.toLowerCase() || '';
-                    const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
+            return await urlToFile(fileUrl, filename, mimeType);
+        });
 
-                    const file = await urlToFile(url, filename, mimeType);
+        return Promise.all(filePromises);
+    }
 
-                    // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
-                    // setFormData(prev => ({ ...prev, resume: file }));
-                    setInitialDataCandidate({
-                        ...rowData, offerLetterUrl: file, resumeUrl: url, candidateId: rowData?.interviewAssesmentId?.candidateId?._id, department: initialData?.department?.name || '',
-                        position: initialData?.requiredPosition?.name
-                    });
-                    // If you want to preview, also create an object URL
-                    // setResumePreview(URL.createObjectURL(file));
-                } catch (err) {
-                    console.error("Error loading file:", err);
-                }
-            };
-            loadFile();
+    const editOffer = async (rowData: any) => {
+
+        let educationCertificatesFile: any = "";
+        let passportFile: any = "";
+        let visitVisaFile: any = "";
+        let visaCancellationFile: any = "";
+        let passportSizePhotoFile: any = "";
+
+        const eductionCertificatesUrl = rowData?.uploadDocuments?.educationCertificatesUrl;
+        const passportUrl = rowData?.passportInfo?.passportUrl;
+        const visitVisaUrl = rowData?.uploadDocuments?.visitVisaUrl;
+        const cancellationVisaUrl = rowData?.uploadDocuments?.cancellationVisaUrl;
+        const passortSizePhotoUrl = rowData?.uploadDocuments?.passportSizePhotoUrl;
+
+
+        if (eductionCertificatesUrl) {
+            educationCertificatesFile = await urlsToFiles(eductionCertificatesUrl);
         }
 
-        // setInitialDataCandidate({
-        //     ...rowData, candidateId: rowData?.interviewAssesmentId?.candidateId?._id, department: initialData?.department?.name || '',
-        //     position: initialData?.requiredPosition?.name
-        // });
+        if (passportUrl) {
+            const filename = passportUrl.split("/").pop() || "visa";
+            const ext = filename.split(".").pop()?.toLowerCase() || "";
+            const mimeType = ext === "pdf" ? "application/pdf" : `application/${ext}`;
+            passportFile = await urlToFile(passportUrl, filename, mimeType);
+        }
+
+        if (visitVisaUrl) {
+            const filename = visitVisaUrl.split("/").pop() || "visa";
+            const ext = filename.split(".").pop()?.toLowerCase() || "";
+            const mimeType = ext === "pdf" ? "application/pdf" : `application/${ext}`;
+            visitVisaFile = await urlToFile(visitVisaUrl, filename, mimeType);
+        }
+
+        if (cancellationVisaUrl) {
+            const filename = cancellationVisaUrl.split("/").pop() || "visa";
+            const ext = filename.split(".").pop()?.toLowerCase() || "";
+            const mimeType = ext === "pdf" ? "application/pdf" : `application/${ext}`;
+            visaCancellationFile = await urlToFile(cancellationVisaUrl, filename, mimeType);
+        }
+
+        if (passortSizePhotoUrl) {
+            const filename = passortSizePhotoUrl.split("/").pop() || "visa";
+            const ext = filename.split(".").pop()?.toLowerCase() || "";
+            const mimeType = ext === "pdf" ? "application/pdf" : `application/${ext}`;
+            passportSizePhotoFile = await urlToFile(passortSizePhotoUrl, filename, mimeType);
+        }
+
+        console.log('offerData', rowData)
+        if (rowData?.offerLetterUrl) {
+
+            try {
+                // Extract filename and extension
+                const url = rowData.offerLetterUrl;
+                const filename = url.split('/').pop();
+                const ext = filename.split('.').pop()?.toLowerCase() || '';
+                const mimeType = ext === 'pdf' ? 'application/pdf' : `application/${ext}`;
+
+                const file = await urlToFile(url, filename, mimeType);
+
+                // Store file in your form state (e.g., react-hook-form, Formik, or normal state)
+                // setFormData(prev => ({ ...prev, resume: file }));
+                setInitialDataCandidate({
+                    ...rowData, offerLetterUrl: file, offerUrl: url, candidateId: rowData?.interviewAssesmentId?.candidateId?._id, department: initialData?.department?.name || '',
+                    position: initialData?.requiredPosition?.name, uploadDocuments: {
+                        ...rowData?.uploadDocuments,
+                        attachEducationCertificates: educationCertificatesFile,
+                        attachVisitVisa: visitVisaFile,
+                        attachVisaCancellation: visaCancellationFile,
+                        passportSizePhoto: passportSizePhotoFile
+                    },
+                    passportInfo: {
+                        ...rowData?.passportInfo,
+                        attachPassport: passportFile
+                    }
+                });
+                // If you want to preview, also create an object URL
+                // setResumePreview(URL.createObjectURL(file));
+            } catch (err) {
+                console.error("Error loading file:", err);
+            }
+
+        }
+        else {
+            setInitialDataCandidate(rowData);
+        }
+
         setActionOffer('Update');
 
         setShowOfferDialog(true);
@@ -838,22 +1322,26 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     const handleAddOffer = () => {
         setActionOffer('Add');
         setInitialDataCandidate({
-            department: initialData?.department?.name || '',
+            offerDepartment: initialData?.department?.name || '',
             position: initialData?.requiredPosition?.name
         });
         setShowOfferDialog(true);
     };
 
-    const handleShareLink = () => {
-        const currentUrl = `http://localhost:3000/candidates?processId=${initialData?._id}`;
-        const subject = encodeURIComponent("URL to submit candidate details");
+    const handleShareLink = async () => {
+        const res = await fetch("/api/linkExpiry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ processId: initialData?._id }),
+        });
 
-        // Place URL at the start to improve auto-link detection
-        const body = encodeURIComponent(`${currentUrl}\n\nCopy and paste the above url to add the candidate information.`);
+        const { url } = await res.json();
+
+        const subject = encodeURIComponent("URL to submit candidate details");
+        const body = encodeURIComponent(`${url}\n\nThis link will expire in 1 hour.`);
 
         window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
-
-    }
+    };
 
     const candidateColumns = [
         {
@@ -1159,19 +1647,34 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 const interview = row.original;
                 const rounds = interview?.rounds || [];
 
-                if (rounds.length <= 1) return <div>NA</div>;
+                if (rounds.length <= 1 && rounds[0]?.roundStatus !== 'rejected') return <div>NA</div>;
 
                 // Sort rounds to get the last round
                 const sortedRounds = [...rounds].sort((a: any, b: any) => a.roundNumber - b.roundNumber);
+
+                const lastRound = sortedRounds[sortedRounds.length - 1];
 
                 // Get second last round
                 const secondLastRound = sortedRounds.length >= 2
                     ? sortedRounds[sortedRounds.length - 2]
                     : null;
 
+                let roundToDisplay = null;
+
+                if (lastRound.roundStatus?.toLowerCase() === 'rejected') {
+                    // If last round is rejected, show last round
+                    roundToDisplay = lastRound;
+                } else if (sortedRounds.length >= 2) {
+                    // Otherwise, show second last round
+                    roundToDisplay = secondLastRound;
+                } else {
+                    // Only one round and not rejected
+                    roundToDisplay = lastRound;
+                }
+
                 return (
                     <div>
-                        Round {secondLastRound.roundNumber} - {secondLastRound.roundStatus.toProperCase() || 'NA'}
+                        Round {roundToDisplay.roundNumber} - {roundToDisplay.roundStatus.toProperCase() || 'NA'}
                     </div>
                 );
             },
@@ -1219,15 +1722,28 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     ];
 
     const formattedInterviewData = useMemo(() => {
-        return localInterviews.map((candidate: any) => ({
-            ...candidate,
-            firstName: candidate?.candidateId?.firstName || '',
-            lastName: candidate?.candidateId?.lastName || '',
-            contactNumber: candidate?.candidateId?.contactNumber || '',
-            email: candidate?.candidateId?.email || '',
-            fullName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName} ${candidate?.candidateId?.contactNumber}`,
-            candidateName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName}`
-        }));
+        return localInterviews.map((candidate: any) => {
+            let rounds = [...(candidate.rounds || [])];
+
+            // ✅ Check if any round is rejected
+            const hasRejected = rounds.some((r: any) => r.roundStatus === "rejected");
+
+            if (hasRejected && rounds.length > 0) {
+                // Remove last round if rejected exists
+                rounds = rounds.slice(0, -1);
+            }
+
+            return {
+                ...candidate,
+                rounds, // updated rounds
+                firstName: candidate?.candidateId?.firstName || '',
+                lastName: candidate?.candidateId?.lastName || '',
+                contactNumber: candidate?.candidateId?.contactNumber || '',
+                email: candidate?.candidateId?.email || '',
+                fullName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName} ${candidate?.candidateId?.contactNumber}`,
+                candidateName: `${candidate?.candidateId?.firstName} ${candidate?.candidateId?.lastName}`
+            };
+        });
     }, [localInterviews]);
 
     console.log('formattedData:', formattedInterviewData)
@@ -1438,7 +1954,10 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             contactNumber: candidate?.interviewAssesmentId?.candidateId?.contactNumber || '',
             email: candidate?.interviewAssesmentId?.candidateId?.email || '',
             candidateName: `${candidate?.interviewAssesmentId?.candidateId?.firstName} ${candidate?.interviewAssesmentId?.candidateId?.lastName}`,
-            department: initialData?.department?.name
+            offerDepartment: initialData?.department?.name,
+            candidateId: candidate?.interviewAssesmentId?.candidateId?._id,
+            position: candidate?.recruitmentId?.requiredPosition?.name,
+
         }));
     }, [localOfferData]);
 
@@ -1463,7 +1982,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     };
 
 
-    console.log('offer data', formattedOfferData)
+    console.log('offer data', formattedOfferData, formConfig)
 
     return (
         <>
@@ -1474,8 +1993,10 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                         // Reset everything when dialog closes
 
                         closeDialog();
-                        setEmployeeType(null);
+                        setEmployeeType('');
+                        setRegion('');
                         setIsStaff(false);
+
 
                         // setCurrentStepIndex(savedStepIndex);
                     }
@@ -1493,37 +2014,68 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
                     <div className="h-full flex flex-col min-h-0 pt-4">
 
-                        {(!isStaff && !loading) && (
-                            <div className="w-[200px] mb-4">
-                                <Label className="mb-1 block">Select Employee Type</Label>
-                                <Combobox
-                                    value={''}
-                                    field={{
-                                        name: 'employeeType',
-                                        label: 'Employee Type',
-                                        data: employeeTypes, // this should come from props or fetched API (with _id and name)
-                                        key: 'employeeType',
-                                    }}
-                                    formData={formData}
-                                    handleChange={(value: any) => {
-                                        setEmployeeType(value); // value = _id of selected employee type
-                                        setIsEmployeeTypeSelected(true);
-                                        setFormData((prev) => ({
-                                            ...prev,
-                                            employeeType: value,
-                                        }));
+                        {(!isStaff && !loading && !['business_travel', 'performance_appraisal', 'offboarding'].includes(workflowType)) && (
+                            <div className="flex  justify-between gap-2 mb-4 w-[400px]">
+                                <div className="w-full">
+                                    <Label className="mb-1 block">Select Region</Label>
+                                    <Combobox
+                                        className="w-full"
+                                        value={''}
+                                        field={{
+                                            name: 'regionRequisition',
+                                            label: 'Region',
+                                            data: uniqueCountries, // this should come from props or fetched API (with _id and name)
+                                            key: 'regionRequisition',
+                                        }}
+                                        formData={formData}
+                                        handleChange={(value: any) => {
+                                            setRegion(value); // value = _id of selected employee type
+                                            // setIsEmployeeTypeSelected(true);
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                regionRequisition: value,
+                                            }));
 
-                                        // Optionally: update form config if needed
-                                    }}
-                                    placeholder="Choose employee type"
-                                />
+                                            // Optionally: update form config if needed
+                                        }}
+                                        placeholder="Choose a region"
+                                    />
+                                </div>
+                                <div className="w-full">
+                                    <Label className="mb-1 block">Select Employee Type</Label>
+                                    <Combobox
+                                        className="w-full"
+                                        value={''}
+                                        field={{
+                                            name: 'employeeType',
+                                            label: 'Employee Type',
+                                            data: employeeTypes, // this should come from props or fetched API (with _id and name)
+                                            key: 'employeeType',
+                                        }}
+                                        formData={formData}
+                                        handleChange={(value: any) => {
+                                            setEmployeeType(value); // value = _id of selected employee type
+                                            setIsEmployeeTypeSelected(true);
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                employeeType: value,
+                                            }));
+
+                                            // Optionally: update form config if needed
+                                        }}
+                                        placeholder="Choose employee type"
+                                    />
+                                </div>
+
+
+
                             </div>
                         )}
 
-                        {isStaff && !loading && formConfig && (
+                        {(!loading && formConfig && (isStaff || workflowType === 'business_travel' || workflowType === 'performance_appraisal' || workflowType === 'offboarding')) && (
                             <>
                                 {/* Fixed WorkflowNavigation inside dialog */}
-                                <div className="fixed top-10 left-0 right-0 z-40 flex justify-center bg-white">
+                                {workflowType !== 'business_travel' && workflowType !== 'performance_appraisal' && workflowType !== 'offboarding' && <div className="fixed top-10 left-0 right-0 z-20 flex justify-center bg-white pb-2">
                                     <div className="w-full max-w-5xl pt-1 px-3">
                                         <WorkflowNavigation
                                             formConfig={{
@@ -1534,10 +2086,10 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                             }}
                                         />
                                     </div>
-                                </div>
+                                </div>}
 
                                 {/* Scrollable Form container below header */}
-                                <div className="pt-[220px] flex-1 overflow-y-auto flex justify-center">
+                                <div className={`${workflowType !== 'business_travel' && workflowType !== 'performance_appraisal' && workflowType !== 'offboarding' ? 'pt-[210px]' : ''} flex-1 overflow-y-auto flex justify-center`}>
                                     {(() => {
                                         switch (formConfig?.formType) {
                                             case "candidate_information":
@@ -1577,6 +2129,45 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                                             summary={false}
                                                         />
 
+                                                    </div>
+                                                );
+
+                                            case "business_trip_request":
+                                                return (
+                                                    <div className="w-full max-w-5xl p-4 pr-2">
+                                                        <FormContainer
+                                                            formConfig={formConfig}
+                                                            onSubmit={handleSaveBusinessTrip}
+                                                            initialData={initialData}
+                                                            action={action}
+                                                            users={users}
+                                                        />
+                                                    </div>
+                                                );
+
+                                            case "performance_appraisal":
+                                                return (
+                                                    <div className="w-full max-w-5xl p-4 pr-2">
+                                                        <FormContainer
+                                                            formConfig={formConfig}
+                                                            onSubmit={handleSaveAppraisal}
+                                                            initialData={initialData}
+                                                            action={action}
+                                                            users={users}
+                                                        />
+                                                    </div>
+                                                );
+
+                                            case "offboarding":
+                                                return (
+                                                    <div className="w-full max-w-5xl p-4 pr-2">
+                                                        <FormContainer
+                                                            formConfig={formConfig}
+                                                            onSubmit={handleSaveOffboarding}
+                                                            initialData={initialData}
+                                                            action={action}
+                                                            users={users}
+                                                        />
                                                     </div>
                                                 );
 
@@ -1627,7 +2218,13 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             )}
 
 
-            <Dialog open={showInterviewDialog} onOpenChange={setShowInterviewDialog}>
+            <Dialog open={showInterviewDialog} onOpenChange={(open) => {
+                setShowInterviewDialog(open);
+                if (!open) {
+                    // Dialog is closing, reset the initial data
+                    setInitialDataCandidate([]);
+                }
+            }}>
                 <DialogContent
                     className="bg-white max-w-full pointer-events-auto mx-2 max-h-[95vh] w-[75%] h-[95vh] flex flex-col"
                     onInteractOutside={(e) => e.preventDefault()}
@@ -1637,7 +2234,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     </DialogTitle>
 
                     {/* Scrollable form container */}
-                    <div className="overflow-y-auto flex-1 px-2">
+                    {initialDataCandidate && Object.keys(initialDataCandidate).length > 0 && (<div className="overflow-y-auto flex-1 px-2">
                         <FormContainer
                             formConfig={formConfig}
                             onSubmit={handleSaveInterview}
@@ -1645,7 +2242,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                             action={actionInterview}
                             users={users}
                         />
-                    </div>
+                    </div>)}
                 </DialogContent>
             </Dialog>
 

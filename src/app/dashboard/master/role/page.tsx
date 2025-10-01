@@ -72,19 +72,31 @@ const page = () => {
   // Save function to send data to an API or database
   const saveData = async ({ formData, action }: { formData: any, action: string }) => {
 
-    const formattedData = {
-      db: 'ROLE_MASTER',
-      action: action === 'Add' ? 'create' : 'update',
-      filter: { "_id": formData._id },
-      data: formData,
-    };
+    try {
+
+      const formattedData = {
+        db: 'ROLE_MASTER',
+        action: action === 'Add' ? 'create' : 'update',
+        filter: { "_id": formData._id },
+        data: formData,
+      };
 
 
 
-    const response = await createMaster(formattedData);
+      const response = await createMaster(formattedData);
 
+      console.log('respon', response)
+      return response;
 
-  return response;
+    } catch (error) {
+      console.error("API errors:", error);
+
+      // If you're using axios:
+      if (error.response) {
+        console.error("Server responded with:", error.response.data);
+      }
+    }
+
 
   };
 
@@ -104,7 +116,7 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData:[], customerData:[], userData:[], teamData:[], action: "Add", user, createUser: createMaster, db: "ROLE_MASTER", masterName: "Role" });
+    bulkImport({ roleData: roleData, continentData: [], regionData: [], countryData: [], locationData: [], categoryData: [], vendorData: [], productData: [], warehouseData: [], customerTypeData: [], customerData: [], userData: [], teamData: [], action: "Add", user, createUser: createMaster, db: "ROLE_MASTER", masterName: "Role" });
   };
 
   const exportToExcel = (data: any[]) => {
@@ -119,7 +131,7 @@ const page = () => {
   };
 
   const handleExport = (type: string) => {
-    
+
     const formattedData = roleData?.data.map((data: any) => {
       return {
         Role: data?.name,

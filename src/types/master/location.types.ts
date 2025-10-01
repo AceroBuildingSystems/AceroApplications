@@ -8,5 +8,6 @@ export interface location {
     addedBy: string,
     updatedBy: string,
     isActive:boolean,
+    isCompanyLocation: string
 }
   

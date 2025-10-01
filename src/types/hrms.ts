@@ -14,7 +14,11 @@ export enum HRMSFormTypes {
   EMPLOYEE_INFORMATION = 'employee_information',
   ACCOMMODATION_TRANSPORT_CONSENT = 'accommodation_transport_consent',
   BENEFICIARY_DECLARATION = 'beneficiary_declaration',
-  NON_DISCLOSURE_AGREEMENT = 'non_disclosure_agreement'
+  NON_DISCLOSURE_AGREEMENT = 'non_disclosure_agreement',
+  EMPLOYEE_ORIENTATION = 'employee_orientation',
+  VISA_PROCESS = 'visa_process',
+  PERFORMANCE_APPRAISAL = 'performance_appraisal',
+  OFFBOARDING = 'offboarding'
 }
 
 // HRMS Form Status Types
@@ -123,20 +127,23 @@ export const HRMS_WORKFLOW_STAGES = {
     'accommodation_transport_consent',
     'beneficiary_declaration',
     'non_disclosure_agreement',
-    'training_schedule'
+    'employee_orientation',
+    'visa_process'
   ]
 };
 
 // Common field types for forms
 export interface HRMSFormField {
+  accept: string;
+  multiple: boolean;
   disable: boolean | undefined;
   id: string;
 
-  type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'radio' | 'file' | 'array';
+  type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'checkbox-group' | 'radio' | 'file' | 'array' | 'label' | 'labeltext' | 'labeldate' | 'evaluation' | 'handover';
   label: string;
   required?: boolean;
   placeholder?: string;
-  options?: Array<{ value: string; label: string }>;
+  options?: Array<{ value: string; label: string; disabled?: boolean }>;
   validation?: {
     min?: number;
     max?: number;

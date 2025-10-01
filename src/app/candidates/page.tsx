@@ -32,25 +32,61 @@ import { Button } from '@/components/ui/button';
 import { Recruitment } from '@/models';
 import FormContainer from '@/components/hrms/FormContainer';
 
+import jwt from "jsonwebtoken";
+
 const page = () => {
+    const searchParams = useSearchParams();
+    const token = searchParams.get("token");
+    const [status, setStatus] = useState<"loading" | "expired" | "valid" | "invalid">("loading");
+    const [recruitmentId, setRecruitmentId] = useState<string | null>(null);
     const router = useRouter()
     const [createMaster, { isLoading: isCreatingMaster }] = useCreateMasterMutation();
-    const searchParams = useSearchParams();
-    const recruitmentId = searchParams.get("processId");
+
+    // Extract processId from token
+    // const recruitmentId = decoded?.processId
+
+    console.log('recruitmentId', recruitmentId);
+    // const recruitmentId = searchParams.get("processId");
     const [workflowType, setWorkflowType]: any = useState('recruitment');
     const [workflowConfig, setWorkflowConfig]: any = useState(null);
-    const [formConfig, setFormConfig] = useState<HRMSFormConfig | null>(null);
+    const [formConfig, setFormConfig]: any = useState<HRMSFormConfig | null>(null);
     const [importing, setImporting] = useState(false);
     const [showCandidateDialog, setShowCandidateDialog] = useState(false);
 
     const [actionCandidate, setActionCandidate] = useState('Add');
     const [searchTerm, setSearchTerm] = useState('')
-    const { user, status, authenticated } = useUserAuthorised();
+    const { user, authenticated } = useUserAuthorised();
     const [initialDataCandidate, setInitialDataCandidate] = useState([]);
+
+
+    useEffect(() => {
+        if (!token) {
+            setStatus("invalid");
+            return;
+        }
+
+        const verifyToken = async () => {
+            const res = await fetch(`/api/linkExpiry?token=${token}`);
+            const data = await res.json();
+
+            if (res.ok && data.valid) {
+                setStatus("valid");
+                setRecruitmentId(data.processId);
+            } else {
+                setStatus("expired");
+            }
+        };
+
+        verifyToken();
+    }, [token]);
+
+
     const { data: designationData = [], isLoading: designationLoading } = useGetMasterQuery({
         db: MONGO_MODELS.DESIGNATION_MASTER,
         sort: { name: 'asc' },
     });
+
+
 
     const { data: departmentsData = [], isLoading: departmentLoading } = useGetMasterQuery({
         db: MONGO_MODELS.DEPARTMENT_MASTER,
@@ -77,9 +113,18 @@ const page = () => {
         sort: { empId: 'asc' },
     });
 
-    if (!recruitmentId) {
-        toast.error(`Recruitment need to be selected to get the candidates info.`)
-    }
+
+
+    const qualifications = [
+        { name: 'Secondary', _id: 'Secondary' },
+        { name: 'Higher Secondary', _id: 'Higher Secondary' },
+        { name: 'Diploma', _id: 'Diploma' },
+        { name: 'Bachelor’s Degree', _id: 'Degree' },
+        { name: 'Master’s Degree', _id: 'Master Degree' },
+        { name: 'PhD', _id: 'PhD' },
+        { name: 'Others', _id: 'others' },
+
+    ];
 
     useEffect(() => {
 
@@ -91,6 +136,7 @@ const page = () => {
                 nationality: countryData?.data,
                 visaType: visaTypes,
                 checkedBy: usersData?.data,
+                highestQualification: qualifications
             };
             console.log('baseconfig', baseConfig);
             const updatedConfig = deepCloneWithOptionsInjection(baseConfig, optionsMap);
@@ -104,14 +150,14 @@ const page = () => {
     const loading = departmentLoading || userLoading || designationLoading || candidatesLoading || countryLoading || isCreatingMaster || recruitmentLoading;
 
 
-    const handleUpload = async (firstName, lastName, contactNumber, documentType, file) => {
+    const handleUpload = async (firstName:string, lastName:string, contactNumber:string, documentType:string, file:any, folderName:string) => {
         if (!file) return;
         console.log('upoading file:', file.name);
         // setIsUploading(true);
         // setUploadProgress(0);
 
         // Prepare API endpoint with ticketId and userId
-        const endpoint = `/api/uploadCadidatesDocs?fullname=${firstName + `_` + lastName + `_` + contactNumber}&documentType=${documentType}`;
+        const endpoint = `/api/uploadCadidatesDocs?fullname=${firstName + `_` + lastName + `_` + contactNumber}&documentType=${documentType}&folderName=${folderName}`;
 
         // Prepare headers
         const headers: HeadersInit = {
@@ -123,7 +169,7 @@ const page = () => {
         const reader = file.stream().getReader();
         let uploaded = 0;
         const total = file.size;
-        let chunks: Uint8Array[] = [];
+        let chunks: any = [];
 
         while (true) {
             const { done, value } = await reader.read();
@@ -175,12 +221,20 @@ const page = () => {
 
     const handleSaveCandidate = async (data: any) => {
         console.log('Form Data Candidate:', data);
+
+        if (!recruitmentId) {
+            toast.error(`Recruitment need to be selected to get the candidates info.`)
+
+            return;
+        }
+
         const uploadResult = await handleUpload(
             data?.firstName,
             data?.lastName,
             data?.contactNumber,
             'resume',
-            data?.attachResume
+            data?.attachResume,
+            'candidates'
         );
 
         // Prepare candidate save payload
@@ -189,7 +243,7 @@ const page = () => {
             db: MONGO_MODELS.CANDIDATE_INFO,
             action: actionCandidate === 'Add' ? 'create' : 'update',
             filter: { "_id": data?._id },
-            data: { ...data, attachResume: uploadResult?.url, recruitment: recruitmentId, checkedBy:undefined },
+            data: { ...data, attachResume: uploadResult?.url, recruitment: recruitmentId, checkedBy: undefined },
         };
 
         // 2️⃣ Save candidate
@@ -271,15 +325,38 @@ const page = () => {
         );
     }
 
+    if (status === "loading") return (
+        <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        </div>
+    );
+    if (status === "invalid") return (
+        <div className="flex items-center justify-center h-64">
+            <div className="font-bold text-2xl">Invalid Link</div>
+        </div>
+    );
+    if (status === "expired") return (
+        <div className="flex items-center justify-center h-64">
+            <div className="font-bold text-2xl">Link Expired</div>
+        </div>
+    );
+
+
     return (
         <>
 
 
             <div className="bg-white w-full h-screen flex flex-col pb-4">
                 <div className="max-w-5xl mx-auto px-2 flex flex-col h-full">
-                    <div className="font-bold text-xl py-1 pt-5 border-b border-gray-300 mb-3">
-                        Enter Candidate Details
+                    <div className='flex flex-row items-center justify-between py-1 pt-5 border-b border-gray-300 mb-3'>
+                        <div className="font-bold text-2xl ">
+                            Candidate Details
+                        </div>
+                        <div className='text-sm text-red-600'>
+                            Page will expire in 1 hour*
+                        </div>
                     </div>
+
 
                     {/* Scrollable container */}
                     <div className="flex-1 overflow-y-auto pr-2">
@@ -287,8 +364,7 @@ const page = () => {
                             formConfig={formConfig}
                             onSubmit={handleSaveCandidate}
                             initialData={initialDataCandidate}
-                            action={actionCandidate}
-                        />
+                            action={actionCandidate} users={undefined} />
                     </div>
                 </div>
             </div>

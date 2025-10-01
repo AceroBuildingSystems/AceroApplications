@@ -27,13 +27,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [customLoadingState, setCustomLoadingState] = useState(false);
   const pathName = usePathname();
   const pathContent = pathName.split('/')
+  const pageName = pathContent[pathContent.length - 1].split("_");
   const { user, menuItems }: any = useUserAuthorised();
   return (
     <AuthComponent loadingState={customLoadingState}  >
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="">
-          <div className="flex flex-col w-full h-screen  max-w-[85vw] 2xl:max-w-[100%]">
+          <div className="flex flex-col w-full h-screen   2xl:max-w-[100%]">
             <header className="flex h-14 shrink-0 items-center gap-2">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2 px-4 w-full">
@@ -41,14 +42,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
                   <Breadcrumb>
                     <BreadcrumbList>
-                      <BreadcrumbItem className="hidden md:block">
-                        {/* <BreadcrumbLink href="#">
+                      {/* <BreadcrumbItem className="hidden md:block">
+                         <BreadcrumbLink href="#">
                           Acero Application
-                        </BreadcrumbLink> */}
-                      </BreadcrumbItem>
+                        </BreadcrumbLink> 
+                      </BreadcrumbItem> */}
                       {/* <BreadcrumbSeparator className="hidden md:block" /> */}
                       <BreadcrumbItem>
-                        <BreadcrumbPage className="font-semibold">{pathContent[pathContent.length - 1].toProperCase()}</BreadcrumbPage>
+                        <BreadcrumbPage className="font-semibold">{pageName[0] && pageName[0].toProperCase()} {pageName[1] && pageName[1].toProperCase()} {pageName[2] && pageName[2].toProperCase()}</BreadcrumbPage>
                       </BreadcrumbItem>
                     </BreadcrumbList>
                   </Breadcrumb>

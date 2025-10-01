@@ -4,12 +4,12 @@ import { emailData } from '@/types/master/emailData';
 
 export async function POST(req: NextRequest) {
     try {
-        const { recipient, subject, templateData, fileName, senderName, approveUrl, rejectUrl, reason }: 
-        { recipient: string; subject: string; templateData: emailData; fileName: string; senderName: string; approveUrl: string; rejectUrl: string; reason: string } 
-        = await req.json();
+        const { recipient, subject, templateData, fileName, senderName, approveUrl, rejectUrl, reason, recipientName, position }:
+            { recipient: string; subject: string; templateData: emailData; fileName: string; senderName: string; approveUrl: string; rejectUrl: string; reason: string; recipientName: string, position: string }
+            = await req.json();
 
-        const result = await emailManager.sendEmail(recipient, subject, templateData, fileName, senderName, approveUrl, rejectUrl, reason);
-        
+        const result = await emailManager.sendEmail(recipient, subject, templateData, fileName, senderName, approveUrl, rejectUrl, reason, recipientName, position);
+
         return NextResponse.json({ status: "SUCCESS", message: "email sent", data: result, statusCode: 200 });
     } catch (error: any) {
         console.error("Error:", error);

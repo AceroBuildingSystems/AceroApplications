@@ -37,6 +37,7 @@ export interface candidateInformation extends Document {
     noticePeriodRequired?: string;
 
     highestQualification?: string;
+    specialization?: string;
     degreeCertificateAttested: "yes" | "no" | "";
     certifications?: string;
 

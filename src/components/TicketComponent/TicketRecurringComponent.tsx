@@ -17,6 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format, addDays, addWeeks, addMonths } from 'date-fns';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
+import { useCreateApplicationMutation } from '@/services/endpoints/applicationApi';
 
 interface TicketRecurringComponentProps {
   ticketId: string;
@@ -25,14 +27,14 @@ interface TicketRecurringComponentProps {
   recurringEndDate?: Date;
   recurringInterval?: number;
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (updatedTicket) => void;
   userId: string;
 }
 
 const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
   ticketId,
   isRecurring = false,
-  recurringType = 'WEEKLY',
+  recurringType = 'weekly',
   recurringEndDate,
   recurringInterval = 1,
   isOpen,
@@ -44,9 +46,10 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
   const [interval, setInterval] = useState(recurringInterval.toString());
   const [endDate, setEndDate] = useState<Date | undefined>(recurringEndDate ? new Date(recurringEndDate) : undefined);
   const [formError, setFormError] = useState<string | null>(null);
-  
+
   const [updateTicket, { isLoading: isUpdating }] = useUpdateTicketMutation();
-  
+
+  const [createMaster, { isLoading: isCreatingMaster }] = useCreateApplicationMutation();
   // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
@@ -57,65 +60,94 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
       setFormError(null);
     }
   }, [isOpen, isRecurring, recurringType, recurringInterval, recurringEndDate]);
-  
+
   // Calculate next recurring date based on current settings
   const calculateNextRecurringDate = () => {
     const today = new Date();
-    
+
     switch (type) {
-      case 'DAILY':
+      case 'daily':
         return addDays(today, parseInt(interval) || 1);
-      case 'WEEKLY':
+      case 'weekly':
         return addWeeks(today, parseInt(interval) || 1);
-      case 'MONTHLY':
+      case 'monthly':
         return addMonths(today, parseInt(interval) || 1);
-      case 'CUSTOM':
+      case 'custom':
         return addDays(today, parseInt(interval) || 7);
       default:
         return addWeeks(today, 1);
     }
   };
-  
+
   const handleSubmit = async () => {
     try {
       setFormError(null);
-      
-      if (enabled && !endDate) {
-        setFormError('Please select an end date for recurring tickets');
-        return;
+      let formattedData = {};
+      if (!enabled) {
+        formattedData = {
+          db: MONGO_MODELS.TASK,
+          action: 'update',
+          filter: { "_id": ticketId },
+          data: {
+            taskType: enabled ? 'recurring' : 'one-time',
+            // recurring: { intervalType: type, isRecurring: enabled, customDays: type === 'custom' ? parseInt(interval) || 1 : 0 },
+            updatedBy: userId
+          },
+        };
       }
-      
-      const nextDate = enabled ? calculateNextRecurringDate() : undefined;
-      
-      await updateTicket({
-        _id: ticketId,
-        isRecurring: enabled,
-        recurringType: type,
-        recurringInterval: parseInt(interval) || 1,
-        recurringEndDate: endDate,
-        nextRecurringDate: nextDate,
-        updatedBy: userId
-      }).unwrap();
-      
-      toast.success('Recurring settings updated successfully');
-      onClose();
+      else {
+        formattedData = {
+          db: MONGO_MODELS.TASK,
+          action: 'update',
+          filter: { "_id": ticketId },
+          data: {
+            taskType: enabled ? 'recurring' : 'one-time',
+            recurring: { intervalType: type, isRecurring: enabled, customDays: type === 'custom' ? parseInt(interval) || 1 : 0 },
+            updatedBy: userId
+          },
+        };
+      }
+
+      const response: any = await createMaster(formattedData);
+
+      if (response.data && response.data.status === SUCCESS) {
+        toast.success(`Recurring settings updated successfully`, {
+          position: "bottom-right"
+        });
+
+      }
+      onClose(response.data?.data || []);
+      // const nextDate = enabled ? calculateNextRecurringDate() : undefined;
+
+      // await updateTicket({
+      //   _id: ticketId,
+      //   isRecurring: enabled,
+      //   recurringType: type,
+      //   recurringInterval: parseInt(interval) || 1,
+      //   recurringEndDate: endDate,
+      //   nextRecurringDate: nextDate,
+      //   updatedBy: userId
+      // }).unwrap();
+
+      // toast.success('Recurring settings updated successfully');
+      // onClose();
     } catch (error) {
       console.error('Failed to update recurring settings:', error);
       setFormError('Failed to update recurring settings. Please try again.');
       toast.error('Failed to update recurring settings');
     }
   };
-  
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={() => onClose('')}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl">Recurring Ticket Settings</DialogTitle>
+          <DialogTitle className="text-xl">Recurring Task Settings</DialogTitle>
           <DialogDescription>
-            Configure how often this ticket should recur
+            Configure how often this task should recur
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           {formError && (
             <Alert variant="destructive" className="rounded-lg">
@@ -124,7 +156,7 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
               <AlertDescription>{formError}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="flex items-center justify-between">
             <Label htmlFor="recurring-toggle" className="font-medium">Enable Recurring</Label>
             <Switch
@@ -133,7 +165,7 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
               onCheckedChange={setEnabled}
             />
           </div>
-          
+
           {enabled && (
             <>
               <div className="space-y-3">
@@ -146,15 +178,15 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
                     <SelectValue placeholder="Select recurrence pattern" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DAILY">Daily</SelectItem>
-                    <SelectItem value="WEEKLY">Weekly</SelectItem>
-                    <SelectItem value="MONTHLY">Monthly</SelectItem>
-                    <SelectItem value="CUSTOM">Custom</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              
-              {type === 'CUSTOM' && (
+
+              {type === 'custom' && (
                 <div className="space-y-2">
                   <Label htmlFor="interval">Interval (days)</Label>
                   <Input
@@ -168,9 +200,9 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
                   />
                 </div>
               )}
-              
+
               <div className="space-y-2">
-                <Label htmlFor="end-date">End Date</Label>
+                {/* <Label htmlFor="end-date">End Date</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -193,7 +225,7 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
                     />
                   </PopoverContent>
                 </Popover>
-                
+
                 {endDate && (
                   <div className="flex items-center mt-2">
                     <Badge className="bg-blue-100 text-blue-800 border-blue-200">
@@ -208,9 +240,9 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
-                )}
+                )} */}
               </div>
-              
+
               <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
                 <h4 className="text-sm font-medium text-blue-800 mb-1 flex items-center">
                   <Calendar className="h-4 w-4 mr-1" />
@@ -223,12 +255,12 @@ const TicketRecurringComponent: React.FC<TicketRecurringComponentProps> = ({
             </>
           )}
         </div>
-        
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="rounded-lg">
+          <Button variant="outline" onClick={() => onClose('')} className="rounded-lg">
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={isUpdating}
             className="rounded-lg bg-indigo-600 hover:bg-indigo-700"

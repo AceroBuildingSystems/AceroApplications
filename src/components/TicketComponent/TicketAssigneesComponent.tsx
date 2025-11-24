@@ -17,13 +17,17 @@ import { UserDocument } from '@/types';
 import mongoose from 'mongoose';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
+import { useCreateApplicationMutation } from '@/services/endpoints/applicationApi';
 
 interface TicketAssigneesComponentProps {
   ticketId: string;
   currentAssignees: any[];
   isOpen: boolean;
-  onClose: () => void;
+  onClose: (updatedAssignees) => void;
   userId: string;
+  requestType: string;
+  user: any;
 }
 
 const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
@@ -31,15 +35,18 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
   currentAssignees = [],
   isOpen,
   onClose,
-  userId
+  userId,
+  requestType,
+  user
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [formError, setFormError] = useState<string | null>(null);
-  
-  const { data: usersData, isLoading: usersLoading }:any = useGetUsersQuery();
+  const [createMaster, { isLoading: isCreatingMaster }] = useCreateApplicationMutation();
+
+  const { data: usersData, isLoading: usersLoading }: any = useGetUsersQuery();
   const [updateAssignees, { isLoading: isUpdating }] = useUpdateTicketAssigneesMutation();
-  
+
   // Initialize selected users from current assignees
   useEffect(() => {
     if (currentAssignees && currentAssignees.length > 0) {
@@ -48,15 +55,28 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
       setSelectedUsers([]);
     }
   }, [currentAssignees, isOpen]);
-  console.log({})
+
   // Filter users based on search query
-  const filteredUsers = usersData ? usersData?.data?.filter((user: any) => {
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-    return fullName.includes(searchQuery.toLowerCase()) ||
- 
-          user.email?.toLowerCase().includes(searchQuery.toLowerCase());
-  }): [];
-  
+  const filteredUsers = usersData
+    ? usersData.data.filter((u: any) => {
+      const fullName = `${u.firstName} ${u.lastName}`.toLowerCase();
+      const query = searchQuery.toLowerCase();
+
+      // ✅ match by search (name or email)
+      const matchesSearch =
+        fullName.includes(query) || u.email?.toLowerCase().includes(query);
+
+      // ✅ match by department (check safely with optional chaining)
+      const sameDepartment =
+        u.department?._id && user?.department?._id
+          ? u.department._id === user.department._id
+          : false;
+
+      return matchesSearch && sameDepartment;
+    })
+    : [];
+
+
   const handleToggleUser = (userId: string) => {
     setSelectedUsers(prev => {
       if (prev.includes(userId)) {
@@ -66,36 +86,64 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
       }
     });
   };
-  
+
   const handleSubmit = async () => {
     try {
       setFormError(null);
-      
-      await updateAssignees({
-        ticketId,
-        assignees: selectedUsers,
-        updatedBy: userId
-      }).unwrap();
-      
-      toast.success('Assignees updated successfully');
-      onClose();
+
+      if (requestType === 'task') {
+        const formattedData = {
+          db: MONGO_MODELS.TASK,
+          action: 'update',
+          filter: { "_id": ticketId },
+          data: {
+            assignees: selectedUsers,
+            updatedBy: userId
+          },
+        };
+
+        console.log('Task Data to Save:', formattedData);
+
+        const response: any = await createMaster(formattedData);
+
+        console.log('Task Response:', response);
+        if (response.data && response.data.status === SUCCESS) {
+          toast.success(`Assignees updated successfully`, {
+            position: "bottom-right"
+          });
+
+        }
+        onClose(response.data?.data?.assignees || []);
+
+      } else {
+        await updateAssignees({
+          ticketId,
+          assignees: selectedUsers,
+          updatedBy: userId
+        }).unwrap();
+
+        toast.success('Assignees updated successfully');
+        onClose([]);
+      }
+
+
     } catch (error) {
       console.error('Failed to update assignees:', error);
       setFormError('Failed to update assignees. Please try again.');
       toast.error('Failed to update assignees');
     }
   };
-  
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={() => onClose([])}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl">Manage Assignees</DialogTitle>
           <DialogDescription>
-            Assign this ticket to one or more team members
+            Assign this {requestType === 'task' ? 'task' : 'ticket'} to one or more team members
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="space-y-4 py-4">
           {formError && (
             <Alert variant="destructive" className="rounded-lg">
@@ -104,7 +152,7 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
               <AlertDescription>{formError}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             <Input
@@ -124,7 +172,7 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
               </Button>
             )}
           </div>
-          
+
           <div className="mb-4">
             <Label className="text-sm text-gray-500">Selected ({selectedUsers.length})</Label>
             <div className="flex flex-wrap gap-2 mt-2">
@@ -134,11 +182,11 @@ const TicketAssigneesComponent: React.FC<TicketAssigneesComponentProps> = ({
                 selectedUsers.map(userId => {
                   const user = usersData?.data?.find((u: any) => u._id === userId);
                   if (!user) return null;
-                  
-console.log("Selected user:", user);
+
+                  console.log("Selected user:", user);
                   return (
-                    <Badge 
-                      key={userId} 
+                    <Badge
+                      key={userId}
                       variant="secondary"
                       className="flex items-center gap-1 py-1 pl-2 pr-1 bg-indigo-50 text-indigo-700 border border-indigo-100"
                     >
@@ -157,7 +205,7 @@ console.log("Selected user:", user);
               )}
             </div>
           </div>
-          
+
           <ScrollArea className="h-[300px] rounded-md border p-4">
             {usersLoading ? (
               <div className="flex justify-center items-center h-full">
@@ -171,12 +219,12 @@ console.log("Selected user:", user);
             ) : (
               <div className="space-y-4">
                 {filteredUsers.map((user: any) => (
-                  <div 
-                    key={user._id} 
+                  <div
+                    key={user._id}
                     className="flex items-center space-x-3 hover:bg-gray-50 p-2 rounded-lg cursor-pointer"
                     onClick={() => handleToggleUser(user._id)}
                   >
-                    <Checkbox 
+                    <Checkbox
                       checked={selectedUsers.includes(user._id)}
                       onCheckedChange={() => handleToggleUser(user._id)}
                       className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
@@ -202,12 +250,12 @@ console.log("Selected user:", user);
             )}
           </ScrollArea>
         </div>
-        
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="rounded-lg">
+          <Button variant="outline" onClick={() => onClose([])} className="rounded-lg">
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSubmit}
             disabled={isUpdating}
             className="rounded-lg bg-indigo-600 hover:bg-indigo-700"

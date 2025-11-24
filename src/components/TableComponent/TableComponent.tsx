@@ -135,10 +135,10 @@ export function DataTable<T extends { status: string }>({ data, columns, rowClas
           </div>
         </div> */}
 
-        <div className="h-full w-full pb-6">
+        <div className="h-full w-full pb-6 ">
           <div className=" h-auto max-h-[73vh] overflow-y-auto rounded-md border border-gray-200 cursor-pointer">
             <Table className="">
-              <TableHeader className=" w-full ">
+              <TableHeader className=" w-full">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id} className="">
                     {headerGroup.headers.map((header) => {

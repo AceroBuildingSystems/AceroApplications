@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRight, type LucideIcon } from "lucide-react"
-import { GraduationCap, Box, BookUser, ScrollText, Ticket, PanelsTopLeft, AppWindow, UsersRound } from 'lucide-react';
+import { GraduationCap, Box, BookUser, ScrollText, Ticket, PanelsTopLeft, AppWindow, UsersRound, Headset } from 'lucide-react';
 
 import {
   Collapsible,
@@ -30,6 +30,7 @@ const menuItems = [
   { icon: 'AppWindow', Icon: AppWindow },
   { icon: 'PanelsTopLeft', Icon: PanelsTopLeft },
   { icon: 'UsersRound', Icon: UsersRound },
+  { icon: 'Headset', Icon: Headset },
 
 ];
 const CreateSideBarItems = ({ item }: any) => {

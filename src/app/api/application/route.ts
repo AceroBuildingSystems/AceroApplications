@@ -5,94 +5,97 @@ import { NextResponse } from 'next/server'
 import { NextRequest } from 'next/server'
 
 
-export async function GET(request:NextRequest) {
+export async function GET(request: NextRequest) {
   const searchParams = new URL(request.url).searchParams;
-    const operations: any = {};
+  const operations: any = {};
 
-    // Extract the database name
-    const db = searchParams.get('db');
-    if (!db) {
-        return NextResponse.json(
-            { status: 'ERROR', message: 'DB_REQUIRED', data:{} },
-            { status: 400 }
-        );
-    }
-
-    // Extract and parse the filter parameter
-    const filterParam = searchParams.get('filter');
-    if (filterParam) {
-        try {
-            operations.filter = JSON.parse(filterParam);
-        } catch (error) {
-            return NextResponse.json(
-                { status: 'ERROR', message: 'INVALID_FILTER_FORMAT', data:{} },
-                { status: 400 }
-            );
-        }
-    } else {
-        operations.filter = {};
-    }
-
-    // Extract and parse the sort parameter
-    const sortParam = searchParams.get('sort');
-    if (sortParam) {
-        try {
-            operations.sort = JSON.parse(sortParam);
-        } catch (error) {
-            return NextResponse.json(
-                { status: 'ERROR', message: 'INVALID_SORT_FORMAT', data:{} },
-                { status: 400 }
-            );
-        }
-    }
-
-    // Populate Parameter
-    const populateParam = searchParams.get('populate');
-    if (populateParam) {
-        try {
-            operations.populate = JSON.parse(populateParam);
-        } catch (error) {
-            return NextResponse.json(
-                { status: 'ERROR', message: 'INVALID_POPULATE_FORMAT', data:{} },
-                { status: 400 }
-            );
-        }
-    }
-    // Extract pagination parameters
-    // const page = parseInt(searchParams?.get('page'), 10);
-    // const limit = parseInt(searchParams?.get('limit'), 10);
-
-    // Construct the operations object
-    // operations.pagination = { page, limit };
-
-
-  const response:any = await applicationdataManager.getApplicationData({ db,operations })
-  
-  if(response.status === SUCCESS) {
-    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
+  // Extract the database name
+  const db = searchParams.get('db');
+  if (!db) {
+    return NextResponse.json(
+      { status: 'ERROR', message: 'DB_REQUIRED', data: {} },
+      { status: 400 }
+    );
   }
-  return  NextResponse.json(
-    { status: 'ERROR', message: response.message, data:{} },
+
+  // Extract and parse the filter parameter
+  const filterParam = searchParams.get('filter');
+  if (filterParam) {
+    try {
+      operations.filter = JSON.parse(filterParam);
+    } catch (error) {
+      return NextResponse.json(
+        { status: 'ERROR', message: 'INVALID_FILTER_FORMAT', data: {} },
+        { status: 400 }
+      );
+    }
+  } else {
+    operations.filter = {};
+  }
+
+  // Extract and parse the sort parameter
+  const sortParam = searchParams.get('sort');
+  if (sortParam) {
+    try {
+      operations.sort = JSON.parse(sortParam);
+    } catch (error) {
+      return NextResponse.json(
+        { status: 'ERROR', message: 'INVALID_SORT_FORMAT', data: {} },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Populate Parameter
+  const populateParam = searchParams.get('populate');
+  if (populateParam) {
+    try {
+      operations.populate = JSON.parse(populateParam);
+    } catch (error) {
+      return NextResponse.json(
+        { status: 'ERROR', message: 'INVALID_POPULATE_FORMAT', data: {} },
+        { status: 400 }
+      );
+    }
+  }
+  // Extract pagination parameters
+  // const page = parseInt(searchParams?.get('page'), 10);
+  // const limit = parseInt(searchParams?.get('limit'), 10);
+
+  // Construct the operations object
+  // operations.pagination = { page, limit };
+
+
+  const response: any = await applicationdataManager.getApplicationData({ db, operations })
+
+  if (response.status === SUCCESS) {
+    return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: response.data }, { status: 200 })
+  }
+  return NextResponse.json(
+    { status: 'ERROR', message: response.message, data: {} },
     { status: 500 }
-);
+  );
 }
 
-export async function POST(request:NextRequest) {
+export async function POST(request: NextRequest) {
   const body = await request.json()
 
-  if(!body) return NextResponse.json({status:ERROR, message:INVALID_REQUEST, data:{}}, { status: 400 })
+  if (!body) return NextResponse.json({ status: ERROR, message: INVALID_REQUEST, data: {} }, { status: 400 })
 
-  const {db,action,data} = body
+  const { db, action, data } = body
 
-  if(!db || !action) return NextResponse.json({status:ERROR, message:INSUFFIENT_DATA, data:{}}, { status: 400 })
-  
+  if (!db || !action) return NextResponse.json({ status: ERROR, message: INSUFFIENT_DATA, data: {} }, { status: 400 })
 
-  body.data.addedBy = createMongooseObjectId(body.addedBy)
-  body.data.updatedBy = createMongooseObjectId(body.updatedBy)
+  if (action === "create" && body.data.addedBy) {
+    body.data.addedBy = createMongooseObjectId(body.data.addedBy);
+} 
+if (action === "update" && body.data.updatedBy) {
+    body.data.updatedBy = createMongooseObjectId(body.data.updatedBy);
+}
+  console.log('body data', body.data);
+  let response: any = {}
 
-  let response:any = {}
-  
-  switch(action){
+  switch (action) {
     case "create":
       response = await applicationdataManager.createApplicationData(body)
       break;
@@ -100,15 +103,15 @@ export async function POST(request:NextRequest) {
       response = await applicationdataManager.updateApplicationData(body)
       break;
     default:
-      response = {status:ERROR, message:INVALID_REQUEST}
+      response = { status: ERROR, message: INVALID_REQUEST }
   }
 
-  
-  if(response.status === SUCCESS) {
-    return NextResponse.json({status:SUCCESS, message:SUCCESS, data:response.data}, { status: 200 })
+
+  if (response.status === SUCCESS) {
+    return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: response.data }, { status: 200 })
   }
-  return  NextResponse.json(
-    { status: 'ERROR', message: response.message, data:{} },
+  return NextResponse.json(
+    { status: 'ERROR', message: response.message, data: {} },
     { status: 500 })
 }
 

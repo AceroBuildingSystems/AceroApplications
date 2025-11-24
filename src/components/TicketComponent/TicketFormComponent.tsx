@@ -202,11 +202,11 @@ export const TicketFormComponent: React.FC<TicketFormComponentProps> = ({
                 </label>
                 <div className="relative">
                   <Input
-                  type='text'
+                    type='text'
                     id="title"
                     placeholder="Enter a clear title for your issue"
                     {...register('title')}
-                  
+
                     aria-invalid={errors.title ? "true" : "false"}
                   />
                   {errors.title && (

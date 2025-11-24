@@ -7,7 +7,7 @@ import * as XLSX from "xlsx";
 import { toast } from 'react-toastify';
 import { SUCCESS, ERROR, itHardWares, itSoftwares, workplaceApps, accessToBeProvided, otherAccess } from '@/shared/constants';
 import moment from 'moment';
-import { Department, Organisation } from '@/models';
+
 import { exportToExcel } from '@/utils/copyToClipboard';
 import { skip } from 'node:test';
 import { Package } from 'lucide-react';
@@ -3807,7 +3807,7 @@ export function renderBusinessTripTemplate(doc, manpowerData) {
 
     // 3️⃣ Requester Information Section (2 rows × 4 columns)
     const headerHeight = 8;   // shorter header row
-    const rowHeight = 30;      // taller table rows
+    const rowHeight = manpowerData?.travellerType === 'employee' ? 45 : 35;      // taller table rows
     const sectionHeight = headerHeight + rowHeight * 2; // total section height
     const colWidth = (pageWidth - 2 * outerMargin) / 4;
 
@@ -3965,8 +3965,221 @@ export function renderBusinessTripTemplate(doc, manpowerData) {
 
 
     currentY += rowHeight;
-    const declarationDetailsHeight = 55;
+    const logisticsDetailsHeight = 45;
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.setTextColor(0, 0, 0);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Logistics & Arrangements",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
     // const itHarwareSection = 25;
+    gap = currentY + rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Advance Required:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.cashAdvanceRequired?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Amount:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData?.cashAdvanceAmount ? `${manpowerData?.cashAdvanceAmount} ${manpowerData?.currency}` : '',
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Ticket Arranged By:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.airTicketArrangedBy?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Hotel Arranged By:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.hotelArrangedBy?.toProperCase(),
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Remarks:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.remarks?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Employee Sign:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.requestedBySignature,
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Date:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        moment(manpowerData.createdAt).format("DD-MMM-yyyy"),
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    currentY += logisticsDetailsHeight;
+
+    const reimbursmentHeight = 35;
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.setTextColor(0, 0, 0);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Reimbursements",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
+    // const itHarwareSection = 25;
+    gap = currentY + rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Air Ticket Reimbursement:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.airTicketReimbursement ? 'Yes' : 'No',
+        outerMargin + 65, // adjust x position to align with label
+        gap
+    );
+
+    if (manpowerData.airTicketReimbursement) {
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Reimbursed To:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData?.airTicketreimbursedTo?.toProperCase(),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+
+    }
+    gap += rowGap
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Reimbursement for Hotel:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.hotelReimbursement ? 'Yes' : 'No',
+        outerMargin + 65, // adjust x position to align with label
+        gap
+    );
+
+    if (manpowerData.hotelReimbursement) {
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Reimbursed To:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData?.hotelreimbursedTo?.toProperCase(),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+
+    }
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Total Amount (If Applicable):                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        `${manpowerData.reimbursedAmount ? manpowerData.reimbursedAmount : ''} ${manpowerData.reimbursedCurrency ? manpowerData.reimbursedCurrency : ''}`,
+        outerMargin + 65, // adjust x position to align with label
+        gap
+    );
+
+    currentY += reimbursmentHeight;
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Approvals",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    currentY += headerHeight;
+    // Define custom column widths
+    const equalColWidth = (pageWidth - 2 * outerMargin) / 4;
+
+    // Define custom row heights
+    const rowHeights = [18, 30]; // Row 1 shorter, Row 2 taller
+
+    // Draw 2x4 table with custom row heights
+    let yPos = currentY;
+    let cellYPositions = []; // store top Y for each row
+    for (let r = 0; r < 2; r++) {
+        let xPos = outerMargin;
+        cellYPositions[r] = yPos;
+        for (let c = 0; c < 4; c++) {
+            doc.rect(xPos, yPos, equalColWidth, rowHeights[r], "S");
+            xPos += equalColWidth;
+        }
+        yPos += rowHeights[r];
+    }
+
+    // Labels
+    doc.setFont("times", "normal");
+    doc.setFontSize(13);
+
+    // Row 1 (centered text)
+    const row1Labels = ["Department Head", "Head Of HR/Admin", "COO/CFO", "C.E.O"];
+    row1Labels.forEach((label, i) => {
+        const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+        const yCenter = cellYPositions[0] + (rowHeights[0] / 2);
+        doc.text(label, xCenter, yCenter, { align: "center", baseline: "middle" });
+    });
+
+    // Row 2 (empty now, but centered)
+    const row2Values = ["", "", "", ""];
+    row2Values.forEach((val, i) => {
+        const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+        const yCenter = cellYPositions[1] + (rowHeights[1] / 2);
+        doc.text(val, xCenter, yCenter, { align: "center", baseline: "middle" });
+    });
+
+    // Update currentY to move below the new box
+    currentY = yPos;
 
 
     // 8️⃣ Form Version at bottom
@@ -3990,6 +4203,864 @@ export function renderBusinessTripTemplate(doc, manpowerData) {
     );
 
     doc.output("dataurlnewwindow");
+}
+
+
+
+export function renderOffboardingTemplate(doc, manpowerData) {
+
+    const startX = 5; // instead of 10
+    const startY = 5;
+    const totalWidth = 196;
+    const pageWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const outerMargin = startX; // outer border margin
+    let currentY = startY;
+    const rowGap = 9;
+    const smallrowGap = 5;
+    const padding = 6;
+    const lineHeight = 5;
+
+    const defaultRowHeight = 15;
+
+    let gap = 15;
+
+    // 1️⃣ Outer border
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.1); // very thin border
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, pageHeight - 2 * startY);
+
+    // 2️⃣ Main Title Section (merged with outer border)
+    const titleHeight = 16;
+    // doc.setFillColor(100, 149, 237); // blue
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, titleHeight); // Fill + Draw
+    doc.setFont("times", "bolditalic");
+    doc.setFontSize(16);
+    // doc.setTextColor(255, 255, 255);
+    doc.text(
+        "EMPLOYEE CLEARANCE FORM",
+        pageWidth / 2,
+        currentY + titleHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+    doc.setTextColor(0, 0, 0);
+    currentY += titleHeight;
+
+    // 3️⃣ Requester Information Section (2 rows × 4 columns)
+    const headerHeight = 8;   // shorter header row
+    const rowHeight = 32;      // taller table rows
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Employee Details",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
+
+    gap = currentY + rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Employee Name:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.employee?.displayName?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Employee ID:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData?.employee?.empId,
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Designation:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.employee?.designation?.name,
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Department:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.employee?.department?.name,
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Date Of Joining:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.employee?.joiningDate ? moment(manpowerData.employee?.joiningDate).format("DD-MMM-yyyy") : '',
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Last Working Date:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData?.releavingDate ? moment(manpowerData?.releavingDate).format("DD-MMM-yyyy") : '',
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+
+    currentY += rowHeight;
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.setTextColor(0, 0, 0);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Handover Details",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
+    // const itHarwareSection = 25;
+
+    // currentY += reimbursmentHeight;
+
+    // 4️⃣ Handover Details Table
+    // 4️⃣ Handover Details Table with dotted lines & wrapped text
+    // 4️⃣ Handover Details Table with department + description separation
+    // 4️⃣ Handover Details Table with solid department separators & continuous column lines
+    // 4️⃣ Handover Details Table (clean version with only solid department separators)
+    const tableTop = currentY;
+    const colWidths = {
+        sNo: 10,
+        department: 45,
+        description: 60,
+        remarks: 50,
+        signature: 30,
+    };
+    const tableLeft = outerMargin;
+    let y = tableTop;
+
+    // 🟦 Table Header
+    doc.setFillColor(245, 245, 245);
+    doc.rect(tableLeft, y, pageWidth - 2 * outerMargin, 8, "FD");
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+    doc.text("S.No", tableLeft + 1, y + 5);
+    doc.text("Task Department", tableLeft + colWidths.sNo + 3, y + 5);
+    doc.text("Description", tableLeft + colWidths.sNo + colWidths.department + 3, y + 5);
+    doc.text("Handover Remarks", tableLeft + colWidths.sNo + colWidths.department + colWidths.description + 3, y + 5);
+    doc.text("Signature", tableLeft + colWidths.sNo + colWidths.department + colWidths.description + colWidths.remarks + 3, y + 5);
+
+    y += 8;
+    doc.setFont("times", "normal");
+    doc.setFontSize(11);
+
+    let sNo = 1;
+
+    // ✳️ Text wrapping helper
+    function wrapText(text, maxWidth) {
+        if (!text) return [];
+        const words = text.split(" ");
+        const lines = [];
+        let line = "";
+
+        words.forEach((word) => {
+            const testLine = line + word + " ";
+            const testWidth = doc.getTextWidth(testLine);
+            if (testWidth > maxWidth) {
+                lines.push(line.trim());
+                line = word + " ";
+            } else {
+                line = testLine;
+            }
+        });
+        if (line) lines.push(line.trim());
+        return lines;
+    }
+
+    // 🔹 Draw full table vertical column lines once (they’ll stay continuous)
+    function drawVerticalColumns(startY, endY) {
+        doc.setDrawColor(100);
+        doc.setLineWidth(0.1);
+        doc.line(tableLeft + colWidths.sNo, startY, tableLeft + colWidths.sNo, endY);
+        doc.line(tableLeft + colWidths.sNo + colWidths.department, startY, tableLeft + colWidths.sNo + colWidths.department, endY);
+        doc.line(tableLeft + colWidths.sNo + colWidths.department + colWidths.description, startY, tableLeft + colWidths.sNo + colWidths.department + colWidths.description, endY);
+        doc.line(tableLeft + colWidths.sNo + colWidths.department + colWidths.description + colWidths.remarks, startY, tableLeft + colWidths.sNo + colWidths.department + colWidths.description + colWidths.remarks, endY);
+        doc.line(pageWidth - outerMargin, startY, pageWidth - outerMargin, endY);
+    }
+
+    // 🔹 Solid line separator
+    function drawSolidLine(yPos) {
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.1);
+        doc.line(tableLeft, yPos + 2, pageWidth - outerMargin, yPos + 2);
+        doc.setLineWidth(0.1);
+    }
+
+    // 🔸 Measure total table height first (to know full column height)
+    let totalHeight = 0;
+    manpowerData.handoverDetails?.forEach((dept) => {
+        const { taskDescription } = dept;
+        taskDescription.forEach((task) => {
+            const descLines = wrapText(task.description, colWidths.description - 5);
+            const remarksLines = wrapText(task.remarks, colWidths.remarks - 5);
+            const rowLines = Math.max(descLines.length, remarksLines.length, 1);
+            totalHeight += rowLines * 5 + 2;
+        });
+        totalHeight += 3; // spacing between departments
+    });
+
+    // ✴️ Draw continuous vertical columns (cover entire table)
+    drawVerticalColumns(y, y + totalHeight - 1);
+
+    // 🔹 Draw rows per department
+    manpowerData.handoverDetails?.forEach((dept) => {
+        const { department, taskDescription } = dept;
+
+        // Calculate department block height
+        let deptBlockHeight = 0;
+        const taskHeights = [];
+
+        taskDescription.forEach((task) => {
+            const descLines = wrapText(task.description, colWidths.description - 5);
+            const remarksLines = wrapText(task.remarks, colWidths.remarks - 5);
+            const rowLines = Math.max(descLines.length, remarksLines.length, 1);
+            const rowHeight = rowLines * 5 + 2;
+            taskHeights.push(rowHeight);
+            deptBlockHeight += rowHeight;
+        });
+
+        // Draw text for each task
+        let rowY = y;
+        taskDescription.forEach((task, idx) => {
+            const isFirstRow = idx === 0;
+            const descLines = wrapText(task.description, colWidths.description - 5);
+            const remarksLines = wrapText(task.remarks, colWidths.remarks - 5);
+            const rowLines = Math.max(descLines.length, remarksLines.length, 1);
+            const rowHeight = rowLines * 5 + 2;
+
+            // Text columns
+            if (isFirstRow) {
+                doc.text(String(sNo), tableLeft + 3, rowY + 5);
+                doc.text(department, tableLeft + colWidths.sNo + 3, rowY + 5);
+            }
+
+            descLines.forEach((line, i) => {
+                doc.text(line, tableLeft + colWidths.sNo + colWidths.department + 3, rowY + 5 + i * 5);
+            });
+            doc.setTextColor(70, 70, 70);
+            remarksLines.forEach((line, i) => {
+                doc.text(line, tableLeft + colWidths.sNo + colWidths.department + colWidths.description + 3, rowY + 5 + i * 5);
+            });
+
+            doc.text(task.signature || "", tableLeft + colWidths.sNo + colWidths.department + colWidths.description + colWidths.remarks + 3, rowY + 5);
+            doc.setTextColor(0, 0, 0);
+            rowY += rowHeight;
+
+            if (rowY > pageHeight - 30) {
+                doc.addPage();
+                rowY = startY;
+            }
+        });
+
+        // Draw one solid separator under department
+        drawSolidLine(y + deptBlockHeight);
+
+        y += deptBlockHeight + 3;
+        sNo++;
+    });
+
+    doc.setFontSize(13);
+    currentY = y + 7;
+    gap = currentY
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Remarks:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData?.releavingDate ? moment(manpowerData?.releavingDate).format("DD-MMM-yyyy") : '',
+        outerMargin + 25, // adjust x position to align with label
+        gap
+    );
+
+    currentY = y + 12;
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Approvals",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    currentY += headerHeight;
+
+    // Define equal column widths
+    const equalColWidth = (pageWidth - 2 * outerMargin) / 4;
+
+    // Define row heights
+    const rowHeights = [18, 30];
+    let yPos = currentY;
+    let cellYPositions = [];
+
+    // Draw 2x4 table grid
+    for (let r = 0; r < 2; r++) {
+        let xPos = outerMargin;
+        cellYPositions[r] = yPos;
+        for (let c = 0; c < 4; c++) {
+            doc.rect(xPos, yPos, equalColWidth, rowHeights[r], "S");
+            xPos += equalColWidth;
+        }
+        yPos += rowHeights[r];
+    }
+
+    // Helper to wrap text
+    function wrapTextApproval(doc, text, maxWidth) {
+        if (!text) text = "";
+        text = String(text);
+
+        const words = text.split(" ");
+        const lines = [];
+        let line = "";
+
+        words.forEach((word) => {
+            const testLine = line + word + " ";
+            // Use getTextWidth from jsPDF instance
+            const testWidth = typeof doc.getTextWidth === "function" ? doc.getTextWidth(testLine) : testLine.length * 2.5;
+
+            if (testWidth > maxWidth - 6) {
+                lines.push(line.trim());
+                line = word + " ";
+            } else {
+                line = testLine;
+            }
+        });
+        if (line) lines.push(line.trim());
+        return lines;
+    }
+
+    // Labels
+    doc.setFont("times", "normal");
+    doc.setFontSize(12);
+
+    const row1Labels = [
+        "Clearance Submitted by (Employee)",
+        "Endorsed by (Department Head)",
+        "Reviewed by (HR/ADMIN Department)",
+        "Approved by Head of HR"
+    ];
+
+    // Draw wrapped and centered labels
+    row1Labels.forEach((label, i) => {
+        const lines = wrapTextApproval(doc, label, equalColWidth - 8);
+        const lineHeight = 5;
+        const totalTextHeight = lines.length * lineHeight;
+        const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+        const yStart = cellYPositions[0] + (rowHeights[0] - totalTextHeight) / 2 + 4;
+
+        lines.forEach((line, index) => {
+            doc.text(line, xCenter, yStart + index * lineHeight, { align: "center" });
+        });
+    });
+
+    // Row 2 (empty placeholders, still centered)
+    const row2Values = ["", "", "", ""];
+    row2Values.forEach((val, i) => {
+        const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+        const yCenter = cellYPositions[1] + (rowHeights[1] / 2);
+        doc.text(val, xCenter, yCenter, { align: "center", baseline: "middle" });
+    });
+
+    // Update Y position
+    currentY = yPos;
+
+
+
+    // 8️⃣ Form Version at bottom
+    const footerText = "ABS/HR/N/ F17  (25/08/2022) V.1";
+    const footerHeight = 6;
+    const footerY = pageHeight - startY - footerHeight;
+
+    // Draw footer box
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, footerY, pageWidth - 2 * outerMargin, footerHeight, "FD");
+
+    // Footer text (left aligned, vertically centered)
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(
+        footerText,
+        outerMargin + 3,                       // small left padding
+        footerY + footerHeight / 2,            // vertical center
+        { align: "left", baseline: "middle" }  // left alignment
+    );
+
+    doc.output("dataurlnewwindow");
+}
+
+
+export function renderBusinessTripPdf(doc, manpowerData) {
+
+    const startX = 5; // instead of 10
+    const startY = 5;
+    const totalWidth = 196;
+    const pageWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const outerMargin = startX; // outer border margin
+    let currentY = startY;
+    const rowGap = 9;
+    const smallrowGap = 5;
+    const padding = 6;
+    const lineHeight = 5;
+
+    const defaultRowHeight = 15;
+
+    let gap = 15;
+
+    // 1️⃣ Outer border
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.1); // very thin border
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, pageHeight - 2 * startY);
+
+    // 2️⃣ Main Title Section (merged with outer border)
+    const titleHeight = 16;
+    // doc.setFillColor(100, 149, 237); // blue
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, titleHeight); // Fill + Draw
+    doc.setFont("times", "bolditalic");
+    doc.setFontSize(16);
+    // doc.setTextColor(255, 255, 255);
+    doc.text(
+        "BUSINESS TRIP REQUEST FORM",
+        pageWidth / 2,
+        currentY + titleHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+    doc.setTextColor(0, 0, 0);
+    currentY += titleHeight;
+
+    // 3️⃣ Requester Information Section (2 rows × 4 columns)
+    const headerHeight = 8;   // shorter header row
+    const rowHeight = manpowerData?.travellerType === 'employee' ? 45 : 35;      // taller table rows
+    const sectionHeight = headerHeight + rowHeight * 2; // total section height
+    const colWidth = (pageWidth - 2 * outerMargin) / 4;
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Traveller Details",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
+
+    if (manpowerData?.travellerType === 'employee') {
+        gap = currentY + rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Employee Name:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.travellerName?.toProperCase(),
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Employee ID:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData?.empId,
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+        gap += rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Designation:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.requestedBy?.designation?.name,
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Department:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.requestedBy?.department?.name,
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+        gap += rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Place Of Visit:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.placeOfVisit,
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Purpose Of Visit:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.purposeOfVisit,
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+        gap += rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Trip Start Date:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            moment(manpowerData.periodFrom).format("DD-MMM-yyyy"),
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Trip End Date:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            moment(manpowerData.periodTo).format("DD-MMM-yyyy"),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+    }
+    else {
+        gap = currentY + rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Guest Name:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.travellerName?.toProperCase(),
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Requested By:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData?.requestedBy?.displayName?.toProperCase(),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+
+        gap += rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Place Of Visit:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.placeOfVisit,
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Purpose Of Visit:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData.purposeOfVisit,
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+        gap += rowGap
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Trip Start Date:                   ", outerMargin + 2, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            moment(manpowerData.periodFrom).format("DD-MMM-yyyy"),
+            outerMargin + 45, // adjust x position to align with label
+            gap
+        );
+
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Trip End Date:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            moment(manpowerData.periodFrom).format("DD-MMM-yyyy"),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+    }
+
+
+    currentY += rowHeight;
+    const logisticsDetailsHeight = 45;
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.setTextColor(0, 0, 0);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Logistics & Arrangements",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
+    // const itHarwareSection = 25;
+    gap = currentY + rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Advance Required:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.cashAdvanceRequired?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Amount:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData?.cashAdvanceAmount ? `${manpowerData?.cashAdvanceAmount} ${manpowerData?.currency}` : '',
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Ticket Arranged By:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.airTicketArrangedBy?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Hotel Arranged By:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.hotelArrangedBy?.toProperCase(),
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Remarks:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.remarks?.toProperCase(),
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Employee Sign:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.requestedBySignature,
+        outerMargin + 45, // adjust x position to align with label
+        gap
+    );
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Date:                   ", outerMargin + 105, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        moment(manpowerData.createdAt).format("DD-MMM-yyyy"),
+        outerMargin + 150, // adjust x position to align with label
+        gap
+    );
+
+    currentY += logisticsDetailsHeight;
+
+    const reimbursmentHeight = 35;
+
+    // Light blue header
+    doc.setFillColor(224, 240, 255);
+    doc.setTextColor(0, 0, 0);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Reimbursements",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    doc.setFont("times", "normal");
+    currentY += headerHeight;
+    // const itHarwareSection = 25;
+    gap = currentY + rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Air Ticket Reimbursement:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.airTicketReimbursement ? 'Yes' : 'No',
+        outerMargin + 65, // adjust x position to align with label
+        gap
+    );
+
+    if (manpowerData.airTicketReimbursement) {
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Reimbursed To:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData?.airTicketreimbursedTo?.toProperCase(),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+
+    }
+    gap += rowGap
+
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Reimbursement for Hotel:                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        manpowerData.hotelReimbursement ? 'Yes' : 'No',
+        outerMargin + 65, // adjust x position to align with label
+        gap
+    );
+
+    if (manpowerData.hotelReimbursement) {
+        doc.setTextColor(0, 0, 0); // black for label
+        doc.text("Reimbursed To:                   ", outerMargin + 105, gap);
+        doc.setTextColor(70, 70, 70); // lighter black for value
+        doc.text(
+            manpowerData?.hotelreimbursedTo?.toProperCase(),
+            outerMargin + 150, // adjust x position to align with label
+            gap
+        );
+
+
+    }
+
+    gap += rowGap
+    doc.setTextColor(0, 0, 0); // black for label
+    doc.text("Total Amount (If Applicable):                   ", outerMargin + 2, gap);
+    doc.setTextColor(70, 70, 70); // lighter black for value
+    doc.text(
+        `${manpowerData.reimbursedAmount ? manpowerData.reimbursedAmount : ''} ${manpowerData.reimbursedCurrency ? manpowerData.reimbursedCurrency : ''}`,
+        outerMargin + 65, // adjust x position to align with label
+        gap
+    );
+
+    currentY += reimbursmentHeight;
+
+    doc.setTextColor(0, 0, 0);
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, currentY, pageWidth - 2 * outerMargin, headerHeight, "FD");
+    doc.setFont("times", "italic");
+    doc.setFontSize(13);
+    doc.text(
+        "Approvals",
+        pageWidth / 2,
+        currentY + headerHeight / 2,
+        { align: "center", baseline: "middle" }
+    );
+
+    currentY += headerHeight;
+    // Define custom column widths
+    const equalColWidth = (pageWidth - 2 * outerMargin) / 4;
+
+    // Define custom row heights
+    const rowHeights = [18, 30]; // Row 1 shorter, Row 2 taller
+
+    // Draw 2x4 table with custom row heights
+    let yPos = currentY;
+    let cellYPositions = []; // store top Y for each row
+    for (let r = 0; r < 2; r++) {
+        let xPos = outerMargin;
+        cellYPositions[r] = yPos;
+        for (let c = 0; c < 4; c++) {
+            doc.rect(xPos, yPos, equalColWidth, rowHeights[r], "S");
+            xPos += equalColWidth;
+        }
+        yPos += rowHeights[r];
+    }
+
+    // Labels
+    doc.setFont("times", "normal");
+    doc.setFontSize(13);
+
+    // Row 1 (centered text)
+    const row1Labels = ["Department Head", "Head Of HR/Admin", "COO/CFO", "C.E.O"];
+    row1Labels.forEach((label, i) => {
+        const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+        const yCenter = cellYPositions[0] + (rowHeights[0] / 2);
+        doc.text(label, xCenter, yCenter, { align: "center", baseline: "middle" });
+    });
+
+    // Row 2 (empty now, but centered)
+    const row2Values = ["", "", "", ""];
+    row2Values.forEach((val, i) => {
+        const xCenter = outerMargin + (i * equalColWidth) + (equalColWidth / 2);
+        const yCenter = cellYPositions[1] + (rowHeights[1] / 2);
+        doc.text(val, xCenter, yCenter, { align: "center", baseline: "middle" });
+    });
+
+    // Update currentY to move below the new box
+    currentY = yPos;
+
+
+    // 8️⃣ Form Version at bottom
+    const footerText = "ABS/HR/N/ F04 (01/08/2025) V.2";
+    const footerHeight = 6;
+    const footerY = pageHeight - startY - footerHeight;
+
+    // Draw footer box
+    doc.setFillColor(224, 240, 255);
+    doc.rect(outerMargin, footerY, pageWidth - 2 * outerMargin, footerHeight, "FD");
+
+    // Footer text (left aligned, vertically centered)
+    doc.setFont("times", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(0, 0, 0);
+    doc.text(
+        footerText,
+        outerMargin + 3,                       // small left padding
+        footerY + footerHeight / 2,            // vertical center
+        { align: "left", baseline: "middle" }  // left alignment
+    );
+
+    console.log('finish')
+    return "data:application/pdf;base64," + btoa(doc.output());
 }
 
 
@@ -5385,7 +6456,6 @@ export const generateTicketId = async () => {
     // Return the generated ticket ID
     return `TKT-${dateStr}-${sequenceStr}`;
 };
-
 
 
 

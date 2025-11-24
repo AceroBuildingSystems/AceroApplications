@@ -20,6 +20,7 @@ import { Combobox } from '../ui/ComboBoxWrapper';
 import { CustomCaption } from '../CustomerCaption';
 import { DatePicker } from '../ui/date-picker';
 import { request } from 'http';
+import useUserAuthorised from '@/hooks/useUserAuthorised';
 
 interface HRMSFormFieldProps {
   field: HRMSFormFieldType;
@@ -31,6 +32,7 @@ interface HRMSFormFieldProps {
 export default function HRMSFormField({ field, disabled = false, data, userlist }: HRMSFormFieldProps) {
   // console.log('HRMSFormField', field, data);
   let scoreSum = 0;
+  const { user }: any = useUserAuthorised();
   const { control, formState: { errors }, watch, setValue } = useFormContext();
   console.log('userdata', data)
   const error = errors[field.name];
@@ -132,8 +134,6 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
   }, [requestedByValue, setValue]);
 
   useEffect(() => {
-    console.log('employeeValue', requestedByValue)
-
 
     if (employeeValue) {
       // console.log('userlist', userlist)
@@ -721,162 +721,82 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
 
         // Watch all fields
         const watchedHandover: any[] = watch(field.name) || [];
+        const userDepartment = user?.department?.name;
 
         return (
-          <div className="space-y-4 bg-white p-4 rounded-md shadow">
+          <div className="bg-white p-4 rounded-md shadow">
             {/* Header Row */}
-            <div className="flex items-center gap-4 border-b border-gray-300 pb-2 font-bold text-sm text-gray-800">
-              <div className="w-10 text-center">S.No</div>
-              <div className="flex-1 pr-4">Department</div>
-              <div className="flex-1">Task Description</div>
-              <div className="w-42 text-center">Handovered To & Date</div>
-              <div className="w-32 text-center">Status</div>
-              <div className="w-32 text-center">Signature</div>
+            <div className="grid grid-cols-[20px_180px_1fr_230px_140px] gap-4 items-center border-b border-gray-300 pb-2 font-bold text-sm text-gray-800">
+              <div className="text-center">S.No</div>
+              <div className="text-center">Department</div>
+              <div className="text-center">Task Description</div>
+              <div className="text-center">Handover Remarks</div>
+              <div className="text-center">Signature</div>
             </div>
 
-            {handoverData.map((dept, index) => {
-              const isLast = index === handoverData.length - 1;
-              const selectedEmployeeId = watch("employee");
-              const selectedEmployee = userlist.find(
-                (u) => u._id === selectedEmployeeId
-              );
-
-              // 3. Get that employee's department
-              const selectedDepartment = selectedEmployee?.department?.name;
-              let departmentUsers = null;
-              // 4. Filter employees based on that department
-
-              if (dept.department === "Employee Department" && selectedEmployeeId) {
-                departmentUsers = userlist.filter(
-                  (u) => u.department?.name === selectedDepartment
-                );
-
-              }
-
-              if (dept.department === "Finance" && selectedEmployeeId) {
-                departmentUsers = userlist.filter(
-                  (u) => u.department?.name === 'Finance'
-                );
-
-              }
-
-              if (dept.department === "IT" && selectedEmployeeId) {
-                departmentUsers = userlist.filter(
-                  (u) => u.department?.name === 'IT'
-                );
-
-              }
-
-              if (dept.department === "Accommodation In charge" && selectedEmployeeId) {
-                departmentUsers = userlist.filter(
-                  (u) => u.department?.name === 'HR & Admin'
-                );
-
-              }
-
-              if (dept.department === "HR & ADMIN" && selectedEmployeeId) {
-                departmentUsers = userlist.filter(
-                  (u) => u.department?.name === 'HR & Admin'
-                );
-
-              }
-
+            {handoverData?.map((dept, index) => {
+              const isUserDept = dept.department?.toLowerCase() === userDepartment?.toLowerCase();
               return (
-                <div
-                  key={index}
-                  className={`flex items-start gap-4 py-3 ${!isLast ? "border-b border-gray-200" : ""}`}
-                >
-                  {/* S.No */}
-                  <div className="w-10 text-center font-bold text-sm">{index + 1}</div>
+                <div key={index} className=" mb-2 mt-2">
+                  {dept.taskDescription.map((task: string, tIndex: number) => (
+                    <div
+                      key={tIndex}
+                      className={`grid grid-cols-[20px_180px_1fr_230px_140px] gap-4 items-start py-2 px-2 ${tIndex !== dept.taskDescription.length - 1 ? "" : "border-b border-gray-100 pb-6"
+                        }`}
+                    >
+                      {/* S.No (only on first task of the department) */}
+                      <div className="text-center font-bold text-sm">
+                        {tIndex === 0 ? index + 1 : ""}
+                      </div>
 
-                  {/* Department */}
-                  <div className="flex-1 pr-4 font-bold text-sm">{dept.department}</div>
+                      {/* Department (only on first task of the department) */}
+                      <div className="font-bold text-sm">
+                        {tIndex === 0 ? dept.department : ""}
+                      </div>
 
-                  {/* Task Description */}
-                  <div className="flex-1 pl-6">
-                    <ul className="list-disc text-gray-700 text-sm space-y-1">
-                      {dept.taskDescription.map((task: string, tIndex: number) => (
-                        <li key={tIndex}>{task}</li>
-                      ))}
-                    </ul>
-                  </div>
+                      {/* Task Description */}
+                      <div className="text-sm text-gray-700 break-words">
+                        • {task?.description}
+                      </div>
 
-                  {/* Handovered To & Date */}
-                  <div className="w-42 flex flex-col gap-6">
-                    {/* HandoverTo as Combobox */}
-                    <Controller
-                      name={`${field.name}[${index}].handoverTo`}
-                      control={control}
-                      defaultValue={watchedHandover[index]?.handoverTo || ""}
-                      render={({ field: controllerField }) => (
-                        <Combobox
-                          field={{ ...field, data: dept.options || departmentUsers || userlist || [] }} // provide department-specific options
-                          value={controllerField.value ?? ""}
-                          formData={{ [field?.name]: controllerField.value }}
-                          handleChange={controllerField.onChange}
-                          placeholder={field?.placeholder || "Select Handover To"}
-                          disabled={false}
-                        />
-                      )}
-                    />
-
-                    {/* Date */}
-                    <Controller
-                      name={`${field.name}[${index}].handoverDate`}
-                      control={control}
-                      defaultValue={dept.handoverDate || ""}
-                      render={({ field: controllerField }) => (
-                        <DatePicker
-                          currentDate={
-                            controllerField.value ? new Date(controllerField.value) : undefined
-                          }
-                          placeholder="Pick a date"
-                          handleChange={(newDate: Date | undefined, setDate: any) => {
-                            controllerField.onChange(newDate ? newDate.toISOString() : "");
-                            if (setDate) setDate(newDate);
-                          }}
-                        />
-                      )}
-                    />
-                  </div>
-
-
-                  {/* Status */}
-                  <div className="w-24 text-center">
-                  <Controller
-                    name={`${field.name}[${index}].status`}
-                    control={control}
-                    render={({ field: cField }) => (
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5"
-                        checked={!!cField.value}   // ✅ bind directly
-                        onChange={(e) => cField.onChange(e.target.checked)}
+                      {/* Handover Remarks */}
+                      <Controller
+                        name={`${field.name}[${index}].taskDescription[${tIndex}].remarks`}
+                        control={control}
+                        render={({ field: rField }) => (
+                          <Input
+                            {...rField}
+                            value={rField.value ?? ""}
+                            placeholder="Remarks"
+                            className="w-full rounded px-2 py-1 text-sm"
+                            readOnly={!isUserDept}
+                          />
+                        )}
                       />
-                    )}
-                  />
-                    </div>
 
-                  {/* Signature */}
-                  <div className="w-36 text-center">
-                    <Controller
-                      name={`${field.name}[${index}].signature`}
-                      control={control}
-                      defaultValue={watchedHandover[index]?.signature || ""}
-                      render={({ field: cField }) => (
-                        <Input
-                          {...cField}
-                          placeholder="Signature"
-                          className="w-full rounded px-2 py-1 text-sm"
-                        />
-                      )}
-                    />
-                  </div>
+                      {/* Signature */}
+                      <Controller
+                        name={`${field.name}[${index}].taskDescription[${tIndex}].signature`}
+                        control={control}
+                        render={({ field: sField }) => (
+                          <Input
+                            {...sField}
+                            value={sField.value ?? ""}
+                            placeholder="Signature"
+                            className="w-full rounded px-2 py-1 text-sm"
+                            readOnly={!isUserDept}
+                          />
+                        )}
+                      />
+                    </div>
+                  ))}
                 </div>
               );
             })}
           </div>
         );
+
+
 
 
 
@@ -1074,12 +994,18 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
 
 
         // Default: assessment parameter layout
+        const assessmentScores = watch(field.name) || [];
+        const totalScoreInterview = assessmentScores.reduce((sum, row) => {
+          const val = parseFloat(row?.score);
+          return sum + (isNaN(val) ? 0 : val);
+        }, 0);
         return (
           <div className="border rounded-lg p-4 shadow-sm">
             <div className="grid grid-cols-2 gap-4">
               {arrayData.map((item: any, index: number) => (
                 <div key={index} className="flex flex-col gap-1">
                   <Label>{item.parameterName}</Label>
+
                   <Controller
                     name={`${field.name}[${index}].score`}
                     control={control}
@@ -1100,9 +1026,14 @@ export default function HRMSFormField({ field, disabled = false, data, userlist 
                 </div>
               ))}
             </div>
+
+            {/* ---- TOTAL SCORE SECTION ---- */}
+            <div className="mt-4 rounded-lg flex gap-4 items-center">
+              <Label className="text-base font-semibold">Total Score : {totalScoreInterview}</Label>
+              {/* <Label className="font-semibold">{totalScoreInterview}</Label> */}
+            </div>
           </div>
         );
-
 
 
 

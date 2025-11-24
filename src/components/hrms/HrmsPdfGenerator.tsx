@@ -10,7 +10,7 @@ import { MONGO_MODELS } from "@/shared/constants";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { FileTextIcon } from "lucide-react";
-import { renderBeneficiaryTemplate, renderBusinessTripTemplate, renderCandidateTemplate, renderConsentTemplate, renderEmployeeInfoTemplate, renderEmployeeJoiningTemplate, renderInterviewTemplate, renderItAccessTemplate, renderManpowerTemplate, renderNdaTemplate, renderOrientationTemplate } from "@/shared/functions";
+import { renderBeneficiaryTemplate, renderBusinessTripTemplate, renderCandidateTemplate, renderConsentTemplate, renderEmployeeInfoTemplate, renderEmployeeJoiningTemplate, renderInterviewTemplate, renderItAccessTemplate, renderManpowerTemplate, renderNdaTemplate, renderOffboardingTemplate, renderOrientationTemplate } from "@/shared/functions";
 import { toast } from "react-toastify";
 
 type HrmsPdfGeneratorProps = {
@@ -182,6 +182,17 @@ export default function HrmsPdfGenerator({
                 }
                 else {
                     toast.error("Please fill the employee orientation form first.")
+                }
+
+                break;
+
+            case "offboarding":
+                title = "Business Trip Request Form";
+                if (manpowerData.employee) {
+                    renderOffboardingTemplate(doc, manpowerData);
+                }
+                else {
+                    toast.error("Please fill the offboarding form first.")
                 }
 
                 break;

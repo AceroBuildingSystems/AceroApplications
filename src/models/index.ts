@@ -85,13 +85,14 @@ import VisaInfo from "./hrms/VisaInfo.model";
 import BusinessTrip from "./hrms/BusinessTrip.model";
 import PerformanceAppraisal from "./hrms/PerformanceAppraisal.model";
 import Offboarding from "./hrms/Offboarding.model";
+import Task from "./task/Task.model";
 
-export { 
-    Access, Department, Designation, EmployeeType, Organisation, Role, User, 
+export {
+    Access, Department, Designation, EmployeeType, Organisation, Role, User,
     Continent, Region, Country, QuoteStatus, Team, TeamMember, Currency, Customer,
-    CustomerType, CustomerContact, IndustryType, BuildingType, ProjectType, 
-    PaintType, State, Location, ApprovalAuthority, Incoterm, Sector, 
-    ProposalRevisions, Proposal, Quotation,Option,
+    CustomerType, CustomerContact, IndustryType, BuildingType, ProjectType,
+    PaintType, State, Location, ApprovalAuthority, Incoterm, Sector,
+    ProposalRevisions, Proposal, Quotation, Option,
     // Asset and Inventory exports
     Asset, Vendor, ProductCategory, Product, Warehouse, Inventory, UnitMeasurement,
     ApprovalFlow,
@@ -142,6 +143,7 @@ export {
     VisaInfo,
     BusinessTrip,
     PerformanceAppraisal,
-    Offboarding
-    
+    Offboarding,
+    Task
+
 }

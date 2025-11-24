@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   }
 
   const response: any = await masterdataManager.getMasterData({ db, operations })
-console.log('response:', db);
+  console.log('response:', db);
   if (response.status === SUCCESS) {
     return NextResponse.json({ status: SUCCESS, message: SUCCESS, data: response.data }, { status: 200 })
   }
@@ -97,8 +97,12 @@ export async function POST(request: NextRequest) {
   if (!db || !action) return NextResponse.json({ status: ERROR, message: INSUFFIENT_DATA, data: {} }, { status: 400 })
 
 
-  body.data.addedBy = createMongooseObjectId(body.addedBy)
-  body.data.updatedBy = createMongooseObjectId(body.updatedBy)
+  if (action === "create") {
+    body.data.addedBy = createMongooseObjectId(body.addedBy)
+  } else if (action === "update") {
+    body.data.updatedBy = createMongooseObjectId(body.updatedBy)
+  }
+
 
   let response: any = {}
 

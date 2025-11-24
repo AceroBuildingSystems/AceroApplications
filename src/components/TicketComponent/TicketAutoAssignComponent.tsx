@@ -43,7 +43,7 @@ const TicketAutoAssignComponent: React.FC<TicketAutoAssignComponentProps> = ({
   
   // Get user skills for this category
   const { data: skillsData = {data:[]}, isLoading: skillsLoading } = useGetUserSkillsQuery({
-    categoryId: ticket.category._id
+    categoryId: ticket?.category?._id
   }, { skip: !isOpen || !ticket?.category?._id });
   
   // Get assigned tickets for workload calculation
@@ -137,11 +137,11 @@ const TicketAutoAssignComponent: React.FC<TicketAutoAssignComponentProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Department</h4>
-                <p>{ticket.department.name}</p>
+                <p>{ticket?.department?.name}</p>
               </div>
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Category</h4>
-                <p>{ticket.category.name}</p>
+                <p>{ticket?.category?.name}</p>
               </div>
             </div>
             

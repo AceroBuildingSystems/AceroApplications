@@ -10,6 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 interface TicketHistoryComponentProps {
   history: any[];
   isLoading: boolean;
+  requestType: string;
 }
 
 const getHistoryActionLabel = (action: string) => {
@@ -36,12 +37,12 @@ const getHistoryActionLabel = (action: string) => {
 };
 
 const getHistoryDetails = (action: string, details: any) => {
-  console.log({details})
+  console.log({ details })
   switch (action) {
     case 'STATUS_CHANGE':
       return `Status changed to ${details.status}`;
     case 'ASSIGN':
-      return `Ticket assigned to ${details.assignees.map((assignee:any)=>`${assignee.firstName} ${assignee.lastName}`)}`;
+      return `Ticket assigned to ${details.assignees.map((assignee: any) => `${assignee.firstName} ${assignee.lastName}`)}`;
     case 'TASK_CREATE':
       return `Created task: ${details.title}`;
     case 'TASK_STATUS_CHANGE':
@@ -53,16 +54,17 @@ const getHistoryDetails = (action: string, details: any) => {
 
 const TicketHistoryComponent: React.FC<TicketHistoryComponentProps> = ({
   history,
-  isLoading
+  isLoading,
+  requestType
 }) => {
-  console.log({history})
+  console.log({ history })
   return (
     <Card>
       <CardContent className="p-4">
         <DashboardLoader loading={isLoading}>
           {history.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No history available for this ticket.
+              No history available for this {requestType === 'task' ? 'task' : 'ticket'}.
             </div>
           ) : (
             <div className="relative space-y-4 before:absolute before:left-4 before:top-0 before:h-full before:w-0.5 before:bg-gray-200">
@@ -70,14 +72,14 @@ const TicketHistoryComponent: React.FC<TicketHistoryComponentProps> = ({
                 <div key={entry._id} className="relative pl-10">
                   <div className="absolute left-0 flex h-8 w-8 items-center justify-center rounded-full bg-white ring-1 ring-gray-200">
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback>{`${entry.user.firstName[0]}${entry.user.lastName[0]}`}</AvatarFallback>
+                      <AvatarFallback>{`${entry.user?.firstName?.[0]}${entry.user?.lastName?.[0]}`}</AvatarFallback>
                     </Avatar>
                   </div>
                   <div className="flex flex-col rounded-lg border p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="font-medium">
-                          {`${entry.user.firstName} ${entry.user.lastName}`}
+                          {`${entry.user?.firstName} ${entry.user?.lastName}`}
                         </span>
                         <span className="text-gray-500">
                           {getHistoryActionLabel(entry.action)}

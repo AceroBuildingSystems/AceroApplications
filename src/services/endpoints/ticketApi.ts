@@ -42,6 +42,15 @@ export const ticketApi = baseApi.injectEndpoints({
       invalidatesTags: ['Ticket'],
     }),
 
+    createTask: builder.mutation<TicketApiResponse, any>({
+      query: (taskData) => ({
+        url: 'task',
+        method: 'POST',
+        body: taskData,
+      }),
+      invalidatesTags: ['Task'],
+    }),
+
     updateTicket: builder.mutation<TicketApiResponse, any>({
       query: (ticketData) => ({
         url: 'ticket',
@@ -77,7 +86,7 @@ export const ticketApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Ticket'],
     }),
-    
+
     updateTicketAssignees: builder.mutation<TicketApiResponse, any>({
       query: (assigneesData) => ({
         url: 'ticket',

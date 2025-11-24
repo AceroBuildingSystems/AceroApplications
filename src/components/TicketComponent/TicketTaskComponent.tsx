@@ -44,6 +44,7 @@ interface TicketTaskComponentProps {
   userId: string;
   canEdit: boolean;
   ticketStatus: string;
+  requestType: string;
 }
 
 const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
@@ -52,7 +53,8 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   isLoading,
   userId,
   canEdit,
-  ticketStatus
+  ticketStatus,
+  requestType
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [taskTitle, setTaskTitle] = useState('');
@@ -375,7 +377,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
   };
 
   // Can create tasks based on ticket status
-  const canCreateTasks = canEdit && ['NEW', 'ASSIGNED', 'IN_PROGRESS'].includes(ticketStatus);
+  const canCreateTasks = canEdit && ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'Pending', 'In Progress'].includes(ticketStatus);
 
   // Calculate total progress
   const calculateTotalProgress = (taskList: any[] = localTasks) => {
@@ -393,8 +395,8 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
       <div className="space-y-4">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <h3 className="text-base font-medium">Tasks and Subtasks</h3>
-            <p className="text-sm text-muted-foreground">Break down this ticket into manageable tasks</p>
+            <h3 className="text-base font-medium">{requestType === 'task' ? 'Sub Tasks' : 'Tasks and Subtasks'}</h3>
+            <p className="text-sm text-muted-foreground">Break down this task into manageable sub tasks</p>
           </div>
 
           {canCreateTasks && (
@@ -405,7 +407,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 size="sm"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Add Task
+                {requestType === 'task' ? 'Add Sub Task' : 'Add Task'}
               </Button>
             </motion.div>
           )}
@@ -422,9 +424,9 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <CheckSquare className="h-8 w-8 text-primary/60" />
                 </div>
-                <h4 className="text-base font-medium mb-2">No tasks created yet</h4>
+                <h4 className="text-base font-medium mb-2">{requestType === 'task' ? 'No subtasks created yet' : 'No tasks created yet'}</h4>
                 <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
-                  Break down this ticket into smaller, manageable tasks to track progress more effectively.
+                  {requestType === 'task' ? 'Break down this task into smaller, manageable sub tasks to track progress more effectively.' : 'Break down this ticket into smaller, manageable tasks to track progress more effectively.'}
                 </p>
                 {canCreateTasks && (
                   <Button
@@ -433,7 +435,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                     className="gap-2"
                   >
                     <Plus className="h-4 w-4" />
-                    Create First Task
+                    {requestType === 'task' ? 'Create First Sub Task' : 'Create First Task'}
                   </Button>
                 )}
               </motion.div>
@@ -937,7 +939,7 @@ const TicketTaskComponent: React.FC<TicketTaskComponentProps> = ({
                             className="rounded-md border-none bg-white dark:bg-zinc-900"
                           />
                         </PopoverContent>
-                        
+
                       </Popover>
                     </div>
 

@@ -11,9 +11,10 @@ interface SortableTicketItemProps {
   id: string;
   ticket: any;
   onTicketClick: (id: string) => void;
+  userData: any[];
 }
 
-export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicketItemProps) {
+export function SortableTicketItem({ id, ticket, onTicketClick, userData }: SortableTicketItemProps) {
   const [isHovering, setIsHovering] = useState(false);
   
   const {
@@ -65,7 +66,8 @@ export function SortableTicketItem({ id, ticket, onTicketClick }: SortableTicket
           ticket={ticket}
           onClick={handleClick}
           compactView={true}
-          className={isHovering ? 'ring-1 ring-primary/20' : ''}
+          className={isHovering ? 'ring-1 ring-primary/20' : 'bg-gray-100'}
+          userData={userData}
         />
         
         {/* Draggable overlay - only visible on hover */}

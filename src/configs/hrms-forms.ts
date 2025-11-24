@@ -1131,27 +1131,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         ]
       },
 
-      {
-        id: 'preliminary_feedback',
-        title: 'Preliminary Interview Feedback (HR/ADMIN Department)',
-        description: '',
-        visibleFor: ['Manager', 'HR & Admin'],
-        fields: [
-          {
-            name: 'hrFeedback.date',
-            type: 'date',
-            label: 'Interview Date',
-
-          },
-          {
-            name: 'hrFeedback.remarks',
-            type: 'textarea',
-            label: 'Remarks'
-          }
-
-        ]
-      },
-
+    
       {
         id: 'assessment_section',
         title: 'Assessment (For Department Manager)',
@@ -1193,6 +1173,28 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         ]
       },
 
+        {
+        id: 'preliminary_feedback',
+        title: 'Preliminary Interview Feedback (HR/ADMIN Department)',
+        description: '',
+        visibleFor: ['Manager', 'HR & Admin'],
+        fields: [
+          {
+            name: 'hrFeedback.date',
+            type: 'date',
+            label: 'Interview Date',
+
+          },
+          {
+            name: 'hrFeedback.remarks',
+            type: 'textarea',
+            label: 'Remarks'
+          }
+
+        ]
+      },
+
+
       {
         id: 'status_remarks',
         title: 'Status And Remarks (For Department Manager)',
@@ -1220,6 +1222,8 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
 
         ]
       },
+
+      
 
     ]
   },
@@ -1582,6 +1586,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'checkbox',
             label: 'Air Ticket Reimbursement',
             required: false,
+            showIf: (values) => values.airTicketArrangedBy === 'employee' || values.airTicketArrangedBy === 'guest',
 
           },
           {
@@ -1589,7 +1594,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'radio',
             label: 'Air Ticket Reimbursed To',
             required: false,
-            showIf: (values) => values.airTicketreimbursement,
+            showIf: (values) => values.airTicketreimbursement && (values.airTicketArrangedBy === 'employee' || values.airTicketArrangedBy === 'guest'),
             options: [
               { label: 'Guest', value: 'guest' },
               { label: 'Employee', value: 'employee' },
@@ -1601,14 +1606,14 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             type: 'checkbox',
             label: 'Hotel Reimbursement',
             required: false,
-
+            showIf: (values) => values.hotelArrangedBy === 'employee' || values.hotelArrangedBy === 'guest',
           },
           {
             name: 'hotelreimbursedTo',
             type: 'radio',
             label: 'Hotel Reimbursed To',
             required: false,
-            showIf: (values) => values.hotelreimbursement,
+            showIf: (values) => values.hotelreimbursement && (values.hotelArrangedBy === 'employee' || values.hotelArrangedBy === 'guest'),
             options: [
               { label: 'Guest', value: 'guest' },
               { label: 'Employee', value: 'employee' },
@@ -1621,14 +1626,16 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             label: 'Currency',
             required: false,
             placeholder: 'Select Currency',
-            options: []
+            options: [],
+            showIf: (values) => values.hotelreimbursement || values.airTicketreimbursement,
           },
           {
             name: 'reimbursedAmount',
             type: 'number',
             label: 'Amount to be Reimbursed',
             required: false,
-            validation: { min: 0 }
+            validation: { min: 0 },
+            showIf: (values) => values.hotelreimbursement || values.airTicketreimbursement,
           },
         ]
       }
@@ -3167,7 +3174,7 @@ Governing Law: This agreement shall be governed by and enforced in accordance wi
         description: 'Basic details about the employee being appraised',
         fields: [
           {
-            name: 'employee',
+            name: 'employeeDept',
             type: 'select',
             label: 'Employee Name',
             placeholder: 'Select Employee',
@@ -3441,21 +3448,9 @@ Governing Law: This agreement shall be governed by and enforced in accordance wi
                 label: 'Handover Task / Item Description'
               },
               {
-                name: 'handoverTo',
-                type: 'select',
-                label: 'Handovered To',
-                placeholder: 'Select Handover To',
-                options: [] // Populate from Employee collection
-              },
-              {
-                name: 'handoverDate',
-                type: 'date',
-                label: 'Date'
-              },
-              {
-                name: 'status',
-                type: 'checkbox',
-                label: 'Completed'
+                name: 'remarks',
+                type: 'text',
+                label: 'Remarks'
               },
               {
                 name: 'signature',
@@ -3465,77 +3460,107 @@ Governing Law: This agreement shall be governed by and enforced in accordance wi
             ],
             defaultValue: [
               {
-                department: 'Employee Department',
-                taskDescription: [
-                  'Documents and Records',
-                  'Job Handover',
-                  'Emails to be forwarded (provide Email ID)'
+                department: "Employee Department",
+                taskDescription: [{
+                  description: "Documents and Records", remarks: "",
+                  signature: "",
+                }, {
+                  description: "Job Handover", remarks: "",
+                  signature: "",
+                }, {
+                  description: "Emails to be forwarded (provide Email ID)", remarks: "",
+                  signature: "",
+                }
+
                 ],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
               },
               {
                 department: 'Finance',
-                taskDescription: [
-                  'Outstanding Amount Cleared',
-                  'Petty Cash Cleared',
-                  'Others'
+
+                taskDescription: [{
+                  description: "Outstanding Amount Cleared", remarks: "",
+                  signature: "",
+                }, {
+                  description: "Petty Cash Cleared", remarks: "",
+                  signature: "",
+                }, {
+                  description: "Others", remarks: "",
+                  signature: "",
+                }
+
                 ],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
               },
               {
                 department: 'IT',
-                taskDescription: [
-                  'Laptop / Desktop',
-                  'Mobile Phone / Sim Card',
-                  'User Name and Passwords',
-                  'Biometric Access closed on LWD'
+                taskDescription: [{
+                  description: "Laptop / Desktop", remarks: "",
+                  signature: "",
+                }, {
+                  description: "Mobile Phone / Sim Card", remarks: "",
+                  signature: "",
+                }, {
+                  description: "User Name and Passwords", remarks: "",
+                  signature: "",
+                },
+                {
+                  description: "Biometric Access closed on LWD", remarks: "",
+                  signature: "",
+                }
+
                 ],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
+
               },
               {
                 department: 'Material Control / Stores',
-                taskDescription: ['Tools and Equipment’s'],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
+                taskDescription: [{
+                  description: "Tools and Equipment’s", remarks: "",
+                  signature: "",
+                },
+
+                ],
+
+
               },
-              {
-                department: 'Accommodation In charge',
-                taskDescription: ['Accommodation Items and Locker Keys'],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
-              },
+              // {
+              //   department: 'Accommodation In charge',
+              //   taskDescription: ['Accommodation Items and Locker Keys'],
+              //   handoverTo: '',
+              //   handoverDate: '',
+              //   status: false,
+              //   signature: ''
+              // },
               {
                 department: 'HR & ADMIN',
-                taskDescription: [
-                  'Medical Insurance Card / ID Card',
-                  'Office Drawer / Room / Vehicle Keys',
-                  'Others'
+                taskDescription: [{
+                  description: "Medical Insurance Card / ID Card", remarks: "",
+                  signature: "",
+                },
+                {
+                  description: "Office Drawer / Room / Vehicle Keys", remarks: "",
+                  signature: "",
+                },
+                {
+                  description: "Accommodation Items and Locker Keys", remarks: "",
+                  signature: "",
+                },
+                {
+                  description: "Others", remarks: "",
+                  signature: "",
+                },
+
                 ],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
+
               },
               {
                 department: 'Other Department',
-                taskDescription: [''],
-                handoverTo: '',
-                handoverDate: '',
-                status: false,
-                signature: ''
+                taskDescription: [
+                  {
+                    description: "Others", remarks: "",
+                    signature: "",
+                  },
+
+                ],
+
               }
             ]
           },
@@ -3620,7 +3645,117 @@ Governing Law: This agreement shall be governed by and enforced in accordance wi
     ]
   },
 
+  // Tasks
 
+  [HRMSFormTypes.TASK]: {
+    formType: HRMSFormTypes.TASK,
+    title: 'Task',
+    submitLabel: 'Save Task',
+    description: 'Task creation, assignment, and progress tracking',
+    sections: [
+      {
+        id: 'task_info',
+        title: 'Task Details',
+        fields: [
+          { name: 'subject', type: 'text', label: 'Task Title', required: true, placeholder: 'Enter task title' },
+          { name: 'description', type: 'textarea', label: 'Description', placeholder: 'Describe the task...' },
+
+          {
+            name: 'startDateTime',
+            type: 'datetime',
+            label: 'Start Date & Time',
+            required: true,
+          },
+          {
+            name: 'endDateTime',
+            type: 'datetime',
+            label: 'End Date & Time',
+            required: true,
+          },
+          {
+            name: 'priority',
+            type: 'radio',
+            label: 'Priority',
+            required: true,
+            options: [
+              { label: 'Normal', value: 'normal' },
+              { label: 'High', value: 'high' }, { label: 'Critical', value: 'critical' }
+            ]
+          },
+        ],
+      },
+      {
+        id: 'task_type',
+        title: 'Other Details',
+        fields: [
+          {
+            name: 'taskType',
+            type: 'radio',
+            label: 'Task Type',
+            required: true,
+            options: [
+              { label: 'One Time', value: 'one-time' },
+              { label: 'Recurring', value: 'recurring' }
+            ]
+          },
+
+          {
+            name: 'recurring.intervalType',
+            type: 'select',
+            label: 'Recurring Interval',
+            options: [],
+            showIf: (values) => values.taskType === 'recurring'
+          },
+          {
+            name: 'recurring.customDays',
+            type: 'number',
+            label: 'Custom Days Interval',
+            placeholder: 'Enter number of days',
+            showWhen: { field: 'recurring.intervalType', value: 'custom' },
+            min: 1,
+            showIf: (values) => values?.recurring?.intervalType === 'custom'
+          },
+
+          {
+            name: 'assignees',
+            type: 'multiSelect',
+            label: 'Assign To',
+            options: [], // populate from user list
+            required: true,
+
+            placeholder: 'Select one or more users to assign the task',
+          },
+          {
+            name: 'attachments',
+            type: 'file',
+            label: 'Attach Files',
+            multiple: true,
+            helperText: 'Upload documents or images related to the task',
+          },
+        ],
+      },
+
+
+    ],
+  },
+
+  [HRMSFormTypes.TICKET]: {
+    formType: HRMSFormTypes.TICKET,
+    title: 'Support Ticket',
+    sections: [
+      {
+        id: 'ticket_info',
+        title: 'Ticket Information',
+        fields: [
+          { name: 'category', type: 'select', label: 'Category', options: ['IT', 'HR', 'Finance'] },
+          { name: 'subject', type: 'text', label: 'Subject', required: true },
+          { name: 'description', type: 'textarea', label: 'Description' },
+          { name: 'priority', type: 'select', label: 'Priority', options: ['Low', 'Medium', 'High'] },
+          { name: 'attachments', type: 'file', label: 'Upload Files' },
+        ],
+      },
+    ],
+  },
 
 
 

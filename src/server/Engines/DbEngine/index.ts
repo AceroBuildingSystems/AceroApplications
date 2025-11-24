@@ -59,7 +59,8 @@ OrientationInfo,
 VisaInfo,
 BusinessTrip,
 PerformanceAppraisal,
-Offboarding
+Offboarding,
+Task
 } from '@/models';
 
 
@@ -155,7 +156,8 @@ function getMongooseAdapter(): MongooseAdapter {
     VISA_INFO: VisaInfo,
     BUSINESS_TRIP: BusinessTrip,
     PERFORMANCE_APPRAISAL: PerformanceAppraisal,
-    OFFBOARDING: Offboarding
+    OFFBOARDING: Offboarding,
+    TASK: Task
     });
   }
   return dbEngineInstance;

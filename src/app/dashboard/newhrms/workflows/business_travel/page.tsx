@@ -149,8 +149,9 @@ const page = () => {
 
     // Open the dialog and set selected master type
     const openDialog = (masterType: React.SetStateAction<string>) => {
+
         setSelectedMaster(masterType);
-        // setInitialData({ requestedDepartment: user?.department?._id || "", });
+        // setInitialData({ travellerType: 'employee', travellerName: user?.displayName?.toProperCase(), empId: user?.empId, requestedDepartment: user?.department?._id, requiredPosition: user?.designation?._id });
         setDialogOpen(true);
 
     };
@@ -262,7 +263,10 @@ const page = () => {
 
 
     const handleAdd = () => {
-        setInitialData({ requestedDepartment: user?.department?._id || "", requestedBy: user?._id || "" });
+
+        setInitialData({ travellerType: 'employee', travellerName: user?.displayName?.toProperCase(), empId: user?.empId, requestedDepartment: user?.department?._id, requiredPosition: user?.designation?._id });
+
+        // setInitialData({ requestedDepartment: user?.department?._id || "", requestedBy: user?._id || "" });
         setCurrentIndex(0);
         setAction('Add');
         openDialog("businessTrip");

@@ -297,6 +297,26 @@ export const HRMS_WORKFLOW_TEMPLATES: any = {
     ]
   },
 
+  TASK: {
+    workflowName: 'Task',
+    workflowType: HRMSFormTypes.TASK as const,
+    description: '',
+    steps: [
+      {
+        id: 'task_info',
+        formType: HRMSFormTypes.TASK,
+        stepName: 'Task',
+        stepOrder: 1,
+        isRequired: true,
+        dependencies: [],
+        nextSteps: []
+      },
+
+
+    ],
+
+  },
+
 
 };
 

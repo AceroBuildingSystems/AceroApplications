@@ -12,8 +12,8 @@ const AccessSchema: Schema<access> = new Schema(
     parent: { type: Schema.Types.ObjectId, ref: "Access" }, // Single parent
     addedBy: { type: Schema.Types.ObjectId, ref: "User" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "User" },
-    order: { type: Number, default : 1},
-    icon: { type: String},
+    order: { type: Number, default: 1 },
+    icon: { type: String },
   },
   { timestamps: true }
 );

@@ -76,45 +76,60 @@ const ApprovalFlowDialog: FC<ApprovalFlowDialogProps> = ({
                     <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
                 </DialogHeader>
 
-                {approvalFlow && approvalFlow?.length > 0 ? (
+                {approvalFlow && approvalFlow.length > 0 ? (
                     <div className="mt-6 space-y-3 flex flex-col items-center w-full overflow-y-auto pr-1">
-                        {approvalFlow?.map((step) => (
-                            <div
-                                key={step.step}
-                                className="flex flex-row justify-center items-center gap-6 w-[70%] "
-                            >
-                                {/* Info Section */}
-                                <div className="flex flex-col items-center text-center w-full">
-                                    <p className="font-semibold pb-1">{getApprovalName(name, step?.key)}</p>
+                        {approvalFlow
+                            .slice()
+                            .reverse()
+                            .map((step, index) => (
+                                <div
+                                    key={step.step}
+                                    className="flex flex-row justify-center items-center gap-6 w-[70%]"
+                                >
+                                    {/* Info Section */}
+                                    <div className="flex flex-col items-center text-center w-full">
+                                        <p className="font-semibold pb-1">
+                                            {getApprovalName(name, step?.key)}
+                                        </p>
 
-                                    <p className="text-sm text-gray-600">
-                                        {/* <span className="font-medium">Approver:</span>{" "} */}
-                                        {step?.approverId?.displayName}
-                                    </p>
+                                        <p className="text-sm text-gray-600">
+                                            {step?.approverId?.displayName}
+                                        </p>
 
-                                    <p className="text-sm text-gray-600">
-                                        <span className="font-medium">Date:</span>{" "}
-                                        {step?.date ? moment(step?.date).format("DD-MMM-yyyy hh:mm A") : "—"}
-                                    </p>
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Date:</span>{" "}
+                                            {step?.date
+                                                ? moment(step?.date).format("DD-MMM-yyyy hh:mm A")
+                                                : "—"}
+                                        </p>
 
-                                    {step.remarks && (
-                                        <p className="text-sm text-gray-500 italic">Reason: "{step?.remarks}"</p>
-                                    )}
+                                        {step.remarks && (
+                                            <p className="text-sm text-gray-500 italic">
+                                                Reason: "{step?.remarks}"
+                                            </p>
+                                        )}
 
-                                    {step.step !== approvalFlow.length && (<div className="mt-2 w-px h-6 bg-gray-300 "></div>)}
+                                        {/* ✅ Show vertical line for all EXCEPT the last item (bottom-most in the reversed list) */}
+                                        {index !== approvalFlow.length - 1 && (
+                                            <div className="mt-2 w-px h-6 bg-gray-300"></div>
+                                        )}
+                                    </div>
+
+                                    {/* Status Section */}
+                                    <div className="flex justify-center items-center text-center w-full">
+                                        <p className="text-lg font-semibold">
+                                            {getStatusUI(step.status)}
+                                        </p>
+                                    </div>
                                 </div>
-
-                                {/* Status Section */}
-                                <div className="flex justify-center items-center text-center w-full">
-                                    <p className="text-lg font-semibold">{getStatusUI(step.status)}</p>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
-
                 ) : (
-                    <p className="text-gray-500 mt-4 text-center">No approval steps available.</p>
+                    <p className="text-gray-500 mt-4 text-center">
+                        No approval steps available.
+                    </p>
                 )}
+
             </DialogContent>
         </Dialog>
 

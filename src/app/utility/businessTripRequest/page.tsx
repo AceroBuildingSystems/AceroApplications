@@ -172,11 +172,19 @@ const ApprovalPage = () => {
                 <table className="w-full border border-gray-300 rounded-md text-sm mb-6 border-separate border-spacing-0">
                     <tbody>
                         <tr>
-                            <td className="font-semibold px-3 py-4 border-r  border-gray-300 rounded-tl-md w-2/5">
-                                Requested By
+                            <td className="font-semibold px-3 py-4  border-r border-gray-300 rounded-bl-md">
+                                Traveller Name
                             </td>
-                            <td className="px-3 py-4  border-gray-300 rounded-tr-md">
-                                {businessTripData?.data?.[0]?.requestedBy?.displayName?.toProperCase() || businessTripData?.data?.[0]?.requestedBy?.firstName?.toProperCase() || ""}
+                            <td className="px-3 py-4  border-gray-300 rounded-br-md">
+                                {businessTripData?.data?.[0]?.travellerName?.toProperCase() || "—"}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="font-semibold px-3 border-t py-4 border-r  border-gray-300 ">
+                                Department
+                            </td>
+                            <td className="px-3 py-4 border-t border-gray-300 ">
+                                {businessTripData?.data?.[0]?.requestedDepartment?.name || "—"}
                             </td>
                         </tr>
                         <tr>
@@ -187,22 +195,26 @@ const ApprovalPage = () => {
                                 {businessTripData?.data?.[0]?.createdAt ? moment(businessTripData?.data?.[0]?.createdAt).format("DD-MMM-yyyy hh:mm A") : '—'}
                             </td>
                         </tr>
+
                         <tr>
-                            <td className="font-semibold px-3 py-4 border-r  border-gray-300 ">
-                                Department
+                            <td className="font-semibold px-3 py-4   border-b border-r border-gray-300">
+                                Travel From / To Date
                             </td>
-                            <td className="px-3 py-4  border-gray-300 ">
-                                {businessTripData?.data?.[0]?.requestedDepartment?.name || "—"}
+                            <td className="px-3 py-4  border-b   border-gray-300">
+                                {businessTripData?.data?.[0]?.periodFrom ? moment(businessTripData?.data?.[0]?.periodFrom).format("DD-MMM-yyyy") : '—'} To {businessTripData?.data?.[0]?.periodTo ? moment(businessTripData?.data?.[0]?.periodTo).format("DD-MMM-yyyy") : '—'}
                             </td>
                         </tr>
+
                         <tr>
-                            <td className="font-semibold px-3 py-4 border-t border-r border-gray-300 rounded-bl-md">
-                                Traveller
+                            <td className="font-semibold px-3 py-4 border-r border-gray-300">
+                                Travel To
                             </td>
-                            <td className="px-3 py-4 border-t border-gray-300 rounded-br-md">
-                                {businessTripData?.data?.[0]?.travellerType?.toProperCase() || "—"}
+                            <td className="px-3 py-4  border-gray-300">
+                                {businessTripData?.data?.[0]?.placeOfVisit ? businessTripData?.data?.[0]?.placeOfVisit : '—'} 
                             </td>
                         </tr>
+
+                       
                     </tbody>
                 </table>
 

@@ -151,6 +151,7 @@ const page = () => {
 
 
     const editUser = (rowData: RowData) => {
+        console.log('rowdata', rowData)
         setAction('Update');
         setInitialData({ ...rowData, employee: rowData.employee?._id || rowData.employee });
         openDialog("appraisal");

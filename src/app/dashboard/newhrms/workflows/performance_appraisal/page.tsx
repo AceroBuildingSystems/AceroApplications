@@ -152,7 +152,7 @@ const page = () => {
 
     const editUser = (rowData: RowData) => {
         setAction('Update');
-        setInitialData({ ...rowData, employee: rowData.employee?._id || rowData.employee });
+        setInitialData({ ...rowData, employeeDept: rowData.employee?._id || rowData.employee });
         openDialog("appraisal");
         // Your add logic for user page
     };

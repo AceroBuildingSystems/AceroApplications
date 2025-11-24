@@ -25,6 +25,7 @@ interface TicketComponentProps {
     createdAt: Date;
     updatedAt: Date;
     commentCount?: number;
+    userData?: any[]
   };
   className?: string;
   onClick?: () => void;
@@ -32,42 +33,46 @@ interface TicketComponentProps {
   compactView?: boolean; // For board view
 }
 
-const TicketComponent: React.FC<TicketComponentProps> = ({ 
-  ticket, 
-  className, 
+const TicketComponent: React.FC<TicketComponentProps> = ({
+  ticket,
+  className,
   onClick,
   style,
-  compactView = false
-}:any) => {
+  compactView = false,
+  userData
+}: any) => {
   // Card icon based on status
   const StatusIcon = () => {
-    switch(ticket.status.toUpperCase()) {
+    switch (ticket.status.toUpperCase()) {
       case 'NEW': return <AlertCircle className="h-4 w-4 text-blue-500" />;
+      case 'PENDING': return <AlertCircle className="h-4 w-4 text-blue-500" />;
       case 'ASSIGNED': return <UserCircle2 className="h-4 w-4 text-indigo-500" />;
       case 'IN_PROGRESS': return <BarChart className="h-4 w-4 text-amber-500" />;
+      case 'IN PROGRESS': return <BarChart className="h-4 w-4 text-amber-500" />;
       case 'RESOLVED': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'COMPLETED': return <CheckCircle2 className="h-4 w-4 text-green-500" />;
       case 'CLOSED': return <Lock className="h-4 w-4 text-gray-500" />;
       default: return <AlertCircle className="h-4 w-4 text-blue-500" />;
     }
   };
 
   // Get formatted dates
-  const createdAtFormatted = formatDistanceToNow(new Date(ticket.createdAt), {addSuffix: true});
-  const updatedAtFormatted = formatDistanceToNow(new Date(ticket.updatedAt), {addSuffix: true});
-  
+  const createdAtFormatted = formatDistanceToNow(new Date(ticket.createdAt), { addSuffix: true });
+  const updatedAtFormatted = formatDistanceToNow(new Date(ticket.updatedAt), { addSuffix: true });
+
   // Extract first letter of names safely
-  const creatorInitial = ticket.creator?.firstName ? ticket.creator.firstName.charAt(0) : '?';
-  const assigneeInitial = ticket.assignee?.firstName ? ticket.assignee.firstName.charAt(0) : '?';
-  
+  const creatorInitial = ticket.creator?.firstName ? ticket.creator?.firstName?.charAt(0) : ticket.addedBy ? userData?.find(data => data?._id === ticket.addedBy)?.firstName?.charAt(0) : '?';
+  const assigneeInitial = ticket.assignees[0]?.firstName ? ticket.assignees[0].firstName.charAt(0) : '?';
+
   // Define a shorter ticket ID for space efficiency
   const ticketId = `TKT-${String(ticket._id).substr(-8)}`;
-  
+
   // Define a comprehensive tooltip for the comment count
   const CommentTooltip = () => {
     if (!ticket.commentCount || ticket.commentCount === 0) {
       return <p className="text-xs">No comments yet</p>;
     }
-    
+
     return (
       <div>
         {ticket.commentCount} comment{ticket.commentCount !== 1 ? 's' : ''}
@@ -77,7 +82,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
 
   return (
     <TooltipProvider>
-      <motion.div 
+      <motion.div
         whileHover={{ y: -2, transition: { duration: 0.2 } }}
         whileTap={{ y: 0, transition: { duration: 0.1 } }}
         initial={{ opacity: 0, y: 5 }}
@@ -85,14 +90,17 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
         transition={{ duration: 0.2 }}
         className="w-full"
       >
-        <Card 
+        <Card
           className={cn(
             "w-full border-l-4 shadow-sm hover:shadow-md transition-all overflow-hidden cursor-pointer bg-card group",
-            ticket.status === 'NEW' ? "border-l-blue-500" :
-            ticket.status === 'ASSIGNED' ? "border-l-indigo-500" :
-            ticket.status === 'IN_PROGRESS' ? "border-l-amber-500" :
-            ticket.status === 'RESOLVED' ? "border-l-green-500" :
-            "border-l-gray-500",
+            ticket.status === 'Pending' ? "border-l-blue-300" :
+              ticket.status === 'ASSIGNED' ? "border-l-indigo-300" :
+                ticket.status === 'IN_PROGRESS' ? "border-l-amber-300" :
+                  ticket.status?.toUpperCase() === 'IN PROGRESS' ? "border-l-amber-300" :
+                    ticket.status === 'Completed' ? "border-l-green-300" :
+                      ticket.status === 'Closed' ? "border-l-gray-300" :
+                        ticket.status === 'RESOLVED' ? "border-l-green-300" :
+                          "border-l-gray-300",
             compactView ? "p-2 max-w-[270px]" : "p-3",
             className
           )}
@@ -104,15 +112,15 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
             <div className="flex items-center">
               <StatusIcon />
               <Tooltip delayDuration={300}>
-                <TooltipTrigger className="ml-1.5 text-xs font-mono text-muted-foreground group-hover:text-primary transition-colors truncate max-w-[60px]">
-                  {ticketId}
+                <TooltipTrigger className="ml-1.5 text-xs font-mono text-muted-foreground group-hover:text-primary transition-colors truncate max-w-[80px]">
+                  {ticket.taskId}
                 </TooltipTrigger>
-                <TooltipContent side="top">
+                {/* <TooltipContent side="top">
                   ID: {ticketId}
-                </TooltipContent>
+                </TooltipContent> */}
               </Tooltip>
             </div>
-            
+
             <div className="flex gap-1 flex-shrink-0">
               {/* Make badges more compact in the board view */}
               <Tooltip delayDuration={300}>
@@ -129,11 +137,11 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                   Status: {String(ticket.status).replace(/_/g, ' ')}
                 </TooltipContent>
               </Tooltip>
-              
+
               <Tooltip delayDuration={300}>
                 <TooltipTrigger asChild>
                   <Badge className={cn(
-                    "text-xs py-0 h-5 font-medium border shadow-sm badge-hover", 
+                    "text-xs py-0 h-5 font-medium border shadow-sm badge-hover",
                     compactView ? "px-1.5 text-[10px]" : "",
                     getPriorityColor(ticket.priority)
                   )}>
@@ -146,7 +154,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
               </Tooltip>
             </div>
           </div>
-          
+
           {/* Title and description */}
           <div className={cn("mb-2", compactView ? "max-w-full" : "")}>
             <Tooltip delayDuration={300}>
@@ -155,14 +163,14 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                   "font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1",
                   compactView ? "text-xs max-w-[230px]" : "text-sm"
                 )}>
-                  {String(ticket.title)}
+                  {String(ticket.subject)}
                 </h3>
               </TooltipTrigger>
               <TooltipContent>
-                {String(ticket.title)}
+                {String(ticket.subject)}
               </TooltipContent>
             </Tooltip>
-            
+
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <p className={cn(
@@ -177,7 +185,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
               </TooltipContent>
             </Tooltip>
           </div>
-          
+
           {/* Footer information - more compact in board view */}
           <div className={cn(
             "grid text-muted-foreground pt-1.5 border-t border-border",
@@ -200,7 +208,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-            
+
             {/* Time information */}
             <div className={cn(
               "flex items-center gap-1 overflow-hidden",
@@ -209,8 +217,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
               <Tooltip delayDuration={300}>
                 <TooltipTrigger className="flex items-center gap-1 truncate">
                   <Clock size={compactView ? 10 : 12} className="flex-shrink-0" />
-                  <span className="truncate max-w-[70px]">{compactView 
-                    ? createdAtFormatted.replace(' ago', '').replace('about ', '') 
+                  <span className="truncate max-w-[70px]">{compactView
+                    ? createdAtFormatted.replace(' ago', '').replace('about ', '')
                     : createdAtFormatted}
                   </span>
                 </TooltipTrigger>
@@ -219,7 +227,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                 </TooltipContent>
               </Tooltip>
             </div>
-            
+
             {/* Comment count - Optional */}
             {ticket.commentCount !== undefined && (
               <div className="flex items-center gap-1">
@@ -234,7 +242,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                 </Tooltip>
               </div>
             )}
-            
+
             {/* Creator and assignee information */}
             <div className={cn(
               "flex items-center gap-1 overflow-hidden",
@@ -259,8 +267,8 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                   {String(ticket.creator?.firstName || '')} {String(ticket.creator?.lastName || '')}
                 </TooltipContent>
               </Tooltip>
-              
-              {ticket.assignee && (
+
+              {ticket.assignees && (
                 <>
                   <span className="text-border mx-0.5 flex-shrink-0">→</span>
                   <Tooltip delayDuration={300}>
@@ -275,7 +283,7 @@ const TicketComponent: React.FC<TicketComponentProps> = ({
                         "truncate",
                         compactView ? "max-w-[40px] text-[10px]" : "max-w-[4rem] text-xs"
                       )}>
-                        {String(ticket.assignee?.lastName || '')}
+                        {String(ticket.assignees?.lastName || '')}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent>

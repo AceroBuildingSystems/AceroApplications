@@ -38,6 +38,9 @@ import { Recruitment } from "@/models";
 import { useGetMasterQuery, useLazyGetMasterQuery } from "@/services/endpoints/masterApi";
 import { count } from "console";
 import { position } from "html2canvas/dist/types/css/property-descriptors/position";
+import jsPDF from "jspdf";
+import { renderBusinessTripPdf } from "@/shared/functions";
+import { UsersList } from "../UsersList";
 
 interface HrmsDialogProps {
     isOpen: boolean;
@@ -137,7 +140,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     const [candidateOffer, setCandidateOffer] = useState([]);
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && action !== 'Add') {
             console.log('Fetching candidates for recruitment:', initialData?._id);
             getCandidates({
                 db: MONGO_MODELS.CANDIDATE_INFO,
@@ -146,12 +149,12 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             });
             console.log('Fetching candidates for recruitment:', initialData?._id);
         }
-    }, [isOpen, getCandidates]);
+    }, [initialData, getCandidates]);
 
 
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && action !== 'Add') {
             setLocalInterviews([]); // Clear old data
             setCandidateOffer([]);
             getInterviews({
@@ -163,12 +166,12 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 setLocalInterviews(interviews);
 
                 const shortlistedCandidates = interviews
-                    .filter((c: any) => c.status === 'shortlisted')
+                    .filter((c: any) => (c.status === 'shortlisted' || c.status === 'recruited'))
                     .map((c: any) => ({
                         _id: c?.candidateId?._id,
                         name: `${c?.candidateId?.firstName?.toProperCase() || ''} ${c?.candidateId?.lastName?.toProperCase() || ''}`.trim()
                     }));
-
+                console.log(shortlistedCandidates);
                 setCandidateOffer(shortlistedCandidates);
             });
         }
@@ -176,7 +179,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
     console.log('candidate for offer:', candidateOffer)
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && action !== 'Add') {
             setLocalOfferData([]); // Clear old data
             getOfferACceptance({
                 db: MONGO_MODELS.OFFER_ACCEPTANCE,
@@ -222,7 +225,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
     useEffect(() => {
 
-        if (initialData?.employeeType?.name?.toLowerCase() === 'staff') {
+        if (initialData?.employeeType?.name?.toLowerCase() === 'staff' && region !== null) {
             setIsStaff(true);
             setEmployeeType(initialData?.employeeType?._id); // Optionally set this
             setFormData((prev) => ({
@@ -232,8 +235,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             }));
         }
     }, [initialData]);
-
-
+    console.log({ formData }, isRegion);
     const offerStatus = [{ name: 'Issued', _id: 'issued' },
     { name: 'Accepted', _id: 'accepted' },
     { name: 'Rejected', _id: 'rejected' }];
@@ -288,6 +290,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 hotelArrangedBy: arrangedBy,
                 reimbursedCurrency: currencyData,
                 employee: users,
+                employeeDept: users?.filter(data => data?.department?._id === user?.department?._id),
                 "handoverDetails.familyDetails.fatherNationality._id": countryData,
 
             };
@@ -328,8 +331,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
     const loading = candidatesLoading || interviewsLoading || offerAcceptanceLoading;
 
-
-    const handleUpload = async (firstName, lastName, contactNumber, documentType, file, folderName) => {
+    const handleUpload = async (firstName: string, lastName: string, contactNumber: string, documentType: string, file: any, folderName: string) => {
         if (!file) return;
 
         // Prepare API endpoint with ticketId and userId
@@ -865,10 +867,8 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
     const handleSaveBusinessTrip = async (data: any) => {
 
-        console.log('Form Data Business Trip:', data);
-        const recruitmentData = await createRecruitment(data, "businessTrip");
 
-        console.log('business trip data', recruitmentData);
+        const recruitmentData = await createRecruitment(data, "businessTrip");
 
         const formattedData = {
             db: MONGO_MODELS.BUSINESS_TRIP,
@@ -877,11 +877,9 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             data: { ...recruitmentData, requestedBy: user?._id },
         };
 
-        console.log('Business Trip Data to Save:', formattedData);
-
         const response: any = await createMaster(formattedData);
         let emailData = {};
-        console.log('Business Trip Response:', response);
+
         if (response.data && response.data.status === SUCCESS) {
             toast.success(`Successfully ${action === 'Add' ? 'added' : 'updated'} business trip request!`, {
                 position: "bottom-right"
@@ -893,8 +891,10 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
         if (response?.data?.data?.currentApprovalStep === 0) {
             const approver = response.data.data.approvalFlow[0];
             console.log('approval flow', response);
+            const doc = new jsPDF();
+            const pdfBase64 = renderBusinessTripPdf(doc, response?.data?.data);
             const requestData = { 'requested By': response.data.data?.requestedBy?.displayName?.toProperCase(), 'requested Date': response.data.data?.createdAt ? moment(response.data.data?.createdAt).format("DD-MMM-yyyy hh:mm A") : "-", 'Department': response.data.data?.requestedDepartment?.name || user?.department?.name, 'Traveller': response.data.data?.travellerType?.toProperCase() };
-            emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Business Trip Request', templateData: requestData, fileName: "hrmsTemplates/businessTripRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=true&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=false&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}` };
+            emailData = { recipient: 'iqbal.ansari@acero.ae', subject: 'Business Trip Request', templateData: requestData, fileName: "hrmsTemplates/businessTripRequest", senderName: user?.displayName?.toProperCase(), approveUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=true&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, rejectUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}/utility/businessTripRequest?status=false&_id=${response?.data?.data?._id}&step=${response?.data?.data?.currentApprovalStep}`, attachment: pdfBase64, };
 
             await sendEmail(emailData);
         }
@@ -931,11 +931,10 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             action: action === 'Add' ? 'create' : 'update',
             filter: { "_id": data?._id },
             data: {
-                ...data, evaluationParameters: enriched,
+                ...data, employee: data?.employeeDept, evaluationParameters: enriched,
             },
         };
 
-        console.log('Appraisal Data to Save:', formattedData);
 
         const response: any = await createMaster(formattedData);
         let emailData = {};
@@ -968,9 +967,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 "Job Handover",
                 "Emails to be forwarded (provide Email ID)",
             ],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
+            remarks: "",
             signature: "",
         },
         {
@@ -980,9 +977,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 "Petty Cash Cleared",
                 "Others",
             ],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
+            remarks: "",
             signature: "",
         },
         {
@@ -993,45 +988,38 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 "User Name and Passwords",
                 "Biometric Access closed on LWD",
             ],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
+            remarks: "",
             signature: "",
         },
         {
             department: "Material Control / Stores",
             taskDescription: ["Tools and Equipment’s"],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
+            remarks: "",
             signature: "",
         },
-        {
-            department: "Accommodation In charge",
-            taskDescription: ["Accommodation Items and Locker Keys"],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
-            signature: "",
-        },
+        // {
+        //     department: "Accommodation In charge",
+        //     taskDescription: ["Accommodation Items and Locker Keys"],
+        //     handoverTo: "",
+        //     handoverDate: "",
+        //     status: false,
+        //     signature: "",
+        // },
         {
             department: "HR & ADMIN",
             taskDescription: [
                 "Medical Insurance Card / ID Card",
                 "Office Drawer / Room / Vehicle Keys",
+                "Accommodation Items and Locker Keys",
                 "Others",
             ],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
+            remarks: "",
             signature: "",
         },
         {
             department: "Other Department",
-            taskDescription: [""],
-            handoverTo: "",
-            handoverDate: "",
-            status: false,
+            taskDescription: ["Others"],
+            remarks: "",
             signature: "",
         },
     ];
@@ -1044,12 +1032,32 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
         console.log('offborading data', data);
 
 
-        const enriched = data?.handoverDetails?.map((param, index) => ({
-            ...param,
-            department: handoverDefaultValue[index]?.department || "",
-            taskDescription: handoverDefaultValue[index]?.taskDescription || [],
-            handoverTo: param?.handoverTo !== "" ? param?.handoverTo : null,
-        }));
+        // const enriched = data?.handoverDetails?.map((param, index) => ({
+        //     ...param,
+        //     department: handoverDefaultValue[index]?.department || "",
+        //     taskDescription: handoverDefaultValue[index]?.taskDescription || [],
+        //     handoverTo: param?.handoverTo !== "" ? param?.handoverTo : null,
+        // }));
+        const userDepartment = users?.find(d => d?._id === data?.employee);
+
+        const enriched = data?.handoverDetails?.map((param: any, index: number) => {
+            const defaultDept = handoverDefaultValue[index] || {};
+            const taskDescriptions = defaultDept.taskDescription || [];
+
+            // Map each taskDescription to include description + existing remarks & signature
+            const tasks = taskDescriptions.map((desc: string, tIndex: number) => ({
+                description: desc,
+                remarks: param.taskDescription?.[tIndex]?.remarks || "",
+                signature: param.taskDescription?.[tIndex]?.signature || "",
+            }));
+
+            return {
+                ...param,
+                department: defaultDept.department === 'Employee Department' ? userDepartment?.department?.name : defaultDept.department || "",
+                taskDescription: tasks,
+
+            };
+        });
         const formattedData = {
             db: MONGO_MODELS.OFFBOARDING,
             action: action === 'Add' ? 'create' : 'update',
@@ -1059,6 +1067,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
             },
         };
         console.log('offborading data', formattedData);
+
         const response: any = await createMaster(formattedData);
         let emailData = {};
         console.log('Offboarding Response:', response);
@@ -1322,6 +1331,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     const handleAddOffer = () => {
         setActionOffer('Add');
         setInitialDataCandidate({
+
             offerDepartment: initialData?.department?.name || '',
             position: initialData?.requiredPosition?.name
         });
@@ -1991,11 +2001,12 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 onOpenChange={(open) => {
                     if (!open) {
                         // Reset everything when dialog closes
-
-                        closeDialog();
-                        setEmployeeType('');
-                        setRegion('');
+                        setEmployeeType(null);
+                        setRegion(null);
                         setIsStaff(false);
+                        setIsRegion(false);
+                        closeDialog();
+
 
 
                         // setCurrentStepIndex(savedStepIndex);
@@ -2014,13 +2025,13 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
                     <div className="h-full flex flex-col min-h-0 pt-4">
 
-                        {(!isStaff && !loading && !['business_travel', 'performance_appraisal', 'offboarding'].includes(workflowType)) && (
+                        {(!loading && !['business_travel', 'performance_appraisal', 'offboarding'].includes(workflowType)) && (
                             <div className="flex  justify-between gap-2 mb-4 w-[400px]">
                                 <div className="w-full">
                                     <Label className="mb-1 block">Select Region</Label>
                                     <Combobox
                                         className="w-full"
-                                        value={''}
+                                        value={region}
                                         field={{
                                             name: 'regionRequisition',
                                             label: 'Region',
@@ -2030,6 +2041,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                         formData={formData}
                                         handleChange={(value: any) => {
                                             setRegion(value); // value = _id of selected employee type
+                                            setIsRegion(true);
                                             // setIsEmployeeTypeSelected(true);
                                             setFormData((prev) => ({
                                                 ...prev,
@@ -2045,7 +2057,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                     <Label className="mb-1 block">Select Employee Type</Label>
                                     <Combobox
                                         className="w-full"
-                                        value={''}
+                                        value={employeeType}
                                         field={{
                                             name: 'employeeType',
                                             label: 'Employee Type',
@@ -2072,7 +2084,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                             </div>
                         )}
 
-                        {(!loading && formConfig && (isStaff || workflowType === 'business_travel' || workflowType === 'performance_appraisal' || workflowType === 'offboarding')) && (
+                        {(!loading && formConfig && ((isStaff && isRegion) || workflowType === 'business_travel' || workflowType === 'performance_appraisal' || workflowType === 'offboarding')) && (
                             <>
                                 {/* Fixed WorkflowNavigation inside dialog */}
                                 {workflowType !== 'business_travel' && workflowType !== 'performance_appraisal' && workflowType !== 'offboarding' && <div className="fixed top-10 left-0 right-0 z-20 flex justify-center bg-white pb-2">

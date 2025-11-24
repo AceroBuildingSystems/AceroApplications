@@ -1,0 +1,73 @@
+[User]
+hi
+(27/10/2025 16:29)
+
+[Kodee]
+Hello! How can I assist you today?
+(27/10/2025 16:30)
+
+[User]
+I want to know the reason of over utilization of our VPS CPU since last two days
+(27/10/2025 16:30)
+
+[Kodee]
+Your VPS (ID: 1012214) has experienced sustained high CPU usage—often at or near 100%—over the past two days. This triggered Hostinger’s automated protection, which gradually reduced your CPU capacity due to prolonged overutilization. Recent administrative logs show multiple “set limits” actions, confirming CPU throttling was applied several times yesterday.
+
+Common causes for such spikes include heavy web traffic, resource-intensive scripts, malware, or misconfigured applications. To pinpoint the exact reason, please specify if you’ve made any recent changes, installed new software, or noticed unusual activity.
+
+Would you like a detailed analysis of running processes or recommendations for investigating further?
+(27/10/2025 16:30)
+
+[User]
+we did not install or update anything.
+we want to know if any issue in our code scripts or what is the actual cause of over utilization in last two days as we observed very less traffic also
+(27/10/2025 16:33)
+
+[Kodee]
+The main processes consuming CPU on your VPS are Apache web server (apache2) instances, each using a significant percentage of CPU. No other user or background process appears to be causing the spike, and the load is spread across multiple apache2 processes.
+
+This suggests the overutilization is likely due to web server activity—possibly inefficient code, scripts, or a high number of simultaneous requests, even if traffic is low. Common culprits include poorly optimized PHP scripts, loops, or database queries.
+
+Would you like to see which specific website scripts or URLs are causing the load, or get tips on profiling your web applications for bottlenecks?
+(27/10/2025 16:33)
+
+[User]
+yes please share the more detail on this.
+(27/10/2025 16:34)
+
+[Kodee]
+I'm unable to run detailed Apache status commands due to system restrictions, so I can't directly show which scripts or URLs are causing the high CPU usage. However, your top processes are all Apache workers, which means the issue is almost certainly related to your web application code or scripts.
+
+To identify the problem scripts:
+- Check your Apache access and error logs for repeated requests or errors.
+- Look for slow PHP scripts, large file uploads/downloads, or database queries that take a long time to complete.
+- Review any recent changes in your website code, even if you haven't made updates—sometimes automated bots or attacks exploit existing vulnerabilities.
+
+Would you like step-by-step instructions for checking your Apache/PHP logs or guidance on profiling your web application?
+(27/10/2025 16:34)
+
+[User]
+yes please
+(27/10/2025 16:35)
+
+[Kodee]
+To investigate which scripts or URLs are causing high CPU usage on your VPS, follow these steps:
+
+1. Check Apache access logs for frequent or slow requests:
+   ```
+   tail -n 50 /var/log/apache2/access.log
+   ```
+2. Review Apache error logs for script errors or warnings:
+   ```
+   tail -n 50 /var/log/apache2/error.log
+   ```
+3. Identify slow PHP scripts (if using PHP-FPM):
+   ```
+   tail -n 50 /var/log/php7.4-fpm.log
+   ```
+   (Replace php7.4-fpm.log with your PHP version’s log file.)
+4. Look for repeated requests from the same IP, or requests to the same URL, which may indicate bots or problematic scripts.
+5. If you spot a specific script or URL appearing frequently or causing errors, review its code for inefficiencies or vulnerabilities.
+
+Would you like more details on how to interpret these logs, or do you need help with a specific log file?
+(27/10/2025 16:35)

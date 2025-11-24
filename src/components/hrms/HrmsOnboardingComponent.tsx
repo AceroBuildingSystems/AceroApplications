@@ -140,27 +140,42 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     useEffect(() => {
         if (initialData && initialData?.itAccess?._id) {
             setActionItAccess('Update');
+        } else {
+            setActionItAccess('Add');
         }
         if (initialData && initialData?.employeeInfo?._id) {
             setActionEmployeeInfo('Update');
+        } else {
+            setActionEmployeeInfo('Add');
         }
 
         if (initialData && initialData?.employeeInfo?.beneficiaryInfo?._id) {
+
             setActionBeneficiary('Update');
+        } else {
+            setActionBeneficiary('Add');
         }
 
         if (initialData && initialData?.employeeInfo?.consentInfo?._id) {
             setActionConsentInfo('Update');
+        } else {
+            setActionConsentInfo('Add');
         }
         if (initialData && initialData?.employeeInfo?.ndaInfo?._id) {
             setActionNdaInfo('Update');
+        } else {
+            setActionNdaInfo('Add');
         }
 
         if (initialData && initialData?.employeeInfo?.orientationInfo?._id) {
             setActionOrientationInfo('Update');
+        } else {
+            setActionOrientationInfo('Add');
         }
         if (initialData && initialData?.employeeInfo?.visaInfo?._id) {
             setActionVisaInfo('Update');
+        } else {
+            setActionVisaInfo('Add');
         }
 
     }, [initialData]);
@@ -580,70 +595,88 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 ),
             };
             console.log('Form Data 1 2 3 4:', employeeInfo, actionEmployeeInfo);
-            let uploadResultEducationCertificate = null;
-            let uploadResultPassport = null;
-            let uploadResultVisitVisa = null;
-            let uploadResultVisaCancellation = null;
 
-            if (data?.employeeInfo?.uploadDocuments?.attachEducationCertificates?.length) {
-                // Create an array of promises, one per file
-                const uploadPromises = data.employeeInfo.uploadDocuments.attachEducationCertificates.map(
-                    (file) =>
-                        handleUpload(
-                            data.firstName,
-                            data.lastName,
-                            data?.employeeInfo?.empId,
-                            `${file.name.split('.')[0]}`,
-                            file,
-                            'employees'
-                        )
-                );
+            // let uploadResultEducationCertificate = null;
+            // let uploadResultPassport = null;
+            // let uploadResultVisitVisa = null;
+            // let uploadResultVisaCancellation = null;
 
-                // Wait for all uploads to finish concurrently
-                try {
-                    const uploadResult = await Promise.all(uploadPromises);
-                    uploadResultEducationCertificate = uploadResult?.map(file => file.url);
-                    console.log('All files uploaded successfully:', uploadResultEducationCertificate);
-                } catch (err) {
-                    console.error('One or more uploads failed:', err);
-                }
-            }
+            // if (data?.employeeInfo?.uploadDocuments?.attachEducationCertificates?.length) {
+            //     // Create an array of promises, one per file
+            //     const uploadPromises = data.employeeInfo.uploadDocuments.attachEducationCertificates.map(
+            //         (file) =>
+            //             handleUpload(
+            //                 data.firstName,
+            //                 data.lastName,
+            //                 data?.employeeInfo?.empId,
+            //                 `${file.name.split('.')[0]}`,
+            //                 file,
+            //                 'employees'
+            //             )
+            //     );
+
+            //     // Wait for all uploads to finish concurrently
+            //     try {
+            //         const uploadResult = await Promise.all(uploadPromises);
+            //         uploadResultEducationCertificate = uploadResult?.map(file => file.url);
+            //         console.log('All files uploaded successfully:', uploadResultEducationCertificate);
+            //     } catch (err) {
+            //         console.error('One or more uploads failed:', err);
+            //     }
+            // }
 
 
             // 1️⃣ Upload resume
 
-            data?.employeeInfo?.passport?.attachPassport && (uploadResultPassport = await handleUpload(
-                data?.firstName,
-                data?.lastName,
-                initialData?.employeeInfo?.empId,
-                `passport`,
-                data?.employeeInfo?.passport?.attachPassport,
-                'employees'
-            ));
+            // data?.employeeInfo?.passport?.attachPassport && (uploadResultPassport = await handleUpload(
+            //     data?.firstName,
+            //     data?.lastName,
+            //     initialData?.employeeInfo?.empId,
+            //     `passport`,
+            //     data?.employeeInfo?.passport?.attachPassport,
+            //     'employees'
+            // ));
 
-            data?.employeeInfo?.uploadDocuments?.attachVisitVisa && (uploadResultVisitVisa = await handleUpload(
-                data?.firstName,
-                data?.lastName,
-                initialData?.employeeInfo?.empId,
-                `visit visa`,
-                data?.employeeInfo?.uploadDocuments?.attachVisitVisa,
-                'employees'
-            ));
+            // data?.employeeInfo?.uploadDocuments?.attachVisitVisa && (uploadResultVisitVisa = await handleUpload(
+            //     data?.firstName,
+            //     data?.lastName,
+            //     initialData?.employeeInfo?.empId,
+            //     `visit visa`,
+            //     data?.employeeInfo?.uploadDocuments?.attachVisitVisa,
+            //     'employees'
+            // ));
 
-            data?.employeeInfo?.uploadDocuments?.attachVisaCancellation && (uploadResultVisaCancellation = await handleUpload(
-                data?.firstName,
-                data?.lastName,
-                initialData?.employeeInfo?.empId,
-                `visit cancellation`,
-                data?.employeeInfo?.uploadDocuments?.attachVisaCancellation,
-                'employees'
-            ));
+            // data?.employeeInfo?.uploadDocuments?.attachVisaCancellation && (uploadResultVisaCancellation = await handleUpload(
+            //     data?.firstName,
+            //     data?.lastName,
+            //     initialData?.employeeInfo?.empId,
+            //     `visit cancellation`,
+            //     data?.employeeInfo?.uploadDocuments?.attachVisaCancellation,
+            //     'employees'
+            // ));
+            const {
+                beneficiaryInfo,
+                consentInfo,
+                ndaInfo,
+                orientationInfo,
+                visaInfo,
+                ...restEmployeeInfo
+            } = employeeInfo || {};
 
             const formattedData = {
                 db: MONGO_MODELS.EMPLOYEE_INFO,
                 action: actionEmployeeInfo === 'Add' ? 'create' : 'update',
                 filter: { "_id": data.employeeInfo?._id },
-                data: { ...employeeInfo, itAssetsAccessId: initialData?.itAccess?._id, passport: { ...employeeInfo?.passport, passportUrl: uploadResultPassport?.url }, uploadDocuments: { ...employeeInfo?.uploadDocuments, visitVisaUrl: uploadResultVisitVisa?.url, cancellationVisaUrl: uploadResultVisaCancellation?.url, educationCertificatesUrl: uploadResultEducationCertificate }, },
+                data: {
+                    ...restEmployeeInfo,
+                    itAssetsAccessId: initialData?.itAccess?._id,
+                    // Only include linked info if they exist
+                    ...(employeeInfo?.beneficiaryInfo?._id && { beneficiaryInfo: employeeInfo.beneficiaryInfo._id }),
+                    ...(employeeInfo?.consentInfo?._id && { consentInfo: employeeInfo.consentInfo._id }),
+                    ...(employeeInfo?.ndaInfo?._id && { ndaInfo: employeeInfo.ndaInfo._id }),
+                    ...(employeeInfo?.orientationInfo?._id && { orientationInfo: employeeInfo.orientationInfo._id }),
+                    ...(employeeInfo?.visaInfo?._id && { visaInfo: employeeInfo.visaInfo._id }),
+                },
             };
             console.log('Formatted Data:', formattedData);
 
@@ -686,7 +719,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
 
     };
-
+    console.log({ actionBeneficiary });
     const handleSaveBeneficiaryInfo = async (data: any) => {
 
         try {
@@ -714,11 +747,11 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     },
                 },
             };
-            console.log('Formatted Data:', formattedData);
+            console.log('Formatted Data:', formattedData, actionBeneficiary);
 
             const response: any = await createMaster(formattedData);
 
-            console.log('Response:', response);
+            console.log({ response });
 
             if (initialData?.completedStep === 3 && response.data?.data && response.data.status === SUCCESS) {
 
@@ -1300,7 +1333,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                                                     </div>
                                                 );
 
-                                          
+
 
                                             default:
                                                 return (

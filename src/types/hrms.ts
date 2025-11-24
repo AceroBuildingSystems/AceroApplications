@@ -18,7 +18,9 @@ export enum HRMSFormTypes {
   EMPLOYEE_ORIENTATION = 'employee_orientation',
   VISA_PROCESS = 'visa_process',
   PERFORMANCE_APPRAISAL = 'performance_appraisal',
-  OFFBOARDING = 'offboarding'
+  OFFBOARDING = 'offboarding',
+  TASK = 'task',
+  TICKET = 'ticket',
 }
 
 // HRMS Form Status Types
@@ -139,7 +141,7 @@ export interface HRMSFormField {
   disable: boolean | undefined;
   id: string;
 
-  type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'checkbox-group' | 'radio' | 'file' | 'array' | 'label' | 'labeltext' | 'labeldate' | 'evaluation' | 'handover';
+  type: 'text' | 'email' | 'number' | 'date' | 'select' | 'textarea' | 'checkbox' | 'checkbox-group' | 'radio' | 'file' | 'array' | 'label' | 'labeltext' | 'labeldate' | 'evaluation' | 'handover' | 'datetime' | 'multiSelect';
   label: string;
   required?: boolean;
   placeholder?: string;

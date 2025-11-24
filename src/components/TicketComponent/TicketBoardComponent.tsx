@@ -26,6 +26,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useGetMasterQuery } from '@/services/endpoints/masterApi';
 import TicketComponent from './TicketComponent';
+import { useCreateApplicationMutation } from '@/services/endpoints/applicationApi';
+import { MONGO_MODELS, SUCCESS } from '@/shared/constants';
 
 
 // Define column types with proper typing
@@ -73,6 +75,8 @@ interface TicketBoardComponentProps {
   tickets: Ticket[];
   onTicketClick: (ticketId: string) => void;
   userId: string;
+  userData: any[];
+  requestType: string;
 }
 
 // Droppable container component with enhanced visuals
@@ -121,9 +125,11 @@ const DroppableColumn = ({ id, children, title, count, color = 'gray' }: any) =>
 const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   tickets,
   onTicketClick,
-  userId
+  userId,
+  userData,
+  requestType
 }) => {
-  console.log('tickets:', tickets);
+
   const router = useRouter();
   const [columns, setColumns] = useState<{ [key: string]: Column }>({});
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
@@ -131,6 +137,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const [updateTicket] = useUpdateTicketMutation();
   const [assignTicket] = useAssignTicketMutation();
   const [dragStartClientOffset, setDragStartClientOffset] = useState({ x: 0, y: 0 });
+  const [createMaster, { isLoading: isCreatingMaster }] = useCreateApplicationMutation();
 
   // Assignment dialog state
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -150,7 +157,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   );
 
   // Fetch users for assignment dialog
-   const { data: usersData = { data: [] }, isLoading: usersLoading } = useGetMasterQuery({
+  const { data: usersData = { data: [] }, isLoading: usersLoading } = useGetMasterQuery({
     db: 'USER_MASTER',
     filter: {
       isActive: true,
@@ -160,8 +167,8 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   }, { skip: !ticketToAssign });
 
   const userDataInfo = usersData?.data?.filter(
-  (user: any) => user?.departmentId === ticketToAssign?.department?._id
-);
+    (user: any) => user?.departmentId === ticketToAssign?.department?._id
+  );
   // Store the previous tickets ref to avoid unnecessary re-renders
   const prevTicketsRef: any = useRef(null);
 
@@ -176,58 +183,104 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // Update the ref
     prevTicketsRef.current = tickets;
 
-    const initialColumns: { [key: string]: Column } = {
-      new: {
-        id: 'new',
-        title: 'New',
-        status: 'NEW',
-        tickets: [],
-        color: 'blue'
-      },
-      assigned: {
-        id: 'assigned',
-        title: 'Assigned',
-        status: 'ASSIGNED',
-        tickets: [],
-        color: 'amber'
-      },
-      inProgress: {
-        id: 'inProgress',
-        title: 'In Progress',
-        status: 'IN_PROGRESS',
-        tickets: [],
-        color: 'amber'
-      },
-      resolved: {
-        id: 'resolved',
-        title: 'Resolved',
-        status: 'RESOLVED',
-        tickets: [],
-        color: 'green'
-      },
-      closed: {
-        id: 'closed',
-        title: 'Closed',
-        status: 'CLOSED',
-        tickets: [],
-        color: 'purple'
+    const getInitialColumns = (requestType: string): { [key: string]: Column } => {
+      const baseColumns: { [key: string]: Column } = {
+        new: {
+          id: 'pending',
+          title: 'Pending',
+          status: 'Pending',
+          tickets: [],
+          color: 'blue'
+        },
+
+
+      };
+
+      if (requestType === 'task') {
+        // Task: Pending → In Progress → Completed → Closed
+        return {
+          ...baseColumns,
+          inProgress: {
+            id: 'inProgress',
+            title: 'In Progress',
+            status: 'IN PROGRESS',
+            tickets: [],
+            color: 'amber'
+          },
+          completed: {
+            id: 'completed',
+            title: 'Completed',
+            status: 'COMPLETED',
+            tickets: [],
+            color: 'green'
+          },
+          closed: {
+            id: 'closed',
+            title: 'Closed',
+            status: 'CLOSED',
+            tickets: [],
+            color: 'purple'
+          }
+        };
+      } else {
+        // Non-task: Pending → Assigned → In Progress → Resolved → Closed
+        return {
+          ...baseColumns,
+          inProgress: {
+            id: 'inProgress',
+            title: 'In Progress',
+            status: 'IN_PROGRESS',
+            tickets: [],
+            color: 'amber'
+          },
+          assigned: {
+            id: 'assigned',
+            title: 'Assigned',
+            status: 'ASSIGNED',
+            tickets: [],
+            color: 'amber'
+          },
+          resolved: {
+            id: 'resolved',
+            title: 'Resolved',
+            status: 'RESOLVED',
+            tickets: [],
+            color: 'green'
+          },
+          closed: {
+            id: 'closed',
+            title: 'Closed',
+            status: 'CLOSED',
+            tickets: [],
+            color: 'purple'
+          }
+        };
       }
     };
-    console.log(tickets);
+
+    const initialColumns = getInitialColumns(requestType);
+
+
     // Distribute tickets to columns based on status
     tickets.forEach(ticket => {
       switch (ticket.status.toUpperCase()) {
-        case 'NEW':
+        case 'PENDING':
           initialColumns.new.tickets.push(ticket);
           break;
         case 'ASSIGNED':
           initialColumns.assigned?.tickets.push(ticket);
+          break;
+        case 'IN PROGRESS':
+          initialColumns.inProgress.tickets.push(ticket);
           break;
         case 'IN_PROGRESS':
           initialColumns.inProgress.tickets.push(ticket);
           break;
         case 'RESOLVED':
           initialColumns.resolved.tickets.push(ticket);
+          break;
+        case 'COMPLETED':
+          initialColumns.completed.tickets.push(ticket);
           break;
         case 'CLOSED':
           initialColumns.closed.tickets.push(ticket);
@@ -255,6 +308,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const ticketId = active.id as string;
+    console.log("Drag started for ticket ID:", ticketId);
 
     // Capture the initial client offset for more accurate positioning
     if (event.activatorEvent && 'clientY' in event.activatorEvent) {
@@ -278,21 +332,30 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     try {
       console.log("Updating ticket status:", { ticketId, newStatus, userId });
+      // return;
+      // const response = await updateTicket({
+      //   action: 'update',
+      //   data: {
+      //     _id: ticketId,
+      //     status: newStatus,
+      //     updatedBy: userId
+      //   }
+      // }).unwrap();
 
-      const response = await updateTicket({
+      const formattedData = {
+        db: MONGO_MODELS.TASK,
         action: 'update',
-        data: {
-          _id: ticketId,
-          status: newStatus,
-          updatedBy: userId
-        }
-      }).unwrap();
+        filter: { "_id": ticketId },
+        data: { status: newStatus?.toProperCase(), updatedBy: userId },
+      };
+
+      const response: any = await createMaster(formattedData);
 
       console.log("Update ticket response:", response);
 
       // Check for both SUCCESS and Success (case insensitive)
-      if (response && (response.status === 'SUCCESS' || response.status === 'Success')) {
-        toast.success(`Ticket status updated to ${newStatus}`);
+      if (response && (response?.data.status === SUCCESS)) {
+        toast.success(`${requestType === 'task' ? 'Task' : 'Ticket'} status updated to ${newStatus}`);
         return true;
       } else {
         toast.error(`Failed to update status: ${response?.message || 'Unknown error'}`);
@@ -300,7 +363,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
       }
     } catch (error) {
       console.error("Status update error:", error);
-      toast.error('Failed to update ticket status');
+      toast.error(`Failed to update ${requestType === 'task' ? 'task' : 'ticket'} status`);
       return false;
     }
   };
@@ -453,7 +516,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
     // This helps prevent the snap-back effect
     setColumns(newColumns);
   };
-
+  console.log("Rendering TicketBoardComponent with columns:", columns);
   // Empty state component for cleaner code
   const EmptyColumnState = ({ columnColor = 'gray' }) => {
     const colorMap: any = {
@@ -472,8 +535,8 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
         <svg className={`w-8 h-8 ${colors.text} mb-2`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
-        <p className={`text-sm font-medium ${colors.text}`}>No tickets</p>
-        <p className={`text-xs ${colors.text} mt-1`}>Drag tickets here</p>
+        <p className={`text-sm font-medium ${colors.text}`}>No {requestType === 'task' ? 'task' : 'ticket'}</p>
+        <p className={`text-xs ${colors.text} mt-1`}>Drag {requestType === 'task' ? 'tasks' : 'tickets'} here</p>
       </div>
     );
   };
@@ -508,6 +571,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                           id={ticket._id}
                           ticket={ticket}
                           onTicketClick={handleTicketClick}
+                          userData={userData}
                         />
                       ))}
                     </SortableContext>
@@ -573,7 +637,7 @@ const TicketBoardComponent: React.FC<TicketBoardComponentProps> = ({
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
                 <SelectContent className="rounded-md border-border">
-                  {userDataInfo?.map((user:any) => (
+                  {userDataInfo?.map((user: any) => (
                     <SelectItem key={user._id} value={user._id} className="cursor-pointer py-2 px-2">
                       <div className="flex items-center gap-2">
                         <div className="bg-primary/10 text-primary w-7 h-7 rounded-full flex items-center justify-center text-xs ring-2 ring-white">

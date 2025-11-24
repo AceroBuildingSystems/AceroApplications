@@ -48,7 +48,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
      transition duration-300`
           )}
         >
-          
+
           {/* <Search size={17} className="text-gray-400" /> */}
           <input
             type={type}

@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       response = await ticketManager.createTicket({ data });
       break;
     case "update":
-      
+
       // Log the update data
       console.log("Updating ticket with data:", data);
 

@@ -13,7 +13,12 @@ interface EmailOptions {
     senderName: string;
     reason: string,
     recipientName: string,
-    position: string
+    position: string,
+    viewUrl: string,
+    approveUrl: string;
+    rejectUrl: string;
+    attachment?: any;
+    assignee?:string
 }
 
 // Create reusable transporter for sending emails
@@ -43,7 +48,10 @@ export const sendEmail = async (
     rejectUrl: string,
     reason: string,
     recipientName: string,
-    position: string
+    position: string,
+    attachment: any,
+    viewUrl: string,
+    assignee?:string
 ): Promise<any> => {
     try {
         if (!fileName) {
@@ -52,15 +60,36 @@ export const sendEmail = async (
         const filePath = `src/server/shared/emailTemplates/${fileName}.ejs`
         const templatePath = path.join(process.cwd(), filePath);
         const template = fs.readFileSync(templatePath, 'utf-8');
-        const htmlContent = ejs.render(template, { subject, templateData, senderName, approveUrl, rejectUrl, reason, recipientName, position });
+        const htmlContent = ejs.render(template, { subject, templateData, senderName, approveUrl, rejectUrl, reason, recipientName, position, viewUrl, assignee });
+        // console.log("Attachment type:", typeof attachment);
+        // console.log("Attachment sample:", attachment?.slice(0, 50));
 
+        // console.log('htmlcontent', fileName)
         // Set up email options
-        const mailOptions = {
+        const mailOptions: any = {
             from: process.env.EMAIL_USER, // Email address
             to: recipient,
             subject: subject,
             html: htmlContent, // Rendered HTML content
+
         };
+
+        if (attachment && attachment.startsWith("data:application/pdf")) {
+            const base64Data = attachment.split(",")[1];
+            const fileNameFromData =
+                attachment.match(/filename=([^;]+)/)?.[1] || "attachment.pdf";
+
+            mailOptions.attachments = [
+                {
+                    filename: fileName.split("/")[1],
+                    content: base64Data,
+                    encoding: "base64",
+                    contentType: "application/pdf",
+                },
+            ];
+
+            console.log("📎 PDF attachment added:", fileNameFromData);
+        }
 
         const info: any = await transporter.sendMail(mailOptions);
         if (info.status === ERROR) {

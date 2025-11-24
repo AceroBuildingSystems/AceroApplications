@@ -1,12 +1,14 @@
 import { Document, Types } from "mongoose";
 
+export interface handoverTaskSchema {
+    description: string;
+    remarks: string;
+    signature: string
+}
+
 export interface HandoverDetail {
     department: string;
-    taskDescription: string[];
-    handoverTo?: Types.ObjectId; // reference to User
-    handoverDate?: Date;
-    status: boolean;
-    signature?: string;
+    taskDescription: handoverTaskSchema[];
 }
 
 export interface ClearanceSignature {
@@ -17,7 +19,7 @@ export interface ClearanceSignature {
 // -----------------------------
 // Main Offboarding type
 // -----------------------------
-export interface Offboarding extends Document {
+export interface offboarding extends Document {
     employee: Types.ObjectId; // Ref: User
     releavingDate?: Date;
     handoverDetails: HandoverDetail[];

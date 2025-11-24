@@ -118,7 +118,8 @@ export const MONGO_MODELS = {
     VISA_INFO: "VISA_INFO",
     BUSINESS_TRIP: "BUSINESS_TRIP",
     PERFORMANCE_APPRAISAL: "PERFORMANCE_APPRAISAL",
-    OFFBOARDING: "OFFBOARDING"
+    OFFBOARDING: "OFFBOARDING",
+    TASK: "TASK"
 }
 
 
@@ -196,3 +197,51 @@ export const otherAccess = [
     { value: 'vehicle', label: 'Vehicle' },
 
 ]
+
+
+import { DocumentItem } from "@/components/DMSComponent/FileExplorer";
+
+export const documents: DocumentItem[] = [
+  {
+    id: "1",
+    name: "HR Department",
+    type: "folder",
+    children: [
+      {
+        id: "1-1",
+        name: "Policies",
+        type: "folder",
+        children: [
+          {
+            id: "1-1-1",
+            name: "LeavePolicy.pdf",
+            type: "file",
+            sharedWith: [{ userId: "user1", permissions: ["view"] }],
+          },
+          {
+            id: "1-1-2",
+            name: "DressCode.docx",
+            type: "file",
+            sharedWith: [{ userId: "user2", permissions: ["edit"] }],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "2",
+    name: "Finance",
+    type: "folder",
+    children: [
+      {
+        id: "2-1",
+        name: "Budget2025.xlsx",
+        type: "file",
+        sharedWith: [{ userId: "user1", permissions: ["view"] }],
+      },
+    ],
+  },
+];
+
+
+

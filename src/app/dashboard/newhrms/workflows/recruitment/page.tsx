@@ -685,6 +685,7 @@ const page = () => {
                 initialData={initialData}
                 action={action}
                 height='auto'
+                onchangeData={() => { }}
             />
 
             <HrmsPdfGenerator

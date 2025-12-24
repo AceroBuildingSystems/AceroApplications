@@ -14,6 +14,8 @@ import { Package } from 'lucide-react';
 import Provider from '@/components/provider/Provider';
 
 import { Types } from 'mongoose';
+import { date } from 'zod';
+import { VisaType } from '@/models';
 
 
 export function renderCandidateTemplate(doc, manpowerData) {
@@ -5179,7 +5181,35 @@ interface BulkImportParams {
     customerTypeData: any;
     customerData: any;
     userData: any;
+    visaTypeData: any;
     teamData: any;
+    action: string;
+    user: any;
+    createUser: (data: any) => Promise<any>;
+    db: string;
+    masterName: string;
+    designationData: any;
+    departmentData: any;
+    employeeTypeData: any;
+    organisationData: any;
+    onStart: () => void;
+    onFinish: () => void;
+}
+
+interface BulkImportUserParams {
+    roleData: any;
+    continentData: any;
+    regionData: any;
+    countryData: any;
+    locationData: any;
+    categoryData: any;
+    vendorData: any;
+    productData: any;
+    warehouseData: any;
+    customerTypeData: any;
+    customerData: any;
+    userData: any;
+    visaTypeData: any;
     action: string;
     user: any;
     createUser: (data: any) => Promise<any>;
@@ -5516,6 +5546,146 @@ export const bulkImport = async ({ roleData, continentData, regionData, countryD
     input.click();
 };
 
+export const bulkImportUserAddUpdate = async ({ roleData, continentData, regionData, countryData, locationData, categoryData, vendorData, productData, warehouseData, customerTypeData, customerData, userData, visaTypeData, designationData, departmentData, employeeTypeData, organisationData, action, user, createUser, db, masterName, onStart, onFinish }: BulkImportUserParams) => {
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".xlsx, .xls";
+    input.onchange = async (event) => {
+        onStart?.();
+        const file = (event.target as HTMLInputElement)?.files?.[0];
+        if (!file) {
+            onFinish?.();
+            return;
+        };
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const data = e.target?.result;
+            const workbook = XLSX.read(data, { type: "binary" });
+            const sheetName = workbook.SheetNames[0];
+            const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+            if (!sheetData || sheetData.length === 0) {
+                toast.error("The uploaded Excel sheet is empty.");
+                return;
+            }
+
+            const masterRequiredFields: Record<string, string[]> = {
+                User: ['Employee ID', 'First Name', 'Full Name', 'Department', 'Designation', 'Employee Type', 'Organisation', 'Reporting Location', 'Role'],
+
+                // Add other masters as needed
+            };
+
+            const requiredFields = masterRequiredFields[masterName] || [];
+
+            const rowsWithMissingData = sheetData
+                .map((row: any, index: number) => {
+                    const missingFields = requiredFields.filter(field => {
+                        const value = row[field];
+
+                        return value === undefined || value === null || String(value).trim() === "";
+                    });
+
+                    return missingFields.length > 0 ? { index: index + 2, missingFields } : null; // +2 for Excel-like indexing
+                })
+                .filter(Boolean); // Remove nulls
+
+
+            if (rowsWithMissingData.length > 0) {
+                const rowNumbers = rowsWithMissingData.map((_, i) => i + 2).join(', '); // +2 to match Excel rows (header + 1-based index)
+                const errorMessage = rowsWithMissingData
+                    .map(({ index, missingFields }: any) => `Row ${index}: ${missingFields.join(", ")}`)
+                    .join(" | ");
+
+                toast.error(`Missing required fields - ${errorMessage}`);
+                return;
+            }
+
+            // Transform the sheet data based on the entity
+            const formData = mapExcelToEntity(sheetData, masterName as keyof typeof entityFieldMappings);
+            const successful: any[] = [];
+            const skipped: any[] = [];
+
+            const referenceData = {
+                roleData: roleData?.data || [],
+                continentData: continentData?.data || [],
+                regionData: regionData?.data || [],
+                countryData: countryData?.data || [],
+                locationData: locationData?.data || [],
+                categoryData: categoryData?.data || [],
+                vendorData: vendorData?.data || [],
+                productData: productData?.data || [],
+                warehouseData: warehouseData?.data || [],
+                customerTypeData: customerTypeData?.data || [],
+                customerData: customerData?.data || [],
+                userData: userData?.data || [],
+                designationData: designationData?.data || [],
+                departmentData: departmentData?.data || [],
+                employeeTypeData: employeeTypeData?.data || [],
+                visaTypeData: visaTypeData?.data || [],
+                organisationData: organisationData?.data || [],
+            };
+            console.log({ formData });
+
+            const finalData = mapFieldsToIds(formData, masterName, referenceData);
+
+            let enrichedData = finalData.map((item: any) => ({
+                ...item,
+                addedBy: user?._id,
+                updatedBy: user?._id,
+            }));
+
+
+            if (masterName === 'User') {
+                enrichedData = finalData.map((item: any) => ({
+                    ...item,
+                    joiningDate: parseExcelDate(item?.joiningDate),
+                    passportIssueDate: parseExcelDate(item?.passportIssueDate),
+                    passportExpiryDate: parseExcelDate(item?.passportExpiryDate),
+                    dateOfBirth: parseExcelDate(item?.dateOfBirth),
+                    emiratesIdIssueDate: parseExcelDate(item?.emiratesIdIssueDate),
+                    emiratesIdExpiryDate: parseExcelDate(item?.emiratesIdExpiryDate),
+                    visaIssueDate: parseExcelDate(item?.visaIssueDate),
+                    visaExpiryDate: parseExcelDate(item?.visaExpiryDate),
+                }));
+            };
+            console.log(enrichedData, 'final data')
+
+            const formattedData = {
+                db: 'USER_MASTER',
+                action: 'upsert',
+                bulkUpsert: true,
+                uniqueKey: "empId",
+                data: enrichedData,
+            };
+            const response = await createUser(formattedData);
+
+            const { inserted, updated } = response?.data?.data || {};
+
+            if (inserted > 0) {
+                toast.success(`${inserted} new employees created.`);
+            }
+
+            if (updated > 0) {
+                toast.info(`${updated} employees updated.`);
+            }
+            // if (response?.data?.data?.inserted.length > 0) {
+            //     toast.success(`${response?.data?.data?.inserted.length} records imported successfully.`);
+            // }
+
+            // if (response?.data?.data?.skipped.length > 0) {
+            //     exportToExcel(response?.data?.data?.skipped);
+            //     toast.warning(`${response?.data?.data?.skipped.length} duplicates were skipped and exported to Excel.`);
+            // }
+
+            onFinish?.();
+        };
+        reader.readAsBinaryString(file);
+    };
+    input.click();
+};
+
 function convertToCSV(data: any[]): string {
     if (!data.length) return "";
     const headers = Object.keys(data[0]);
@@ -5840,6 +6010,8 @@ const fieldMappingConfig: { [key: string]: any } = {
         activeLocation: { source: "locationData", key: "name", value: "_id" },
         reportingLocation: { source: "locationData", key: "name", value: "_id" },
         reportingTo: { source: "userData", key: "fullName", value: "_id" },
+        nationality: { source: "countryData", key: "name", value: "_id" },
+        visaType: { source: "visaTypeData", key: "name", value: "_id" },
 
     },
     Designation: {
@@ -6012,7 +6184,23 @@ const entityFieldMappings = {
         "Extension": "extension",
         "Mobile": "mobile",
         "Joining Date": "joiningDate",
-        "Personal Number": "personalNumber",
+        "Personal Number": "personalMobileNo",
+        "Passport Number": "passportNumber",
+        "Passport Issue Date": "passportIssueDate",
+        "Passport Expiry Date": "passportExpiryDate",
+        "Nationality": "nationality",
+        "Gender": "gender",
+        "Marital Status": "maritalStatus",
+        "Date Of Birth": "dateOfBirth",
+        "Emirates ID": "emiratesId",
+        "Emirates ID Issue Date": "emiratesIdIssueDate",
+        "Emirates ID Expiry Date": "emiratesIdExpiryDate",
+        "Visa File No": "visaFileNo",
+        "Visa Issue Date": "visaIssueDate",
+        "Visa Expiry Date": "visaExpiryDate",
+        "Visa Type": "visaType",
+        "Work Permit": "workPermit",
+        "Personal No For Work Permit": "personCode",
         // "Relieving Date": "relievingDate",
         // Add more mappings for users
     },
@@ -6312,7 +6500,7 @@ const entityFieldMappings = {
 };
 
 
-const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; teamData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; locationData?: any; }) => {
+const mapFieldsToIds = (data: any[], entityType: string, referenceData: { [x: string]: any; roleData?: any; continentData?: any; regionData?: any; countryData?: any; quoteStatusData?: any; teamMemberData?: any; visaTypeData?: any; customerData?: any; customerContactData?: any; customerTypeData?: any; sectorData?: any; industryData?: any; buildingData?: any; stateData?: any; approvalAuthorityData?: any; projectTypeData?: any; paintTypeData?: any; currencyData?: any; incotermData?: any; locationData?: any; }) => {
 
     const mappings = fieldMappingConfig[entityType as keyof typeof fieldMappingConfig];
     return data.map((item) => {
@@ -6485,15 +6673,9 @@ function parseExcelDate(value: any): Date | null {
 
     if (typeof value === 'string') {
         // Try DD/MM/YYYY
-        const parsed = moment(value, "DD/MM/YYYY", true);
-        if (parsed.isValid()) {
-            return parsed.toDate();
-        }
-
-        // Try MM/DD/YYYY as fallback
-        const fallbackParsed = moment(value, "MM/DD/YYYY", true);
-        if (fallbackParsed.isValid()) {
-            return fallbackParsed.toDate();
+        const parsed = new Date(value);
+        if (!isNaN(parsed.getTime())) {
+            return parsed;
         }
     }
 

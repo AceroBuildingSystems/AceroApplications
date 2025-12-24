@@ -104,6 +104,16 @@ const page = () => {
         sort: { name: 'asc' },
     });
 
+     const { data: rolesData = [], isLoading: userRoleLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.ROLE_MASTER,
+        sort: { name: 'asc' },
+    });
+
+    const { data: organisationData = [], isLoading: organisationLoading } = useGetMasterQuery({
+        db: MONGO_MODELS.ORGANISATION_MASTER,
+        sort: { name: 'asc' },
+    });
+
     const departments = departmentsData?.data || [];
     const users = usersData?.data || [];
 
@@ -175,7 +185,7 @@ const page = () => {
 
     console.log('designations', onboradingData?.data);
 
-    const loading = visaTypeLoading || employeeInfoLoading || itAssetsAccessLoading || customerTypeLoading || departmentLoading || userLoading || usersLoading || designationLoading || countryLoading || employeeTypeLoading || locationLoading || onboradingLoading;
+    const loading = visaTypeLoading || organisationLoading || userRoleLoading || employeeInfoLoading || itAssetsAccessLoading || customerTypeLoading || departmentLoading || userLoading || usersLoading || designationLoading || countryLoading || employeeTypeLoading || locationLoading || onboradingLoading;
 
     interface RowData {
         id: string;
@@ -840,6 +850,8 @@ const page = () => {
                 recruitymentTypes={recruitymentTypes}
                 initialData={initialData}
                 visaTypes={visaTypeData?.data || []}
+                rolesData={rolesData?.data || []}
+                organisationData={organisationData?.data || []}
                 onSave={saveData}
                 currentIndex={currentIndex}
                 countryData={countryData?.data || []}

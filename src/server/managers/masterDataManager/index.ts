@@ -3,5 +3,5 @@ import { createMasterData,getMasterData,updateMasterData } from "@/server/servic
 export const masterdataManager = {
   createMasterData,
   getMasterData,
-  updateMasterData
+  updateMasterData,
 }

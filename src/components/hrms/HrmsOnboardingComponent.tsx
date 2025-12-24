@@ -29,15 +29,16 @@ import { useSendEmailMutation } from "@/services/endpoints/emailApi";
 import moment from "moment";
 import WorkflowNavigation from "./NewWorkflowNavigation";
 import FormContainer from "./FormContainer";
-import { deepCloneWithOptionsInjection, getFormConfig, injectOptionsIntoFormConfig } from "@/configs/hrms-forms";
+import { deepCloneWithOptionsInjection, getFormConfig } from "@/configs/hrms-forms";
 import { approvalFlows } from "@/configs/approvalFlow.config";
 import { ApprovalInfo } from "@/types/hrms/recruitment.types";
 import MasterComponent from "../MasterComponent/MasterComponent";
 import { Checkbox } from "../ui/checkbox";
-import { ConsentInfo, Recruitment } from "@/models";
+import { ConsentInfo, Recruitment, VisaType } from "@/models";
 import { useCreateMasterMutation, useGetMasterQuery, useLazyGetMasterQuery } from "@/services/endpoints/masterApi";
 import { count } from "console";
 import { position } from "html2canvas/dist/types/css/property-descriptors/position";
+import { date } from "zod";
 
 interface HrmsDialogProps {
     isOpen: boolean;
@@ -54,6 +55,8 @@ interface HrmsDialogProps {
     recruitymentTypes: any; // Optional, for recruitment types
     initialData?: any; // Optional, for initial data when updating
     visaTypes?: Option[]; // Optional, for visa types
+    rolesData?: Option[]; // Optional, for role data
+    organisationData?: Option[]; // Optional, for organisation data
     currentIndex?: number; // Optional, for step navigation index
     countryData?: Option[]; // Optional, for country data
     userData?: any;
@@ -73,6 +76,8 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
     recruitymentTypes,
     initialData = null, // Optional initial data for update
     visaTypes,
+    rolesData,
+    organisationData,
     currentIndex = 0, // Optional current index for step navigation
     countryData,
     userData
@@ -119,7 +124,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
     const [initialDataCandidate, setInitialDataCandidate] = useState([]);
 
-    console.log('initial data:', initialFormConfig, initialData);
+    console.log('initial data:', initialFormConfig, initialData, rolesData);
     // const [formattedInterviewData, setFormattedInterviewData] = useState<any[]>([]);
     const [isStepInitialized, setIsStepInitialized] = useState(false);
 
@@ -594,7 +599,8 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     ["fatherNationality", "motherNationality", "spouseNationality", "child1Nationality", "child2Nationality", "child3Nationality"]
                 ),
             };
-            console.log('Form Data 1 2 3 4:', employeeInfo, actionEmployeeInfo);
+
+            console.log('Form Data 1 2 3 4:', employeeInfo, initialData, actionEmployeeInfo);
 
             // let uploadResultEducationCertificate = null;
             // let uploadResultPassport = null;
@@ -663,6 +669,19 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                 ...restEmployeeInfo
             } = employeeInfo || {};
 
+            const initialEmpId = initialData?.employeeInfo?.empId;
+            const currentEmpId = employeeInfo?.empId;
+
+            const isEmpIdChanged =
+                currentEmpId &&
+                initialEmpId &&
+                currentEmpId.trim() !== initialEmpId.trim();
+
+            if (actionEmployeeInfo === 'update' && !isEmpIdChanged) {
+                delete restEmployeeInfo.empId;
+            }
+
+
             const formattedData = {
                 db: MONGO_MODELS.EMPLOYEE_INFO,
                 action: actionEmployeeInfo === 'Add' ? 'create' : 'update',
@@ -678,11 +697,57 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     ...(employeeInfo?.visaInfo?._id && { visaInfo: employeeInfo.visaInfo._id }),
                 },
             };
-            console.log('Formatted Data:', formattedData);
-
+          
             const response: any = await createMaster(formattedData);
 
-            console.log('Response:', response);
+
+            if (actionEmployeeInfo === 'Add') {
+                const roleId = rolesData?.find((role: any) => role?.name === 'User')?._id;
+                const visaId = visaTypes?.find((visa: any) => visa?.name === 'Employee Visa')?._id;
+
+                const organisationId = organisationData?.find((org: any) => org?.location?._id === initialData?.workLocation)?._id;
+
+                const userPayload = {
+                    db: MONGO_MODELS.USER_MASTER,
+                    action: 'create',
+                    data: {
+                        empId: response?.data?.data?.empId,
+                        firstName: initialData?.firstName,
+                        lastName: initialData?.lastName,
+                        fullName: `${initialData.firstName} ${initialData.lastName}`,
+                        displayName: response?.data?.data?.displayName,
+                        email: initialData?.itAccess?.email || undefined,
+                        isActive: true,
+
+                        // org structure
+                        employeeType: initialData.category,
+                        department: initialData.department,
+                        designation: initialData.designation,
+                        reportingTo: initialData.reportingTo,
+                        role: roleId,
+                        visaType: visaId,
+                        organisation: organisationId,
+                        activeLocation: initialData?.workLocation,
+                        reportingLocation: initialData?.workLocation,
+                        availability: 'Available',
+                        gender: initialData?.gender?.toProperCase(),
+                        maritalStatus: initialData?.maritalStatus?.toProperCase(),
+                        dateOfBirth: initialData?.dateOfBirth,
+                        nationality: initialData?.nationality,
+                        joiningDate: response?.data?.data.dateOfJoining,
+                        passportNumber: initialData?.itAccess?.employeeJoiningId?.offerAcceptance?.passportInfo?.passportNo,
+                        passportIssueDate: initialData?.itAccess?.employeeJoiningId?.offerAcceptance?.passportInfo?.issueDate,
+                        passportExpiryDate: initialData?.itAccess?.employeeJoiningId?.offerAcceptance?.passportInfo?.expiryDate,
+
+                        addedBy: response?.data?.data?.addedBy,
+                    }
+                };
+
+                await createMaster(userPayload);
+
+
+            }
+
 
             if (initialData?.completedStep === 2 && response.data?.data && response.data.status === SUCCESS) {
                 const joiningPayload = {

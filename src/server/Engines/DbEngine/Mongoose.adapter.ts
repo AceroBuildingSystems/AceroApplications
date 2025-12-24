@@ -66,6 +66,9 @@ export class MongooseAdapter implements DatabaseAdapter {
    *   }
    * });
    */
+
+
+
   async find(modelName: string, options: FindOptions): Promise<QueryResult> {
     await dbConnect();
     const model = this.models[modelName];
@@ -152,7 +155,7 @@ export class MongooseAdapter implements DatabaseAdapter {
 
     const [docs, total]: any = await Promise.all([query.exec(), countQuery]);
     let sanitizedDocs = docs;
-   
+
     return {
       status: SUCCESS,
       data: sanitizedDocs,
@@ -183,7 +186,10 @@ export class MongooseAdapter implements DatabaseAdapter {
 
   async create(
     modelName: string,
-    options: CreateOptions
+    options: CreateOptions & {
+      bulkUpsert?: boolean;
+      uniqueKey?: string;
+    }
   ): Promise<QueryResult> {
     await dbConnect();
     const model = this.models[modelName];
@@ -191,6 +197,49 @@ export class MongooseAdapter implements DatabaseAdapter {
       return { status: ERROR, message: `Model ${modelName} not found` };
 
     let doc = null;
+    // 🔹 BULK UPSERT MODE
+    if (options.bulkUpsert) {
+      const { data, uniqueKey = "empId" } = options;
+
+      const operations = await Promise.all(
+        data.map(async (item: any) => {
+          const doc = { ...item };
+
+          if (doc.password) {
+            doc.password = await bcrypt.hash(doc.password, 10);
+          }
+          doc.email = doc.email?.trim().toLowerCase() || undefined;
+
+          return {
+            updateOne: {
+              filter: { [uniqueKey]: doc[uniqueKey] },
+              update: {
+                $set: {
+                  ...doc,
+                  updatedAt: new Date(),
+                },
+                $setOnInsert: {
+                  createdAt: new Date(),
+                },
+              },
+              upsert: true,
+            },
+          };
+        })
+      );
+      console.log('model:', model);
+      const result = await model.bulkWrite(operations, { ordered: false });
+
+      return {
+        status: SUCCESS,
+        data: {
+          inserted: result.upsertedCount || 0,
+          updated: result.modifiedCount || 0,
+          matched: result.matchedCount || 0,
+        },
+      };
+    }
+
 
     if (options.bulkInsert) {
       const inserted: any[] = [];

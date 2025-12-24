@@ -1936,6 +1936,13 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Employee identification number'
           },
+           {
+            name: 'employeeInfo.displayName',
+            type: 'text',
+            label: 'Display Name',
+            required: true,
+            placeholder: 'Display name of the employee'
+          },
           {
             name: 'designation',
             type: 'select',

@@ -17,7 +17,7 @@ import { toast } from 'react-toastify';
 import { RowExpanding } from '@tanstack/react-table';
 import * as XLSX from "xlsx";
 import useUserAuthorised from '@/hooks/useUserAuthorised';
-import { bulkImport } from '@/shared/functions';
+import { bulkImport, bulkImportUserAddUpdate } from '@/shared/functions';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import moment from 'moment';
@@ -32,7 +32,7 @@ const page = () => {
 
     sort: { empId: 'asc' },
   });
-  
+
   const { data: departmentData = [], isLoading: departmentLoading }: any = useGetMasterQuery({
     db: 'DEPARTMENT_MASTER',
     filter: { isActive: true },
@@ -70,7 +70,7 @@ const page = () => {
     sort: { name: 'asc' }
   });
 
- 
+
   const [createMaster, { isLoading: isCreatingUser }]: any = useCreateMasterMutation();
 
   const statusData = [{ _id: true, name: 'Active' }, { _id: false, name: 'InActive' }];
@@ -91,7 +91,6 @@ const page = () => {
 
   const orgTransformedData = organisationTransformData(organisationData?.data);
 
-  console.log(transformedData, "transformedData");
   const roleNames = roleData?.data
     ?.filter((role: undefined) => role !== undefined)  // Remove undefined entries
     ?.map((role: { _id: any; name: any }) => ({ _id: role.name, name: role.name }));
@@ -177,7 +176,7 @@ const page = () => {
     { label: 'Active Location', name: "activeLocation", type: "select", data: locationData?.data, format: 'ObjectId', required: true, placeholder: 'Select Location', category: 'employment' },
     { label: 'Organisation', name: "organisation", type: "select", data: orgTransformedData, format: 'ObjectId', required: true, placeholder: 'Select Organisation', category: 'employment' },
     { label: 'Extension', name: "extension", type: "number", placeholder: 'Extension', category: 'employment' },
-    { label: 'Company Number', name: "workMobile", type: "text", placeholder: 'Mobile', category: 'employment' },
+    { label: 'Company Number', name: "mobile", type: "text", placeholder: 'Mobile', category: 'employment' },
     { label: 'Joining Date', name: "joiningDate", type: "date", format: 'Date', placeholder: 'Select Joining Date', category: 'employment' },
     { label: 'Leaving Date', name: "relievingDate", type: "date", format: 'Date', placeholder: 'Select Leaving Date', category: 'employment' },
     { label: 'Person Code', name: "personCode", type: "text", placeholder: 'Person Code', category: 'employment' },
@@ -224,7 +223,7 @@ const page = () => {
   const saveData = async ({ formData, action }: { formData: any; action: string }) => {
     try {
 
-   
+
       const formattedData = {
         db: MONGO_MODELS.USER_MASTER,
         action: action === 'Add' ? 'create' : 'update',
@@ -313,11 +312,11 @@ const page = () => {
   };
 
   const handleImport = () => {
-    bulkImport({
+    bulkImportUserAddUpdate({
       roleData,
       continentData: [],
       regionData: [],
-      countryData: [],
+      countryData: nationalityData || [],
       locationData,
       categoryData: [],
       vendorData: [],
@@ -326,7 +325,7 @@ const page = () => {
       customerTypeData: [],
       customerData: [],
       userData,
-      teamData: [],
+      visaTypeData: visTypeData || [],
       designationData,
       departmentData,
       employeeTypeData,

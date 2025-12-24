@@ -8,7 +8,14 @@ const UserSchema: Schema<UserDocument> = new Schema({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     fullName: { type: String },
-    email: { type: String, unique: true, sparse: true },
+    email: {
+        type: String,
+        unique: true,
+        sparse: true,
+        trim: true,
+        lowercase: true,
+    },
+
     displayName: { type: String },
 
     isActive: { type: Boolean, default: true },
@@ -144,6 +151,9 @@ const UserSchema: Schema<UserDocument> = new Schema({
     updatedBy: { type: String },
 
 }, { timestamps: true })
+
+UserSchema.index({ empId: 1 }, { unique: true });
+
 
 UserSchema.pre('save', async function (next) {
     if (!this.fullName) {

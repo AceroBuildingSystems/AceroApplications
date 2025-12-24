@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
   if (!body) return NextResponse.json({ status: ERROR, message: INVALID_REQUEST, data: {} }, { status: 400 })
 
 
-  const { db, action, data } = body
+  const { db, action, data, bulkUpsert, uniqueKey } = body;
 
   if (!db || !action) return NextResponse.json({ status: ERROR, message: INSUFFIENT_DATA, data: {} }, { status: 400 })
 
@@ -113,6 +113,14 @@ export async function POST(request: NextRequest) {
     case "update":
       response = await masterdataManager.updateMasterData(body)
       break;
+
+    case "upsert": // ✅ NEW
+      response = await masterdataManager.createMasterData({
+    ...body,
+    bulkUpsert: true,
+    uniqueKey: body.uniqueKey || "empId",
+  });
+  break;
     default:
       response = { status: ERROR, message: INVALID_REQUEST }
   }

@@ -5,6 +5,7 @@ export interface employeeinfo {
 
     itAssetsAccessId: Types.ObjectId; // ref: ItAssetsAccess
     empId: string;
+    displayName?: string;
     grade?: string;
     dateOfJoining: Date;
 

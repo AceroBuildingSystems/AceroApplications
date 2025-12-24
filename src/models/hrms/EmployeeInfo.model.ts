@@ -13,6 +13,7 @@ const EmployeeInfoSchema: Schema<employeeinfo> = new Schema({
         autopopulate: true
     },
     empId: { type: String, required: true, unique: true },
+    displayName: { type: String },
     grade: { type: String },
     dateOfJoining: { type: Date, required: true },
 

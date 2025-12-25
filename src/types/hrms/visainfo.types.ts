@@ -10,6 +10,7 @@ export interface visainfo {
     emiratesIdIssueDate?: Date;
     emiratesIdExpiryDate?: Date;
     workPermitNo?: string;
+    personCode?: string;
     visaType?: Types.ObjectId; // reference to VisaType
     laborCardExpiryDate?: Date;
     iloeExpiryDate?: Date;

@@ -26,6 +26,9 @@ const VisaInfoSchema: Schema<visainfo> = new Schema({
     workPermitNo: {
         type: String,
     },
+    personCode: {
+        type: String,
+    },
     visaType: {
         type: Schema.Types.ObjectId,
         ref: 'VisaType',

@@ -3098,6 +3098,12 @@ Governing Law: This agreement shall be governed by and enforced in accordance wi
             placeholder: 'Work Permit Number'
           },
           {
+            name: 'employeeInfo.visaInfo.personCode',
+            type: 'text',
+            label: 'Person Code For Work Permit',
+            placeholder: 'Person Code For Work Permit'
+          },
+          {
             name: 'employeeInfo.visaInfo.visaType._id',
             type: 'select',
             label: 'Visa Type',

@@ -39,6 +39,7 @@ import { useCreateMasterMutation, useGetMasterQuery, useLazyGetMasterQuery } fro
 import { count } from "console";
 import { position } from "html2canvas/dist/types/css/property-descriptors/position";
 import { date } from "zod";
+import { filter } from "lodash";
 
 interface HrmsDialogProps {
     isOpen: boolean;
@@ -697,13 +698,13 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     ...(employeeInfo?.visaInfo?._id && { visaInfo: employeeInfo.visaInfo._id }),
                 },
             };
-          
+
             const response: any = await createMaster(formattedData);
 
 
             if (actionEmployeeInfo === 'Add') {
                 const roleId = rolesData?.find((role: any) => role?.name === 'User')?._id;
-                const visaId = visaTypes?.find((visa: any) => visa?.name === 'Employee Visa')?._id;
+                const visaId = visaTypes?.find((visa: any) => visa?.name === 'Dubai')?._id;
 
                 const organisationId = organisationData?.find((org: any) => org?.location?._id === initialData?.workLocation)?._id;
 
@@ -784,12 +785,12 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
 
     };
-    console.log({ actionBeneficiary });
+
     const handleSaveBeneficiaryInfo = async (data: any) => {
 
         try {
 
-            console.log('Form Data 1 2 3 4:', data);
+
             let uploadResultBeneficiary = null;
             // 1️⃣ Upload resume
 
@@ -871,7 +872,7 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
         try {
 
-            console.log('Form Data 1 2 3 4:', data);
+
             let uploadResultConsent = null;
             // 1️⃣ Upload resume
 
@@ -895,11 +896,9 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     },
                 },
             };
-            console.log('Formatted Data:', formattedData);
 
             const response: any = await createMaster(formattedData);
 
-            console.log('Response:', response);
 
             if (initialData?.completedStep === 4 && response.data?.data && response.data.status === SUCCESS) {
 
@@ -909,7 +908,6 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     filter: { "_id": initialData?.employeeInfo?._id },
                     data: { consentInfo: response?.data?.data?._id },
                 };
-                console.log('employee Update Data:', employeePayload);
 
                 const employeeResponse: any = await createMaster(employeePayload);
 
@@ -919,10 +917,9 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
                     filter: { "_id": initialData?._id },
                     data: { completedStep: 5 },
                 };
-                console.log('Joining Update Data:', joiningPayload);
 
                 const joiningResponse: any = await createMaster(joiningPayload);
-                console.log('joining Update Response:', joiningResponse);
+
 
                 initialData['completedStep'] = 5;
             }
@@ -1163,7 +1160,32 @@ const HrmsDialog: React.FC<HrmsDialogProps> = ({
 
             const response: any = await createMaster(formattedData);
 
-            console.log('Response:', response);
+            console.log('Response:', response, initialData);
+
+            const userPayload = {
+                db: MONGO_MODELS.USER_MASTER,
+                action: 'update',
+                filter: { "empId": initialData?.employeeInfo?.empId },
+                data: {
+                    visaIssueDate: response?.data?.data?.visaIssueDate || undefined,
+                    visaExpiryDate: response?.data?.data?.visaExpiryDate || undefined,
+                    visaFileNo: response?.data?.data?.visaFileNo,
+                    emiratesId: response?.data?.data?.emiratesIdNo,
+                    emiratesIdIssueDate: response?.data?.data?.emiratesIdIssueDate || undefined,
+                    emiratesIdExpiryDate: response?.data?.data?.emiratesIdExpiryDate || undefined,
+
+                    // org structure
+                    workPermit: response?.data?.data?.workPermitNo || undefined,
+                    personCode: response?.data?.data?.personCode,
+                    visaType: response?.data?.data?.visaType?._id,
+                    labourCardExpiryDate: response?.data?.data?.laborCardExpiryDate || undefined,
+                    iloeExpiryDate: response?.data?.data?.iloeExpiryDate || undefined,
+                    updatedBy: response?.data?.data?.updatedBy,
+                }
+            };
+
+            await createMaster(userPayload);
+
 
             if (initialData?.completedStep === 7 && response.data?.data && response.data.status === SUCCESS) {
 

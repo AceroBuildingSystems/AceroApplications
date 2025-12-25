@@ -1,4 +1,4 @@
-import { createMasterData,getMasterData,updateMasterData } from "@/server/services/masterDataServices";
+import { createMasterData, getMasterData, updateMasterData } from "@/server/services/masterDataServices";
 
 export const masterdataManager = {
   createMasterData,

@@ -116,11 +116,11 @@ export async function POST(request: NextRequest) {
 
     case "upsert": // ✅ NEW
       response = await masterdataManager.createMasterData({
-    ...body,
-    bulkUpsert: true,
-    uniqueKey: body.uniqueKey || "empId",
-  });
-  break;
+        ...body,
+        bulkUpsert: true,
+        uniqueKey: body.uniqueKey || "empId",
+      });
+      break;
     default:
       response = { status: ERROR, message: INVALID_REQUEST }
   }

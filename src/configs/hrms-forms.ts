@@ -1131,7 +1131,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         ]
       },
 
-    
+
       {
         id: 'assessment_section',
         title: 'Assessment (For Department Manager)',
@@ -1173,7 +1173,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         ]
       },
 
-        {
+      {
         id: 'preliminary_feedback',
         title: 'Preliminary Interview Feedback (HR/ADMIN Department)',
         description: '',
@@ -1223,7 +1223,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
         ]
       },
 
-      
+
 
     ]
   },
@@ -1936,7 +1936,7 @@ export const HRMS_FORM_CONFIGS: Record<string, HRMSFormConfig> = {
             required: true,
             placeholder: 'Employee identification number'
           },
-           {
+          {
             name: 'employeeInfo.displayName',
             type: 'text',
             label: 'Display Name',
